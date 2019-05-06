@@ -18,7 +18,14 @@ import datapath as dp
 import createdata.data_arrange as da
 # ======================================
 
+# inputvariable
+post_process_path = dp.post_process_path
+hdf5_csv_path = dp.hdf5_csv_path
+thermo_path = dp.thermo_path
+f_thermo = dp.f_thermo
+# end inputvariable
+
 # create folder
-om.create_directory(dp.post_process_path)
-om.create_directory(dp.hdf5_csv_path)
-da.thermo_file_to_h5_csv(dp.thermo_path, dp.f_thermo, override ='yes')
+om.create_directory(post_process_path)
+om.create_directory(hdf5_csv_path)
+da.thermo_file_to_h5_csv(thermo_path, f_thermo, override ='yes')

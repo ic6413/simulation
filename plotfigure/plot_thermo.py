@@ -8,8 +8,8 @@ import matplotlib.pyplot as plt
 import datapath as dp
 
 # import plot module
-import plotfigure.input as pi
-# input
+import plotfigure.inputvariable as pi
+# inputvariable
 step1 = pi.step1
 step2 = pi.step2
 

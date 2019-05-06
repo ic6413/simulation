@@ -7,9 +7,9 @@ import osmanage as om
 import datapath as dp
 # import module in calculate folder
 import calculate.checksimulation as cs
-import calculate.input as ci
+import calculate.inputvariable as ci
 
-# ====== input begin ========
+# ====== inputvariable begin ========
 method_list = ci.method_list  # method = 0, 1, 2 are correct. method = 3~7(8) wrong
 
 worj = ci.worj
@@ -22,7 +22,7 @@ step2 = ci.step2
 
 error_tolerence = ci.error_tolerence
 
-# ======= input end ==============
+# ======= inputvariable end ==============
 
 f_name_check_f_1contact = 'check_contact_force_' + worj + '_id_' + str(ci.id_i) +'step_' + str(ci.step1) + '_' + str(ci.step2)
 

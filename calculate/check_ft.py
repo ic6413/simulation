@@ -6,13 +6,13 @@ import osmanage as om
 import datapath as dp
 # import module in calculate folder
 import calculate.checksimulation as cs
-import calculate.input as ci
+import calculate.inputvariable as ci
 
 check_f_function = cs.fjwi_plus_check_multistep_multicontact_fromcustom  # or cs.fjwi_plus_check_multistep_multicontact_fromcustom_v1
 
 method_list = list(range(0, 3))
 
-file = dp.debug_print_path + ci.f_input_name
+file = dp.debug_print_path + ci.f_inputvariable_name
 
 np.set_printoptions(threshold = 100000)
 np.set_printoptions(precision=6)

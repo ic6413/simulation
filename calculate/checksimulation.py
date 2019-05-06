@@ -17,12 +17,12 @@ import osmanage as om
 import datapath as dp
 # import module in calculate folder
 import calculate.checksimulation as cs
-import calculate.input as ci
+import calculate.inputvariable as ci
 
-# ==== input varables ====
+# ==== inputvariable varables ====
 # current module variable
 overlap_tolerence = 0
-# ==== input varables end ====
+# ==== inputvariable varables end ====
 
 # ====================================== import variable
 with open(dp.f_attribute, 'r') as f:
@@ -1054,7 +1054,7 @@ def fjwi_plus_cal_multistep_multicontact_fromcustom_v1(f_read, id_i, step1, step
     return [fi_cal, fi_plus, sum_tqji_plus_cal_steps, tqi_plus]
 
 
-def fjwi_plus_check_multistep_multicontact_fromcustom_inputfunc(f_read, id_i, step1, step2, error_tolerence, method, func_fjwi_plus_cal):
+def fjwi_plus_check_multistep_multicontact_fromcustom_inputvariablefunc(f_read, id_i, step1, step2, error_tolerence, method, func_fjwi_plus_cal):
 
     [fi_cal, fi_plus, sum_tqji_plus_cal_steps, tqi_plus] = func_fjwi_plus_cal(f_read, id_i, step1, step2, error_tolerence, method)
     [f_step_error_array, f_errorindex] = step_error_array_with_index(step1, step2, fi_cal, fi_plus, error_tolerence)
@@ -1074,7 +1074,7 @@ def fjwi_plus_check_multistep_multicontact_fromcustom_inputfunc(f_read, id_i, st
 def fjwi_plus_check_multistep_multicontact_fromcustom(f_read, id_i, step1, step2, error_tolerence, method):
 
     [f_step_error_array, fi_cal_in_error_step, fi_plus_in_error_step] = (
-        fjwi_plus_check_multistep_multicontact_fromcustom_inputfunc(f_read, id_i, step1, step2, error_tolerence, method, fjwi_plus_cal_multistep_multicontact_fromcustom)
+        fjwi_plus_check_multistep_multicontact_fromcustom_inputvariablefunc(f_read, id_i, step1, step2, error_tolerence, method, fjwi_plus_cal_multistep_multicontact_fromcustom)
     )
     
     return [f_step_error_array, fi_cal_in_error_step, fi_plus_in_error_step] 
@@ -1083,7 +1083,7 @@ def fjwi_plus_check_multistep_multicontact_fromcustom(f_read, id_i, step1, step2
 def fjwi_plus_check_multistep_multicontact_fromcustom_v1(f_read, id_i, step1, step2, error_tolerence, method):
 
     [f_step_error_array, fi_cal_in_error_step, fi_plus_in_error_step] = (
-        fjwi_plus_check_multistep_multicontact_fromcustom_inputfunc(f_read, id_i, step1, step2, error_tolerence, method, fjwi_plus_cal_multistep_multicontact_fromcustom_v1)
+        fjwi_plus_check_multistep_multicontact_fromcustom_inputvariablefunc(f_read, id_i, step1, step2, error_tolerence, method, fjwi_plus_cal_multistep_multicontact_fromcustom_v1)
     )
     return [f_step_error_array, fi_cal_in_error_step, fi_plus_in_error_step] 
 

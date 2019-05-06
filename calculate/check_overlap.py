@@ -6,9 +6,9 @@ import osmanage as om
 import datapath as dp
 # import module in calculate folder
 import calculate.checksimulation as cs
-import calculate.input as ci
+import calculate.inputvariable as ci
 
-file = dp.debug_print_path + ci.f_input_name
+file = dp.debug_print_path + ci.f_inputvariable_name
 
 [step_id_ifover_diffnext, ifoverlap_ij_iw_array, initial_overlap_id] = cs.contact_check_multistep(dp.f_custom + '.h5', ci.id_i, ci.step1, ci.step2, ci.error_tolerence)
 

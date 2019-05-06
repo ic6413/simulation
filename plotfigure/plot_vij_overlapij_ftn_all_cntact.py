@@ -8,13 +8,13 @@ import matplotlib.pyplot as plt
 import datapath as dp
 
 # import plot module
-import plotfigure.input as pi
+import plotfigure.inputvariable as pi
 
 # import calculate module
 import calculate.checksimulation as cs
 
 
-# input
+# inputvariable
 id_i = pi.id_i
 step1 = pi.step1
 step2 = pi.step2
