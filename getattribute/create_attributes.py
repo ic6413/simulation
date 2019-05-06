@@ -7,9 +7,6 @@ import os.path
 import osmanage as om
 import datapath as dp
 
-# import module in createdata folder
-import createdata.data_arrange as da
-
 dict = {}
 
 dict['ts'] = 10**-6

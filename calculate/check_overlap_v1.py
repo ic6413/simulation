@@ -9,9 +9,11 @@ import datapath as dp
 import calculate.checksimulation as cs
 import calculate.inputvariable as ci
 
-file = dp.debug_print_path + ci.f_inputvariable_name
+f_custom_path = ci.f_custom_path
 
-[step_id_ifover_diffnext, ifoverlap_ij_iw_array] = cs.contact_check_multistep_v1(dp.f_custom + '.h5', ci.id_i, ci.step1, ci.step2, ci.error_tolerence)
+file = dp.debug_print_path + ci.f_check_overlap_name
+
+[step_id_ifover_diffnext, ifoverlap_ij_iw_array] = cs.contact_check_multistep_v1(f_custom_path + '.h5', ci.id_i, ci.step1, ci.step2, ci.error_tolerence)
 
 om.create_directory(dp.debug_print_path)
 pprint.pprint(datetime.datetime.now(), open(file, 'a'))

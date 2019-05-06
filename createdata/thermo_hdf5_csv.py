@@ -13,16 +13,16 @@ from mpl_toolkits.mplot3d import Axes3D
 # import module in simulation folder
 import osmanage as om
 import datapath as dp
-
 # import module in createdata folder
 import createdata.data_arrange as da
+import createdata.inputvariable as cdi
 # ======================================
 
 # inputvariable
 post_process_path = dp.post_process_path
 hdf5_csv_path = dp.hdf5_csv_path
 thermo_path = dp.thermo_path
-f_thermo = dp.f_thermo
+f_thermo = cdi.fcdi_thermo
 # end inputvariable
 
 # create folder

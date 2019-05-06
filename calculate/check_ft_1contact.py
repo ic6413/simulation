@@ -22,9 +22,11 @@ step2 = ci.step2
 
 error_tolerence = ci.error_tolerence
 
+f_custom_path = ci.f_custom_path
+
 # ======= inputvariable end ==============
 
-f_name_check_f_1contact = 'check_contact_force_' + worj + '_id_' + str(ci.id_i) +'step_' + str(ci.step1) + '_' + str(ci.step2)
+f_name_check_f_1contact = ci.f_check_f_1contact_name
 
 file = dp.debug_print_path + f_name_check_f_1contact
 
@@ -42,7 +44,7 @@ with open (file, 'a') as f:
 	
 
 	for method_i in method_list:
-		[f_step_error_array, fji_cal_in_error_step, fji_plus_in_error_step, id_j] = cs.fjwi_plus_check_multistep_1contact_fromcustom(dp.f_custom + '.h5', ci.id_i, ci.step1, ci.step2, ci.error_tolerence, method_i, worj)
+		[f_step_error_array, fji_cal_in_error_step, fji_plus_in_error_step, id_j] = cs.fjwi_plus_check_multistep_1contact_fromcustom(f_custom_path + '.h5', ci.id_i, ci.step1, ci.step2, ci.error_tolerence, method_i, worj)
 		pprint.pprint("id_j {id_j}".format(id_j=id_j), f)
 		pprint.pprint ("method {method_i}".format(method_i=method_i), f)
 		pprint.pprint("f_step_error_array", f)

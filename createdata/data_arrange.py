@@ -10,6 +10,7 @@ import sys
 import matplotlib.pyplot as plt
 # This import registers the 3D projection, but is otherwise unused.
 from mpl_toolkits.mplot3d import Axes3D
+# import module
 import rename_variable as rv
 # =======================================
 
@@ -18,7 +19,47 @@ header_change_sign = ['fjinx', 'fjiny', 'fjinz', 'fjitx', 'fjity', 'fjitz', 'vij
 # Switch i j for id and type
 header_change_from = ['id_i', 'id_j', 'type_i', 'type_j']
 header_change_to = ['id_j', 'id_i', 'type_j', 'type_i']
-
+# Rename variable in pair
+rename_mapper_pair = {
+	'c_p_idtype_trace[1]':'id_i',
+	'c_p_idtype_trace[2]':'id_j',
+	'c_p_idtype_trace[3]':'type_i',
+	'c_p_idtype_trace[4]':'type_j',
+	'c_p_fv_trace[1]':'distance',
+	'c_p_fv_trace[2]':'fjinx',
+	'c_p_fv_trace[3]':'fjiny',
+	'c_p_fv_trace[4]':'fjinz',
+	'c_p_fv_trace[5]':'fjin',
+	'c_p_fv_trace[6]':'fjitx',
+	'c_p_fv_trace[7]':'fjity',
+	'c_p_fv_trace[8]':'fjitz',
+	'c_p_fv_trace[9]':'fjit',
+	'c_p_fv_trace[10]':'vijnx',
+	'c_p_fv_trace[11]':'vijny',
+	'c_p_fv_trace[12]':'vijnz',
+	'c_p_fv_trace[13]':'vijtx',
+	'c_p_fv_trace[14]':'vijty',
+	'c_p_fv_trace[15]':'vijtz',
+	'c_p_idtype_all[1]':'id_i',
+	'c_p_idtype_all[2]':'id_j',
+	'c_p_idtype_all[3]':'type_i',
+	'c_p_idtype_all[4]':'type_j',
+	'c_p_fv_all[1]':'distance',
+	'c_p_fv_all[2]':'fjinx',
+	'c_p_fv_all[3]':'fjiny',
+	'c_p_fv_all[4]':'fjinz',
+	'c_p_fv_all[5]':'fjin',
+	'c_p_fv_all[6]':'fjitx',
+	'c_p_fv_all[7]':'fjity',
+	'c_p_fv_all[8]':'fjitz',
+	'c_p_fv_all[9]':'fjit',
+	'c_p_fv_all[10]':'vijnx',
+	'c_p_fv_all[11]':'vijny',
+	'c_p_fv_all[12]':'vijnz',
+	'c_p_fv_all[13]':'vijtx',
+	'c_p_fv_all[14]':'vijty',
+	'c_p_fv_all[15]':'vijtz',
+	}
 # ====================================== thermo =========================
 
 def thermofile_to_dataframe(file):
@@ -165,7 +206,7 @@ def file_to_h5_csv(f_dumppair, f_dumpcustom, id_i_list, f_output_name, override 
             sys.exit('h5 file exist')
         else:
             dfp = dumpfile_to_dataframe(f_dumppair)
-            dfp = dfp.rename(columns=rv.rename_mapper_pair)
+            dfp = dfp.rename(columns=rename_mapper_pair)
             dfc = dumpfile_to_dataframe(f_dumpcustom)
             dfc_select = select_custom(dfc, id_i_list)
             dfp2 = pair_double(dfp, header_change_from, header_change_to, header_change_sign)

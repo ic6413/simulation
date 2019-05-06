@@ -8,9 +8,12 @@ import datapath as dp
 import calculate.checksimulation as cs
 import calculate.inputvariable as ci
 
-file = dp.debug_print_path + ci.f_inputvariable_name
+# input
+f_custom_path = ci.f_custom_path
 
-[step_id_ifover_diffnext, ifoverlap_ij_iw_array, initial_overlap_id] = cs.contact_check_multistep(dp.f_custom + '.h5', ci.id_i, ci.step1, ci.step2, ci.error_tolerence)
+file = dp.debug_print_path + ci.f_check_overlap_name
+
+[step_id_ifover_diffnext, ifoverlap_ij_iw_array, initial_overlap_id] = cs.contact_check_multistep(f_custom_path + '.h5', ci.id_i, ci.step1, ci.step2, ci.error_tolerence)
 
 np.set_printoptions(threshold = 100000)
 
