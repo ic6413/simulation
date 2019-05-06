@@ -9,13 +9,15 @@ import sys
 import matplotlib.pyplot as plt
 # This import registers the 3D projection, but is otherwise unused.
 from mpl_toolkits.mplot3d import Axes3D
-# import project module
-import data_arrange as da
+# import module in simulation folder
+import osmanage as om
 import datapath as dp
-import output_control as oc
+
+# import module in createdata folder
+import createdata.data_arrange as da
 # ======================================
 
 # create folder
-da.create_directory(dp.post_process_path)
-da.create_directory(dp.hdf5_csv_path)
-da.file_to_h5_csv(None, dp.custom_path, oc.custom_id_i_list, dp.f_custom, override ='yes')
+om.create_directory(dp.post_process_path)
+om.create_directory(dp.hdf5_csv_path)
+da.file_to_h5_csv(dp.pair_path, dp.custom_path, dp.combine_id_i_list, dp.f_cipcj, override ='yes')

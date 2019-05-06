@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 # This import registers the 3D projection, but is otherwise unused.
 from mpl_toolkits.mplot3d import Axes3D
 import rename_variable as rv
+import osmanage as om
 # =======================================
 
 # Change sign when switch i j

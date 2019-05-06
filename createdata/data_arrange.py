@@ -182,13 +182,3 @@ def file_to_h5_csv(f_dumppair, f_dumpcustom, id_i_list, f_output_name, override 
             dfc_select.to_hdf(f_output_name + '.h5', key='df', mode='w')
             dfc_select.to_csv(f_output_name + '.csv', encoding='utf-8')
 
-
-def create_directory(post_process_folder_path):
-    # define the name of the directory to be created
-    if not os.path.isdir(post_process_folder_path):
-        try:  
-            os.mkdir(post_process_folder_path)
-        except OSError:  
-            print ("Creation of the directory %s failed" % post_process_folder_path)
-        else:  
-            print ("Successfully created the directory %s " % post_process_folder_path)

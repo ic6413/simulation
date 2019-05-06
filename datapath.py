@@ -1,10 +1,8 @@
 # import
 import os
-# import project module
-import output_control as oc
 
 # input directory
-lammps_directory = oc.folder_path
+lammps_directory = os.path.expanduser('~/lammps_simulation/run/0103_mu05_nofreeze_traceid15556/')
 
 # specify the path of input files
 pair_path = lammps_directory + 'output/dump/pair_trace_0.dump'
@@ -28,6 +26,21 @@ diagram_path = post_process_path + 'diagram/'
 f_attribute = attribute_json_path + 'attribute'
 
 # output filename, no filename extension
-f_cipcj = hdf5_csv_path + oc.f_cipcj
-f_custom = hdf5_csv_path + oc.f_custom
+#=========== data arrange ========================
+
+# select combine id_i
+combine_id_i_list = 'all'
+custom_id_i_list = 'all' # id_list or 'all'
+
+def put_id_on_file(id_list, f_name_without_id):
+    
+    if custom_id_i_list != 'all':
+        f_name_add_id = (f_name_without_id + '_' + '_'.join(str(i) for i in custom_id_i_list))
+    else:
+        f_name_add_id = (f_name_without_id + '_' + 'all')
+
+    return f_name_add_id 
+
+f_cipcj = hdf5_csv_path + put_id_on_file(combine_id_i_list, 'cipcj_id')
+f_custom = hdf5_csv_path + put_id_on_file(custom_id_i_list, 'custom_id')
 f_thermo = hdf5_csv_path + 'thermo'

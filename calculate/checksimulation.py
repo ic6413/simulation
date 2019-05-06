@@ -12,10 +12,18 @@ import sys
 import matplotlib.pyplot as plt
 # This import registers the 3D projection, but is otherwise unused.
 from mpl_toolkits.mplot3d import Axes3D
-# import project module
+# import module in simulation folder
+import osmanage as om
 import datapath as dp
-import data_arrange as da
-import output_control as oc
+# import module in calculate folder
+import calculate.checksimulation as cs
+import calculate.input as ci
+
+# ==== input varables ====
+# current module variable
+overlap_tolerence = 0
+# ==== input varables end ====
+
 # ====================================== import variable
 with open(dp.f_attribute, 'r') as f:
     attribute = json.load(f)
@@ -178,7 +186,7 @@ class intersection_to_i(object):
         pass
 
     def ifoverlap(self):
-        return (self.overlap_length() >= oc.overlap_tolerence)
+        return (self.overlap_length() >= overlap_tolerence)
 
     def overlapij_vector(self):
         return -self.overlap_length()*unit(self.xij())*self.ifoverlap()
@@ -193,7 +201,7 @@ class intersection_to_i(object):
         pass
 
     def ifoverlap_plus(self):
-        return (self.overlap_length_plus() >= oc.overlap_tolerence)
+        return (self.overlap_length_plus() >= overlap_tolerence)
 
     def overlapij_vector_plus(self):
         return -self.overlap_length_plus()*unit(self.xij_plus())*self.ifoverlap_plus()
@@ -346,10 +354,10 @@ class wall_class(intersection_to_i):
         return mi
 
     def ifoverlap(self):
-        return (self.overlap_length() >= oc.overlap_tolerence)
+        return (self.overlap_length() >= overlap_tolerence)
 
     def ifoverlap_plus(self):
-        return (self.overlap_length_plus() >= oc.overlap_tolerence)
+        return (self.overlap_length_plus() >= overlap_tolerence)
 
     def overlapij_vector(self):
         pass
@@ -460,7 +468,7 @@ class wall_cy_class(wall_class):
 def overlapij(ri, rj, xi, xj):
     xij = (xi - xj)
     overlap_length = ri + rj - length(xij)
-    ifoverlap = (overlap_length >= oc.overlap_tolerence)
+    ifoverlap = (overlap_length >= overlap_tolerence)
     overlapij_vector = -overlap_length*unit(xij)*ifoverlap
     return [ifoverlap, overlapij_vector, overlap_length]
 
@@ -1714,7 +1722,7 @@ def cumsum_work(f_read, id_i, idj_or_idw, step1, step2, error_tolerence, method)
 
     return [sum_ftwork, sum_fnwork]
 
-#[number_contact_total, contact_id_collection_no_dup] = cs.number_contact_total_id_collection(f_read, id_i, oc.step1, oc.step2, oc.error_tolerence)
+#[number_contact_total, contact_id_collection_no_dup] = cs.number_contact_total_id_collection(f_read, id_i, ci.step1, ci.step2, ci.error_tolerence)
 
 def sum_results_all_contacts(
     func,

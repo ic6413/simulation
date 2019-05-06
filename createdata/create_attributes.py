@@ -3,9 +3,12 @@ import csv
 import json
 import os.path
 
-# import project module
+# import module in simulation folder
+import osmanage as om
 import datapath as dp
-import data_arrange as da
+
+# import module in createdata folder
+import createdata.data_arrange as da
 
 dict = {}
 
@@ -49,8 +52,8 @@ dict['walls_cy'] = [
 
 if not os.path.exists(dp.f_attribute):
 
-    da.create_directory(dp.post_process_path)
-    da.create_directory(dp.attribute_json_path)
+    om.create_directory(dp.post_process_path)
+    om.create_directory(dp.attribute_json_path)
 
     with open(dp.f_attribute, 'w') as f:
         json.dump(dict, f, indent=4)

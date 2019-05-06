@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 # import project module
-import check_simulation as cs
+import checksimulation as cs
 import output_control as oc
 import datapath as dp
 

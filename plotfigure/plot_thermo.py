@@ -4,14 +4,20 @@ import datetime
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-# import project module
-import check_simulation as cs
-import output_control as oc
+# import simulation module
 import datapath as dp
+
+# import plot module
+import plotfigure.input as pi
+# input
+step1 = pi.step1
+step2 = pi.step2
+
+import plot
 
 #=====
 def plot_v(array):
-	x = np.arange(oc.step1, oc.step2+1)
+	x = np.arange(step1, step2+1)
 	plt.plot(x, array)
 	x_label = 'Step'
 	plt.xlabel(x_label)
@@ -31,7 +37,7 @@ if variable_name_list == 'all':
     variable_name_list = list(df)
 
 
-df_step = df.loc[df['Step'].isin(list(range(oc.step1, oc.step2+1)))]
+df_step = df.loc[df['Step'].isin(list(range(step1, step2+1)))]
 
 for variable_name in variable_name_list:
 
@@ -39,5 +45,5 @@ for variable_name in variable_name_list:
     fig = plt.figure()
     plot_v(y)
     plt.ylabel(variable_name)
-    outputfig = outputfolder + variable_name + '_step_' + str(oc.step1) + '_' + str(oc.step2) + '.png'
+    outputfig = outputfolder + variable_name + '_step_' + str(step1) + '_' + str(step2) + '.png'
     fig.savefig(outputfig, bbox_inches='tight')   # save the figure to file
