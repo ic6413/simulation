@@ -10,7 +10,7 @@ lammps_directory = inputvariable.lammps_directory
 
 # specify the path of inputvariable files
 pair_path = lammps_directory + 'output/dump/pair_trace_0.dump'
-custom_path = lammps_directory + 'output/dump/nb_maxKEatom_0.dump'
+custom_path = lammps_directory + 'output/dump/nb_maxKEatom_900000.dump'
 thermo_path = lammps_directory + 'log_0.lammps'
 ## folder path of output
 post_process_path = lammps_directory + 'postprocess/'

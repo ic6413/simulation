@@ -9,7 +9,7 @@ import datapath as dp
 
 dict = {}
 
-dict['ts'] = 4e-7
+dict['ts'] = 1e-6
 # atom radius
 dict['dp0'] = 0.00083
 dict['density'] = 2500

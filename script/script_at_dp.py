@@ -1,24 +1,49 @@
 #!/usr/bin/env python
 
-import script.scriptclasses as ss
 
-ss.script_attribute().executive()
+class scripttofile(object):
+    def __init__(self):
+        pass
+
+    def startstring(self):
+        pass
+
+    def tofile(self):
+        pass
+
+    def executive(self):
+        print(self.startstring())
+        self.tofile()
+        print('finished' + self.startstring())
+
+
+class script_attribute(scripttofile):
+    def __init__(self):
+        super().__init__()
+    
+    def startstring(self):
+        return 'creating attribute'
+
+    def tofile(self):
+        import getattribute.create_attributes
+script_attribute().executive()
+import script.scriptclasses as ss
 ss.script_thermo().executive()
 ss.script_custom().executive()
-id_i = 15556
-step1 = 324789
-step2 = 870000
-#ss.script_checkoverlap(id_i, step1, step2).executive()
+id_i = 1
+step1 = 900001
+step2 = 1377826
+ss.script_checkoverlap(id_i, step1, step2).executive()
 error_tolerence = 1e-7
 method_list = list(range(0, 3))
 #ss.script_checkforce_all(id_i, step1, step2, error_tolerence, method_list).executive()
-#ss.script_checkforce_1contactatom(id_i, step1, step2, error_tolerence, method_list).executive()
-#ss.script_checkforce_1contactwall(id_i, step1, step2, error_tolerence, method_list).executive()
+ss.script_checkforce_1contactatom(id_i, step1, step2, error_tolerence, method_list).executive()
+ss.script_checkforce_1contactwall(id_i, step1, step2, error_tolerence, method_list).executive()
 ss.script_plotij(id_i, step1, step2,).executive()
-#ss.script_plotthermo(400000, 870000, 'all').executive()
+ss.script_plotthermo(step1, step2, 'all').executive()
 
 
-#ss.script_custom_single(id_i).executive()
+ss.script_custom_single(id_i).executive()
 y_variables = [
         'fx',
         'fy',
@@ -39,7 +64,12 @@ y_variables = [
 y_variables = 'all'
 
 ss.script_plotsingle(id_i, step1, step2, y_variables).executive()
-#ss.script_plotsingle(15583, 330000, 870000, y_variables).executive()
+
+
+
+
+
+
 
 def script_skip(attrfile=1, hdf5file=1, overlapfile=1, forcefile=1, contact1frocefile=1, plotfile=1):
     

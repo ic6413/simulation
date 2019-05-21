@@ -228,10 +228,8 @@ def select_custom(df_custom, select_id_list):
         df_select_custom = df_custom.loc[df_custom['id'].isin(select_id_list)]
         # check id appear in every steps
         steps_array = df_select_custom['step'].values
-        check_first_step_is_zero = (steps_array[0: len(select_id_list)] == 0).all()
-        check_other_steps = (steps_array[0: -len(select_id_list)] + 1 == steps_array[len(select_id_list): ]).all()
-        check_all = (check_other_steps and check_first_step_is_zero)
-        if not check_all:
+        check_steps = (steps_array[0: -len(select_id_list)] + 1 == steps_array[len(select_id_list): ]).all()
+        if not check_steps:
             firstwrong = np.where(np.logical_not((steps_array[0: -len(select_id_list)] + 1 == steps_array[len(select_id_list): ])))[0][0]
             print('one of select atom not in step' + repr(steps_array[firstwrong]))
         return df_select_custom
