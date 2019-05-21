@@ -15,13 +15,12 @@ from mpl_toolkits.mplot3d import Axes3D
 # import module in simulation folder
 import osmanage as om
 import datapath as dp
-# import module in calculate folder
-import calculate.checksimulation as cs
-import calculate.inputvariable as ci
 
 # ==== inputvariable varables ====
 # current module variable
 overlap_tolerence = 0
+# see reading value as zero
+abs_error_tolerence = 1e-18
 # ==== inputvariable varables end ====
 
 # ====================================== import variable
@@ -74,14 +73,38 @@ def reset_nan_to_zero(A):
     return A
 
 
+# define extract dataframe by step1 step2
+def extract_dataframe(df, step1, step2):
+
+    def test1(df, step1, step2):
+        if 'Step' in list(df):
+            row1 = df['Step'].values.searchsorted(step1-0.5)
+            row2 = df['Step'].values.searchsorted(step2+1-0.5)
+        elif 'step' in list(df):
+            row1 = df['step'].values.searchsorted(step1-0.5)
+            row2 = df['step'].values.searchsorted(step2+1-0.5)
+        else:
+            sys.exit('no step in header')
+        df_step = df.iloc[row1:row2]
+        return df_step
+
+    #def test2(df, step1, step2):
+    #    if 'Step' in list(df):
+    #        df_step = df.loc[df['Step'].isin(list(range(step1, step2+1)))]
+    #    elif 'step' in list(df):
+    #        df_step = df.loc[df['step'].isin(list(range(step1, step2+1)))]
+    #    else:
+    #        sys.exit('no step in header')
+    #    return df_step
+    
+    return test1(df, step1, step2)
+
+
 # define function for get radius of each atom
-
-
 def radius_by_type(type): 
     type_expand = type[..., np.newaxis]
     r = np.sum((type_expand == type_radius_array[0])*type_radius_array[1], axis=-1)
     return r
-
 
 def mass_by_type(type, density):
     return 4/3*np.pi*radius_by_type(type)**3*density
@@ -135,10 +158,8 @@ class single_atom(object):
         self.om = om
         self.tq = tq
 
-    def radius(self):    
-        type_expand = self.type[..., np.newaxis]
-        r = np.sum((type_expand == type_radius_array[0])*type_radius_array[1], axis=-1)
-        return r
+    def radius(self):
+        return radius_by_type(self.type)
 
     def mass(self):
         return 4/3*np.pi*self.radius()**3*density
@@ -154,6 +175,141 @@ class single_atom(object):
 
     def om_half(self):
         return self.om + self.tq/self.rotational_inertia()*ts/2
+
+
+class overlap_to_i(object):
+    
+    def __init__(self, typei, xi):
+        self.typei = typei
+        self.xi = xi
+
+    def xij(self):
+        pass
+    
+    def overlap_length(self):
+        pass
+
+    def ifoverlap(self):
+        return (self.overlap_length() >= overlap_tolerence)
+
+    def overlapij_vector(self):
+        return -self.overlap_length()*unit(self.xij())*self.ifoverlap()
+
+class j_overlap_class(overlap_to_i):
+
+    def __init__(
+        self,
+        typei, xi,
+        typej, xj
+    ):
+        super().__init__(self, typei, xi)
+        self.typej = typej
+        self.xj = xj
+
+    def xij(self):
+        xij = self.xi - self.xj
+        return xij
+        
+    def overlap_length(self):
+        return radius_by_type(self.typei) + radius_by_type(self.typej) - length(self.xij())
+
+class wall_overlap_class(overlap_to_i):
+
+    def __init__(self,
+                typei, xi,
+                typew, xw,
+                ):
+        super().__init__(typei, xi)
+        self.typew = typew
+        self.xw = xw
+
+    def nearest_point_fun(self, xi):
+	    pass
+
+    def nearest_point(self):
+	    return self.nearest_point_fun(self.xi)
+
+    def xij(self):
+        return self.xi - self.xw
+
+    def overlap_length(self):
+        pass
+
+    def ifoverlap(self):
+        return (self.overlap_length() >= overlap_tolerence)
+
+    def overlapij_vector(self):
+        pass
+
+    def overlapiw(self):
+        result1 = overlapij(radius_by_type(self.typei), 0, self.xi, self.nearest_point())
+        ifo = result1[0]
+        o_vector = result1[1]
+        return [ifo, o_vector]
+
+class wall_p_overlap_class(wall_overlap_class):
+
+    def __init__(self,
+                typei, xi,
+                center_point, plane_normal,
+                typew=None, xw=np.zeros(3),
+                ):
+        super().__init__(
+            typei, xi,
+            typew, xw,
+            )
+        self.center_point = np.asarray(center_point)
+        self.plane_normal = np.asarray(plane_normal)
+        self.r = 0
+
+    def nearest_point_fun(self, xi):
+	    return verticle_vector(xi - self.center_point, self.plane_normal) + self.center_point
+
+    def overlap_length(self):
+        d_to_plane = np.abs(projection_scalar(self.xi - self.center_point, self.plane_normal))
+        return radius_by_type(self.typei) - d_to_plane
+
+    def overlapij_vector(self):
+        ps = projection_scalar(self.xi - self.center_point, self.plane_normal)
+        return -self.overlap_length()*unit(self.plane_normal)*self.ifoverlap()*ps/np.abs(ps)
+
+class wall_cy_overlap_class(wall_overlap_class):
+    
+    def __init__(self,
+                typei, xi,
+                center_point, axis_vector, r,
+                typew=None, xw=np.zeros(3),
+                ):
+        super().__init__(
+            typei, xi,
+            typew, xw,
+            )
+        self.center_point = np.asarray(center_point)
+        self.axis_vector = np.asarray(axis_vector)
+        self.r = r
+
+    def nearest_point_fun(self, xi):
+        axispoint = projection_vector(xi - self.center_point, self.axis_vector) + self.center_point
+        return self.r*unit(xi - axispoint) + axispoint
+
+    def vector_to_axis_fun(self, xi):
+        return verticle_vector(xi - self.center_point, self.axis_vector)
+    
+    def vector_to_axis(self):
+        return self.vector_to_axis_fun(self.xi)
+
+    def d_axis(self):
+        return length(self.vector_to_axis())
+
+    def d_to_surface(self):
+        return self.d_axis() - self.r
+
+    def overlap_length(self):
+        return radius_by_type(self.typei) - np.abs(self.d_to_surface())
+
+    def overlapij_vector(self):
+        n = unit(self.vector_to_axis())*self.d_to_surface()/np.abs(self.d_to_surface())
+        return -self.overlap_length()*n*self.ifoverlap()
 
 
 class intersection_to_i(object):
@@ -172,11 +328,13 @@ class intersection_to_i(object):
         self.total_displacement = total_displacement
 
     def vi_half(self):
-        [vi_half, xi_plus] = update_v_x(self.xi, self.vi, self.fi/self.atomi.mass())
+        vi_half_xi_plus = update_v_x(self.xi, self.vi, self.fi/self.atomi.mass())
+        vi_half = vi_half_xi_plus[0]
         return vi_half
 
     def xi_plus(self):
-        [vi_half, xi_plus] = update_v_x(self.xi, self.vi, self.fi/self.atomi.mass())
+        vi_half_xi_plus = update_v_x(self.xi, self.vi, self.fi/self.atomi.mass())
+        xi_plus = vi_half_xi_plus[1]
         return xi_plus
 
     def xij(self):
@@ -240,8 +398,6 @@ class intersection_to_i(object):
         history_force_out = history_force(method, self.xij(), self.xij_plus(), self.vijt_half(), self.history_t_k, self.total_displacement, self.total_length)
 
         length_singlestep = length(self.displacement_ji_singlestep())
-        total_displacement_plus = self.total_displacement + self.displacement_ji_singlestep()
-        total_length_plus = self.total_length + length_singlestep
         fji_t_plus = self.fji_t_gamma_plus() + self.fji_t_k_plus_one_step() + history_force_out
         
         truncated = length(fji_t_plus) > mu*length(self.fji_n_plus())
@@ -366,11 +522,15 @@ class wall_class(intersection_to_i):
         pass
 
     def overlapiw(self):
-        [ifo, o_vector, o_length] = overlapij(self.atomi.radius(), 0, self.xi, self.nearest_point())
+        result2 = overlapij(self.atomi.radius(), 0, self.xi, self.nearest_point())
+        ifo = result2[0]
+        o_vector = result2[1]
         return [ifo, o_vector]
 
     def overlapiw_plus(self):
-        [ifo, o_vector, o_length] = overlapij(self.atomi.radius(), 0, self.xi_plus(), self.nearest_point_plus())
+        result3 = overlapij(self.atomi.radius(), 0, self.xi_plus(), self.nearest_point_plus())
+        ifo = result3[0]
+        o_vector = result3[1]
         return [ifo, o_vector]
 
 
@@ -470,6 +630,11 @@ def overlapij(ri, rj, xi, xj):
     overlap_length = ri + rj - length(xij)
     ifoverlap = (overlap_length >= overlap_tolerence)
     overlapij_vector = -overlap_length*unit(xij)*ifoverlap
+    def setnocontacttonan(array, ifoverlapcheck):
+        array[~ifoverlapcheck[:,0],:]=np.nan
+        return array
+    overlap_length = setnocontacttonan(overlap_length, ifoverlap)
+    overlapij_vector = setnocontacttonan(overlapij_vector, ifoverlap)
     return [ifoverlap, overlapij_vector, overlap_length]
 
 
@@ -550,32 +715,20 @@ def add_step_to_array(steps_array, array):
 
 def step_error_array_with_index(step1, step2, fi_cal, fi, error_tolerence):
 
-    f_diff = (fi_cal - fi)
-    sum_fji_error_steps = np.divide(f_diff, fi, out=np.zeros_like(f_diff), where=fi!=0)
-    steps_array = np.arange(step1+1, step2+1)
-    steps_array = steps_array.reshape((-1,1))
-    step_error_array = add_step_to_array(steps_array, sum_fji_error_steps)
-    errornorm = np.nansum(abs(sum_fji_error_steps), axis=-1)
-    errorindex = (errornorm > error_tolerence)
-    step_error_array = step_error_array[errorindex,:]
+    #f_diff = (fi_cal - fi)
+    #fji_error_steps = np.divide(f_diff, fi, out=np.zeros_like(f_diff), where=fi!=0)
     
+    #errornorm = np.nansum(abs(fji_error_steps), axis=-1)
+    #errorindex = (errornorm > error_tolerence)
+
+    errorindex = np.logical_not(
+        np.isclose(fi_cal, fi, rtol=error_tolerence, atol=abs_error_tolerence).all(axis=-1)
+    )
+
+    fji_error_steps = np.absolute((fi_cal[errorindex,:]-fi[errorindex,:])/fi[errorindex,:])
+    steps_array = np.arange(step1+1, step2+1)[errorindex].reshape((-1,1))
+    step_error_array = add_step_to_array(steps_array, fji_error_steps)
     return [step_error_array, errorindex]
-
-
-def error_ratio_dx(typei, xi, vi, fi, tqi):
-    mi = mass_by_type(typei, density)
-    ai = fi/mi
-    error_dx = np.diff(xi) - (vi[:-1] + ai[:-1]*ts/2)*ts
-    error_ratio_dx = error_ratio(error_dx, np.diff(xi))
-    return error_ratio_dx
-
-
-def error_ratio_dv(typei, xi, vi, fi, tqi):
-    mi = mass_by_type(typei, density)
-    ai = fi/mi
-    error_dv = np.diff(vi) - (ai[:-1] + ai[1:])/2*ts
-    error_ratio_dv = error_ratio(error_dv, np.diff(vi))
-    return error_ratio_dv
 
 
 def update_v_x(x,v,a):
@@ -598,8 +751,8 @@ def calculate_m_r_I_vh_xp_omh(type, density, f, tq, x, v, om):
     a = f/m
     alpha = tq/I
     [v_half, x_plus_cal]=update_v_x(x,v,a)
-    [om_half, d_theta]=update_v_x(0,om,alpha)
-
+    result4=update_v_x(0,om,alpha)
+    om_half=result4[0]
     return [m, r, I, v_half, x_plus_cal, om_half]
 
 
@@ -610,16 +763,17 @@ def calculate_m_r_I_vh_xp_omh_pre(type, density, f, tq, x, v, om):
     I = 2/5*m*r**2
     a = f/m
     alpha = tq/I
-    [v_half, x_plus_cal]=update_v_x_pre(x,v,a)
-    [om_half, d_theta]=update_v_x_pre(0,om,alpha)
-
-    return [m, r, I, v_half, x_plus_cal, om_half]
+    [v_half_pre, x_minus_cal]=update_v_x_pre(x,v,a)
+    result5=update_v_x_pre(0,om,alpha)
+    om_half_pre = result5[0]
+    return [m, r, I, v_half_pre, x_minus_cal, om_half_pre]
 
 
 def calculate_wall_r_vh_xp_omh(wall):
     
     [v_half, x_plus_cal]=update_v_x(wall.xw,wall.vw,wall.aw)
-    [om_half, d_theta]=update_v_x(np.zeros(3),wall.omw,wall.alphaw)
+    result6=update_v_x(np.zeros(3),wall.omw,wall.alphaw)
+    om_half = result6[0]
     r = wall.r
     
     return [r, v_half, x_plus_cal, om_half]
@@ -660,14 +814,12 @@ def create_wall_class_from_walllist(
 
 def reindex_by_step(df, step1, step2):
     df = df.set_index('step')
-    df = df.reindex(list(range(step1, step2+1)))
+    df = df.reindex(np.arange(step1, step2+1))
     return df
 
 
-def get_type_x_v_f_om_tq_from_a_group_of_df(group_df, step1, step2):
+def get_type_x_v_f_om_tq_from_df(dfi, step1, step2):
     
-    dfi = reindex_by_step(group_df, step1, step2)
-	
     type = dfi[['type']].values
     x = dfi[['x','y','z']].values
     v = dfi[['vx','vy','vz']].values
@@ -782,11 +934,16 @@ def fwi_plus_cal(typei, wall, xi, vi, fi, previous_ktforce, total_length, total_
     return [ftk_include_his_out, total_displacement, fjit_plus_cal, fjin_plus_cal, tqji_plus_cal, total_length]
 
 
-def fjwi_plus_cal_multistep_multicontact_fromcustom(f_read, id_i, step1, step2, error_tolerence, method):
+def fjwi_plus_cal_multistep_multicontact_fromcustom(f_read, id_i, step1, step2, method):
 
     df = pd.read_hdf(f_read, 'df')
     
-    df_step = df.loc[df['step'].isin(list(range(step1, step2+1)))]
+    df_step = extract_dataframe(df, step1, step2)
+
+    if df_step['step'].values[0]==step1:
+        sys.exit('there exist contact in the begin step. can not get history')
+    else:
+        pass
 
     groups_byid = df_step.groupby(['id'])
     
@@ -820,9 +977,7 @@ def fjwi_plus_cal_multistep_multicontact_fromcustom(f_read, id_i, step1, step2, 
         fj = dfj[['fx','fy','fz']].values[:-1]
         omj = dfj[['omegax','omegay','omegaz']].values[:-1]
         tqj = dfj[['tqx','tqy','tqz']].values[:-1]
-        xj_plus = dfj[['x','y','z']].values[1:]
-        fj_plus = dfj[['fx','fy','fz']].values[1:]
-        tqj_plus = dfj[['tqx','tqy','tqz']].values[1:]
+        
 
         fjit_plus_cal_steps = np.empty([step2-step1, 3])
         fjin_plus_cal_steps = np.empty([step2-step1, 3])
@@ -834,7 +989,7 @@ def fjwi_plus_cal_multistep_multicontact_fromcustom(f_read, id_i, step1, step2, 
         ftk_include_his = np.zeros((1,3))
         total_displacement = np.zeros((1,3))
         total_length = np.zeros((1,1))
-        total_project_length = np.zeros((1,1))
+        
 
         for step in range(step1, step2):
 
@@ -869,12 +1024,8 @@ def fjwi_plus_cal_multistep_multicontact_fromcustom(f_read, id_i, step1, step2, 
 
         xj = 0*xi
         vj = 0*xi
-        aj = 0*xi
         omj = 0*xi
-        alphaj = 0*xi
         xj_plus = 0*xi_plus
-        aj_plus = 0*fi_plus
-        alphaj_plus = 0*tqi_plus
         
         for step in range(step1, step2):
 
@@ -913,11 +1064,16 @@ def fjwi_plus_cal_multistep_multicontact_fromcustom(f_read, id_i, step1, step2, 
     return [fi_cal, fi_plus, sum_tqji_plus_cal_steps, tqi_plus]
 
 
-def fjwi_plus_cal_multistep_multicontact_fromcustom_v1(f_read, id_i, step1, step2, error_tolerence, method):
+def fjwi_plus_cal_multistep_multicontact_fromcustom_v1(f_read, id_i, step1, step2, method):
 
     df = pd.read_hdf(f_read, 'df')
     
-    df_step = df.loc[df['step'].isin(list(range(step1, step2+1)))]
+    df_step = extract_dataframe(df, step1, step2)
+    
+    if df_step['step'].values[0]==step1:
+        sys.exit('there exist contact in the begin step. can not get history')
+    else:
+        pass
 
     groups_byid = df_step.groupby(['id'])
     
@@ -929,7 +1085,6 @@ def fjwi_plus_cal_multistep_multicontact_fromcustom_v1(f_read, id_i, step1, step
     fi = dfi[['fx','fy','fz']].values[:-1]
     omi = dfi[['omegax','omegay','omegaz']].values[:-1]
     tqi = dfi[['tqx','tqy','tqz']].values[:-1]
-    xi_plus = dfi[['x','y','z']].values[1:]
     fi_plus = dfi[['fx','fy','fz']].values[1:]
     tqi_plus = dfi[['tqx','tqy','tqz']].values[1:]
 
@@ -1004,9 +1159,6 @@ def fjwi_plus_cal_multistep_multicontact_fromcustom_v1(f_read, id_i, step1, step
         fjin_plus_cal_steps = np.empty([step2-step1+1, 3])
         tqji_plus_cal_steps = np.empty([step2-step1+1, 3])
 
-        fjit_plus_cal = np.zeros((1,3))
-        fjin_plus_cal = np.zeros((1,3))
-        tqji_plus_cal = np.zeros((1,3))
         history_t_k_many_steps = np.zeros((step2-step1+1,3))
         total_displacement_many_steps = np.zeros((step2-step1+1,3))
         total_length_many_steps = np.zeros((step2-step1+1,1))
@@ -1056,7 +1208,7 @@ def fjwi_plus_cal_multistep_multicontact_fromcustom_v1(f_read, id_i, step1, step
 
 def fjwi_plus_check_multistep_multicontact_fromcustom_inputvariablefunc(f_read, id_i, step1, step2, error_tolerence, method, func_fjwi_plus_cal):
 
-    [fi_cal, fi_plus, sum_tqji_plus_cal_steps, tqi_plus] = func_fjwi_plus_cal(f_read, id_i, step1, step2, error_tolerence, method)
+    [fi_cal, fi_plus, sum_tqji_plus_cal_steps, tqi_plus] = func_fjwi_plus_cal(f_read, id_i, step1, step2, method)
     [f_step_error_array, f_errorindex] = step_error_array_with_index(step1, step2, fi_cal, fi_plus, error_tolerence)
     [tq_step_error_array, tq_errorindex] = step_error_array_with_index(step1, step2, sum_tqji_plus_cal_steps, tqi_plus, error_tolerence)
     
@@ -1088,15 +1240,10 @@ def fjwi_plus_check_multistep_multicontact_fromcustom_v1(f_read, id_i, step1, st
     return [f_step_error_array, fi_cal_in_error_step, fi_plus_in_error_step] 
 
 
-def contact_check_multistep(f_read, id_i, step1, step2, error_tolerence):
-
+def contact_check_multistep(f_read, id_i, step1, step2):
     df = pd.read_hdf(f_read, 'df')
     
-    df_step = df.loc[df['step'].isin(list(range(step1, step2+1)))][['step', 'id', 'type', 'x', 'y', 'z',
-                                                                    'vx','vy','vz',
-                                                                    'fx','fy','fz',
-                                                                    'omegax','omegay','omegaz',
-                                                                    'tqx','tqy','tqz',]]
+    df_step = extract_dataframe(df, step1, step2)[['step', 'id', 'type', 'x', 'y', 'z',]]
 
     groups_byid = df_step.groupby(['id'])
     
@@ -1105,10 +1252,6 @@ def contact_check_multistep(f_read, id_i, step1, step2, error_tolerence):
     typei = dfi[['type']].values[:-1]
     ri = radius_by_type(typei)
     xi = dfi[['x','y','z']].values[:-1]
-    vi = dfi[['vx','vy','vz']].values[:-1]
-    fi = dfi[['fx','fy','fz']].values[:-1]
-    omi = dfi[['omegax','omegay','omegaz']].values[:-1]
-    tqi = dfi[['tqx','tqy','tqz']].values[:-1]
 
     id_list = groups_byid.groups.keys()
 
@@ -1140,23 +1283,13 @@ def contact_check_multistep(f_read, id_i, step1, step2, error_tolerence):
         id_j_wall_list = np.append(id_j_wall_list, -n-1)
 
         if walllist[0] == 'p':
-            wall = wall_p_class(
-                                typei,xi,vi,fi,omi,tqi,
-                                walllist[1], walllist[2], 0,0,0, 1,
-                                )
+            wall = wall_p_overlap_class(typei,xi,walllist[1], walllist[2])
         elif walllist[0] == 'cy':
-            wall = wall_cy_class(
-                                typei,xi,vi,fi,omi,tqi,
-                                walllist[1], walllist[2], walllist[3],0,0,0,1,
-                                )
+            wall = wall_cy_overlap_class(typei,xi,walllist[1], walllist[2], walllist[3])
         else:
             print('walltype not p not cy')
 
-        
-        
-        ifoverlap_iw = wall.ifoverlap_plus()
-        overlapiw_vector = wall.overlapij_vector_plus()
-
+        ifoverlap_iw = wall.ifoverlap()
         ifoverlap_iw_array[:,n:n+1] = ifoverlap_iw
     
     ifoverlap_ij_iw_array = np.concatenate((ifoverlap_ij_array, ifoverlap_iw_array), axis=1)
@@ -1179,22 +1312,21 @@ def contact_check_multistep(f_read, id_i, step1, step2, error_tolerence):
     # add initial contact
     initial_overlap = ifoverlap_nantozero[0:1] == True
     index_initial_overlap = np.nonzero(initial_overlap)
-    initial_overlap_id = id_j_wall_list[index_initial_overlap[1]].astype(int)
+    id_j_wall_initial_overlap = id_j_wall_list[index_initial_overlap[1]].astype(int)
+    step_id_ifover_initial = np.empty([len(id_j_wall_initial_overlap), 3], dtype=int)
+    step_id_ifover_initial[:, 0:1] = step1
+    step_id_ifover_initial[:, 1] = id_j_wall_initial_overlap
+    step_id_ifover_initial[:, 2] = 1
     ifoverlap_ij_iw_array = ifoverlap_ij_iw_array.astype(int)
 
-    return [step_id_ifover_difflast, ifoverlap_ij_iw_array, initial_overlap_id]
+    return [step_id_ifover_difflast, ifoverlap_ij_iw_array, step_id_ifover_initial]
 
 
-def contact_check_multistep_v1(f_read, id_i, step1, step2, error_tolerence):
+def contact_check_multistep_v1(f_read, id_i, step1, step2):
 
     df = pd.read_hdf(f_read, 'df')
     
-    df_step = df.loc[df['step'].isin(list(range(step1, step2+1)))][[
-        'step', 'id', 'type', 'x', 'y', 'z',
-        'vx','vy','vz',
-        'fx','fy','fz',
-        'omegax','omegay','omegaz',
-        'tqx','tqy','tqz',]]
+    df_step = extract_dataframe(df, step1, step2)[['step', 'id', 'type', 'x', 'y', 'z',]]
 
     groups_byid = df_step.groupby(['id'])
     
@@ -1202,10 +1334,6 @@ def contact_check_multistep_v1(f_read, id_i, step1, step2, error_tolerence):
     
     typei = dfi[['type']].values[:-1]
     xi = dfi[['x','y','z']].values[:-1]
-    vi = dfi[['vx','vy','vz']].values[:-1]
-    fi = dfi[['fx','fy','fz']].values[:-1]
-    omi = dfi[['omegax','omegay','omegaz']].values[:-1]
-    tqi = dfi[['tqx','tqy','tqz']].values[:-1]
 
     id_list = groups_byid.groups.keys()
 
@@ -1233,26 +1361,14 @@ def contact_check_multistep_v1(f_read, id_i, step1, step2, error_tolerence):
         indexjfori = selectindexfori(dfj)
         typei = dfi[['type']].values[indexjfori]
         xi = dfi[['x','y','z']].values[indexjfori]
-        vi = dfi[['vx','vy','vz']].values[indexjfori]
-        fi = dfi[['fx','fy','fz']].values[indexjfori]
-        omi = dfi[['omegax','omegay','omegaz']].values[indexjfori]
-        tqi = dfi[['tqx','tqy','tqz']].values[indexjfori]
 
         typej = dfj[['type']].values[:-1]
         xj = dfj[['x','y','z']].values[:-1]
-        vj = dfj[['vx','vy','vz']].values[:-1]
-        fj = dfj[['fx','fy','fz']].values[:-1]
-        omj = dfj[['omegax','omegay','omegaz']].values[:-1]
-        tqj = dfj[['tqx','tqy','tqz']].values[:-1]
 
-        jtoi = j_class(
-            typei, xi, vi, fi, omi, tqi,
-            typej, xj, vj, fj, omj, tqj, 
-            0,0,0, 1
-            )
+        jtoi = j_overlap_class(typei, xi, typej, xj)
 
         ifoverlap_ij = jtoi.ifoverlap()
-        overlapij_vector = jtoi.overlapij_vector()
+        
 
         
         ifoverlap_ij_array[selectindexfori(dfj),n:n+1] = ifoverlap_ij
@@ -1263,20 +1379,14 @@ def contact_check_multistep_v1(f_read, id_i, step1, step2, error_tolerence):
 
         id_j_wall_list = np.append(id_j_wall_list, -n-1)
         if walllist[0] == 'p':
-            wtoi = wall_p_class(
-                typei, xi, vi, fi, omi, tqi,
-                walllist[1], walllist[2], 0,0,0,1,
-                )
+            wtoi = wall_p_overlap_class(typei,xi,walllist[1], walllist[2])
         elif walllist[0] == 'cy':
-            wtoi = wall_cy_class(
-                typei, xi, vi, fi, omi, tqi,
-                walllist[1], walllist[2], walllist[3], 0,0,0,1,
-                )
+            wtoi = wall_cy_overlap_class(typei,xi,walllist[1], walllist[2], walllist[3])
         else:
             print('walltype not p not cy')
 
         ifoverlap_iw = wtoi.ifoverlap()
-        overlapiw_vector = wtoi.overlapij_vector()
+        
 
         ifoverlap_iw_array[:,n:n+1] = ifoverlap_iw
 
@@ -1300,51 +1410,82 @@ def contact_check_multistep_v1(f_read, id_i, step1, step2, error_tolerence):
     # add initial contact
     initial_overlap = ifoverlap_nantozero[0:1] == True
     index_initial_overlap = np.nonzero(initial_overlap)
-    initial_overlap_id = id_j_wall_list[index_initial_overlap[1]]
+    id_j_wall_initial_overlap = id_j_wall_list[index_initial_overlap[1]]
+    step_id_ifover_initial = np.empty([len(id_j_wall_initial_overlap), 3], dtype=int)
+    step_id_ifover_initial[:, 0:1] = step1
+    step_id_ifover_initial[:, 1] = id_j_wall_initial_overlap
+    step_id_ifover_initial[:, 2] = 1
 
-    return [step_id_ifover_difflast, ifoverlap_ij_iw_array, initial_overlap_id]
+
+    return [step_id_ifover_difflast, ifoverlap_ij_iw_array, step_id_ifover_initial]
 
 
-def collect_contact_id_no_dup(f_read, id_i, step1, step2, error_tolerence):
+def steps_n_c_wall_less_1_n_c_j_less_1(f_read, id_i, step1, step2):
     
-    [step_id_ifover_difflast, ifoverlap_ij_iw_array, initial_overlap_id] = contact_check_multistep(f_read, id_i, step1, step2, error_tolerence)
-    contact_id_after_initial = (step_id_ifover_difflast[:,1])[step_id_ifover_difflast[:,2]==1]
-    contact_id_collection = np.concatenate((initial_overlap_id, contact_id_after_initial), axis=None)
+    [step_id_ifover_difflast, ifoverlap_ij_iw_array, step_id_ifover_initial] = contact_check_multistep(f_read, id_i, step1, step2)
+    step_id_ifover = np.concatenate((step_id_ifover_initial, step_id_ifover_difflast), axis=0)
+    steps = step_id_ifover[:,0]
+    ids = step_id_ifover[:,1]
+    ifoverlap = step_id_ifover[:,2]
+    # ifoverlap_j change 0 to -1, see wall as no contact
+    ifoverlap_j = 2*ifoverlap-1
+    ifoverlap_j[ids<0] = 0
+    # ifoverlap_wall change 0 to -1, see j as no contact
+    ifoverlap_wall = 2*ifoverlap-1
+    ifoverlap_wall[ids>0] = 0
+    
+    ncj = np.cumsum(ifoverlap_j, dtype=int) 
+    ncwall = np.cumsum(ifoverlap_wall, dtype=int)
+    
+    contactchange_ncjis1_or_ncwall1 = np.append((steps[:-1] != steps[1:]), np.array([True])) & ((ncj==1) | (ncwall==1))
+    step1_contactchange_ncjis1_or_ncwall1 = steps[contactchange_ncjis1_or_ncwall1]
+    index = np.nonzero(contactchange_ncjis1_or_ncwall1)[0]
+    if contactchange_ncjis1_or_ncwall1[-1]==True:
+        # ignore last index and append step2
+        step2_contactchange_ncjis1_or_ncwall1 = steps[index[:-1]+1]
+        step2_contactchange_ncjis1_or_ncwall1 = np.append(step2_contactchange_ncjis1_or_ncwall1,(np.array([step2])))
+    else:
+        step2_contactchange_ncjis1_or_ncwall1 = steps[index+1]
+    
+    return [step1_contactchange_ncjis1_or_ncwall1, step2_contactchange_ncjis1_or_ncwall1]
+
+
+def collect_contact_id_no_dup(f_read, id_i, step1, step2):
+    [step_id_ifover_difflast, ifoverlap_ij_iw_array, step_id_ifover_initial] = contact_check_multistep(f_read, id_i, step1, step2)
+    step_id_ifover = np.concatenate((step_id_ifover_initial, step_id_ifover_difflast), axis=0)
+    contact_id_collection = (step_id_ifover[:,1])[step_id_ifover[:,2]==1]
     unique_ids = np.unique(contact_id_collection)
     return unique_ids
 
 
-def number_contact_atom_id_collection(f_read, id_i, step1, step2, error_tolerence):
-    
-    contact_id_collection_no_dup = collect_contact_id_no_dup(f_read, id_i, step1, step2, error_tolerence)
+def number_contact_atom_id_collection(f_read, id_i, step1, step2):
+    contact_id_collection_no_dup = collect_contact_id_no_dup(f_read, id_i, step1, step2)
     contact_atom_id_collection_no_dup = contact_id_collection_no_dup[contact_id_collection_no_dup > 0]
     number_contact_atom = len(contact_atom_id_collection_no_dup)
-    
     return [number_contact_atom, contact_atom_id_collection_no_dup]
 
 
-def number_contact_wall_id_collection(f_read, id_i, step1, step2, error_tolerence):
-    
-    contact_id_collection_no_dup = collect_contact_id_no_dup(f_read, id_i, step1, step2, error_tolerence)
+def number_contact_wall_id_collection(f_read, id_i, step1, step2):
+    contact_id_collection_no_dup = collect_contact_id_no_dup(f_read, id_i, step1, step2)
     contact_wall_id_collection_no_dup = contact_id_collection_no_dup[contact_id_collection_no_dup < 0]
     number_contact_wall = len(contact_wall_id_collection_no_dup)
     
     return [number_contact_wall, contact_wall_id_collection_no_dup]
 
 
-def number_contact_total_id_collection(f_read, id_i, step1, step2, error_tolerence):
+def number_contact_total_id_collection(f_read, id_i, step1, step2):
     
-    contact_id_collection_no_dup = collect_contact_id_no_dup(f_read, id_i, step1, step2, error_tolerence)
+    contact_id_collection_no_dup = collect_contact_id_no_dup(f_read, id_i, step1, step2)
     number_contact_total = len(contact_id_collection_no_dup)
     
     return [number_contact_total, contact_id_collection_no_dup]
 
 
-def fjwi_plus_cal_multistep_1contact_fromcustom(f_read, id_i, idj_or_idw, step1, step2, error_tolerence, method):
+def fjwi_plus_cal_multistep_1contact_fromcustom(f_read, id_i, idj_or_idw, step1, step2, method):
 
     df = pd.read_hdf(f_read, 'df')
     
-    df_step = df.loc[df['step'].isin(list(range(step1, step2+1)))]
+    df_step = extract_dataframe(df, step1, step2)
 
     groups_byid = df_step.groupby(['id'])
     
@@ -1357,18 +1498,13 @@ def fjwi_plus_cal_multistep_1contact_fromcustom(f_read, id_i, idj_or_idw, step1,
     fpair = dfi[['f_force_pair[1]','f_force_pair[2]','f_force_pair[3]']].values[:-1]
     omi = dfi[['omegax','omegay','omegaz']].values[:-1]
     tqi = dfi[['tqx','tqy','tqz']].values[:-1]
-    xi_plus = dfi[['x','y','z']].values[1:]
-    vi_plus = dfi[['vx','vy','vz']].values[1:]
+    
     fi_plus = dfi[['fx','fy','fz']].values[1:]
     fpair_plus = dfi[['f_force_pair[1]','f_force_pair[2]','f_force_pair[3]']].values[1:]
-    omi_plus = dfi[['omegax','omegay','omegaz']].values[1:]
+    
     tqi_plus = dfi[['tqx','tqy','tqz']].values[1:]
 
     [mi, ri, I_i, vi_half_pre, xi_minus_cal, omi_half_pre] = calculate_m_r_I_vh_xp_omh_pre(typei, density, fi, tqi, xi, vi, omi)
-
-    id_list = groups_byid.groups.keys()
-
-    id_j_list = [i for i in id_list if i !=id_i]
 
     force_not_contact = gravity(mi)
     force_not_contact_plus = gravity(mi)
@@ -1455,26 +1591,30 @@ def fjwi_plus_cal_multistep_1contact_fromcustom(f_read, id_i, idj_or_idw, step1,
 def fjwi_plus_check_multistep_1contact_fromcustom(f_read, id_i, step1, step2, error_tolerence, method, jorw):
 
     if jorw == 'j':
-        [n, id_collection] = number_contact_atom_id_collection(f_read, id_i, step1, step2, error_tolerence)
+        [n, id_collection] = number_contact_atom_id_collection(f_read, id_i, step1, step2)
     elif jorw == 'w':
-        [n, id_collection] = number_contact_wall_id_collection(f_read, id_i, step1, step2, error_tolerence)
+        [n, id_collection] = number_contact_wall_id_collection(f_read, id_i, step1, step2)
     else:
         sys.exit("jorw not j not w")
-    
-    if n != 1:
-        sys.exit("number of contact is {n} for".format(n=n) + jorw)
-    [fji_cal, fji_plus, tqji_plus_cal, tqi_plus, fjit_plus_cal, fjin_plus_cal] = fjwi_plus_cal_multistep_1contact_fromcustom(f_read, id_i, id_collection[0], step1, step2, error_tolerence, method)
 
-    [f_step_error_array, f_errorindex] = step_error_array_with_index(step1, step2, fji_cal, fji_plus, error_tolerence)
-    [tq_step_error_array, tq_errorindex] = step_error_array_with_index(step1, step2, tqji_plus_cal, tqi_plus, error_tolerence)
-    
-    steps_array = np.arange(step1+1, step2+1)
-    steps_array = steps_array.reshape((-1,1))
+    if n > 1:
+        sys.exit("number of contact is {n} for ".format(n=n) + jorw + ' should be 0 or 1')
+    elif n == 1:
+        [fji_cal, fji_plus, tqji_plus_cal, tqi_plus, fjit_plus_cal, fjin_plus_cal] = fjwi_plus_cal_multistep_1contact_fromcustom(f_read, id_i, id_collection[0], step1, step2, method)
+        [f_step_error_array, f_errorindex] = step_error_array_with_index(step1, step2, fji_cal, fji_plus, error_tolerence)
+        [tq_step_error_array, tq_errorindex] = step_error_array_with_index(step1, step2, tqji_plus_cal, tqi_plus, error_tolerence)
+        
+        steps_array = np.arange(step1+1, step2+1)
+        steps_array = steps_array.reshape((-1,1))
 
-    step_fji_cal = add_step_to_array(steps_array, fji_cal)
-    step_fji_plus = add_step_to_array(steps_array, fji_plus)
-    fji_cal_in_error_step = step_fji_cal[f_errorindex]
-    fji_plus_in_error_step = step_fji_plus[f_errorindex]
+        step_fji_cal = add_step_to_array(steps_array, fji_cal)
+        step_fji_plus = add_step_to_array(steps_array, fji_plus)
+        fji_cal_in_error_step = step_fji_cal[f_errorindex]
+        fji_plus_in_error_step = step_fji_plus[f_errorindex]
+    elif n==0:
+        print("number of contact is {n} for ".format(n=n) + jorw + ' so not check')
+    else:
+        sys.exit("number of contact is {n} for ".format(n=n) + jorw + ' should >=0')
 
     return [f_step_error_array, fji_cal_in_error_step, fji_plus_in_error_step, id_collection[0]]
 
@@ -1490,7 +1630,7 @@ def get_vijt(typei, typej, xi, xj, vi, vj, omi, omj):
     return vijt_no_om + ri*np.cross(omi, unit(-xij)) - rj*np.cross(omj, unit(xij))
 
 
-def get_vijn(typei, typej, xi, xj, vi, vj, omi, omj):
+def get_vijn(xi, xj, vi, vj):
 
     xij = xi - xj
     vij = vi - vj
@@ -1512,7 +1652,7 @@ def get_viwt(typei, wall, xi, vi, omi):
     return vijt_no_om + ri*np.cross(omi, unit(-xij)) - rj*np.cross(omj, unit(xij))
 
 
-def get_viwn(typei, wall, xi, vi, omi):
+def get_viwn(typei, wall, xi, vi):
 
     vj = wall.vw
     xij = xi - wall.nearest_point()
@@ -1521,215 +1661,233 @@ def get_viwn(typei, wall, xi, vi, omi):
     return projection_vector(vij, xij)
 
 
-def vij_many_steps(id_i, idj_or_idw, f_read, step1, step2, method):
 
-    df = pd.read_hdf(f_read)
-
-    df_step = df.loc[df['step'].isin(list(range(step1, step2+1)))]
-
-    groups_byid = df_step.groupby(['id'])
-
-    dfi = groups_byid.get_group(id_i)
-    [typei, xi, vi, fi, omi, tqi] = get_type_x_v_f_om_tq_from_a_group_of_df(dfi, step1, step2)
-
-    [mi, ri, I_i, vi, xi_minus_cal, omi] = calculate_m_r_I_vh_xp_omh_pre(typei, density, fi, tqi, xi, vi, omi)
+class manysteps(object):
     
+    def __init__(self, f_read, id_i, idj_or_idw, step1, step2, method):
+        self.f_read = f_read
+        self.id_i = id_i
+        self.idj_or_idw = idj_or_idw
+        self.step1 = step1
+        self.step2 = step2
+        self.method = method
+        df = pd.read_hdf(self.f_read, 'df')
+        df_step = extract_dataframe(df, self.step1, self.step2)
+        self.groups_byid = df_step.groupby(['id'])
+        self.dfi = reindex_by_step(self.groups_byid.get_group(self.id_i), self.step1, self.step2)
+        [self.typei, self.xi, self.vi, self.fi, self.omi, self.tqi] = get_type_x_v_f_om_tq_from_df(self.dfi, self.step1, self.step2)
+    def gravity(self):
+        mi = mass_by_type(self.typei, density)
+        return gravity(mi)
 
-    if idj_or_idw > 0:
-
-        dfj = groups_byid.get_group(idj_or_idw)
-        [typej, xj, vj, fj, omj, tqj] = get_type_x_v_f_om_tq_from_a_group_of_df(dfj, step1, step2)
-        [mj, rj, I_j, vj, xj_mjnus_cal, omj] = calculate_m_r_I_vh_xp_omh_pre(typej, density, fj, tqj, xj, vj, omj)
-
-        vijt = get_vijt(typei, typej, xi, xj, vi, vj, omi, omj)
-        vijn = get_vijn(typei, typej, xi, xj, vi, vj, omi, omj)
-
-
-    elif idj_or_idw < 0:
-
-        id_wall_list = -idj_or_idw-1
-        walllist = wall_list[id_wall_list]
-
-        wall = create_wall_class_from_walllist(
-                walllist,
-                typei,xi,vi,fi,omi,tqi, 
-                np.zeros(3), np.zeros(3), np.zeros(3), method,
-                typew=None, xw=np.zeros(3), vw=np.zeros(3), aw=np.zeros(3), omw=np.zeros(3), alphaw=np.zeros(3),
-                )
-
-        vijt = get_viwt(typei, wall, xi, vi, omi)
-        vijn = get_viwn(typei, wall, xi, vi, omi)
-
-    return [vijt, vijn]
-
-
-def overlap_length_many_steps(id_i, idj_or_idw, f_read, step1, step2, method):
-
-    df = pd.read_hdf(f_read)
-
-    df_step = df.loc[df['step'].isin(list(range(step1, step2+1)))]
-
-    groups_byid = df_step.groupby(['id'])
-
-    dfi = groups_byid.get_group(id_i)
-    [typei, xi, vi, fi, omi, tqi] = get_type_x_v_f_om_tq_from_a_group_of_df(dfi, step1, step2)
-
-    if idj_or_idw > 0:
-
-        dfj = groups_byid.get_group(idj_or_idw)
-        [typej, xj, vj, fj, omj, tqj] = get_type_x_v_f_om_tq_from_a_group_of_df(dfj, step1, step2)
-        ri = radius_by_type(typei)
-        rj = radius_by_type(typej)
-        [ifoverlap, overlapij_vector, overlap_length] = overlapij(ri, rj, xi, xj)
-
-
-    elif idj_or_idw < 0:
-
-        id_wall_list = -idj_or_idw-1
-        walllist = wall_list[id_wall_list]
-
-        wall = create_wall_class_from_walllist(
-                walllist,
-                typei,xi,vi,fi,omi,tqi, 
-                np.zeros(3), np.zeros(3), np.zeros(3), method,
-                typew=None, xw=np.zeros(3), vw=np.zeros(3), aw=np.zeros(3), omw=np.zeros(3), alphaw=np.zeros(3),
-                )
-
-        overlap_length = wall.overlap_length()
-
-    return overlap_length
-
-
-def f_many_steps(f_read, id_i, idj_or_idw, step1, step2, error_tolerence, method):
-
-    df = pd.read_hdf(f_read, 'df')
+    def vh_omh_pre(self, type, density, f, tq, x, v, om):
     
-    df_step = df.loc[df['step'].isin(list(range(step1, step2+1)))]
+        m = mass_by_type(type, density)
+        r = radius_by_type(type)
+        I = 2/5*m*r**2
+        a = f/m
+        alpha = tq/I
+        [v_half_pre, x_minus_cal]=update_v_x_pre(x,v,a)
+        result5=update_v_x_pre(0,om,alpha)
+        om_half_pre = result5[0]
 
-    groups_byid = df_step.groupby(['id'])
-    
-    dfi = reindex_by_step(groups_byid.get_group(id_i), step1, step2)
-    
-    typei = dfi[['type']].values
-    xi = dfi[['x','y','z']].values
-    vi = dfi[['vx','vy','vz']].values
-    fi = dfi[['fx','fy','fz']].values
-    fpair = dfi[['f_force_pair[1]','f_force_pair[2]','f_force_pair[3]']].values
-    omi = dfi[['omegax','omegay','omegaz']].values
-    tqi = dfi[['tqx','tqy','tqz']].values
-
-    [mi, ri, I_i, vi_half_pre, xi_minus_cal, omi_half_pre] = calculate_m_r_I_vh_xp_omh_pre(typei, density, fi, tqi, xi, vi, omi)
-
-    force_not_contact = gravity(mi)
-
-    fjtoi = fpair
-    fwtoi = fi - (fpair + force_not_contact)
+        return [v_half_pre, om_half_pre]
 
 
-    if idj_or_idw > 0:
+    def work_ftfn_many_steps(self, vijt, vijn, f_many_steps):
 
-        id_j = idj_or_idw
-
-        dfj = reindex_by_step(groups_byid.get_group(id_j), step1, step2)
-
-        typej = dfj[['type']].values
-        xj = dfj[['x','y','z']].values
-        vj = dfj[['vx','vy','vz']].values
-        fj = dfj[['fx','fy','fz']].values
-        omj = dfj[['omegax','omegay','omegaz']].values
-        tqj = dfj[['tqx','tqy','tqz']].values
-
-
-        [mj, rj, I_j, vj_half_pre, xj_minus_cal, omj_half_pre] = calculate_m_r_I_vh_xp_omh_pre(typej, density, fj, tqj, xj, vj, omj)
-
-        meff = mi*mj/(mi + mj)
-        f_jorw_to_i_total = fjtoi
-
-        xij = xi - xj
-        [ifoverlap, overlapij_vector, overlapij_length] = overlapij(ri, rj, xi, xj)
-
-    if idj_or_idw < 0:
-
-        idw = -idj_or_idw-1
-        walllist = wall_list[idw]
-
-        wall = create_wall_class_from_walllist(
-                walllist,
-                typei,xi,vi,fi,omi,tqi, 
-                np.zeros(3), np.zeros(3), np.zeros(3), method,
-                typew=None, xw=np.zeros(3), vw=np.zeros(3), aw=np.zeros(3), omw=np.zeros(3), alphaw=np.zeros(3),
-                )
-
-        [rj, vj_half_pre, xj_minus_cal, omj_half_pre] = calculate_wall_r_vh_xp_omh_pre(wall)
-        meff = wall.meff()
-        f_jorw_to_i_total = fwtoi
-        xij = xi - wall.nearest_point()
-        ifoverlap = wall.ifoverlap()
+        [fnk,fngamma,ftk_include_his,ftgamma] = f_many_steps
+        fn = fnk + fngamma
+        ft = ftk_include_his + ftgamma
         
-        overlapij_vector = wall.overlapij_vector()
+        def innerproduct(a,b):
+            return np.sum(a*b, axis=-1)
 
-    vij_half_pre = vi_half_pre - vj_half_pre
-    vijn_half_pre = projection_vector(vij_half_pre, xij)
-    vijt_half_no_om_pre = verticle_vector(vij_half_pre, xij)
-    vijt_half_pre = vijt_half_no_om_pre + ri*np.cross(omi_half_pre, unit(-xij)) - rj*np.cross(omj_half_pre, unit(xij))
+        work_ft = innerproduct(ft, vijt)*ts
+        work_fn = innerproduct(fn, vijn)*ts
 
-    [fnk,fngamma,ftk,ftgamma] = cal_f_no_history(overlapij_vector, ifoverlap, meff, vijn_half_pre, vijt_half_pre)
-    fjin = fnk + fngamma
-    friction_ratio = np.divide(length(f_jorw_to_i_total - fjin), length(fjin), out=np.zeros_like(length(fjin)), where=length(fjin)!=0)
-    ftk_include_his = f_jorw_to_i_total - fjin - ftgamma
+        return [work_ft, work_fn]
 
-    return [fnk,fngamma,ftk_include_his,ftgamma]
+    def work_ftgammafngamma_many_steps(self, vijt, vijn, f_many_steps):
+
+        [fnk,fngamma,ftk_include_his,ftgamma] = f_many_steps
+
+        def innerproduct(a,b):
+            return np.sum(a*b, axis=-1)
+
+        work_ftgamma = innerproduct(ftgamma,vijt)*ts
+        work_fngamma = innerproduct(fngamma,vijn)*ts
+        return [work_ftgamma, work_fngamma]
+
+    def work_ftkfnk_many_steps(self, vijt, vijn, f_many_steps):
+
+        [fnk,fngamma,ftk_include_his,ftgamma] = f_many_steps
+
+        def innerproduct(a,b):
+            return np.sum(a*b, axis=-1)
+
+        work_ftk = innerproduct(ftk_include_his,vijt)*ts
+        work_fnk = innerproduct(fnk,vijn)*ts
+        return [work_ftk, work_fnk]
 
 
-def work_ftfn_many_steps(f_read, id_i, idj_or_idw, step1, step2, error_tolerence, method):
+class manysteps_idj(manysteps):
 
-    [fnk,fngamma,ftk_include_his,ftgamma] = f_many_steps(f_read, id_i, idj_or_idw, step1, step2, error_tolerence, method)
-    fn = fnk + fngamma
-    ft = ftk_include_his + ftgamma
-    [vijt, vijn] = vij_many_steps(id_i, idj_or_idw, f_read, step1, step2, method)
+    def __init__(self, f_read, id_i, idj_or_idw, step1, step2, method):
+        super().__init__(f_read, id_i, idj_or_idw, step1, step2, method)
+        self.fj = reindex_by_step(self.groups_byid.get_group(self.idj_or_idw), self.step1, self.step2)
+        [self.typej, self.xj, self.vj, self.fj, self.omj, self.tqj] = get_type_x_v_f_om_tq_from_df(self.fj, self.step1, self.step2)
+    def vijt(self):
+        return get_vijt(self.typei, self.typej, self.xi, self.xj, self.vi, self.vj, self.omi, self.omj)
 
-    def innerproduct(a,b):
-        return np.sum(a*b, axis=-1)
+    def vijt_contactpoint(self):
+        ri = radius_by_type(self.typei)
+        rj = radius_by_type(self.typej)
+        return rj/(ri+rj)*get_vijt(self.typei, self.typej, self.xi, self.xj, self.vi, self.vj, np.zeros_like(self.vi), np.zeros_like(self.vj))
 
-    work_ft = innerproduct(ft,vijt)*ts
-    work_fn = innerproduct(fn,vijn)*ts
-
-    return [work_ft, work_fn]
-
-
-def work_ftgammafngamma_many_steps(f_read, id_i, idj_or_idw, step1, step2, error_tolerence, method):
-
-    [fnk,fngamma,ftk_include_his,ftgamma] = f_many_steps(f_read, id_i, idj_or_idw, step1, step2, error_tolerence, method)
+    def vijn(self):
+        return get_vijn(self.xi, self.xj, self.vi, self.vj)
     
-    [vijt, vijn] = vij_many_steps(id_i, idj_or_idw, f_read, step1, step2, method)
+    def vijt_half_pre(self):
+        [mi, ri, I_i, vi_half_pre, xi_minus_cal, omi_half_pre] = calculate_m_r_I_vh_xp_omh_pre(self.typei, density, self.fi, self.tqi, self.xi, self.vi, self.omi)
+        [mj, rj, I_j, vj_half_pre, xj_minus_cal, omj_half_pre] = calculate_m_r_I_vh_xp_omh_pre(self.typej, density, self.fj, self.tqj, self.xj, self.vj, self.omj)
+        return get_vijt(self.typei, self.typej, self.xi, self.xj, vi_half_pre, vj_half_pre, omi_half_pre, omj_half_pre)
 
-    def innerproduct(a,b):
-        return np.sum(a*b, axis=-1)
+    def vijn_half_pre(self):
+        [mi, ri, I_i, vi_half_pre, xi_minus_cal, omi_half_pre] = calculate_m_r_I_vh_xp_omh_pre(self.typei, density, self.fi, self.tqi, self.xi, self.vi, self.omi)
+        [mj, rj, I_j, vj_half_pre, xj_minus_cal, omj_half_pre] = calculate_m_r_I_vh_xp_omh_pre(self.typej, density, self.fj, self.tqj, self.xj, self.vj, self.omj)
+        return get_vijn(self.xi, self.xj, vi_half_pre, vj_half_pre)
 
-    work_ftgamma = innerproduct(ftgamma,vijt)*ts
-    work_fngamma = innerproduct(fngamma,vijn)*ts
+    def overlap_length(self):
+        ri = radius_by_type(self.typei)
+        rj = radius_by_type(self.typej)
+        [ifoverlap, overlapij_vector, overlap_length] = overlapij(ri, rj, self.xi, self.xj)
+        return overlap_length
 
-    breakpoint()
+    def f_jorw_to_i_total(self):
+        # only 1 contact can use this function
+        fpair = self.dfi[['f_force_pair[1]','f_force_pair[2]','f_force_pair[3]']].values
+        fjtoi = fpair
+        return fjtoi
 
-    return [work_ftgamma, work_fngamma]
+    def xij(self):
+        return self.xi - self.xj
+
+    def f_many_steps(self):
+        # only 1 contact can use this function
+
+        [mi, ri, I_i, vi_half_pre, xi_minus_cal, omi_half_pre] = calculate_m_r_I_vh_xp_omh_pre(self.typei, density, self.fi, self.tqi, self.xi, self.vi, self.omi)
+        id_j = self.idj_or_idw
+        [mj, rj, I_j, vj_half_pre, xj_minus_cal, omj_half_pre] = calculate_m_r_I_vh_xp_omh_pre(self.typej, density, self.fj, self.tqj, self.xj, self.vj, self.omj)
+        meff = mi*mj/(mi + mj)
+        [ifoverlap, overlapij_vector, overlapij_length] = overlapij(ri, rj, self.xi, self.xj)
+
+        [fnk,fngamma,ftk,ftgamma] = cal_f_no_history(overlapij_vector, ifoverlap, meff, self.vijn_half_pre(), self.vijt_half_pre())
+        fjin = fnk + fngamma
+        friction_ratio = np.divide(length(self.f_jorw_to_i_total() - fjin), length(fjin), out=np.zeros_like(length(fjin)), where=length(fjin)!=0)
+        ftk_include_his = self.f_jorw_to_i_total() - fjin - ftgamma
+
+        return [fnk,fngamma,ftk_include_his,ftgamma]
+    
+    def work_ftfn_many_steps(self):
+        return super().work_ftfn_many_steps(self.vijt(), self.vijn(), self.f_many_steps())
+
+    def work_ftgammafngamma_many_steps(self):
+        return super().work_ftgammafngamma_many_steps(self.vijt(), self.vijn(), self.f_many_steps())
+
+    def work_ftkfnk_many_steps(self):
+        return super().work_ftkfnk_many_steps(self.vijt(), self.vijn(), self.f_many_steps())
+
+    def cumsum_work(self):
+        [work_ft, work_fn] = self.work_ftfn_many_steps()
+        sum_ftwork = np.cumsum(work_ft, axis=0)
+        sum_fnwork = np.cumsum(work_fn, axis=0)
+        return [sum_ftwork, sum_fnwork]
+
+class manysteps_wall(manysteps):
+
+    def __init__(self, f_read, id_i, idj_or_idw, step1, step2, method):
+        super().__init__(f_read, id_i, idj_or_idw, step1, step2, method)
+
+        id_wall_list = -self.idj_or_idw-1
+        walllist = wall_list[id_wall_list]
+
+        self.wall = create_wall_class_from_walllist(
+                walllist,
+                self.typei,self.xi,self.vi,self.fi,self.omi,self.tqi, 
+                np.zeros(3), np.zeros(3), np.zeros(3), self.method,
+                typew=None, xw=np.zeros(3), vw=np.zeros(3), aw=np.zeros(3), omw=np.zeros(3), alphaw=np.zeros(3),
+                )
+    def vijt(self):
+        return get_viwt(self.typei, self.wall, self.xi, self.vi, self.omi)
+
+    def vijt_contactpoint(self):
+        return get_viwt(self.typei, self.wall, self.xi, self.vi, np.zeros_like(self.vi))
 
 
-def cumsum_work(f_read, id_i, idj_or_idw, step1, step2, error_tolerence, method):
+    def vijn(self):
+        return get_viwn(self.typei, self.wall, self.xi, self.vi)
 
-    [work_ft, work_fn] = work_ftfn_many_steps(f_read, id_i, idj_or_idw, step1, step2, error_tolerence, method)
-    sum_ftwork = np.cumsum(work_ft, axis=0)
-    sum_fnwork = np.cumsum(work_fn, axis=0)
+    def vijt_half_pre(self):
+        [mi, ri, I_i, vi_half_pre, xi_minus_cal, omi_half_pre] = calculate_m_r_I_vh_xp_omh_pre(self.typei, density, self.fi, self.tqi, self.xi, self.vi, self.omi)
+        return get_viwt(self.typei, self.wall, self.xi, vi_half_pre, omi_half_pre)
+    def vijn_half_pre(self):    
+        [mi, ri, I_i, vi_half_pre, xi_minus_cal, omi_half_pre] = calculate_m_r_I_vh_xp_omh_pre(self.typei, density, self.fi, self.tqi, self.xi, self.vi, self.omi)
+        return get_viwn(self.typei, self.wall, self.xi, vi_half_pre)
 
-    return [sum_ftwork, sum_fnwork]
+    def overlap_length(self):
+        return self.wall.overlap_length()
 
-#[number_contact_total, contact_id_collection_no_dup] = cs.number_contact_total_id_collection(f_read, id_i, ci.step1, ci.step2, ci.error_tolerence)
+    def f_jorw_to_i_total(self):
+        # only 1 contact can use this function
+        fpair = self.dfi[['f_force_pair[1]','f_force_pair[2]','f_force_pair[3]']].values
+        mi = mass_by_type(self.typei, density)
+        force_not_contact = gravity(mi)
+        fwtoi = self.fi - (fpair + force_not_contact)
+        return fwtoi
+
+    def xij(self):
+        return self.xi - self.wall.nearest_point()
+
+
+    def f_many_steps(self):
+        # only 1 contact can use this function
+
+        
+        meff = self.wall.meff()
+        ifoverlap = self.wall.ifoverlap()
+        
+        overlapij_vector = self.wall.overlapij_vector()
+
+        [fnk,fngamma,ftk,ftgamma] = cal_f_no_history(overlapij_vector, ifoverlap, meff, self.vijn_half_pre(), self.vijt_half_pre())
+        fjin = fnk + fngamma
+        friction_ratio = np.divide(length(self.f_jorw_to_i_total() - fjin), length(fjin), out=np.zeros_like(length(fjin)), where=length(fjin)!=0)
+        ftk_include_his = self.f_jorw_to_i_total() - fjin - ftgamma
+
+        return [fnk,fngamma,ftk_include_his,ftgamma]
+
+    def work_ftfn_many_steps(self):
+        return super().work_ftfn_many_steps(self.vijt(), self.vijn(), self.f_many_steps())
+
+    def work_ftgammafngamma_many_steps(self):
+        return super().work_ftgammafngamma_many_steps(self.vijt(), self.vijn(), self.f_many_steps())
+
+    def work_ftkfnk_many_steps(self):
+        return super().work_ftkfnk_many_steps(self.vijt(), self.vijn(), self.f_many_steps())
+
+    def cumsum_work(self):
+        [work_ft, work_fn] = self.work_ftfn_many_steps()
+        sum_ftwork = np.cumsum(work_ft, axis=0)
+        sum_fnwork = np.cumsum(work_fn, axis=0)
+        return [sum_ftwork, sum_fnwork]
+
 
 def sum_results_all_contacts(
     func,
     f_read, id_i, idj_or_idw_list, step1, step2, error_tolerence, method,
     ):
 
-    [number_contact_total, contact_id_collection_no_dup] = number_contact_total_id_collection(f_read, id_i, step1, step2, error_tolerence)
+    [number_contact_total, contact_id_collection_no_dup] = number_contact_total_id_collection(f_read, id_i, step1, step2)
 
     sum = 0
     for id in contact_id_collection_no_dup:

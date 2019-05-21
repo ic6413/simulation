@@ -15,7 +15,7 @@ id_i = oc.id_i
 
 method = 1
 
-[number_contact_total, contact_id_collection_no_dup] = cs.number_contact_total_id_collection(f_read, id_i, oc.step1, oc.step2, oc.error_tolerence)
+[number_contact_total, contact_id_collection_no_dup] = cs.number_contact_total_id_collection(f_read, id_i, oc.step1, oc.step2)
 
 def plot_v(array):
 	x = np.arange(oc.step1, oc.step2+1)

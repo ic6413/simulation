@@ -9,7 +9,7 @@ import datapath as dp
 
 dict = {}
 
-dict['ts'] = 10**-6
+dict['ts'] = 4e-7
 # atom radius
 dict['dp0'] = 0.00083
 dict['density'] = 2500
@@ -22,7 +22,9 @@ dict['kt'] = 2524.95037556768
 dict['gamma_n'] = 34445.5603308471
 dict['gamma_t'] = 17222.7801654236
 dict['type_radius_list'] = [
-    [1, 1.0*dict['dp0']/2],
+    [1, 0.9*dict['dp0']/2],
+    [2, 1.0*dict['dp0']/2],
+    [3, 1.1*dict['dp0']/2],
 ]
 
 dict['walls_p'] = [

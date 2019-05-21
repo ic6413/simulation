@@ -6,8 +6,8 @@ custom_id_i_list = 'all' # id_list or 'all'
 
 def put_id_on_file(id_list, f_name_without_id):
     
-    if custom_id_i_list != 'all':
-        f_name_add_id = (f_name_without_id + '_' + '_'.join(str(i) for i in custom_id_i_list))
+    if id_list != 'all':
+        f_name_add_id = (f_name_without_id + '_' + '_'.join(str(i) for i in id_list))
     else:
         f_name_add_id = (f_name_without_id + '_' + 'all')
 

@@ -1,4 +1,4 @@
-step1 = 0
-step2 = 300000
-id_i = 15556
-error_tolerence = 1e-6
+import createdata.inputvariable
+import datapath as dp
+f_thermo = dp.hdf5_csv_path + 'thermo' + '.h5'
+f_custom = createdata.inputvariable.f_custom + '.h5'

@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 # This import registers the 3D projection, but is otherwise unused.
 from mpl_toolkits.mplot3d import Axes3D
 # import project module
-import data_arrange as da
+import dataarrange as da
 import datapath as dp
 import output_control as oc
 import osmanage as om

@@ -1,6 +1,9 @@
 # import
 import os
 
+# import simulation module
+import inputvariable
+
 # inputvariable
 lammps_directory = inputvariable.lammps_directory
 # end inputvariable
@@ -17,6 +20,10 @@ attribute_json_path = post_process_path + 'attribute/'
 hdf5_csv_path = post_process_path + 'hdf5_csv/'
 # debug
 debug_print_path = post_process_path + 'debug/'
+debug_fig_path = debug_print_path + 'fig/'
+debug_fig_thermo_path = debug_fig_path + 'thermo/'
+debug_fig_oneatom_path = debug_fig_path + 'oneatom/'
+debug_fig_atomij_path = debug_fig_path + 'atomij/'
 # interactive
 interactive_path = post_process_path + 'interactive/'
 # diagram
