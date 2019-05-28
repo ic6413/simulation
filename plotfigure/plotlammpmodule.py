@@ -10,9 +10,6 @@ from mpl_toolkits.mplot3d import Axes3D
 import osmanage as om
 import datapath as dp
 
-# import plot module
-import plotfigure.inputvariable as pi
-
 # import calculate module
 import calculate.checksimulation as cs
 

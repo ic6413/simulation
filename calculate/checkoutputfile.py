@@ -1,4 +1,5 @@
 import sys
+import os.path
 import pprint
 import datetime
 import numpy as np
@@ -7,11 +8,9 @@ import osmanage as om
 import datapath as dp
 # import module in calculate folder
 import calculate.checksimulation as cs
-# import from other folder
-import createdata.inputvariable as cdi
 
 # input
-f_custom_path = cdi.f_custom + '.h5'
+f_custom_path = dp.f_custom
 debug_print_path = dp.debug_print_path
 
 class checkfile(object):
@@ -60,6 +59,13 @@ class checkforce(checkfile):
     def checkprint(self):
 
         file = self.filepath()
+
+        if os.path.isfile(file):
+            print ('file exist, calculate again and append to the end')
+        else:
+            print ("create file and print to file")
+
+
         check_f_function = cs.fjwi_plus_check_multistep_multicontact_fromcustom  # or cs.fjwi_plus_check_multistep_multicontact_fromcustom_v1
 
         self.print_string_list([
@@ -116,6 +122,10 @@ class check_ft_1j_contact(check_ft_1_contact):
 
     def checkprint(self):
         file = self.filepath()
+        if os.path.isfile(file):
+            print ('file exist, calculate again and append to the end')
+        else:
+            print ("create file and print to file")
         
         if self.number_contact()==1:
 
@@ -160,6 +170,10 @@ class check_ft_1w_contact(check_ft_1_contact):
 
     def checkprint(self):
         file = self.filepath()
+        if os.path.isfile(file):
+            print ('file exist, calculate again and append to the end')
+        else:
+            print ("create file and print to file")
         
         if self.number_contact()==1:
 
@@ -202,6 +216,10 @@ class checkoverlap(checkfile):
     
     def checkprint(self):
         file = self.filepath()
+        if os.path.isfile(file):
+            print ('file exist, calculate again and append to the end')
+        else:
+            print ("create file and print to file")
         [step_id_ifover_diffnext, ifoverlap_ij_iw_array, initial_overlap_id] = self.contact_check_multistep()
         self.print_string_list([
             datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), self.stringstep(),

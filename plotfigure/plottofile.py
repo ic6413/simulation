@@ -26,9 +26,6 @@ om.create_directory(outputfolder_thermo)
 om.create_directory(outputfolder_oneatom)
 method = 1
 
-
-
-
 # ========begin==========
 
 class plotclass(object):
@@ -39,7 +36,7 @@ class plotclass(object):
         print("plot step from {step1} to {step2}".format(step1=step1, step2=step2))
 
     def plotsingle(self, id_i, variable_name_list):
-        f_read_custom_single = dp.hdf5_csv_path + dp.put_id_on_file([id_i], 'custom_id') + '.h5'
+        f_read_custom_single = dp.put_id_on_file([id_i], dp.f_custom)
         df = pd.read_hdf(f_read_custom_single)
 
         if variable_name_list == 'all':
@@ -49,7 +46,7 @@ class plotclass(object):
 
         df_step = cs.extract_dataframe(df, self.step1, self.step2)
 
-        steps = np.arange(self.step1, self.step2+1)
+        steps = np.arange(self.step1, self.step2)
         
         x_array_label_list = [
             [steps,'step']
@@ -114,7 +111,7 @@ class plotclass(object):
         else:
             sys.exit("idj = 0")
 
-        steps = np.arange(step1, step2+1)
+        steps = np.arange(step1, step2)
 
         ifoverlap = manystepsclass.ifoverlap()
 
@@ -130,8 +127,7 @@ class plotclass(object):
             figclass = pp.create_figclass_i_jorw(step1, step2, x_array1D, x_label1D, y_array1D, y_label1D, id_i, id_jorw)
             figclass.create_and_save(outputfolder_atomij)
             plt.close('all')
-
-        
+            
 
         if y_array.ndim == 2 and y_array.shape[-1] == 3:
 
@@ -153,8 +149,6 @@ class plotclass(object):
                 
             [y_label1, y_label2, y_label3] = addxyzlabel(y_label)
             [y_array1, y_array2, y_array3] = splitxyzarray(y_array)
-
-            
 
         ## velocity
         #vijt = manystepsclass.vijt()
@@ -226,7 +220,7 @@ class plotclass(object):
             figclass.create_and_save(outputfolder_atomij)
             plt.close('all')
 
-        print("finish plot single j")
+        print("finish plot ij or iw")
 
 
     def plotij(self, id_i):
@@ -243,7 +237,9 @@ class plotclass(object):
         [n_c_wall, idlist_wall] = cs.number_contact_wall_id_collection(
             f_read_custom, id_i, step1, step2
         )
-        for id_jorw in (np.append(idlist_atom, idlist_wall)):
+        contactid_list = np.append(idlist_atom, idlist_wall)
+
+        for id_jorw in contactid_list:
             self.plotij_singlej(id_i, id_jorw)
 
         print("finish plot ij")
@@ -251,7 +247,7 @@ class plotclass(object):
 
     def plot3Dtraj(self, id_i):
         try:
-            f_read_custom_single = dp.hdf5_csv_path + dp.put_id_on_file([id_i], 'custom_id') + '.h5'
+            f_read_custom_single = dp.put_id_on_file([id_i], dp.f_custom)
         except FileNotFoundError:
             import createdata.datatofile as cd
             cd.dump_custom_select([id_i])
@@ -287,7 +283,7 @@ class plotclass(object):
             else:
                 sys.exit("idj = 0")
 
-            steps = np.arange(step1, step2+1)
+            steps = np.arange(step1, step2)
 
             [work_ftk, work_fnk] = manystepsclass.work_ftkfnk_many_steps()
             sum_ftkwork = np.cumsum(work_ftk, axis=0)
@@ -351,7 +347,7 @@ class plotclass(object):
 
         df_step = cs.extract_dataframe(df, self.step1, self.step2)
 
-        steps = np.arange(self.step1, self.step2+1)
+        steps = np.arange(self.step1, self.step2)
 
         x_array_label_list = [
             [steps,'step']

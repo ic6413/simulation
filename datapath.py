@@ -12,7 +12,7 @@ stepstart = 0
 def put_id_on_file(id_list, f_name_without_id):
     
     if id_list != 'all':
-        f_name_add_id = (f_name_without_id[:-3] + '_id_' + '_'.join(str(i) for i in id_list))
+        f_name_add_id = (f_name_without_id[:-3] + '_id_' + '_'.join(str(i) for i in id_list)) + ".h5"
     else:
         f_name_add_id = f_name_without_id
 

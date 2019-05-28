@@ -79,10 +79,10 @@ def extract_dataframe(df, step1, step2):
     def test1(df, step1, step2):
         if 'Step' in list(df):
             row1 = df['Step'].values.searchsorted(step1-0.5)
-            row2 = df['Step'].values.searchsorted(step2+1-0.5)
+            row2 = df['Step'].values.searchsorted(step2-0.5)
         elif 'step' in list(df):
             row1 = df['step'].values.searchsorted(step1-0.5)
-            row2 = df['step'].values.searchsorted(step2+1-0.5)
+            row2 = df['step'].values.searchsorted(step2-0.5)
         else:
             sys.exit('no step in header')
         df_step = df.iloc[row1:row2]
@@ -90,9 +90,9 @@ def extract_dataframe(df, step1, step2):
 
     #def test2(df, step1, step2):
     #    if 'Step' in list(df):
-    #        df_step = df.loc[df['Step'].isin(list(range(step1, step2+1)))]
+    #        df_step = df.loc[df['Step'].isin(list(range(step1, step2)))]
     #    elif 'step' in list(df):
-    #        df_step = df.loc[df['step'].isin(list(range(step1, step2+1)))]
+    #        df_step = df.loc[df['step'].isin(list(range(step1, step2)))]
     #    else:
     #        sys.exit('no step in header')
     #    return df_step
@@ -638,6 +638,44 @@ def overlapij(ri, rj, xi, xj):
     return [ifoverlap, overlapij_vector, overlap_length]
 
 
+def contact_ids_inonestep(df_onestep, id_i):
+    
+    dfi_onestep = df_onestep.loc[df_onestep['id']==id_i]
+    typei = dfi_onestep[['type']].values
+    ri = radius_by_type(typei)
+    xi = dfi_onestep[['x','y','z']].values
+
+    dfjs_onestep = df_onestep.loc[df_onestep['id']!=id_i]
+    typej = dfjs_onestep[['type']].values
+    rj = radius_by_type(typej)
+    xj = dfjs_onestep[['x','y','z']].values
+    [ifoverlap_ij_onestep, overlapij_vector_onestep, overlapij_length_onestep] = overlapij(ri, rj, xi, xj)
+
+    contact_idj = dfjs_onestep[['id']].values[ifoverlap_ij_onestep]
+
+    idwalls = np.empty(len(wall_list), dtype=int)
+    ifoverlap_iwall_onestep = np.empty(len(wall_list), dtype=bool)
+    
+    for n, walllist in enumerate(wall_list):
+
+        idwalls[n] = -n-1
+
+        if walllist[0] == 'p':
+            wall = wall_p_overlap_class(typei, xi, walllist[1], walllist[2])
+        elif walllist[0] == 'cy':
+            wall = wall_cy_overlap_class(typei, xi, walllist[1], walllist[2], walllist[3])
+        else:
+            print('walltype not p not cy')
+
+        ifoverlap_iwall_onestep[n] = wall.ifoverlap()
+
+    contact_idwall = idwalls[ifoverlap_iwall_onestep]
+
+    contact_idj_wall = np.append(contact_idj,contact_idwall)
+
+    return contact_idj_wall
+
+
 def gravity(mi):
     return mi*g
 
@@ -704,9 +742,9 @@ def error_ratio(error, denominator):
 
 def add_step_to_array(steps_array, array):
     
-    n_column = array.shape[0]
-    n_row = array.shape[1]+1
-    array_addstep = np.empty([n_column, n_row])
+    n_row = array.shape[0]
+    n_column = array.shape[1]+1
+    array_addstep = np.empty([n_row, n_column])
     array_addstep[:,0:1] = steps_array
     array_addstep[:,1:] = array
     
@@ -726,7 +764,7 @@ def step_error_array_with_index(step1, step2, fi_cal, fi, error_tolerence):
     )
 
     fji_error_steps = np.absolute((fi_cal[errorindex,:]-fi[errorindex,:])/fi[errorindex,:])
-    steps_array = np.arange(step1+1, step2+1)[errorindex].reshape((-1,1))
+    steps_array = np.arange(step1+1, step2)[errorindex].reshape((-1,1))
     step_error_array = add_step_to_array(steps_array, fji_error_steps)
     return [step_error_array, errorindex]
 
@@ -814,7 +852,7 @@ def create_wall_class_from_walllist(
 
 def reindex_by_step(df, step1, step2):
     df = df.set_index('step')
-    df = df.reindex(np.arange(step1, step2+1))
+    df = df.reindex(np.arange(step1, step2))
     return df
 
 
@@ -940,13 +978,17 @@ def fjwi_plus_cal_multistep_multicontact_fromcustom(f_read, id_i, step1, step2, 
     
     df_step = extract_dataframe(df, step1, step2)
 
-    if df_step['step'].values[0]==step1:
-        sys.exit('there exist contact in the begin step. can not get history')
+    df_firststep = extract_dataframe(df, step1, step1+1)
+        
+    fisststep_contact_ids = contact_ids_inonestep(df_firststep, id_i)
+
+    if len(fisststep_contact_ids) != 0:
+        sys.exit('there exist contact in the begin step. can not get history. contact id list = {fisststep_contact_ids}'.format(fisststep_contact_ids=fisststep_contact_ids))
     else:
         pass
 
     groups_byid = df_step.groupby(['id'])
-    
+
     dfi = reindex_by_step(groups_byid.get_group(id_i), step1, step2)
     
     typei = dfi[['type']].values[:-1]
@@ -979,9 +1021,9 @@ def fjwi_plus_cal_multistep_multicontact_fromcustom(f_read, id_i, step1, step2, 
         tqj = dfj[['tqx','tqy','tqz']].values[:-1]
         
 
-        fjit_plus_cal_steps = np.empty([step2-step1, 3])
-        fjin_plus_cal_steps = np.empty([step2-step1, 3])
-        tqji_plus_cal_steps = np.empty([step2-step1, 3])
+        fjit_plus_cal_steps = np.empty([step2-step1-1, 3])
+        fjin_plus_cal_steps = np.empty([step2-step1-1, 3])
+        tqji_plus_cal_steps = np.empty([step2-step1-1, 3])
 
         fjit_plus_cal = np.zeros((1,3))
         fjin_plus_cal = np.zeros((1,3))
@@ -991,9 +1033,9 @@ def fjwi_plus_cal_multistep_multicontact_fromcustom(f_read, id_i, step1, step2, 
         total_length = np.zeros((1,1))
         
 
-        for step in range(step1, step2):
+        for step in range(step1+1, step2):
 
-            k = step - step1
+            k = step - (step1+1)
 
             [ftk_include_his, total_displacement, fjit_plus_cal, fjin_plus_cal, tqji_plus_cal, total_length] = (
                 fji_plus_cal(typei[k:k+1], typej[k:k+1], xi[k:k+1], xj[k:k+1], vi[k:k+1], vj[k:k+1], fi[k:k+1], fj[k:k+1], ftk_include_his, total_length, total_displacement, omi[k:k+1], omj[k:k+1], tqi[k:k+1], tqj[k:k+1], method=method)
@@ -1003,16 +1045,15 @@ def fjwi_plus_cal_multistep_multicontact_fromcustom(f_read, id_i, step1, step2, 
             tqji_plus_cal_steps[k:k+1] = tqji_plus_cal
             
 
-
         sum_fjit_plus_cal_steps = sum_fjit_plus_cal_steps + reset_nan_to_zero(fjit_plus_cal_steps)
         sum_fjin_plus_cal_steps = sum_fjin_plus_cal_steps + reset_nan_to_zero(fjin_plus_cal_steps)
         sum_tqji_plus_cal_steps = sum_tqji_plus_cal_steps + reset_nan_to_zero(tqji_plus_cal_steps)
 
     for walllist in wall_list:
 
-        fjit_plus_cal_steps = np.empty([step2-step1, 3])
-        fjin_plus_cal_steps = np.empty([step2-step1, 3])
-        tqji_plus_cal_steps = np.empty([step2-step1, 3])
+        fjit_plus_cal_steps = np.empty([step2-step1-1, 3])
+        fjin_plus_cal_steps = np.empty([step2-step1-1, 3])
+        tqji_plus_cal_steps = np.empty([step2-step1-1, 3])
 
         fjit_plus_cal = np.zeros((1,3))
         fjin_plus_cal = np.zeros((1,3))
@@ -1027,9 +1068,9 @@ def fjwi_plus_cal_multistep_multicontact_fromcustom(f_read, id_i, step1, step2, 
         omj = 0*xi
         xj_plus = 0*xi_plus
         
-        for step in range(step1, step2):
+        for step in range(step1+1, step2):
 
-            k = step - step1
+            k = step - (step1+1)
 
             wall = create_wall_class_from_walllist(
                         walllist,
@@ -1069,9 +1110,13 @@ def fjwi_plus_cal_multistep_multicontact_fromcustom_v1(f_read, id_i, step1, step
     df = pd.read_hdf(f_read, 'df')
     
     df_step = extract_dataframe(df, step1, step2)
-    
-    if df_step['step'].values[0]==step1:
-        sys.exit('there exist contact in the begin step. can not get history')
+
+    df_firststep = extract_dataframe(df, step1, step1+1)
+
+    fisststep_contact_ids = contact_ids_inonestep(df_firststep, id_i)
+
+    if len(fisststep_contact_ids) != 0:
+        sys.exit('there exist contact in the begin step. can not get history. contact id list = {fisststep_contact_ids}'.format(fisststep_contact_ids=fisststep_contact_ids))
     else:
         pass
 
@@ -1212,7 +1257,7 @@ def fjwi_plus_check_multistep_multicontact_fromcustom_inputvariablefunc(f_read, 
     [f_step_error_array, f_errorindex] = step_error_array_with_index(step1, step2, fi_cal, fi_plus, error_tolerence)
     [tq_step_error_array, tq_errorindex] = step_error_array_with_index(step1, step2, sum_tqji_plus_cal_steps, tqi_plus, error_tolerence)
     
-    steps_array = np.arange(step1+1, step2+1)
+    steps_array = np.arange(step1+1, step2)
     steps_array = steps_array.reshape((-1,1))
 
     step_fi_cal = add_step_to_array(steps_array, fi_cal)
@@ -1249,9 +1294,9 @@ def contact_check_multistep(f_read, id_i, step1, step2):
     
     dfi = reindex_by_step(groups_byid.get_group(id_i), step1, step2)
     
-    typei = dfi[['type']].values[:-1]
+    typei = dfi[['type']].values
     ri = radius_by_type(typei)
-    xi = dfi[['x','y','z']].values[:-1]
+    xi = dfi[['x','y','z']].values
 
     id_list = groups_byid.groups.keys()
 
@@ -1269,9 +1314,9 @@ def contact_check_multistep(f_read, id_i, step1, step2):
     for n, id_j in enumerate(id_j_list):
 
         dfj = reindex_by_step(groups_byid.get_group(id_j), step1, step2)
-        typej = dfj[['type']].values[:-1]
+        typej = dfj[['type']].values
         rj = radius_by_type(typej)
-        xj = dfj[['x','y','z']].values[:-1]
+        xj = dfj[['x','y','z']].values
         
         [ifoverlap_ij, overlapij_vector, overlapij_length] = overlapij(ri, rj, xi, xj)
         ifoverlap_ij_array[:,n:n+1] = ifoverlap_ij
@@ -1332,8 +1377,8 @@ def contact_check_multistep_v1(f_read, id_i, step1, step2):
     
     dfi = (groups_byid.get_group(id_i))
     
-    typei = dfi[['type']].values[:-1]
-    xi = dfi[['x','y','z']].values[:-1]
+    typei = dfi[['type']].values
+    xi = dfi[['x','y','z']].values
 
     id_list = groups_byid.groups.keys()
 
@@ -1353,7 +1398,7 @@ def contact_check_multistep_v1(f_read, id_i, step1, step2):
         dfj = (groups_byid.get_group(id_j))
         
         def selectindexfori(dfj):
-            indexjfori = (dfj[['step']].values[:-1]-step1).astype(int)
+            indexjfori = (dfj[['step']].values-step1).astype(int)
             indexjfori = indexjfori[:,0].T
             return indexjfori
         
@@ -1362,8 +1407,8 @@ def contact_check_multistep_v1(f_read, id_i, step1, step2):
         typei = dfi[['type']].values[indexjfori]
         xi = dfi[['x','y','z']].values[indexjfori]
 
-        typej = dfj[['type']].values[:-1]
-        xj = dfj[['x','y','z']].values[:-1]
+        typej = dfj[['type']].values
+        xj = dfj[['x','y','z']].values
 
         jtoi = j_overlap_class(typei, xi, typej, xj)
 
@@ -1604,7 +1649,7 @@ def fjwi_plus_check_multistep_1contact_fromcustom(f_read, id_i, step1, step2, er
         [f_step_error_array, f_errorindex] = step_error_array_with_index(step1, step2, fji_cal, fji_plus, error_tolerence)
         [tq_step_error_array, tq_errorindex] = step_error_array_with_index(step1, step2, tqji_plus_cal, tqi_plus, error_tolerence)
         
-        steps_array = np.arange(step1+1, step2+1)
+        steps_array = np.arange(step1+1, step2)
         steps_array = steps_array.reshape((-1,1))
 
         step_fji_cal = add_step_to_array(steps_array, fji_cal)

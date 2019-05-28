@@ -5,9 +5,9 @@ gc.define_attribute_dict()
 import createdata.datatofile as cd
 cd.thermo_hdf5_csv()
 cd.dump_custom()
-id_i = 15583
-step1 = 330000
-step2 = 870000
+id_i = 15556
+step1 = 57860
+step2 = 57900
 
 import calculate.checkoutputfile as cco
 cco.checkoverlap(id_i, step1, step2).checkprint()

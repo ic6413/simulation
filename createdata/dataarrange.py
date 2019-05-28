@@ -1,5 +1,5 @@
 # import
-import os
+import os.path
 from io import StringIO
 import re
 import time
@@ -283,7 +283,7 @@ class handledumppair(handledump):
 class handlecustomselect(handlelammpfile):
 
     def __init__(self, f_in_custom, id_i_list, override, ifcsv):
-        f_out = dp.put_id_on_file(id_i_list, f_in_custom)
+        f_out = dp.put_id_on_file(id_i_list, dp.f_custom)
         super().__init__(f_out, override, ifcsv)
         self.id_i_list = id_i_list
         self.f_custom_all_out = dp.f_custom
