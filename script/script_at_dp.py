@@ -1,11 +1,10 @@
 #!/usr/bin/env python
-import getattribute.create_attributes as gc
 import createdata.datatofile as cd
 import calculate.checkoutputfile as cco
 import plotfigure.plottofile as ppf
 
 # attribute
-gc.define_attribute_dict()
+#gc.define_attribute_dict()
 
 # thermo
 cd.thermo_hdf5_csv()

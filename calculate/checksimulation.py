@@ -15,6 +15,7 @@ from mpl_toolkits.mplot3d import Axes3D
 # import module in simulation folder
 import osmanage as om
 import datapath as dp
+# import attributes.py
 
 # ==== inputvariable varables ====
 # current module variable
@@ -24,29 +25,56 @@ abs_error_tolerence = 1e-18
 # ==== inputvariable varables end ====
 
 # ====================================== import variable
-with open(dp.f_attribute, 'r') as f:
-    attribute = json.load(f)
-# atom radius
-dp0 = attribute['dp0']
-density = attribute['density']
-# intersection pointmu
-r_in = attribute['r_in']
-r_out = attribute['r_out']
-# gravity
-g = attribute['g']
-# parameter
-mu = attribute['mu']
-kn = attribute['kn'] 
-kt = attribute['kt'] 
-gamma_n = attribute['gamma_n']
-gamma_t = attribute['gamma_t']
-
-type_radius_array = np.transpose(np.asarray(attribute['type_radius_list']))
-walls_p = attribute['walls_p']
-walls_cy = attribute['walls_cy']
-
+import imp
+attributes = imp.load_source('attributes', dp.attribute_py_path)
 # timestep
-ts = attribute['ts']
+ts = attributes.ts
+# atom radius
+dp0 = attributes.dp0
+density = attributes.density
+# intersection pointmu
+r_in = attributes.r_in
+r_out = attributes.r_out
+# gravity
+g = attributes.g
+# parameter
+mu = attributes.mu
+kn = attributes.kn 
+kt = attributes.kt 
+gamma_n = attributes.gamma_n
+gamma_t = attributes.gamma_t
+
+type_radius_array = np.transpose(np.asarray(attributes.type_radius_list))
+walls_p = attributes.walls_p
+walls_cy = attributes.walls_cy
+
+
+#====
+#with open(dp.f_attribute, 'r') as f:
+#    attribute = json.load(f)
+## timestep
+#ts = attribute['ts']
+## atom radius
+#dp0 = attribute['dp0']
+#density = attribute['density']
+## intersection pointmu
+#r_in = attribute['r_in']
+#r_out = attribute['r_out']
+## gravity
+#g = attribute['g']
+## parameter
+#mu = attribute['mu']
+#kn = attribute['kn'] 
+#kt = attribute['kt'] 
+#gamma_n = attribute['gamma_n']
+#gamma_t = attribute['gamma_t']
+#
+#type_radius_array = np.transpose(np.asarray(attribute['type_radius_list']))
+#walls_p = attribute['walls_p']
+#walls_cy = attribute['walls_cy']
+#
+## timestep
+#ts = attribute['ts']
 # ====================================== end import variable
 wall_list = (walls_p + walls_cy)
 wall_list_name = [None]*len(wall_list)

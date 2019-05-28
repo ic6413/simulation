@@ -29,6 +29,7 @@ thermo_path = lammps_directory + logname
 ## folder path of output
 post_process_path = lammps_directory + 'postprocess/'
 # attribute
+attribute_py_path = lammps_directory + 'attributes.py'
 attribute_json_path = post_process_path + 'attribute/'
 # hdf5
 hdf5_csv_path = post_process_path + 'hdf5_csv/'
