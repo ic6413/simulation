@@ -56,3 +56,9 @@ try:
 except FileNotFoundError:
     cd.dump_custom_select([id_i])
 
+id_i = 15583
+try:
+    ppf.plotclass(200000, 300000).plotsingle(id_i, variable_name_list)
+except FileNotFoundError:
+    cd.dump_custom_select([id_i])
+
