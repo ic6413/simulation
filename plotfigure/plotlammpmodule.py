@@ -39,12 +39,15 @@ class lammp_figure(object):
         self.ylabel = ylabel
         self.step1 = step1
         self.step2 = step2
+        self.fig = plt.figure()
+        plt.xscale('linear')
+        plt.yscale('log')
+        #plt.yscale('symlog', linthreshy=1e-20)
         
 
     def create_lammp_figure(self):
         
-        fig = plt.figure()
-        
+
         def array_to1D(array):
             array_dim = array.ndim
             if array_dim == 1:
@@ -63,17 +66,14 @@ class lammp_figure(object):
 
         plt.plot(array_x, array_y)
 
-        plt.xscale('linear')
-        plt.yscale('linear')
-        #plt.yscale('symlog', linthreshy=1e-20)
+        
         plt.xticks(rotation=20, fontsize=14)
         plt.yticks(fontsize=14)
 
         plt.xlabel(self.xlabel)
         plt.ylabel(self.ylabel)
         self.add_title()
-        
-        return fig
+
         
     def add_title(self):
         pass
@@ -82,8 +82,8 @@ class lammp_figure(object):
         pass
 
     def create_and_save(self, outputfolder):
-        fig = self.create_lammp_figure()
-        fig.savefig(outputfolder + self.filename(), bbox_inches='tight')   # save the figure to file
+        self.create_lammp_figure()
+        self.fig.savefig(outputfolder + self.filename(), bbox_inches='tight')   # save the figure to file
 
 class lammp_figure_thermo(lammp_figure):
     
@@ -139,17 +139,12 @@ class lammp_figure_atomi_wall(lammp_figure):
         return filename
 
 
-class lammp_3Dtrajfigure(object):
+class lammp_3Dtrajfigure(lammp_figure):
 
-    def __init__(self, step1, step2, array_x, array_y, array_z, label_x,label_y,label_z):
-        self.step1 = step1
-        self.step2 = step2
-        self.array_x = array_x
-        self.array_y = array_y
+    def __init__(self, step1, step2, array_x, array_y, array_z, xlabel,ylabel,zlabel):
+        super().__init__(step1, step2, array_x, xlabel, array_y, ylabel)
         self.array_z = array_z
-        self.label_x = label_x
-        self.label_y = label_y
-        self.label_z = label_z
+        self.zlabel = zlabel
 
     def skipsteps(self, step):
         self.array_x = self.array_x[::step]
@@ -160,37 +155,33 @@ class lammp_3Dtrajfigure(object):
     def create_3Dlammp_figure(self):
         
         self.skipsteps(1000)
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
+        
+        ax = self.fig.add_subplot(111, projection='3d')
         vx = np.diff(self.array_x)
         vy = np.diff(self.array_y)
         vz = np.diff(self.array_z)
 
         ax.quiver(self.array_x[:-1], self.array_y[:-1], self.array_z[:-1], vx, vy, vz, normalize=True, length = 0.0002)
 
-        plt.xscale('linear')
-        plt.yscale('linear')
-        #plt.yscale('symlog', linthreshy=1e-20)
         plt.xticks(rotation=20, fontsize=14)
         plt.yticks(fontsize=14)
 
-        plt.xlabel(self.label_x)
-        plt.ylabel(self.label_y)
-        plt.ylabel(self.label_z)
+        plt.xlabel(self.xlabel)
+        plt.ylabel(self.ylabel)
+        plt.ylabel(self.zlabel)
 
         self.add_title()
-        
-        return fig
+
         
     def add_title(self):
         plt.title('3D')
 
     def filename(self):
-        filename = self.label_x + '_' + self.label_y + '_' + self.label_z + '_step_' + str(self.step1) + '_' + str(self.step2) + '.png'
+        filename = self.xlabel + '_' + self.ylabel + '_' + self.zlabel + '_step_' + str(self.step1) + '_' + str(self.step2) + '.png'
         return filename
 
     def create_and_save(self, outputfolder):
-        fig = self.create_3Dlammp_figure()
-        fig.savefig(outputfolder + self.filename(), bbox_inches='tight')   # save the figure to file
+        self.create_3Dlammp_figure()
+        self.fig.savefig(outputfolder + self.filename(), bbox_inches='tight')   # save the figure to file
 
 

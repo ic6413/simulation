@@ -10,7 +10,7 @@ import plotfigure.plottofile as ppf
 cd.thermo_hdf5_csv()
 # thermo plot
 variable_name_list = 'all'
-ppf.plotclass(0, 600000).plotthermo(variable_name_list)
+ppf.plotclass(700000, 1180000).plotthermo(variable_name_list)
 
 # custom
 cd.dump_custom()
