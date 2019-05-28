@@ -49,6 +49,7 @@ class checkforce(checkfile):
         super().__init__(id_i, step1, step2)
         self.error_tolerence = error_tolerence
         self.method_list = method_list # method = 0, 1, 2 are correct. method = 3~7(8) wrong
+        print("checking force")
 
     def f_name(self):
         return 'check_force_' + self.string_idi_step()
@@ -78,6 +79,8 @@ class checkforce(checkfile):
             pprint.pprint("fi_cal_in_error_step", open(file, 'a'))
             pprint.pprint(fi_cal_in_error_step, open(file, 'a'))
             pprint.pprint('===========', open(file, 'a'))
+        
+        print("finish printing to file")
 
 class check_ft_1_contact(checkforce):
     
@@ -98,6 +101,7 @@ class check_ft_1j_contact(check_ft_1_contact):
     
     def __init__(self, id_i, step1, step2, error_tolerence, method_list):
         super().__init__(id_i, step1, step2, error_tolerence, method_list)
+        print("check contact with single atom j")
 
     def f_name(self):
         return 'check_1contact_force_' + 'j' + '_' + self.string_idi_step()
@@ -135,11 +139,13 @@ class check_ft_1j_contact(check_ft_1_contact):
                 pprint.pprint('=========', open(file, 'a'))
         else:
             print("contact is {n_contact} not 1 so not print".format(n_contact=self.number_contact()))
+        print("finish printing to file")
 
 class check_ft_1w_contact(check_ft_1_contact):
 
     def __init__(self, id_i, step1, step2, error_tolerence, method_list):
         super().__init__(id_i, step1, step2, error_tolerence, method_list)
+        print("check contact with single wall")
 
     def f_name(self):
         return 'check_1contact_force_' + 'w' + '_' + self.string_idi_step()
@@ -178,10 +184,14 @@ class check_ft_1w_contact(check_ft_1_contact):
         else:
             print("contact is {n_contact} not 1 so not print".format(n_contact=self.number_contact()))
 
+        print("finish printing to file")
+
+        
 class checkoverlap(checkfile):
     
     def __init__(self, id_i, step1, step2):
         super().__init__(id_i, step1, step2)
+        print ('creating overlap')
     
     def f_name(self):
         return 'check_overlap_' + self.string_idi_step()
@@ -201,6 +211,7 @@ class checkoverlap(checkfile):
         ])
         pprint.pprint(step_id_ifover_diffnext, open(file, 'a'))
         pprint.pprint('==========', open(file, 'a'))
+        print ("file printed")
 
 
 # v1 means contact_check_multistep_v1

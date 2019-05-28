@@ -3,7 +3,9 @@ import pprint
 import datetime
 import numpy as np
 import pandas as pd
+import matplotlib as mpl
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 # import simulation module
 import osmanage as om
 import datapath as dp
@@ -138,3 +140,60 @@ class lammp_figure_atomi_wall(lammp_figure):
     def filename(self):
         filename = self.ylabel + '_' + self.xlabel + '_idi_' + str(self.id_i) + '_idwall_' + str(self.id_j) + '_step_' + str(self.step1) + '_' + str(self.step2) + '.png'
         return filename
+
+
+class lammp_3Dtrajfigure(object):
+
+    def __init__(self, step1, step2, array_x, array_y, array_z, label_x,label_y,label_z):
+        self.step1 = step1
+        self.step2 = step2
+        self.array_x = array_x
+        self.array_y = array_y
+        self.array_z = array_z
+        self.label_x = label_x
+        self.label_y = label_y
+        self.label_z = label_z
+
+    def skipsteps(self, step):
+        self.array_x = self.array_x[::step]
+        self.array_y = self.array_y[::step]
+        self.array_z = self.array_z[::step]
+        
+
+    def create_3Dlammp_figure(self):
+        
+        self.skipsteps(1000)
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        vx = np.diff(self.array_x)
+        vy = np.diff(self.array_y)
+        vz = np.diff(self.array_z)
+
+        ax.quiver(self.array_x[:-1], self.array_y[:-1], self.array_z[:-1], vx, vy, vz, normalize=True, length = 0.0002)
+
+        plt.xscale('linear')
+        plt.yscale('linear')
+        #plt.yscale('symlog', linthreshy=1e-20)
+        plt.xticks(rotation=20, fontsize=14)
+        plt.yticks(fontsize=14)
+
+        plt.xlabel(self.label_x)
+        plt.ylabel(self.label_y)
+        plt.ylabel(self.label_z)
+
+        self.add_title()
+        
+        return fig
+        
+    def add_title(self):
+        plt.title('3D')
+
+    def filename(self):
+        filename = self.label_x + '_' + self.label_y + '_' + self.label_z + '_step_' + str(self.step1) + '_' + str(self.step2) + '.png'
+        return filename
+
+    def create_and_save(self, outputfolder):
+        fig = self.create_3Dlammp_figure()
+        fig.savefig(outputfolder + self.filename(), bbox_inches='tight')   # save the figure to file
+
+

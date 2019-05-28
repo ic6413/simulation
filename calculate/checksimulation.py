@@ -624,15 +624,15 @@ class wall_cy_class(wall_class):
         n = unit(self.vector_to_axis_plus())*self.d_to_surface_plus()/np.abs(self.d_to_surface_plus())
         return -self.overlap_length_plus()*n*self.ifoverlap_plus()
 
+def setnocontacttonan(array, ifoverlapcheck):
+    array[~ifoverlapcheck[:,0],:]=np.nan
+    return array
 
 def overlapij(ri, rj, xi, xj):
     xij = (xi - xj)
     overlap_length = ri + rj - length(xij)
     ifoverlap = (overlap_length >= overlap_tolerence)
     overlapij_vector = -overlap_length*unit(xij)*ifoverlap
-    def setnocontacttonan(array, ifoverlapcheck):
-        array[~ifoverlapcheck[:,0],:]=np.nan
-        return array
     overlap_length = setnocontacttonan(overlap_length, ifoverlap)
     overlapij_vector = setnocontacttonan(overlapij_vector, ifoverlap)
     return [ifoverlap, overlapij_vector, overlap_length]
@@ -1743,7 +1743,8 @@ class manysteps_idj(manysteps):
     def vijt_contactpoint(self):
         ri = radius_by_type(self.typei)
         rj = radius_by_type(self.typej)
-        return rj/(ri+rj)*get_vijt(self.typei, self.typej, self.xi, self.xj, self.vi, self.vj, np.zeros_like(self.vi), np.zeros_like(self.vj))
+        [ifoverlap, overlapij_vector, overlap_length] = overlapij(ri, rj, self.xi, self.xj)
+        return ifoverlap*(rj/(ri+rj)*get_vijt(self.typei, self.typej, self.xi, self.xj, self.vi, self.vj, np.zeros_like(self.vi), np.zeros_like(self.vj)))
 
     def vijn(self):
         return get_vijn(self.xi, self.xj, self.vi, self.vj)
@@ -1757,6 +1758,12 @@ class manysteps_idj(manysteps):
         [mi, ri, I_i, vi_half_pre, xi_minus_cal, omi_half_pre] = calculate_m_r_I_vh_xp_omh_pre(self.typei, density, self.fi, self.tqi, self.xi, self.vi, self.omi)
         [mj, rj, I_j, vj_half_pre, xj_minus_cal, omj_half_pre] = calculate_m_r_I_vh_xp_omh_pre(self.typej, density, self.fj, self.tqj, self.xj, self.vj, self.omj)
         return get_vijn(self.xi, self.xj, vi_half_pre, vj_half_pre)
+    
+    def ifoverlap(self):
+        ri = radius_by_type(self.typei)
+        rj = radius_by_type(self.typej)
+        [ifoverlap, overlapij_vector, overlap_length] = overlapij(ri, rj, self.xi, self.xj)
+        return ifoverlap
 
     def overlap_length(self):
         ri = radius_by_type(self.typei)
@@ -1822,7 +1829,8 @@ class manysteps_wall(manysteps):
         return get_viwt(self.typei, self.wall, self.xi, self.vi, self.omi)
 
     def vijt_contactpoint(self):
-        return get_viwt(self.typei, self.wall, self.xi, self.vi, np.zeros_like(self.vi))
+        ifoverlap = self.wall.ifoverlap()
+        return ifoverlap*(get_viwt(self.typei, self.wall, self.xi, self.vi, np.zeros_like(self.vi)))
 
 
     def vijn(self):
@@ -1834,6 +1842,9 @@ class manysteps_wall(manysteps):
     def vijn_half_pre(self):    
         [mi, ri, I_i, vi_half_pre, xi_minus_cal, omi_half_pre] = calculate_m_r_I_vh_xp_omh_pre(self.typei, density, self.fi, self.tqi, self.xi, self.vi, self.omi)
         return get_viwn(self.typei, self.wall, self.xi, vi_half_pre)
+
+    def ifoverlap(self):
+        return self.wall.ifoverlap()
 
     def overlap_length(self):
         return self.wall.overlap_length()

@@ -1,6 +1,7 @@
 import createdata.datatofile as cd
 import calculate.checkoutputfile as cco
 import plotfigure.plottofile as ppf
+import getattribute.create_attributes as gc
 
 
 
@@ -28,7 +29,7 @@ class script_attribute(scripttofile):
         return 'creating attribute'
 
     def tofile(self):
-        import getattribute.create_attributes
+        gc.define_attribute_dict()
         
 
 class script_thermo(scripttofile):
@@ -157,4 +158,16 @@ class script_plotsingle(script_idi_steps):
             ppf.plotclass(self.step1, self.step2).plotsingle(self.id_i, self.variable_name_list)
         except FileNotFoundError:
             script_custom_single(self.id_i).executive()
-        
+
+class script_plot3D(script_idi_steps):
+    def __init__(self, id_i, step1, step2):
+        super().__init__(id_i, step1, step2)
+    
+    def startstring(self):
+        return 'plotting 3D id {id}'.format(id=self.id_i)
+
+    def tofile(self):
+        try:
+            ppf.plotclass(self.step1, self.step2).plot3Dtraj(self.id_i)
+        except FileNotFoundError:
+            script_custom_single(self.id_i).executive()
