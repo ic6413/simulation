@@ -4,8 +4,6 @@ import calculate.checkoutputfile as cco
 import plotfigure.plottofile as ppf
 
 
-
-
 # attribute
 #gc.define_attribute_dict()
 
