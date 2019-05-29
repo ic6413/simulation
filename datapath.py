@@ -18,6 +18,10 @@ def put_id_on_file(id_list, f_name_without_id):
 
     return f_name_add_id
 
+def put_maxlabel_on_file(maxlabel, f_name_without_id):
+    f_name_add_id = f_name_without_id[:-3] + '_maxlabel_' + maxlabel + ".h5"
+    return f_name_add_id
+
 # Lammps output file name
 dumpname_custom = "nb_maxKEatom_0.dump"
 dumpname_pair = "pair_trace_0.dump"
@@ -44,6 +48,7 @@ debug_fig_path = debug_print_path + 'fig/'
 debug_fig_thermo_path = debug_fig_path + 'thermo/'
 debug_fig_oneatom_path = debug_fig_path + 'oneatom/'
 debug_fig_atomij_path = debug_fig_path + 'atomij/'
+
 # interactive
 interactive_path = post_process_path + 'interactive/'
 # diagram

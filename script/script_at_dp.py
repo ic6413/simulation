@@ -3,6 +3,12 @@ import createdata.datatofile as cd
 import calculate.checkoutputfile as cco
 import plotfigure.plottofile as ppf
 
+import matplotlib.pyplot as plt
+plt.xscale('linear')
+plt.yscale('log')
+#plt.yscale('symlog', linthreshy=1e-20)
+
+
 # attribute
 #gc.define_attribute_dict()
 
@@ -10,9 +16,12 @@ import plotfigure.plottofile as ppf
 cd.thermo_hdf5_csv()
 # thermo plot
 variable_name_list = 'all'
-ppf.plotclass(700000, 1180000).plotthermo(variable_name_list)
-
+ppf.plotfromthermo(0, 300000).plotthermo(variable_name_list)
+variable_name_list = 'all'
+ppf.plotfromcustom(0, 300000).plotmaxKE_everystep('c_KEt_atom', variable_name_list)
+"""
 # custom
+
 cd.dump_custom()
 id_i = 15556
 step1 = 57860
@@ -27,18 +36,18 @@ cco.check_ft_1j_contact(id_i, step1, step2, error_tolerence, method_list).checkp
 cco.check_ft_1w_contact(id_i, step1, step2, error_tolerence, method_list).checkprint()
 
 
-ppf.plotclass(step1, step2).plotij(id_i)
+ppf.plotfromcustom(step1, step2).plotij(id_i)
 
 
 
 
 id_i = 15556
 
-ppf.plotclass(0, 100000).plot3Dtraj(id_i)
-ppf.plotclass(0, 10000).plot3Dtraj(id_i)
+ppf.plotfromcustomselect(0, 100000, id_i).plot3Dtraj()
+ppf.plotfromcustomselect(0, 10000, id_i).plot3Dtraj()
 
 for i in range(0,800000,200000):
-    ppf.plotclass(i, i+200000).plot3Dtraj(id_i)
+    ppf.plotclass(i, i+200000, id_i).plot3Dtraj()
 cd.dump_custom_select([id_i])
 y_variables = [
         'fx',
@@ -60,13 +69,14 @@ y_variables = [
 variable_name_list = 'all'
 
 try:
-    ppf.plotclass(step1, step2).plotsingle(id_i, variable_name_list)
+    ppf.plotfromcustomselect(step1, step2, id_i).plotsingle(variable_name_list)
 except FileNotFoundError:
     cd.dump_custom_select([id_i])
 
 id_i = 15583
 try:
-    ppf.plotclass(200000, 300000).plotsingle(id_i, variable_name_list)
+    ppf.plotfromcustomselect(200000, 300000, id_i).plotsingle(variable_name_list)
 except FileNotFoundError:
     cd.dump_custom_select([id_i])
 
+"""

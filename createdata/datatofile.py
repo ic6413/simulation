@@ -12,15 +12,16 @@ override='no'
 ifcsv='no'
 
 def thermo_hdf5_csv():
-    da.handlelog(dp.thermo_path, override, ifcsv).tohdf5()
+    da.handlelog(override, ifcsv).tohdf5()
 
 def dump_custom():
-    da.handledumpcustom(dp.custom_path, override, ifcsv).tohdf5()
+    da.handledumpcustom(override, ifcsv).tohdf5()
 
 def dump_custom_select(id_i_list):
-    da.handlecustomselect(dp.custom_path, id_i_list, override, ifcsv).tohdf5()
+    da.handlecustomselect(id_i_list, override, ifcsv).tohdf5()
 
 def dump_custom_pair_combine(id_i_list):
-    da.handle_merge_custom_pair(dp.custom_path, dp.pair_path, id_i_list, override, ifcsv).tohdf5()
-    
-    
+    da.handle_merge_custom_pair(id_i_list, override, ifcsv).tohdf5()
+
+def dump_custom_max(maxlabel):
+    da.handlecustom_max_everysteps(maxlabel, override, ifcsv).tohdf5()

@@ -92,10 +92,10 @@ class handlelammpfile(object):
 
 class handlelog(handlelammpfile):
 
-    def __init__(self, f_log_in, override, ifcsv):
+    def __init__(self, override, ifcsv):
         f_out = dp.f_thermo
         super().__init__(f_out, override, ifcsv)
-        self.f_log_in = f_log_in
+        self.f_log_in = dp.thermo_path
         print("handle log")
 
     def todataframe(self):
@@ -267,30 +267,31 @@ class handledump(handlelammpfile):
 
 class handledumpcustom(handledump):
 
-    def __init__(self, f_in, override, ifcsv):
+    def __init__(self, override, ifcsv):
         f_out = dp.f_custom
+        f_in = dp.custom_path
         super().__init__(f_in, f_out, override, ifcsv)
         print("handle dumpcustom")
 
 class handledumppair(handledump):
 
-    def __init__(self, f_in, override, ifcsv):
+    def __init__(self, override, ifcsv):
         f_out = dp.f_pair
+        f_in = dp.pair_path
         super().__init__(f_in, f_out, override, ifcsv)
         print("handle dumppair")
 
 
 class handlecustomselect(handlelammpfile):
 
-    def __init__(self, f_in_custom, id_i_list, override, ifcsv):
+    def __init__(self, id_i_list, override, ifcsv):
         f_out = dp.put_id_on_file(id_i_list, dp.f_custom)
         super().__init__(f_out, override, ifcsv)
         self.id_i_list = id_i_list
         self.f_custom_all_out = dp.f_custom
-        self.dumpcustomall = handledumpcustom(f_in_custom, override, ifcsv)
+        self.dumpcustomall = handledumpcustom(override, ifcsv)
         print("handle customselect")
-
-        
+   
 
     def todataframe(self):
 
@@ -309,18 +310,45 @@ class handlecustomselect(handlelammpfile):
     def tohdf5(self):
         super().tohdf5(self.todataframe())
 
+class handlecustom_max_everysteps(handlelammpfile):
+
+    def __init__(self, maxlabel, override, ifcsv):
+        f_out = dp.put_maxlabel_on_file(maxlabel, dp.f_custom)
+        super().__init__(f_out, override, ifcsv)
+        self.maxlabel = maxlabel
+        self.f_custom_all_out = dp.f_custom
+        self.dumpcustomall = handledumpcustom(override, ifcsv)
+        print("handle custom_max_everysteps")
+
+    def todataframe(self):
+
+        if os.path.isfile(self.f_out) and (self.override == 'no'):
+            print ('h5 file exist, so create dataframe from previous saved file')
+            df_max = pd.read_hdf(self.f_out)
+        else:
+            print ("reading f_in_custom and creating h5")
+            self.dumpcustomall.tohdf5()
+            dfc = pd.read_hdf(self.f_custom_all_out)
+            # find maxKE in everysteps
+            df_max = dfc.loc[dfc.groupby(["step"])[self.maxlabel].idxmax()]
+
+        return df_max
+
+    def tohdf5(self):
+        super().tohdf5(self.todataframe())
+
 
 class handle_merge_custom_pair(handlelammpfile):
 
-    def __init__(self, f_in_custom, f_in_pair, id_i_list, override, ifcsv):
+    def __init__(self, id_i_list, override, ifcsv):
         f_out = dp.put_id_on_file(id_i_list, dp.f_cipcj)
         super().__init__(f_out, override, ifcsv)
         self.id_i_list = id_i_list
         self.f_custom_all_out = dp.f_custom
         self.f_pair_all_out = dp.f_pair
-        self.dumpcustomall = handledumpcustom(f_in_custom, override, ifcsv)
-        self.dumpcustomselect = handlecustomselect(f_in_custom, id_i_list, override, ifcsv)
-        self.dumppairall = handledumppair(f_in_pair, override, ifcsv)
+        self.dumpcustomall = handledumpcustom(override, ifcsv)
+        self.dumpcustomselect = handlecustomselect(id_i_list, override, ifcsv)
+        self.dumppairall = handledumppair(override, ifcsv)
         print("handle merge_custom_pair")
 
 
@@ -350,9 +378,6 @@ class handle_merge_custom_pair(handlelammpfile):
 
     def tohdf5(self):
         super().tohdf5(self.todataframe())
-
-
-
 
 
 def thermofile_to_dataframe(file):
