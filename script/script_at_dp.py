@@ -3,10 +3,7 @@ import createdata.datatofile as cd
 import calculate.checkoutputfile as cco
 import plotfigure.plottofile as ppf
 
-import matplotlib.pyplot as plt
-plt.xscale('linear')
-plt.yscale('log')
-#plt.yscale('symlog', linthreshy=1e-20)
+
 
 
 # attribute
@@ -17,8 +14,11 @@ cd.thermo_hdf5_csv()
 # thermo plot
 variable_name_list = 'all'
 ppf.plotfromthermo(0, 300000).plotthermo(variable_name_list)
-variable_name_list = 'all'
-ppf.plotfromcustom(0, 300000).plotmaxKE_everystep('c_KEt_atom', variable_name_list)
+
+ppf.plotfromcustom(0, 300000).plotmaxKE_everystep(
+    'c_KEt_atom', ['c_KEt_atom','c_KEr_atom','v_KEtr_atom','id',]
+    )
+
 """
 # custom
 

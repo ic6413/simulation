@@ -10,9 +10,6 @@ import itertools
 import osmanage as om
 import datapath as dp
 
-# import plot module
-import plotfigure.plotlammpmodule as pp
-
 # import calculate module
 import calculate.checksimulation as cs
 
@@ -48,7 +45,7 @@ class lammp_figure(object):
         self.step2 = step2
         self.fig = plt.figure()
         plt.xscale('linear')
-        plt.yscale('linear')
+        plt.yscale('log')
         #plt.yscale('symlog', linthreshy=1e-20)
         
 
