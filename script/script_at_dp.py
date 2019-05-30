@@ -9,7 +9,7 @@ import plotfigure.plottofile as ppf
 
 # thermo
 cd.thermo_hdf5_csv()
-cd.dump_custom_max("mc_KEt_ato")
+cd.dump_custom_max("c_KEt_atom")
 # thermo plot
 variable_name_list = 'all'
 ppf.plotfromthermo(0, 300000).plotthermo(variable_name_list)
