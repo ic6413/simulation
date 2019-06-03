@@ -12,10 +12,11 @@ cd.thermo_hdf5_csv()
 cd.dump_custom_max("c_KEt_atom")
 # thermo plot
 variable_name_list = 'all'
-ppf.plotfromthermo(0, 300000).plotthermo(variable_name_list)
+ppf.plotfromthermo(570000, 870000).plotthermo(variable_name_list)
 
-ppf.plotfromcustom(0, 300000).plotmaxKE_everystep(
-    'c_KEt_atom', ['c_KEt_atom','c_KEr_atom','v_KEtr_atom','id',]
+variable_name_list2 = ['c_KEt_atom','c_KEr_atom','v_KEtr_atom','id',]
+ppf.plotfromcustom(570000, 870000).plotmaxKE_everystep(
+    'c_KEt_atom', 'all'
     )
 
 """

@@ -75,6 +75,33 @@ def save_dataframe(df, h5filename, ifcsv):
     else:
         pass
 
+def thermofile_to_dataframe(file):
+    with open(file) as f:
+        lines = f.read().strip().split('\n')
+    # index of first row of every block
+    id_headers = [n for n, line in enumerate(lines) if line.startswith('Step Atoms')]
+    if len(id_headers) > 1:
+        string = 'log file has {n} sections, only extract the last section'.format(n=len(id_headers))
+        print(string)
+    # choose last section of thermo output
+    id_header = id_headers[-1]
+    # index of data end
+    id_ends = [n for n, line in enumerate(lines) if line.startswith('Loop time of')]
+    # find data end
+    if len(id_ends) < len(id_headers):
+        id_end = len(lines)-2
+        laststep = lines[id_end].split()[0]
+        print ("simulation not complete, thermo only run to step {laststep}, use the second-last line in log file as end of data".format(laststep=laststep))
+    else:
+        id_end = id_ends[0]
+    # header
+    header = lines[id_header].split()[0:]
+    # select data
+    id_data_begin = id_header + 1
+    data = [lines[t].split() for t in range(id_data_begin, id_end)]
+    # attach data
+    df = pd.DataFrame(data = data, columns = header, dtype = 'float64')
+    return df
 
 class handlelammpfile(object):
     def __init__(self, f_out, override='no', ifcsv='no'):
@@ -106,31 +133,8 @@ class handlelog(handlelammpfile):
         else:
             print ("reading f_log_in and creating h5")
 
-            with open(self.f_log_in) as f:
-                lines = f.read().strip().split('\n')
-            # index of first row of every block
-
-            id_headers = [n for n, line in enumerate(lines) if line.startswith('Step Atoms')]
-            if len(id_headers) > 1:
-                string = 'number of header = {n}'.format(n=len(id_headers))
-                sys.exit(string)
-            id_header = id_headers[0]
-            # index of data end
-            id_ends = [n for n, line in enumerate(lines) if line.startswith('Loop time of')]
-            # find data end
-            if not id_ends:
-                id_end = len(lines)-2
-                laststep = lines[id_end].split()[0]
-                print ("simulation not complete, thermo only run to step {laststep}, use the second-last line in log file as end of data".format(laststep=laststep))
-            else:
-                id_end = id_ends[0]
-            # header
-            header = lines[id_header].split()[0:]
-            # select data
-            id_data_begin = id_header + 1
-            data = [lines[t].split() for t in range(id_data_begin, id_end)]
-            # attach data
-            df = pd.DataFrame(data = data, columns = header, dtype = 'float64')
+            df = thermofile_to_dataframe(self.f_log_in)
+            
         
         return df
 
@@ -380,34 +384,7 @@ class handle_merge_custom_pair(handlelammpfile):
         super().tohdf5(self.todataframe())
 
 
-def thermofile_to_dataframe(file):
-    with open(file) as f:
-        lines = f.read().strip().split('\n')
-    # index of first row of every block
 
-    id_headers = [n for n, line in enumerate(lines) if line.startswith('Step Atoms')]
-    if len(id_headers) > 1:
-        string = 'number of header = {n}'.format(n=len(id_headers))
-        sys.exit(string)
-    id_header = id_headers[0]
-    # index of data end
-    id_ends = [n for n, line in enumerate(lines) if line.startswith('Loop time of')]
-    # find data end
-    if not id_ends:
-        id_end = len(lines)-2
-        laststep = lines[id_end].split()[0]
-        print ("simulation not complete, thermo only run to step {laststep}, use the second-last line in log file as end of data".format(laststep=laststep))
-    else:
-        id_end = id_ends[0]
-    # header
-    header = lines[id_header].split()[0:]
-    # select data
-    id_data_begin = id_header + 1
-    data = [lines[t].split() for t in range(id_data_begin, id_end)]
-    # attach data
-    df = pd.DataFrame(data = data, columns = header, dtype = 'float64')
-
-    return df
 
 
 def thermo_file_to_h5_csv(f_thermo, f_output_name, override ='no'):
