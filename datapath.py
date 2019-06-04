@@ -23,8 +23,8 @@ def put_maxlabel_on_file(maxlabel, f_name_without_id):
     return f_name_add_id
 
 # Lammps output file name
-dumpname_custom = "nb_maxKEatom_0.dump"
-dumpname_pair = "pair_trace_0.dump"
+dumpname_custom = "nb_maxKEatom_" + str(stepstart) + ".dump"
+dumpname_pair = "pair_trace_" + str(stepstart) + ".dump"
 logname = "log_" + str(stepstart) + ".lammps"
 # specify the path of inputvariable files
 pair_path = lammps_directory + 'output/dump/' + dumpname_pair
