@@ -521,13 +521,13 @@ class plotfromcustomselect(plotclass):
             else:
                 pass
         
-        def radius_theta(x_component,y_component):
-            radius = (x_component**2+y_component**2)**0.5
+        def d_zaxis_theta(x_component,y_component):
+            d_zaxis = (x_component**2+y_component**2)**0.5
             theta = np.arctan(y_component/x_component)
-            return [radius,theta]
+            return [d_zaxis,theta]
 
-        [radius,theta] = radius_theta(x_component,y_component)
-        y_array_label_list.append([radius,'radius'])
+        [d_zaxis,theta] = d_zaxis_theta(x_component,y_component)
+        y_array_label_list.append([d_zaxis,'d_zaxis'])
         y_array_label_list.append([theta,'theta'])
 
         for xy_array_label in itertools.product(x_array_label_list, y_array_label_list):

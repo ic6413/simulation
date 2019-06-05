@@ -677,6 +677,7 @@ def contact_ids_inonestep(df_onestep, id_i):
     typej = dfjs_onestep[['type']].values
     rj = radius_by_type(typej)
     xj = dfjs_onestep[['x','y','z']].values
+    breakpoint()
     [ifoverlap_ij_onestep, overlapij_vector_onestep, overlapij_length_onestep] = overlapij(ri, rj, xi, xj)
 
     contact_idj = dfjs_onestep[['id']].values[ifoverlap_ij_onestep]
@@ -1006,6 +1007,14 @@ def fjwi_plus_cal_multistep_multicontact_fromcustom(f_read, id_i, step1, step2, 
     
     df_step = extract_dataframe(df, step1, step2)
 
+    df_step_id_i = df_step.loc[df_step['id']==id_i]
+    n_step1tostep2_id_i = len(df_step_id_i.index)
+    n_step = step2 - step1
+    if n_step1tostep2_id_i != step2 - step1:
+        sys.exit('number of id_i in df_step = {n_step1tostep2_id_i}, which is different than step2 - step1 = {n_step}'.format(n_step1tostep2_id_i=n_step1tostep2_id_i, n_step=n_step))
+    else:
+        pass
+
     df_firststep = extract_dataframe(df, step1, step1+1)
         
     fisststep_contact_ids = contact_ids_inonestep(df_firststep, id_i)
@@ -1139,6 +1148,14 @@ def fjwi_plus_cal_multistep_multicontact_fromcustom_v1(f_read, id_i, step1, step
     
     df_step = extract_dataframe(df, step1, step2)
 
+    df_step_id_i = df_step.loc[df_step['id']==id_i]
+    n_step1tostep2_id_i = len(df_step_id_i.index)
+    n_step = step2 - step1
+    if n_step1tostep2_id_i != step2 - step1:
+        sys.exit('number of id_i in df_step = {n_step1tostep2_id_i}, which is different than step2 - step1 = {n_step}'.format(n_step1tostep2_id_i=n_step1tostep2_id_i, n_step=n_step))
+    else:
+        pass
+        
     df_firststep = extract_dataframe(df, step1, step1+1)
 
     fisststep_contact_ids = contact_ids_inonestep(df_firststep, id_i)
