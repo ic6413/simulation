@@ -9,13 +9,17 @@ import plotfigure.plottofile as ppf
 
 # thermo
 cd.thermo_hdf5_csv()
-cd.dump_custom_max("c_KEt_atom")
+
+step1 = 2000000
+step2 = 4000000
 # thermo plot
 variable_name_list = 'all'
-ppf.plotfromthermo(570000, 870000).plotthermo(variable_name_list)
+ppf.plotfromthermo(step1, step2).plotthermo(variable_name_list)
 
+cd.dump_custom_max("c_KEt_atom")
+cco.checkmaxid("c_KEt_atom", step1, step2).checkprint()
 variable_name_list2 = ['c_KEt_atom','c_KEr_atom','v_KEtr_atom','id',]
-ppf.plotfromcustom(570000, 870000).plotmaxKE_everystep(
+ppf.plotfromcustom(step1, step2).plotmaxKE_everystep(
     'c_KEt_atom', 'all'
     )
 

@@ -44,8 +44,11 @@ class lammp_figure(object):
         self.step1 = step1
         self.step2 = step2
         self.fig = plt.figure()
+        plt.style.use('classic')
+        #plt.autoscale(enable=True, axis='y', tight=True)
         plt.xscale('linear')
         plt.yscale('linear')
+        #plt.yscale('linear')
         #plt.yscale('symlog', linthreshy=1e-20)
         
 

@@ -1488,7 +1488,7 @@ def contact_check_multistep_v1(f_read, id_i, step1, step2):
     step_id_ifover_initial[:, 0:1] = step1
     step_id_ifover_initial[:, 1] = id_j_wall_initial_overlap
     step_id_ifover_initial[:, 2] = 1
-
+    ifoverlap_ij_iw_array = ifoverlap_ij_iw_array.astype(int)
 
     return [step_id_ifover_difflast, ifoverlap_ij_iw_array, step_id_ifover_initial]
 
@@ -1980,3 +1980,18 @@ def sum_results_all_contacts(
     return sum
 
 
+def max_id_step(f_read, step1, step2):
+    df = pd.read_hdf(f_read, 'df')
+    df_step = extract_dataframe(df, step1, step2)
+    
+    ids = df_step[['id']].values
+    diff_next = (ids[:-1] != ids[1:])
+    index_diff_next = np.nonzero(diff_next)[0]
+    index_diff_last = index_diff_next + 1
+    step_id_difflast = np.empty( (len(index_diff_last), 2), dtype=int)
+    step_id_difflast[:, 0] = index_diff_last + step1
+    step_id_difflast[:, 1:2] = ids[index_diff_last]
+    step_id_initial = np.array([[step1, ids[0,0]]], dtype=int)
+    step_id = np.concatenate((step_id_initial, step_id_difflast), axis=0)
+
+    return step_id

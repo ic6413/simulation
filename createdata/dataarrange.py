@@ -67,7 +67,7 @@ rename_mapper_pair = {
 
 def save_dataframe(df, h5filename, ifcsv):
 
-    df.to_hdf(h5filename, key='df', mode='w')
+    df.to_hdf(h5filename, key='df', mode='w', format='fixed')
     print ("h5 saved")
     if ifcsv == "yes":
         df.to_csv(h5filename[:-3]+".csv", encoding='utf-8')
@@ -174,7 +174,7 @@ class handledump(handlelammpfile):
 
                 # data
                 # (?:IT|\Z) means end with IT or fileend but not capture the group in this parentheses
-                pattern_data = re.compile("all \n(.*?)(?:IT|\Z)", re.DOTALL)
+                pattern_data = re.compile(header[-1] + " \n(.*?)(?:IT|\Z)", re.DOTALL)
                 f.seek(0)
                 data = pattern_data.findall(f.read())
 
@@ -418,7 +418,7 @@ def dumpfile_to_dataframe(file, selectid='all'):
 
         # data
         # (?:IT|\Z) means end with IT or fileend but not capture the group in this parentheses
-        pattern_data = re.compile("all \n(.*?)(?:IT|\Z)", re.DOTALL)
+        pattern_data = re.compile(header[-1] + " \n(.*?)(?:IT|\Z)", re.DOTALL)
         f.seek(0)
         data = pattern_data.findall(f.read())
 

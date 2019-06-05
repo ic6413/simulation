@@ -7,7 +7,7 @@ lammps_directory = os.getcwd() + '/'  #os.path.expanduser('~/lammps_simulation/r
 print('current working directory:' + lammps_directory)
 
 # Lammps start step
-stepstart = 0
+stepstart = 2000000
 
 def put_id_on_file(id_list, f_name_without_id):
     

@@ -15,8 +15,7 @@ debug_print_path = dp.debug_print_path
 
 class checkfile(object):
 
-    def __init__(self, id_i, step1, step2):
-        self.id_i = id_i
+    def __init__(self, step1, step2):
         self.step1 = step1
         self.step2 = step2
         # begin
@@ -33,16 +32,26 @@ class checkfile(object):
     def stringstep(self):
         return "step_{first}_{second}".format(first=self.step1, second=self.step2)
 
-    def string_idi_step(self):
-        return 'idi_' + str(self.id_i) + '_' + self.stringstep()
-
     def string_wallname_id(self):
         return "(wall_id, wallname) = {first}".format(first=cs.wall_list_id_name)
 
     def print_string_list(self, string_list):
         pprint.pprint ('\n'.join(string_list), open(self.filepath(), 'a'))
 
-class checkforce(checkfile):
+
+class checkfile_look_idi(checkfile):
+
+    def __init__(self, id_i, step1, step2):
+        super().__init__(step1, step2)
+        self.id_i = id_i
+
+    def f_name(self):
+        pass
+
+    def string_idi_step(self):
+        return 'idi_' + str(self.id_i) + '_' + self.stringstep()
+
+class checkforce(checkfile_look_idi):
 
     def __init__(self, id_i, step1, step2, error_tolerence, method_list):
         super().__init__(id_i, step1, step2)
@@ -201,7 +210,7 @@ class check_ft_1w_contact(check_ft_1_contact):
         print("finish printing to file")
 
         
-class checkoverlap(checkfile):
+class checkoverlap(checkfile_look_idi):
     
     def __init__(self, id_i, step1, step2):
         super().__init__(id_i, step1, step2)
@@ -241,3 +250,31 @@ class checkoverlap_v1(checkoverlap):
     def contact_check_multistep(self):
         result_contact_check_multistep = cs.contact_check_multistep_v1(f_custom_path, self.id_i, self.step1, self.step2)
         return result_contact_check_multistep
+
+
+
+class checkmaxid(checkfile):
+    
+    def __init__(self, maxlabel, step1, step2):
+        super().__init__(step1, step2)
+        self.maxlabel = maxlabel
+        self.maxh5file = dp.put_maxlabel_on_file(maxlabel, dp.f_custom)
+        print ('creating maxid')
+    
+    def f_name(self):
+        return 'maxlabel_' + self.maxlabel + "_step_" + str(self.step1) + "_" + str(self.step2)
+    
+    def checkprint(self):
+        file = self.filepath()
+        if os.path.isfile(file):
+            print ('file exist, calculate again and append to the end')
+        else:
+            print ("create file and print to file")
+        id_step = cs.max_id_step(self.maxh5file, self.step1, self.step2)
+        self.print_string_list([
+            datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), self.stringstep(),
+            "step, id for maximum",
+        ])
+        pprint.pprint(id_step, open(file, 'a'))
+        pprint.pprint('==========', open(file, 'a'))
+        print ("file printed")
