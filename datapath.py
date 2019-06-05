@@ -1,5 +1,6 @@
 # import
 import os
+import initialize
 
 # === current module inputvariable ===
 # set lammps directory (current workspace directory or path)
@@ -7,7 +8,7 @@ lammps_directory = os.getcwd() + '/'  #os.path.expanduser('~/lammps_simulation/r
 print('current working directory:' + lammps_directory)
 
 # Lammps start step
-stepstart = 2000000
+stepstart = initialize.stepstart
 
 def put_id_on_file(id_list, f_name_without_id):
     

@@ -10,8 +10,8 @@ import plotfigure.plottofile as ppf
 # thermo
 cd.thermo_hdf5_csv()
 
-step1 = 2000000
-step2 = 4000000
+step1 = 4000000
+step2 = 6000000
 # thermo plot
 variable_name_list = 'all'
 ppf.plotfromthermo(step1, step2).plotthermo(variable_name_list)
@@ -23,7 +23,7 @@ ppf.plotfromcustom(step1, step2).plotmaxKE_everystep(
     'c_KEt_atom', 'all'
     )
 
-
+"""
 # custom
 
 cd.dump_custom()
@@ -43,7 +43,7 @@ step1 = 3060000
 step2 = 4000000
 #ppf.plotfromcustom(step1, step2).plotij(id_i)
 
-
+"""
 
 """
 id_i = 15556
@@ -54,7 +54,7 @@ ppf.plotfromcustomselect(0, 10000, id_i).plot3Dtraj()
 for i in range(0,800000,200000):
     ppf.plotfromcustomselect(i, i+200000, id_i).plot3Dtraj()
 """
-
+id_i = 6109
 cd.dump_custom_select([id_i])
 y_variables = [
         'fx',

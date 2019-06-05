@@ -517,14 +517,36 @@ def select_custom(df_custom, select_id_list):
     if select_id_list == 'all':
         return df_custom
     else:
-        # select traceid
+        # number of step of df_custom
+        steps_of_df_custom = df_custom['step'].values
+        firststep = steps_of_df_custom[0]
+        laststep = steps_of_df_custom[-1]
+        n_step_df_custom = laststep - firststep + 1
+        # number of select id
+        n_select = len(select_id_list)
+        # select traceid for dataframe
         df_select_custom = df_custom.loc[df_custom['id'].isin(select_id_list)]
-        # check id appear in every steps
-        steps_array = df_select_custom['step'].values
-        check_steps = (steps_array[0: -len(select_id_list)] + 1 == steps_array[len(select_id_list): ]).all()
-        if not check_steps:
-            firstwrong = np.where(np.logical_not((steps_array[0: -len(select_id_list)] + 1 == steps_array[len(select_id_list): ])))[0][0]
-            print('one of select atom not in step' + repr(steps_array[firstwrong]))
+        # number of row of df_select_custom
+        n_row_df_select_custom = len(df_select_custom.index)
+        # check len of step array is n_select*n_step_df_custom
+        if n_row_df_select_custom < n_select*n_step_df_custom:
+            sys.exit('len of steps selected less than number_of_atom*number of step, maybe one of the select atom not appear in all the steps of df_custom')
+        elif n_row_df_select_custom > n_select*n_step_df_custom:
+            breakpoint()
+            sys.exit('len of steps selected larger than expected')
+        else:
+            pass
+
+        steps_array_expected = np.repeat(steps_of_df_custom, n_select)
+        steps_df_select_custom = df_select_custom['step'].values
+        check_steps = (steps_array_expected == steps_df_select_custom)
+        if not check_steps.all():
+            id_step_firstwrong = np.nonzero(check_steps)[0][0]
+            step_firstwrong = steps_array_expected[id_step_firstwrong]
+            sys.exit('step ' + repr(step_firstwrong) + 'has less or more atom than expected')
+        else:
+            pass
+        
         return df_select_custom
 
 # create ji pair from ij pair and combine together
