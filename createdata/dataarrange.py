@@ -541,7 +541,7 @@ def select_custom(df_custom, select_id_list):
         steps_df_select_custom = df_select_custom['step'].values
         check_steps = (steps_array_expected == steps_df_select_custom)
         if not check_steps.all():
-            id_step_firstwrong = np.nonzero(check_steps)[0][0]
+            id_step_firstwrong = np.nonzero(~check_steps)[0][0]
             step_firstwrong = steps_array_expected[id_step_firstwrong]
             sys.exit('step ' + repr(step_firstwrong) + 'has less or more atom than expected')
         else:

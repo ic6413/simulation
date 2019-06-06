@@ -669,6 +669,12 @@ def overlapij(ri, rj, xi, xj):
 def contact_ids_inonestep(df_onestep, id_i):
     
     dfi_onestep = df_onestep.loc[df_onestep['id']==id_i]
+    
+    if len(dfi_onestep.index) != 1:
+        sys.exit('row number of dfi_onestep is not 1')
+    else:
+        pass
+
     typei = dfi_onestep[['type']].values
     ri = radius_by_type(typei)
     xi = dfi_onestep[['x','y','z']].values
@@ -1010,8 +1016,18 @@ def fjwi_plus_cal_multistep_multicontact_fromcustom(f_read, id_i, step1, step2, 
     df_step_id_i = df_step.loc[df_step['id']==id_i]
     n_step1tostep2_id_i = len(df_step_id_i.index)
     n_step = step2 - step1
-    if n_step1tostep2_id_i != step2 - step1:
-        sys.exit('number of id_i in df_step = {n_step1tostep2_id_i}, which is different than step2 - step1 = {n_step}'.format(n_step1tostep2_id_i=n_step1tostep2_id_i, n_step=n_step))
+    if n_step1tostep2_id_i != n_step:
+        steps_expected = np.arange(step1, step2)
+        # only compare for same length part before array end
+        min_len = min(n_step1tostep2_id_i, n_step)
+        checksteps = df_step_id_i['step'].values[0:min_len] == steps_expected[0:min_len]
+        if checksteps.all():
+            id_first_wrong_step = min_len
+        else:
+            id_first_wrong_step = np.nonzero(~checksteps)[0][0]
+
+        first_step_wrong = steps_expected[id_first_wrong_step]
+        sys.exit('id_i is not in df read on step = {first_step_wrong}'.format(first_step_wrong=first_step_wrong))
     else:
         pass
 
@@ -1151,8 +1167,18 @@ def fjwi_plus_cal_multistep_multicontact_fromcustom_v1(f_read, id_i, step1, step
     df_step_id_i = df_step.loc[df_step['id']==id_i]
     n_step1tostep2_id_i = len(df_step_id_i.index)
     n_step = step2 - step1
-    if n_step1tostep2_id_i != step2 - step1:
-        sys.exit('number of id_i in df_step = {n_step1tostep2_id_i}, which is different than step2 - step1 = {n_step}'.format(n_step1tostep2_id_i=n_step1tostep2_id_i, n_step=n_step))
+    if n_step1tostep2_id_i != n_step:
+        steps_expected = np.arange(step1, step2)
+        # only compare for same length part before array end
+        min_len = min(n_step1tostep2_id_i, n_step)
+        checksteps = df_step_id_i['step'].values[0:min_len] == steps_expected[0:min_len]
+        if checksteps.all():
+            id_first_wrong_step = min_len
+        else:
+            id_first_wrong_step = np.nonzero(~checksteps)[0][0]
+
+        first_step_wrong = steps_expected[id_first_wrong_step]
+        sys.exit('id_i is not in df read on step = {first_step_wrong}'.format(first_step_wrong=first_step_wrong))
     else:
         pass
         
@@ -1335,6 +1361,25 @@ def contact_check_multistep(f_read, id_i, step1, step2):
     
     df_step = extract_dataframe(df, step1, step2)[['step', 'id', 'type', 'x', 'y', 'z',]]
 
+    df_step_id_i = df_step.loc[df_step['id']==id_i]
+    n_step1tostep2_id_i = len(df_step_id_i.index)
+    n_step = step2 - step1
+    if n_step1tostep2_id_i != n_step:
+        steps_expected = np.arange(step1, step2)
+        # only compare for same length part before array end
+        min_len = min(n_step1tostep2_id_i, n_step)
+
+        checksteps = df_step_id_i['step'].values[0:min_len] == steps_expected[0:min_len]
+        if checksteps.all():
+            id_first_wrong_step = min_len
+        else:
+            id_first_wrong_step = np.nonzero(~checksteps)[0][0]
+
+        first_step_wrong = steps_expected[id_first_wrong_step]
+        sys.exit('id_i is not in df read on step = {first_step_wrong}'.format(first_step_wrong=first_step_wrong))
+    else:
+        pass
+
     groups_byid = df_step.groupby(['id'])
     
     dfi = reindex_by_step(groups_byid.get_group(id_i), step1, step2)
@@ -1417,6 +1462,24 @@ def contact_check_multistep_v1(f_read, id_i, step1, step2):
     df = pd.read_hdf(f_read, 'df')
     
     df_step = extract_dataframe(df, step1, step2)[['step', 'id', 'type', 'x', 'y', 'z',]]
+
+    df_step_id_i = df_step.loc[df_step['id']==id_i]
+    n_step1tostep2_id_i = len(df_step_id_i.index)
+    n_step = step2 - step1
+    if n_step1tostep2_id_i != n_step:
+        steps_expected = np.arange(step1, step2)
+        # only compare for same length part before array end
+        min_len = min(n_step1tostep2_id_i, n_step)
+        checksteps = df_step_id_i['step'].values[0:min_len] == steps_expected[0:min_len]
+        if checksteps.all():
+            id_first_wrong_step = min_len
+        else:
+            id_first_wrong_step = np.nonzero(~checksteps)[0][0]
+
+        first_step_wrong = steps_expected[id_first_wrong_step]
+        sys.exit('id_i is not in df read on step = {first_step_wrong}'.format(first_step_wrong=first_step_wrong))
+    else:
+        pass
 
     groups_byid = df_step.groupby(['id'])
     
@@ -1576,6 +1639,23 @@ def fjwi_plus_cal_multistep_1contact_fromcustom(f_read, id_i, idj_or_idw, step1,
     df = pd.read_hdf(f_read, 'df')
     
     df_step = extract_dataframe(df, step1, step2)
+
+    df_step_id_i = df_step.loc[df_step['id']==id_i]
+    n_step1tostep2_id_i = len(df_step_id_i.index)
+    n_step = step2 - step1
+    if n_step1tostep2_id_i != n_step:
+        steps_expected = np.arange(step1, step2)
+        # only compare for same length part before array end
+        min_len = min(n_step1tostep2_id_i, n_step)
+        checksteps = df_step_id_i['step'].values[0:min_len] == steps_expected[0:min_len]
+        if checksteps.all():
+            id_first_wrong_step = min_len
+        else:
+            id_first_wrong_step = np.nonzero(~checksteps)[0][0]
+        first_step_wrong = steps_expected[id_first_wrong_step]
+        sys.exit('id_i is not in df read on step = {first_step_wrong}'.format(first_step_wrong=first_step_wrong))
+    else:
+        pass
 
     groups_byid = df_step.groupby(['id'])
     

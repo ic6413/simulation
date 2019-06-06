@@ -10,15 +10,20 @@ import plotfigure.plottofile as ppf
 # thermo
 cd.thermo_hdf5_csv()
 
-step1 = 4000000
-step2 = 6000000
+step1 = 2000000
+step2 = 4000000
+
 # thermo plot
 variable_name_list = 'all'
+
 ppf.plotfromthermo(step1, step2).plotthermo(variable_name_list)
 
 cd.dump_custom_max("c_KEt_atom")
+
 cco.checkmaxid("c_KEt_atom", step1, step2).checkprint()
+
 variable_name_list2 = ['c_KEt_atom','c_KEr_atom','v_KEtr_atom','id',]
+
 ppf.plotfromcustom(step1, step2).plotmaxKE_everystep(
     'c_KEt_atom', 'all'
     )
@@ -28,11 +33,12 @@ ppf.plotfromcustom(step1, step2).plotmaxKE_everystep(
 
 cd.dump_custom()
 id_i = 6109
-step1 = 3060000
-step2 = 4000000
+step1 = 4120248
+step2 = 6000000
 
 
 cco.checkoverlap(id_i, step1, step2).checkprint()
+
 error_tolerence = 1e-7
 method_list = list(range(0, 3))
 #cco.checkforce(id_i, step1, step2, error_tolerence, method_list).checkprint()
@@ -53,6 +59,7 @@ ppf.plotfromcustomselect(0, 10000, id_i).plot3Dtraj()
 
 for i in range(0,800000,200000):
     ppf.plotfromcustomselect(i, i+200000, id_i).plot3Dtraj()
+"""
 """
 id_i = 6109
 cd.dump_custom_select([id_i])
@@ -79,6 +86,7 @@ try:
     ppf.plotfromcustomselect(step1, step2, id_i).plotsingle(variable_name_list)
 except FileNotFoundError:
     cd.dump_custom_select([id_i])
+"""
 """
 id_i = 15583
 try:
