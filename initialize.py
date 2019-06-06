@@ -1,1 +1,2 @@
-stepstart = 2000000
+# read project setting from lammps
+startstep = 0

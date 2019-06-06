@@ -1,5 +1,6 @@
 print('create attribute')
 
+startstep = 0
 ts = 4e-7
 # atom radius
 dp0 = 0.00083

@@ -10,8 +10,8 @@ import plotfigure.plottofile as ppf
 # thermo
 cd.thermo_hdf5_csv()
 
-step1 = 2000000
-step2 = 4000000
+step1 = 0
+step2 = 100
 
 # thermo plot
 variable_name_list = 'all'
