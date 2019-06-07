@@ -119,9 +119,9 @@ class handlelammpfile(object):
 
 class handlelog(handlelammpfile):
 
-    def __init__(self, override, ifcsv, fromtraceorall):
+    def __init__(self, override, ifcsv):
         f_out = dp.f_thermo
-        super().__init__(f_out, override, ifcsv, fromtraceorall)
+        super().__init__(f_out, override, ifcsv)
         self.f_log_in = dp.thermo_path
         print("handle log")
 

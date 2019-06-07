@@ -130,11 +130,13 @@ def put_maxlabel_on_file(maxlabel, f_name_without_id):
     return f_name_add_id
 
 # Lammps output file name
+dumpname_custom_all = "all_" + str(startstep) + ".dump"
 dumpname_custom = "nb_maxKEatom_" + str(startstep) + ".dump"
 dumpname_pair = "pair_trace_" + str(startstep) + ".dump"
 logname = "log_" + str(startstep) + ".lammps"
 # specify the path of inputvariable files
 pair_path = lammps_directory + 'output/dump/' + dumpname_pair
+custom_all_path = lammps_directory + 'output/dump/' + dumpname_custom_all
 custom_path = lammps_directory + 'output/dump/' + dumpname_custom
 thermo_path = lammps_directory + logname
 def add_label_max_tracepath(label):

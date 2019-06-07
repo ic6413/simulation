@@ -17,7 +17,7 @@ variable_name_list = 'all'
 ppf.plotfromthermo(step1, step2).plotthermo(variable_name_list)
 
 
-cd.dump_custom_max("c_KEt_atom")
+cd.dump_custom_max("c_KEt_atom", fromtraceorall='all')
 
 """
 #cco.checkmaxid("c_KEt_atom", step1, step2).checkprint()
