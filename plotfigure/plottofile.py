@@ -638,14 +638,21 @@ class plotfromtraceprint_idi(plotclass):
             array = np.arange(step1,step2)
         else:
             array = self.labeltoarray(label)
+        
+        if step1 < 1+dp.startstep:
+            sys.exit("step1 should >= 1+startstep, step1={step1}, startstep={startstep}".format(step1=step1, startstep = dp.startstep))
+        if step2 > dp.startstep+1+len(array):
+            sys.exit("step2 should <= startstep+1+len(array)")
+
         row1 = step1 - 1 - dp.startstep
         row2 = step2 - 1 - dp.startstep
-        array = array[row1:row2]
-        return array
+
+        return array[row1:row2]
+        
         
     def plotsingle(self, x_label, y_label, step1, step2):
 
-        if step1 <= dp.startstep:
+        if step1 < dp.startstep+1:
             sys.exit("step1 in trace print should be larger than startstep, step1={step1}, startstep={startstep}".format(step1=step1, startstep = dp.startstep))
         x_array = self.labelorstepto1Darray(x_label, step1, step2)
         y_array = self.labelorstepto1Darray(y_label, step1, step2)
@@ -686,20 +693,24 @@ class plotfromtraceprint_max(plotclass):
             array = np.arange(step1,step2)
         else:
             array = self.labeltoarray(label)
-        
+        if step1 < 1+dp.startstep:
+            sys.exit("step1 should >= 1+startstep, step1={step1}, startstep={startstep}".format(step1=step1, startstep = dp.startstep))
+        if step2 > dp.startstep+1+len(array):
+            sys.exit("step2 should <= startstep+1+len(array)")
+
         row1 = step1 - 1 - dp.startstep
         row2 = step2 - 1 - dp.startstep
-        array = array[row1:row2]
-        return array
+
+        return array[row1:row2]
+        
         
     def plotsingle(self, x_label, y_label, step1, step2):
 
-        if step1 <= dp.startstep:
+        if step1 < dp.startstep+1:
             sys.exit("step1 in trace print should be larger than startstep, step1={step1}, startstep={startstep}".format(step1=step1, startstep = dp.startstep))
 
         x_array = self.labelorstepto1Darray(x_label, step1, step2)
         y_array = self.labelorstepto1Darray(y_label, step1, step2)
-
         figclass = lammp_figure_max(step1, step2, x_array, x_label, y_array, y_label, self.maxlabel)
         figclass.create_and_save(self.debug_fig_max_path)
         plt.close('all')

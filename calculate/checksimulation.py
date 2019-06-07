@@ -75,14 +75,25 @@ def reset_nan_to_zero(A):
 def extract_dataframe(df, step1, step2):
 
     def test1(df, step1, step2):
+
+        
         if 'Step' in list(df):
-            row1 = df['Step'].values.searchsorted(step1-0.5)
-            row2 = df['Step'].values.searchsorted(step2-0.5)
+            steps = df['Step'].values
         elif 'step' in list(df):
-            row1 = df['step'].values.searchsorted(step1-0.5)
-            row2 = df['step'].values.searchsorted(step2-0.5)
+            steps = df['step'].values
+            
         else:
             sys.exit('no step in header')
+        
+        firststep = steps[0]
+        laststep = steps[-1]
+        if step1 < firststep:
+            sys.exit("step1 should be larger or equal to first step in array, step1={step1}, firststep={firststep}".format(step1=step1,firststep=firststep))
+        if step2 > laststep+1:
+            sys.exit("step2 should be smaller or equal to laststep+1 in array, step2={step2}, laststep={laststep}".format(step2=step2,laststep=laststep))
+
+        row1 = steps.searchsorted(step1-0.5)
+        row2 = steps.searchsorted(step2-0.5)
         df_step = df.iloc[row1:row2]
         return df_step
 

@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+import sys
+import datapath as dp
 import createdata.datatofile as cd
 import calculate.checkoutputfile as cco
 import plotfigure.plottofile as ppf
@@ -10,8 +12,8 @@ import plotfigure.plottofile as ppf
 # thermo
 cd.thermo_hdf5_csv()
 
-step1 = 101
-step2 = 200
+step1 = 0
+step2 = 100
 
 # thermo plot
 variable_name_list = 'all'
@@ -40,12 +42,12 @@ y_variables = [
         'c_KEr_atom',
         'c_KEt_atom'
     ]
-#ppf.plotfromtraceprint_max("c_KEt_atom").plotsingle_multifigure(["step"], y_variables, 101, 200)
-
+ppf.plotfromtraceprint_max("c_KEt_atom").plotsingle_multifigure(["step"], y_variables, 1, 101)
+"""
 ppf.plotfromcustom(step1, step2).plotmaxKE_everystep(
     'c_KEt_atom', 'all'
     )
-
+"""
 
 """
 # custom
