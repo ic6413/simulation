@@ -10,8 +10,8 @@ import plotfigure.plottofile as ppf
 # thermo
 cd.thermo_hdf5_csv()
 
-step1 = 0
-step2 = 100
+step1 = 101
+step2 = 200
 
 # thermo plot
 variable_name_list = 'all'
@@ -24,9 +24,28 @@ cco.checkmaxid("c_KEt_atom", step1, step2).checkprint()
 
 variable_name_list2 = ['c_KEt_atom','c_KEr_atom','v_KEtr_atom','id',]
 
+y_variables = [
+        'fx',
+        'fy',
+        'fz',
+        'x',
+        'y',
+        'z',
+        'vx',
+        'vy',
+        'vz',
+        'omegax',
+        'omegay',
+        'omegaz',
+        'c_KEr_atom',
+        'c_KEt_atom'
+    ]
+#ppf.plotfromtraceprint_max("c_KEt_atom").plotsingle_multifigure(["step"], y_variables, 101, 200)
+
 ppf.plotfromcustom(step1, step2).plotmaxKE_everystep(
     'c_KEt_atom', 'all'
     )
+
 
 """
 # custom

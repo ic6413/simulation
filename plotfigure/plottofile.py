@@ -9,7 +9,6 @@ import itertools
 # import simulation module
 import osmanage as om
 import datapath as dp
-
 # import calculate module
 import calculate.checksimulation as cs
 
@@ -70,7 +69,6 @@ class lammp_figure(object):
         
         array_x = array_to1D(self.array_x)
         array_y = array_to1D(self.array_y)
-
         plt.plot(array_x, array_y)
 
         
@@ -619,3 +617,97 @@ class plotfromthermo(plotclass):
         print("finish plot thermo")
 
 
+class plotfromtraceprint_idi(plotclass):
+
+    def __init__(self, id_i):
+        super().__init__()
+        self.id_i = id_i
+        
+
+    def traceprinttexttoarray(self, file):
+        with open(file) as f:
+            array = np.loadtxt(f, skiprows=1)
+        return array
+
+    def labeltoarray(self, label):
+        file = dp.add_label_put_id_tracepath(label, self.id_i)
+        return self.traceprinttexttoarray(file)
+
+    def labelorstepto1Darray(self, label, step1, step2):
+        if label == "step":
+            array = np.arange(step1,step2)
+        else:
+            array = self.labeltoarray(label)
+        row1 = step1 - 1 - dp.startstep
+        row2 = step2 - 1 - dp.startstep
+        array = array[row1:row2]
+        return array
+        
+    def plotsingle(self, x_label, y_label, step1, step2):
+
+        if step1 <= dp.startstep:
+            sys.exit("step1 in trace print should be larger than startstep, step1={step1}, startstep={startstep}".format(step1=step1, startstep = dp.startstep))
+        x_array = self.labelorstepto1Darray(x_label, step1, step2)
+        y_array = self.labelorstepto1Darray(y_label, step1, step2)
+
+        figclass = lammp_figure_atom_single(step1, step2, x_array, x_label, y_array, y_label, self.id_i)
+        figclass.create_and_save(dp.debug_fig_oneatom_path)
+        plt.close('all')
+
+        print("finish plot single i for" + y_label + " v.s " + x_label)
+
+    def plotsingle_multifigure(self, x_label_list, y_label_list, step1, step2):
+        
+        for x_label in x_label_list:
+            for y_label in y_label_list:
+                self.plotsingle(x_label, y_label, step1, step2)
+
+
+class plotfromtraceprint_max(plotclass):
+
+    def __init__(self, maxlabel):
+        super().__init__()
+        self.maxlabel = maxlabel
+        self.debug_fig_max_path = dp.debug_fig_path + 'max_' + self.maxlabel + '/'
+        om.create_directory(self.debug_fig_max_path)
+        
+        
+    def traceprinttexttoarray(self, file):
+        with open(file) as f:
+            array = np.loadtxt(f, skiprows=1)
+        return array
+
+    def labeltoarray(self, label):
+        file = dp.add_label_max_tracepath(label)
+        return self.traceprinttexttoarray(file)
+
+    def labelorstepto1Darray(self, label, step1, step2):
+        if label == "step":
+            array = np.arange(step1,step2)
+        else:
+            array = self.labeltoarray(label)
+        
+        row1 = step1 - 1 - dp.startstep
+        row2 = step2 - 1 - dp.startstep
+        array = array[row1:row2]
+        return array
+        
+    def plotsingle(self, x_label, y_label, step1, step2):
+
+        if step1 <= dp.startstep:
+            sys.exit("step1 in trace print should be larger than startstep, step1={step1}, startstep={startstep}".format(step1=step1, startstep = dp.startstep))
+
+        x_array = self.labelorstepto1Darray(x_label, step1, step2)
+        y_array = self.labelorstepto1Darray(y_label, step1, step2)
+
+        figclass = lammp_figure_max(step1, step2, x_array, x_label, y_array, y_label, self.maxlabel)
+        figclass.create_and_save(self.debug_fig_max_path)
+        plt.close('all')
+
+        print("finish plot single i for" + y_label + " v.s " + x_label)
+
+    def plotsingle_multifigure(self, x_label_list, y_label_list, step1, step2):
+        
+        for x_label in x_label_list:
+            for y_label in y_label_list:
+                self.plotsingle(x_label, y_label, step1, step2)

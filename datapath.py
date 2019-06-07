@@ -44,7 +44,7 @@ if os.path.isfile(attribute_lammps_path):
         gamma_t = attribute_dict['gamma_t']
         n_type = int(attribute_dict['n_type'])
         if n_type == 1:
-            type_radius_array = [
+            type_radius_list = [
                 [1, 1.0*dp0/2]
             ]
         elif n_type == 3:
@@ -57,6 +57,7 @@ if os.path.isfile(attribute_lammps_path):
             ]
         else:
             sys.exit("n_type not 3 or 1")
+        type_radius_array = np.transpose(np.asarray(type_radius_list))
         z_bottom = attribute_dict['z_bottom']
         walls_p = [
             [
@@ -136,6 +137,12 @@ logname = "log_" + str(startstep) + ".lammps"
 pair_path = lammps_directory + 'output/dump/' + dumpname_pair
 custom_path = lammps_directory + 'output/dump/' + dumpname_custom
 thermo_path = lammps_directory + logname
+def add_label_max_tracepath(label):
+    path = lammps_directory + 'output/trace_print/' + "trace_atom_" + "max" + "_" + label + ".txt"
+    return path
+def add_label_put_id_tracepath(label, id):
+    path = lammps_directory + 'output/trace_print/' + "trace_atom_" + str(id) + "_" + label + ".txt" 
+    return path
 ## folder path of output
 post_process_path = lammps_directory + 'postprocess/'
 # hdf5

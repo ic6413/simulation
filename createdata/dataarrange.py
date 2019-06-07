@@ -384,9 +384,6 @@ class handle_merge_custom_pair(handlelammpfile):
         super().tohdf5(self.todataframe())
 
 
-
-
-
 def thermo_file_to_h5_csv(f_thermo, f_output_name, override ='no'):
 
     if os.path.isfile(f_output_name + '.h5') and (override != 'yes'):
