@@ -104,7 +104,7 @@ def thermofile_to_dataframe(file):
     return df
 
 class handlelammpfile(object):
-    def __init__(self, f_out, override='no', ifcsv='no'):
+    def __init__(self, f_out, override='no', ifcsv='no', fromtraceorall='trace'):
         self.f_out = f_out
         self.override = override
         self.ifcsv = ifcsv
@@ -119,9 +119,9 @@ class handlelammpfile(object):
 
 class handlelog(handlelammpfile):
 
-    def __init__(self, override, ifcsv):
+    def __init__(self, override, ifcsv, fromtraceorall):
         f_out = dp.f_thermo
-        super().__init__(f_out, override, ifcsv)
+        super().__init__(f_out, override, ifcsv, fromtraceorall)
         self.f_log_in = dp.thermo_path
         print("handle log")
 
@@ -144,9 +144,9 @@ class handlelog(handlelammpfile):
 
 class handledump(handlelammpfile):
 
-    def __init__(self, f_in, f_out, override, ifcsv):
+    def __init__(self, f_in, f_out, override, ifcsv, fromtraceorall):
 
-        super().__init__(f_out, override, ifcsv)
+        super().__init__(f_out, override, ifcsv, fromtraceorall)
         self.f_in = f_in
         print("handle dump")
 
@@ -271,29 +271,34 @@ class handledump(handlelammpfile):
 
 class handledumpcustom(handledump):
 
-    def __init__(self, override, ifcsv):
+    def __init__(self, override, ifcsv, fromtraceorall):
         f_out = dp.f_custom
-        f_in = dp.custom_path
-        super().__init__(f_in, f_out, override, ifcsv)
+        if fromtraceorall == 'trace':
+            f_in = dp.custom_path
+        elif fromtraceorall == 'all':
+            f_in = dp.custom_all_path
+        else:
+            sys.exit("fromtraceorall not trace not all, please select one of them")
+        super().__init__(f_in, f_out, override, ifcsv, fromtraceorall)
         print("handle dumpcustom")
 
 class handledumppair(handledump):
 
-    def __init__(self, override, ifcsv):
+    def __init__(self, override, ifcsv, fromtraceorall):
         f_out = dp.f_pair
         f_in = dp.pair_path
-        super().__init__(f_in, f_out, override, ifcsv)
+        super().__init__(f_in, f_out, override, ifcsv, fromtraceorall)
         print("handle dumppair")
 
 
 class handlecustomselect(handlelammpfile):
 
-    def __init__(self, id_i_list, override, ifcsv):
+    def __init__(self, id_i_list, override, ifcsv, fromtraceorall):
         f_out = dp.put_id_on_file(id_i_list, dp.f_custom)
-        super().__init__(f_out, override, ifcsv)
+        super().__init__(f_out, override, ifcsv, fromtraceorall)
         self.id_i_list = id_i_list
         self.f_custom_all_out = dp.f_custom
-        self.dumpcustomall = handledumpcustom(override, ifcsv)
+        self.dumpcustomall = handledumpcustom(override, ifcsv, fromtraceorall)
         print("handle customselect")
    
 
@@ -316,12 +321,12 @@ class handlecustomselect(handlelammpfile):
 
 class handlecustom_max_everysteps(handlelammpfile):
 
-    def __init__(self, maxlabel, override, ifcsv):
+    def __init__(self, maxlabel, override, ifcsv, fromtraceorall):
         f_out = dp.put_maxlabel_on_file(maxlabel, dp.f_custom)
-        super().__init__(f_out, override, ifcsv)
+        super().__init__(f_out, override, ifcsv, fromtraceorall)
         self.maxlabel = maxlabel
         self.f_custom_all_out = dp.f_custom
-        self.dumpcustomall = handledumpcustom(override, ifcsv)
+        self.dumpcustomall = handledumpcustom(override, ifcsv, fromtraceorall)
         print("handle custom_max_everysteps")
 
     def todataframe(self):
@@ -344,15 +349,15 @@ class handlecustom_max_everysteps(handlelammpfile):
 
 class handle_merge_custom_pair(handlelammpfile):
 
-    def __init__(self, id_i_list, override, ifcsv):
+    def __init__(self, id_i_list, override, ifcsv, fromtraceorall):
         f_out = dp.put_id_on_file(id_i_list, dp.f_cipcj)
-        super().__init__(f_out, override, ifcsv)
+        super().__init__(f_out, override, ifcsv, fromtraceorall)
         self.id_i_list = id_i_list
         self.f_custom_all_out = dp.f_custom
         self.f_pair_all_out = dp.f_pair
-        self.dumpcustomall = handledumpcustom(override, ifcsv)
-        self.dumpcustomselect = handlecustomselect(id_i_list, override, ifcsv)
-        self.dumppairall = handledumppair(override, ifcsv)
+        self.dumpcustomall = handledumpcustom(override, ifcsv, fromtraceorall)
+        self.dumpcustomselect = handlecustomselect(id_i_list, override, ifcsv, fromtraceorall)
+        self.dumppairall = handledumppair(override, ifcsv, fromtraceorall)
         print("handle merge_custom_pair")
 
 

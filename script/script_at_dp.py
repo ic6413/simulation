@@ -5,24 +5,22 @@ import createdata.datatofile as cd
 import calculate.checkoutputfile as cco
 import plotfigure.plottofile as ppf
 
-
-# attribute
-#gc.define_attribute_dict()
-
 # thermo
 cd.thermo_hdf5_csv()
 
-step1 = 0
-step2 = 100
+step1 = 17000001
+step2 = 17001001
 
 # thermo plot
 variable_name_list = 'all'
 
 ppf.plotfromthermo(step1, step2).plotthermo(variable_name_list)
 
+
 cd.dump_custom_max("c_KEt_atom")
 
-cco.checkmaxid("c_KEt_atom", step1, step2).checkprint()
+"""
+#cco.checkmaxid("c_KEt_atom", step1, step2).checkprint()
 
 variable_name_list2 = ['c_KEt_atom','c_KEr_atom','v_KEtr_atom','id',]
 
@@ -42,7 +40,15 @@ y_variables = [
         'c_KEr_atom',
         'c_KEt_atom'
     ]
-ppf.plotfromtraceprint_max("c_KEt_atom").plotsingle_multifigure(["step"], y_variables, 1, 101)
+y_variables = [
+        'omegaz',
+        'c_KEr_atom',
+        'c_KEt_atom'
+    ]
+ppf.plotfromtraceprint_max("c_KEt_atom").plotsingle_multifigure(["step"], y_variables, step1, step2)
+
+
+"""
 """
 ppf.plotfromcustom(step1, step2).plotmaxKE_everystep(
     'c_KEt_atom', 'all'
