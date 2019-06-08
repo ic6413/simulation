@@ -217,12 +217,13 @@ class plotclass(object):
 
 class plotfromcustom(plotclass):
 
-    def __init__(self, step1, step2):
+    def __init__(self, step1, step2, fromtraceorall):
         super().__init__()
         self.step1 = step1
         self.step2 = step2
+        self.fromtraceorall = fromtraceorall
         print("plot step from {step1} to {step2}".format(step1=step1, step2=step2))
-        cd.dump_custom()
+        cd.dumptofile(fromtraceorall).dump_custom()
 
     def plotij_singlej(self, id_i, id_jorw):
 
@@ -440,7 +441,7 @@ class plotfromcustom(plotclass):
         
     def plotmaxKE_everystep(self, maxlabel, variable_name_list):
 
-        cd.dump_custom_max(maxlabel)
+        cd.dumptofile(self.fromtraceorall).dump_custom_max(maxlabel)
         debug_fig_max_path = dp.debug_fig_path + 'max_' + maxlabel + '/'
         om.create_directory(debug_fig_max_path)
 
@@ -479,14 +480,15 @@ class plotfromcustom(plotclass):
 
 class plotfromcustomselect(plotclass):
 
-    def __init__(self, step1, step2, id_i):
+    def __init__(self, step1, step2, id_i, fromtraceorall):
         super().__init__()
         self.step1 = step1
         self.step2 = step2
         self.id_i = id_i
         self.id_i_list = [id_i]
+        self.fromtraceorall = fromtraceorall
         print("plot step from {step1} to {step2}".format(step1=step1, step2=step2))
-        cd.dump_custom_select(self.id_i_list)
+        cd.dumptofile(fromtraceorall).dump_custom_select(self.id_i_list)
         self.f_read_custom_single = dp.put_id_on_file(self.id_i_list, dp.f_custom)
 
     def plotsingle(self, variable_name_list):

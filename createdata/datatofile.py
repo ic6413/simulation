@@ -11,18 +11,25 @@ om.create_directory(dp.hdf5_csv_path)
 override='no'
 ifcsv='no'
 
+
+
 def thermo_hdf5_csv():
     da.handlelog(override, ifcsv).tohdf5()
 
-def dump_custom(fromtraceorall):
-    da.handledumpcustom(override, ifcsv, fromtraceorall).tohdf5()
+class dumptofile:
 
-def dump_custom_select(id_i_list, fromtraceorall):
-    da.handlecustomselect(id_i_list, override, ifcsv, fromtraceorall).tohdf5()
+    def __init__(self, fromtraceorall):
+        self.fromtraceorall = fromtraceorall
 
-def dump_custom_pair_combine(id_i_list, fromtraceorall):
-    da.handle_merge_custom_pair(id_i_list, override, ifcsv, fromtraceorall).tohdf5()
+    def dump_custom(self):
+        da.handledumpcustom(override, ifcsv, self.fromtraceorall).tohdf5()
 
-def dump_custom_max(maxlabel, fromtraceorall):
-    da.handlecustom_max_everysteps(maxlabel, override, ifcsv, fromtraceorall).tohdf5()
+    def dump_custom_select(self, id_i_list):
+        da.handlecustomselect(id_i_list, override, ifcsv, self.fromtraceorall).tohdf5()
+
+    def dump_custom_pair_combine(self, id_i_list):
+        da.handle_merge_custom_pair(id_i_list, override, ifcsv, self.fromtraceorall).tohdf5()
+
+    def dump_custom_max(self, maxlabel):
+        da.handlecustom_max_everysteps(maxlabel, override, ifcsv, self.fromtraceorall).tohdf5()
 
