@@ -376,7 +376,7 @@ class plotfromcustom(plotclass):
         step1 = self.step1
         step2 = self.step2
 
-        for id_jorw in [15583]:
+        for id_jorw in [id_i]:
 
             if id_jorw > 0:
                 manystepsclass = cs.manysteps_idj(dp.f_custom, id_i, id_jorw, step1, step2, method)

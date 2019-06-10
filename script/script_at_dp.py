@@ -51,13 +51,13 @@ ppf.plotfromcustom(step1, step2,fromtraceorall=fromtraceorall_input).plotmaxKE_e
     )
 
 
-"""
+
 # custom
 
-cd.dumptofile(fromtraceorall).dump_custom()
-id_i = 6109
-step1 = 4120248
-step2 = 6000000
+cd.dumptofile(fromtraceorall=fromtraceorall_input).dump_custom()
+id_i = 19
+step1 = 17000001
+step2 = 17001001
 
 
 cco.checkoverlap(id_i, step1, step2).checkprint()
@@ -65,14 +65,15 @@ cco.checkoverlap(id_i, step1, step2).checkprint()
 error_tolerence = 1e-7
 method_list = list(range(0, 3))
 #cco.checkforce(id_i, step1, step2, error_tolerence, method_list).checkprint()
+# check j force, must have store pairforce when running lammps
 cco.check_ft_1j_contact(id_i, step1, step2, error_tolerence, method_list).checkprint()
-#cco.check_ft_1w_contact(id_i, step1, step2, error_tolerence, method_list).checkprint()
+# check wall force, must have store wallforce when running lammps
+cco.check_ft_1w_contact(id_i, step1, step2, error_tolerence, method_list).checkprint()
 
-step1 = 3060000
-step2 = 4000000
-#ppf.plotfromcustom(step1, step2,fromtraceorall=fromtraceorall_input).plotij(id_i)
+cd.dumptofile(fromtraceorall=fromtraceorall_input).dump_custom_select([id_i])
+ppf.plotfromcustomselect(step1, step2, id_i, fromtraceorall=fromtraceorall_input).plotsingle(variable_name_list)
+ppf.plotfromcustom(step1, step2,fromtraceorall=fromtraceorall_input).plotij(id_i)
 
-"""
 
 """
 id_i = 15556
@@ -108,13 +109,13 @@ variable_name_list = 'all'
 try:
     ppf.plotfromcustomselect(step1, step2, id_i, fromtraceorall=fromtraceorall_input).plotsingle(variable_name_list)
 except FileNotFoundError:
-    cd.dumptofile(fromtraceorall).dump_custom_select([id_i])
+    cd.dumptofile(fromtraceorall=fromtraceorall_input).dump_custom_select([id_i])
 """
 """
 id_i = 15583
 try:
     ppf.plotfromcustomselect(200000, 300000, id_i, fromtraceorall=fromtraceorall_input).plotsingle(variable_name_list)
 except FileNotFoundError:
-    cd.dumptofile(fromtraceorall).dump_custom_select([id_i])
+    cd.dumptofile(fromtraceorall=fromtraceorall_input).dump_custom_select([id_i])
 """
 

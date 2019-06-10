@@ -18,7 +18,7 @@ type_radius_list = [
     [2, 1.0*dp0/2],
     [3, 1.1*dp0/2],
 ]
-
+z_bottom = 0
 walls_p = [
     [
         'p',

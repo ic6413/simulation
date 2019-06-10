@@ -664,7 +664,6 @@ def contact_ids_inonestep(df_onestep, id_i):
     typej = dfjs_onestep[['type']].values
     rj = radius_by_type(typej)
     xj = dfjs_onestep[['x','y','z']].values
-    breakpoint()
     [ifoverlap_ij_onestep, overlapij_vector_onestep, overlapij_length_onestep] = overlapij(ri, rj, xi, xj)
 
     contact_idj = dfjs_onestep[['id']].values[ifoverlap_ij_onestep]

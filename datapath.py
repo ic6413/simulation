@@ -35,7 +35,11 @@ if os.path.isfile(attribute_lammps_path):
         r_in = attribute_dict['ri']
         r_out = attribute_dict['ro']
         # gravity
-        g = attribute_dict['gravitational_acceleration']
+        gravitational_acceleration = attribute_dict['gravitational_acceleration']
+        gravitation_direction_x = attribute_dict['gravitation_direction_x']
+        gravitation_direction_y = attribute_dict['gravitation_direction_y']
+        gravitation_direction_z = attribute_dict['gravitation_direction_z']
+        g = gravitational_acceleration*np.array([gravitation_direction_x, gravitation_direction_y, gravitation_direction_z])
         # parameter
         mu = attribute_dict['friction_coefficient']
         kn = attribute_dict['kn'] 
@@ -97,13 +101,14 @@ elif os.path.isfile(attribute_py_path):
     r_out = attributes.r_out
     # gravity
     g = attributes.g
+    g = np.asarray(g)
     # parameter
     mu = attributes.mu
     kn = attributes.kn 
     kt = attributes.kt 
     gamma_n = attributes.gamma_n
     gamma_t = attributes.gamma_t
-
+    z_bottom = attributes.z_bottom
     type_radius_array = np.transpose(np.asarray(attributes.type_radius_list))
     walls_p = attributes.walls_p
     walls_cy = attributes.walls_cy

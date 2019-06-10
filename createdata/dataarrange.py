@@ -534,15 +534,14 @@ def select_custom(df_custom, select_id_list):
         if n_row_df_select_custom < n_select*n_step_df_custom:
             sys.exit('len of steps selected less than number_of_atom*number of step, maybe one of the select atom not appear in all the steps of df_custom')
         elif n_row_df_select_custom > n_select*n_step_df_custom:
-            breakpoint()
             sys.exit('len of steps selected larger than expected')
         else:
             pass
 
-        steps_array_expected = np.repeat(steps_of_df_custom, n_select)
+        steps_array_expected = np.repeat(np.arange(firststep, laststep+1), n_select)
         steps_df_select_custom = df_select_custom['step'].values
         check_steps = (steps_array_expected == steps_df_select_custom)
-        if not check_steps.all():
+        if not np.all(check_steps):
             id_step_firstwrong = np.nonzero(~check_steps)[0][0]
             step_firstwrong = steps_array_expected[id_step_firstwrong]
             sys.exit('step ' + repr(step_firstwrong) + 'has less or more atom than expected')
@@ -578,7 +577,7 @@ def merge_ci_p(dfc, dfp2):
     # check if type_i_x = type_i_y except nan (means no pair for the timestep). If yes then delete type_i_y
     type_notconsistent = np.where(dfcip['type_i_x'].values != dfcip['type_i_y'].values)[0]
     where_type_i_y_nan = np.where(np.isnan(dfcip['type_i_y'].values))[0]
-    check_only_nan_inconsistent = (type_notconsistent == where_type_i_y_nan).all()
+    check_only_nan_inconsistent = np.all(type_notconsistent == where_type_i_y_nan)
     if ~check_only_nan_inconsistent:
         sys.exit('type_i not consistent when merge custom and pair')
     else:
@@ -596,7 +595,7 @@ def merge_cip_cj(dfcip, dfc):
     # check if type_j_x = type_j_y except nan (means no pair for the timestep). If yes then delete type_j_y
     type_notconsistent = np.where(dfcipcj['type_j_x'].values != dfcipcj['type_j_y'].values)[0]
     where_type_j_y_nan = np.where(np.isnan(dfcipcj['type_j_y'].values))[0]
-    check_only_nan_inconsistent = (type_notconsistent == where_type_j_y_nan).all()
+    check_only_nan_inconsistent = np.all(type_notconsistent == where_type_j_y_nan)
     if ~check_only_nan_inconsistent:
         sys.exit('type_j not consistent when merge custom and pair')
     else:

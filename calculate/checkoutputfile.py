@@ -158,6 +158,8 @@ class check_ft_1j_contact(check_ft_1_contact):
                 pprint.pprint('=========', open(file, 'a'))
         else:
             print("contact is {n_contact} not 1 so not print".format(n_contact=self.number_contact()))
+            pprint.pprint("contact is {n_contact} not 1 so not print".format(n_contact=self.number_contact()), open(file, 'a'))
+            pprint.pprint('=========', open(file, 'a'))
         print("finish printing to file")
 
 class check_ft_1w_contact(check_ft_1_contact):
@@ -206,6 +208,8 @@ class check_ft_1w_contact(check_ft_1_contact):
                 pprint.pprint('=========', open(file, 'a'))
         else:
             print("contact is {n_contact} not 1 so not print".format(n_contact=self.number_contact()))
+            pprint.pprint("contact is {n_contact} not 1 so not print".format(n_contact=self.number_contact()), open(file, 'a'))
+            pprint.pprint('=========', open(file, 'a'))
 
         print("finish printing to file")
 
