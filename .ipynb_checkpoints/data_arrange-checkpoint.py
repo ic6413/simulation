@@ -72,12 +72,12 @@ def pair_double(df_pair, header_change_from, header_change_to, header_change_sig
     mapper = {v: header_change_to[i] for i, v in enumerate(header_change_from)}
     df_switch = df_switch.rename(columns=mapper)
     # reorder columns
-    df_switch = df_switch[list(df_pair)]
+    df_switch = df_switch[df_pair.columns.values.tolist()]
     # combine df_pair and df_switch
     dfp_data_double = np.empty((2*df_pair.shape[0], df_pair.shape[1]))
     dfp_data_double[::2] = df_pair.values
     dfp_data_double[1::2] = df_switch.values
-    df_double = pd.DataFrame(data = dfp_data_double, columns = list(df_pair))
+    df_double = pd.DataFrame(data = dfp_data_double, columns = df_pair.columns.values.tolist())
     return df_double
 
 # merge pairdouble and select_custom, output dfcip

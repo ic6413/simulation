@@ -77,9 +77,9 @@ def extract_dataframe(df, step1, step2):
     def test1(df, step1, step2):
 
         
-        if 'Step' in list(df):
+        if 'Step' in df.columns.values.tolist():
             steps = df['Step'].values
-        elif 'step' in list(df):
+        elif 'step' in df.columns.values.tolist():
             steps = df['step'].values
             
         else:
@@ -98,9 +98,9 @@ def extract_dataframe(df, step1, step2):
         return df_step
 
     #def test2(df, step1, step2):
-    #    if 'Step' in list(df):
+    #    if 'Step' in df.columns.values.tolist():
     #        df_step = df.loc[df['Step'].isin(list(range(step1, step2)))]
-    #    elif 'step' in list(df):
+    #    elif 'step' in df.columns.values.tolist():
     #        df_step = df.loc[df['step'].isin(list(range(step1, step2)))]
     #    else:
     #        sys.exit('no step in header')

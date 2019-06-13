@@ -5,25 +5,28 @@ import createdata.datatofile as cd
 import calculate.checkoutputfile as cco
 import plotfigure.plottofile as ppf
 
+"""
 # thermo
 cd.thermo_hdf5_csv()
-
-step1 = 17000001
-step2 = 17001001
+"""
+step1 = 1
+step2 = 10000000
 
 # thermo plot
-variable_name_list = 'all'
+y_variable_name_list = 'all'
+x_variable_name_list = ['Step']
+ppf.plotfromthermo(step1, step2).plotthermo(x_variable_name_list, y_variable_name_list)
 
-ppf.plotfromthermo(step1, step2).plotthermo(variable_name_list)
 
 fromtraceorall_input = 'all'
+fromtraceorall_input = 'trace'
+
 cd.dumptofile(fromtraceorall=fromtraceorall_input).dump_custom_max("c_KEt_atom")
-
-
+"""
 cco.checkmaxid("c_KEt_atom", step1, step2).checkprint()
 
-variable_name_list2 = ['c_KEt_atom','c_KEr_atom','v_KEtr_atom','id',]
-
+y_variable_name_list2 = ['c_KEt_atom','c_KEr_atom','v_KEtr_atom','id',]
+"""
 y_variables = [
         'fx',
         'fy',
@@ -42,22 +45,19 @@ y_variables = [
     ]
 
 #ppf.plotfromtraceprint_max("c_KEt_atom").plotsingle_multifigure(["step"], y_variables, step1, step2)
-
-
+#ppf.plotfromtraceprint_idi(250).plotsingle_multifigure(["step"], y_variables, step1, step2)
 
 
 ppf.plotfromcustom(step1, step2,fromtraceorall=fromtraceorall_input).plotmaxKE_everystep(
-    'c_KEt_atom', 'all'
+    'c_KEt_atom', ['step'],'all'
     )
 
 
-
+"""
 # custom
 
 cd.dumptofile(fromtraceorall=fromtraceorall_input).dump_custom()
-id_i = 19
-step1 = 17000001
-step2 = 17001001
+id_i = 250
 
 
 cco.checkoverlap(id_i, step1, step2).checkprint()
@@ -71,9 +71,10 @@ cco.check_ft_1j_contact(id_i, step1, step2, error_tolerence, method_list).checkp
 cco.check_ft_1w_contact(id_i, step1, step2, error_tolerence, method_list).checkprint()
 
 cd.dumptofile(fromtraceorall=fromtraceorall_input).dump_custom_select([id_i])
-ppf.plotfromcustomselect(step1, step2, id_i, fromtraceorall=fromtraceorall_input).plotsingle(variable_name_list)
+x_variable_name_list = 'step'
+ppf.plotfromcustomselect(step1, step2, id_i, fromtraceorall=fromtraceorall_input).plotsingle(x_variable_name_list, y_variable_name_list)
 ppf.plotfromcustom(step1, step2,fromtraceorall=fromtraceorall_input).plotij(id_i)
-
+"""
 
 """
 id_i = 15556
@@ -104,17 +105,17 @@ y_variables = [
         'c_KEr_atom',
         'c_KEt_atom'
     ]
-variable_name_list = 'all'
-
+y_variable_name_list = 'all'
+x_variable_name_list = 'step'
 try:
-    ppf.plotfromcustomselect(step1, step2, id_i, fromtraceorall=fromtraceorall_input).plotsingle(variable_name_list)
+    ppf.plotfromcustomselect(step1, step2, id_i, fromtraceorall=fromtraceorall_input).plotsingle(x_variable_name_list, y_variable_name_list)
 except FileNotFoundError:
     cd.dumptofile(fromtraceorall=fromtraceorall_input).dump_custom_select([id_i])
 """
 """
 id_i = 15583
 try:
-    ppf.plotfromcustomselect(200000, 300000, id_i, fromtraceorall=fromtraceorall_input).plotsingle(variable_name_list)
+    ppf.plotfromcustomselect(200000, 300000, id_i, fromtraceorall=fromtraceorall_input).plotsingle(x_variable_name_list, y_variable_name_list)
 except FileNotFoundError:
     cd.dumptofile(fromtraceorall=fromtraceorall_input).dump_custom_select([id_i])
 """

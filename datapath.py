@@ -36,9 +36,9 @@ if os.path.isfile(attribute_lammps_path):
         r_out = attribute_dict['ro']
         # gravity
         gravitational_acceleration = attribute_dict['gravitational_acceleration']
-        gravitation_direction_x = attribute_dict['gravitation_direction_x']
-        gravitation_direction_y = attribute_dict['gravitation_direction_y']
-        gravitation_direction_z = attribute_dict['gravitation_direction_z']
+        gravitation_direction_x = 0
+        gravitation_direction_y = 0
+        gravitation_direction_z = -1
         g = gravitational_acceleration*np.array([gravitation_direction_x, gravitation_direction_y, gravitation_direction_z])
         # parameter
         mu = attribute_dict['friction_coefficient']

@@ -23,11 +23,11 @@ om.create_directory(dp.debug_fig_oneatom_path)
 method = 1
 
 # =========format===========
-def create_figclass_i_jorw(step1, step2, array_x, xlabel, array_y, ylabel, id_i, id_jorw):
+def create_figclass_i_jorw(step1, step2, xlabel, ylabel, id_i, id_jorw):
 	if id_jorw > 0:
-		result = lammp_figure_atom_ij(step1, step2, array_x, xlabel, array_y, ylabel, id_i, id_jorw)
+		result = lammp_figure_atom_ij(step1, step2, xlabel, ylabel, id_i, id_jorw)
 	elif id_jorw < 0:
-		result = lammp_figure_atomi_wall(step1, step2, array_x, xlabel, array_y, ylabel, id_i, id_jorw)
+		result = lammp_figure_atomi_wall(step1, step2, xlabel, ylabel, id_i, id_jorw)
 	else:
 		sys.exit('idjorw = 0')
 	return result
@@ -35,10 +35,8 @@ def create_figclass_i_jorw(step1, step2, array_x, xlabel, array_y, ylabel, id_i,
 # plot for 1D array_y or length of 2D array_y
 class lammp_figure(object):
 
-    def __init__(self, step1, step2, array_x, xlabel, array_y, ylabel):
-        self.array_x = array_x
+    def __init__(self, step1, step2, xlabel, ylabel):
         self.xlabel = xlabel
-        self.array_y = array_y
         self.ylabel = ylabel
         self.step1 = step1
         self.step2 = step2
@@ -51,7 +49,7 @@ class lammp_figure(object):
         #plt.yscale('symlog', linthreshy=1e-20)
         
 
-    def create_lammp_figure(self):
+    def create_lammp_figure(self, array_x, array_y):
         
 
         def array_to1D(array):
@@ -67,8 +65,8 @@ class lammp_figure(object):
                 sys.exit('array dim not 1 not 2')
             return array
         
-        array_x = array_to1D(self.array_x)
-        array_y = array_to1D(self.array_y)
+        array_x = array_to1D(array_x)
+        array_y = array_to1D(array_y)
         plt.plot(array_x, array_y)
 
         
@@ -86,14 +84,14 @@ class lammp_figure(object):
     def filename(self):
         pass
 
-    def create_and_save(self, outputfolder):
-        self.create_lammp_figure()
+    def create_and_save(self, outputfolder, array_x, array_y):
+        self.create_lammp_figure(array_x, array_y)
         self.fig.savefig(outputfolder + self.filename(), bbox_inches='tight')   # save the figure to file
 
 class lammp_figure_thermo(lammp_figure):
     
-    def __init__(self, step1, step2, array_x, xlabel, array_y, ylabel):
-        super().__init__(step1, step2, array_x, xlabel, array_y, ylabel)
+    def __init__(self, step1, step2, xlabel, ylabel):
+        super().__init__(step1, step2, xlabel, ylabel)
     
     def add_title(self):
         plt.title('thermo')
@@ -104,8 +102,8 @@ class lammp_figure_thermo(lammp_figure):
 
 class lammp_figure_max(lammp_figure):
     
-    def __init__(self, step1, step2, array_x, xlabel, array_y, ylabel, maxlabel):
-        super().__init__(step1, step2, array_x, xlabel, array_y, ylabel)
+    def __init__(self, step1, step2, xlabel, ylabel, maxlabel):
+        super().__init__(step1, step2, xlabel, ylabel)
         self.maxlabel = maxlabel
     
     def add_title(self):
@@ -117,8 +115,8 @@ class lammp_figure_max(lammp_figure):
 
 class lammp_figure_atom_single(lammp_figure):
     
-    def __init__(self, step1, step2, array_x, xlabel, array_y, ylabel, atomid):
-        super().__init__(step1, step2, array_x, xlabel, array_y, ylabel)
+    def __init__(self, step1, step2, xlabel, ylabel, atomid):
+        super().__init__(step1, step2, xlabel, ylabel)
         self.atomid = atomid
     
     def add_title(self):
@@ -130,8 +128,8 @@ class lammp_figure_atom_single(lammp_figure):
 
 class lammp_figure_atom_ij(lammp_figure):
     
-    def __init__(self, step1, step2, array_x, xlabel, array_y, ylabel, id_i, id_j):
-        super().__init__(step1, step2, array_x, xlabel, array_y, ylabel)
+    def __init__(self, step1, step2, xlabel, ylabel, id_i, id_j):
+        super().__init__(step1, step2, xlabel, ylabel)
         self.id_i = id_i
         self.id_j = id_j
 
@@ -144,8 +142,8 @@ class lammp_figure_atom_ij(lammp_figure):
 
 class lammp_figure_atomi_wall(lammp_figure):
     
-    def __init__(self, step1, step2, array_x, xlabel, array_y, ylabel, id_i, id_w):
-        super().__init__(step1, step2, array_x, xlabel, array_y, ylabel)
+    def __init__(self, step1, step2, xlabel, ylabel, id_i, id_w):
+        super().__init__(step1, step2, xlabel, ylabel)
         self.id_i = id_i
         self.id_j = id_w
     
@@ -159,26 +157,23 @@ class lammp_figure_atomi_wall(lammp_figure):
 class lammp_3Dtrajfigure(lammp_figure):
 
     def __init__(self, step1, step2, array_x, array_y, array_z, xlabel,ylabel,zlabel):
-        super().__init__(step1, step2, array_x, xlabel, array_y, ylabel)
+        super().__init__(step1, step2, xlabel, ylabel)
         self.array_z = array_z
         self.zlabel = zlabel
 
-    def skipsteps(self, step):
-        self.array_x = self.array_x[::step]
-        self.array_y = self.array_y[::step]
-        self.array_z = self.array_z[::step]
+    def create_3Dlammp_figure(self, array_x, array_y, array_z):
         
-
-    def create_3Dlammp_figure(self):
-        
-        self.skipsteps(1000)
+        skipsteps=1000
+        array_x = array_x[::skipsteps]
+        array_y = array_y[::skipsteps]
+        array_z = array_z[::skipsteps]
         
         ax = self.fig.add_subplot(111, projection='3d')
-        vx = np.diff(self.array_x)
-        vy = np.diff(self.array_y)
-        vz = np.diff(self.array_z)
+        vx = np.diff(array_x)
+        vy = np.diff(array_y)
+        vz = np.diff(array_z)
 
-        ax.quiver(self.array_x[:-1], self.array_y[:-1], self.array_z[:-1], vx, vy, vz, normalize=True, length = 0.0002)
+        ax.quiver(array_x[:-1], array_y[:-1], array_z[:-1], vx, vy, vz, normalize=True, length = 0.0002)
 
         plt.xticks(rotation=20, fontsize=14)
         plt.yticks(fontsize=14)
@@ -197,8 +192,8 @@ class lammp_3Dtrajfigure(lammp_figure):
         filename = self.xlabel + '_' + self.ylabel + '_' + self.zlabel + '_step_' + str(self.step1) + '_' + str(self.step2) + '.png'
         return filename
 
-    def create_and_save(self, outputfolder):
-        self.create_3Dlammp_figure()
+    def create_and_save(self, outputfolder, array_x, array_y, array_z):
+        self.create_3Dlammp_figure(array_x, array_y, array_z)
         self.fig.savefig(outputfolder + self.filename(), bbox_inches='tight')   # save the figure to file
 
 # =======format end ======
@@ -250,8 +245,8 @@ class plotfromcustom(plotclass):
 
         def plot_1D_xarray_1D_yarray(x_array1D, x_label1D, y_array1D, y_label1D):
 
-            figclass = create_figclass_i_jorw(step1, step2, x_array1D, x_label1D, y_array1D, y_label1D, id_i, id_jorw)
-            figclass.create_and_save(dp.debug_fig_atomij_path)
+            figclass = create_figclass_i_jorw(step1, step2, x_label1D, y_label1D, id_i, id_jorw)
+            figclass.create_and_save(dp.debug_fig_atomij_path, x_array1D, y_array1D)
             plt.close('all')
             
 
@@ -342,8 +337,8 @@ class plotfromcustom(plotclass):
             y_array = xy_array_label[1][0]
             y_label = xy_array_label[1][1]
 
-            figclass = create_figclass_i_jorw(step1, step2, x_array, x_label, y_array, y_label, id_i, id_jorw)
-            figclass.create_and_save(dp.debug_fig_atomij_path)
+            figclass = create_figclass_i_jorw(step1, step2, x_label, y_label, id_i, id_jorw)
+            figclass.create_and_save(dp.debug_fig_atomij_path, x_array, y_array)
             plt.close('all')
 
         print("finish plot ij or iw")
@@ -432,14 +427,14 @@ class plotfromcustom(plotclass):
                 y_array = xy_array_label[1][0]
                 y_label = xy_array_label[1][1]
 
-                figclass = create_figclass_i_jorw(step1, step2, x_array, x_label, y_array, y_label, id_i, id_jorw)
-                figclass.create_and_save(dp.debug_fig_atomij_path)
+                figclass = create_figclass_i_jorw(step1, step2, x_label, y_label, id_i, id_jorw)
+                figclass.create_and_save(dp.debug_fig_atomij_path, x_array, y_array)
                 plt.close('all')
 
         print("finish plot ij test")
 
         
-    def plotmaxKE_everystep(self, maxlabel, variable_name_list):
+    def plotmaxKE_everystep(self, maxlabel, x_variable_name_list, y_variable_name_list):
 
         cd.dumptofile(self.fromtraceorall).dump_custom_max(maxlabel)
         debug_fig_max_path = dp.debug_fig_path + 'max_' + maxlabel + '/'
@@ -447,33 +442,23 @@ class plotfromcustom(plotclass):
 
         df = pd.read_hdf(dp.put_maxlabel_on_file(maxlabel, dp.f_custom))
 
-        if variable_name_list == 'all':
-            new_variable_name_list = list(df)
-        else:
-            new_variable_name_list = variable_name_list
+        def redefine_variable_name(variable_name_list):
+            if variable_name_list == 'all':
+                new_variable_name_list = df.columns.values.tolist()
+            else:
+                new_variable_name_list = variable_name_list
+            return new_variable_name_list
 
-        df_step = cs.extract_dataframe(df, self.step1, self.step2)
+        new_x_variable_name_list = redefine_variable_name(x_variable_name_list)
+        new_y_variable_name_list = redefine_variable_name(y_variable_name_list)
 
-        steps = np.arange(self.step1, self.step2)
-
-        x_array_label_list = [
-            [steps,'step']
-        ]
-
-        y_array_label_list = [
-            [df_step[variable_name].values, variable_name] for variable_name in new_variable_name_list
-            ]
-
-        for xy_array_label in itertools.product(x_array_label_list, y_array_label_list):
-
-            x_array = xy_array_label[0][0]
-            x_label = xy_array_label[0][1]
-            y_array = xy_array_label[1][0]
-            y_label = xy_array_label[1][1]
-
-            figclass = lammp_figure_max(self.step1, self.step2, x_array, x_label, y_array, y_label, maxlabel)
-            figclass.create_and_save(debug_fig_max_path)
-            plt.close('all')
+        for x_label in new_x_variable_name_list:
+            x_array = df[x_label].values
+            for y_label in new_y_variable_name_list:
+                y_array = df[y_label].values
+                figclass = lammp_figure_max(self.step1, self.step2, x_label, y_label, maxlabel)
+                figclass.create_and_save(debug_fig_max_path, x_array, y_array)
+                plt.close('all')
 
         print("finish plot max")
 
@@ -491,84 +476,42 @@ class plotfromcustomselect(plotclass):
         cd.dumptofile(fromtraceorall).dump_custom_select(self.id_i_list)
         self.f_read_custom_single = dp.put_id_on_file(self.id_i_list, dp.f_custom)
 
-    def plotsingle(self, variable_name_list):
+    def plotsingle(self, x_variable_name_list, y_variable_name_list):
         df = pd.read_hdf(self.f_read_custom_single)
 
-        if variable_name_list == 'all':
-            new_variable_name_list = list(df)
-        else:
-            new_variable_name_list = variable_name_list
-
-        df_step = cs.extract_dataframe(df, self.step1, self.step2)
-
-        steps = np.arange(self.step1, self.step2)
-        
-        x_array_label_list = [
-            [steps,'step']
-        ]
-
-        y_array_label_list = [
-            [df_step[variable_name].values, variable_name] for variable_name in new_variable_name_list
-            ]
-
-        for y_array_label in y_array_label_list:
-            if y_array_label[1]=='x':
-                x_component = y_array_label[0]
-            elif y_array_label[1]=='y':
-                y_component = y_array_label[0]
-            elif y_array_label[1]=='z':
-                z_component = y_array_label[0]
+        def redefine_variable_name(variable_name_list):
+            if variable_name_list == 'all':
+                new_variable_name_list = df.columns.values.tolist()
             else:
-                pass
-        
-        def d_zaxis_theta(x_component,y_component):
-            d_zaxis = (x_component**2+y_component**2)**0.5
-            theta = np.arctan(y_component/x_component)
-            return [d_zaxis,theta]
+                new_variable_name_list = variable_name_list
+            return new_variable_name_list
 
-        [d_zaxis,theta] = d_zaxis_theta(x_component,y_component)
-        y_array_label_list.append([d_zaxis,'d_zaxis'])
-        y_array_label_list.append([theta,'theta'])
+        new_x_variable_name_list = redefine_variable_name(x_variable_name_list)
+        new_y_variable_name_list = redefine_variable_name(y_variable_name_list)
 
-        for xy_array_label in itertools.product(x_array_label_list, y_array_label_list):
-
-            x_array = xy_array_label[0][0]
-            x_label = xy_array_label[0][1]
-            y_array = xy_array_label[1][0]
-            y_label = xy_array_label[1][1]
-
-            figclass = lammp_figure_atom_single(self.step1, self.step2, x_array, x_label, y_array, y_label, self.id_i)
-            figclass.create_and_save(dp.debug_fig_oneatom_path)
-            plt.close('all')
-
-            
-        x_array = theta
-        x_label = 'theta'
-        y_array = z_component
-        y_label = 'z'
-
-        figclass = lammp_figure_atom_single(self.step1, self.step2, x_array, x_label, y_array, y_label, self.id_i)
-        figclass.create_and_save(dp.debug_fig_oneatom_path)
-        plt.close('all')
+        for x_label in new_x_variable_name_list:
+            x_array = df[x_label].values
+            for y_label in new_y_variable_name_list:
+                y_array = df[y_label].values
+                figclass = lammp_figure_atom_single(self.step1, self.step2, x_label, y_label, self.id_i)
+                figclass.create_and_save(dp.debug_fig_oneatom_path, x_array, y_array)
+                plt.close('all')
 
         print("finish plot single i")
 
 
-    def plot3Dtraj(self):
+    def plot3Dtraj(self, x_label, y_label, z_label):
 
         df = pd.read_hdf(self.f_read_custom_single)
 
         df_step = cs.extract_dataframe(df, self.step1, self.step2)
 
-        array_x = df_step['x'].values
-        array_y = df_step['y'].values
-        array_z = df_step['z'].values
-        label_x = 'x'
-        label_y = 'y'
-        label_z = 'z'
+        array_x = df_step[x_label].values
+        array_y = df_step[y_label].values
+        array_z = df_step[z_label].values
 
-        figclass = lammp_3Dtrajfigure(self.step1, self.step2, array_x, array_y, array_z, label_x,label_y,label_z)
-        figclass.create_and_save(dp.debug_fig_oneatom_path)
+        figclass = lammp_3Dtrajfigure(self.step1, self.step2, label_x, label_y, label_z)
+        figclass.create_and_save(dp.debug_fig_oneatom_path, array_x, array_y, array_z)
         plt.close('all')
 
         print("finish plot 3Dtraj")
@@ -583,38 +526,29 @@ class plotfromthermo(plotclass):
         print("plot step from {step1} to {step2}".format(step1=step1, step2=step2))
         cd.thermo_hdf5_csv()
 
-    def plotthermo(self, variable_name_list):
+    def plotthermo(self, x_variable_name_list, y_variable_name_list):
 
         df = pd.read_hdf(dp.f_thermo)
 
-        if variable_name_list == 'all':
-            new_variable_name_list = list(df)
-        else:
-            new_variable_name_list = variable_name_list
+        def redefine_variable_name(variable_name_list):
+            if variable_name_list == 'all':
+                new_variable_name_list = df.columns.values.tolist()
 
-        df_step = cs.extract_dataframe(df, self.step1, self.step2)
+            else:
+                new_variable_name_list = variable_name_list
+            return new_variable_name_list
 
-        steps = np.arange(self.step1, self.step2)
+        new_x_variable_name_list = redefine_variable_name(x_variable_name_list)
+        new_y_variable_name_list = redefine_variable_name(y_variable_name_list)
 
-        x_array_label_list = [
-            [steps,'step']
-        ]
 
-        y_array_label_list = [
-            [df_step[variable_name].values, variable_name] for variable_name in new_variable_name_list
-            ]
-
-        for xy_array_label in itertools.product(x_array_label_list, y_array_label_list):
-
-            x_array = xy_array_label[0][0]
-            x_label = xy_array_label[0][1]
-            y_array = xy_array_label[1][0]
-            y_label = xy_array_label[1][1]
-
-            figclass = lammp_figure_thermo(self.step1, self.step2, x_array, x_label, y_array, y_label)
-            figclass.create_and_save(dp.debug_fig_thermo_path)
-
-        plt.close('all')
+        for x_label in new_x_variable_name_list:
+            x_array = df[x_label].values
+            for y_label in new_y_variable_name_list:
+                y_array = df[y_label].values
+                figclass = lammp_figure_thermo(self.step1, self.step2, x_label, y_label)
+                figclass.create_and_save(dp.debug_fig_oneatom_path, x_array, y_array)
+                plt.close('all')
 
         print("finish plot thermo")
 
@@ -659,8 +593,8 @@ class plotfromtraceprint_idi(plotclass):
         x_array = self.labelorstepto1Darray(x_label, step1, step2)
         y_array = self.labelorstepto1Darray(y_label, step1, step2)
 
-        figclass = lammp_figure_atom_single(step1, step2, x_array, x_label, y_array, y_label, self.id_i)
-        figclass.create_and_save(dp.debug_fig_oneatom_path)
+        figclass = lammp_figure_atom_single(step1, step2, x_label, y_label, self.id_i)
+        figclass.create_and_save(dp.debug_fig_oneatom_path, x_array, y_array)
         plt.close('all')
 
         print("finish plot single i for" + y_label + " v.s " + x_label)
@@ -713,8 +647,8 @@ class plotfromtraceprint_max(plotclass):
 
         x_array = self.labelorstepto1Darray(x_label, step1, step2)
         y_array = self.labelorstepto1Darray(y_label, step1, step2)
-        figclass = lammp_figure_max(step1, step2, x_array, x_label, y_array, y_label, self.maxlabel)
-        figclass.create_and_save(self.debug_fig_max_path)
+        figclass = lammp_figure_max(step1, step2, x_label, y_label, self.maxlabel)
+        figclass.create_and_save(self.debug_fig_max_path, x_array, y_array)
         plt.close('all')
 
         print("finish plot single i for" + y_label + " v.s " + x_label)

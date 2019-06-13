@@ -12,7 +12,6 @@ override='no'
 ifcsv='no'
 
 
-
 def thermo_hdf5_csv():
     da.handlelog(override, ifcsv).tohdf5()
 

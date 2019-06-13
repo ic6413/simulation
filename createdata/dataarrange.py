@@ -108,14 +108,18 @@ class handlelammpfile(object):
         self.f_out = f_out
         self.override = override
         self.ifcsv = ifcsv
+        self.ifoutputexist = os.path.isfile(self.f_out)
+
+    def todataframe(self):
+        pass
     
-    def tohdf5(self, df):
-        if os.path.isfile(self.f_out) and (self.override == 'no'):
+    def tohdf5(self):
+        if self.ifoutputexist and (self.override == 'no'):
             print ('h5 file exist, so not create again')
         else:
             print ("creating h5")
             print ("extract dataframe")
-            save_dataframe(df, self.f_out, self.ifcsv)
+            save_dataframe(self.todataframe(), self.f_out, self.ifcsv)
 
 class handlelog(handlelammpfile):
 
@@ -134,12 +138,10 @@ class handlelog(handlelammpfile):
             print ("reading f_log_in and creating h5")
 
             df = thermofile_to_dataframe(self.f_log_in)
-            
-        
         return df
 
     def tohdf5(self):
-        super().tohdf5(self.todataframe())
+        super().tohdf5()
 
 
 class handledump(handlelammpfile):
@@ -267,7 +269,7 @@ class handledump(handlelammpfile):
         return df
 
     def tohdf5(self):
-        super().tohdf5(self.todataframe())
+        super().tohdf5()
 
 class handledumpcustom(handledump):
 
@@ -317,7 +319,7 @@ class handlecustomselect(handlelammpfile):
         return dfc_select
 
     def tohdf5(self):
-        super().tohdf5(self.todataframe())
+        super().tohdf5()
 
 class handlecustom_max_everysteps(handlelammpfile):
 
@@ -344,7 +346,7 @@ class handlecustom_max_everysteps(handlelammpfile):
         return df_max
 
     def tohdf5(self):
-        super().tohdf5(self.todataframe())
+        super().tohdf5()
 
 
 class handle_merge_custom_pair(handlelammpfile):
@@ -386,7 +388,7 @@ class handle_merge_custom_pair(handlelammpfile):
         return df_select_cipcj
 
     def tohdf5(self):
-        super().tohdf5(self.todataframe())
+        super().tohdf5()
 
 
 def thermo_file_to_h5_csv(f_thermo, f_output_name, override ='no'):
@@ -522,8 +524,10 @@ def select_custom(df_custom, select_id_list):
         # number of step of df_custom
         steps_of_df_custom = df_custom['step'].values
         firststep = steps_of_df_custom[0]
+        secondstep = steps_of_df_custom[steps_of_df_custom!=firststep][0]
+        d_step = secondstep - firststep
         laststep = steps_of_df_custom[-1]
-        n_step_df_custom = laststep - firststep + 1
+        n_step_df_custom = (laststep - firststep)/d_step + 1
         # number of select id
         n_select = len(select_id_list)
         # select traceid for dataframe
@@ -538,7 +542,7 @@ def select_custom(df_custom, select_id_list):
         else:
             pass
 
-        steps_array_expected = np.repeat(np.arange(firststep, laststep+1), n_select)
+        steps_array_expected = np.repeat(np.arange(firststep, laststep+1, d_step), n_select)
         steps_df_select_custom = df_select_custom['step'].values
         check_steps = (steps_array_expected == steps_df_select_custom)
         if not np.all(check_steps):
@@ -560,12 +564,12 @@ def pair_double(df_pair, header_change_from, header_change_to, header_change_sig
     mapper = {v: header_change_to[i] for i, v in enumerate(header_change_from)}
     df_switch = df_switch.rename(columns=mapper)
     # reorder columns
-    df_switch = df_switch[list(df_pair)]
+    df_switch = df_switch[df_pair.columns.values.tolist()]
     # combine df_pair and df_switch
     dfp_data_double = np.empty((2*df_pair.shape[0], df_pair.shape[1]))
     dfp_data_double[::2] = df_pair.values
     dfp_data_double[1::2] = df_switch.values
-    df_double = pd.DataFrame(data = dfp_data_double, columns = list(df_pair))
+    df_double = pd.DataFrame(data = dfp_data_double, columns = df_pair.columns.values.tolist())
     return df_double
 
 # merge pairdouble and select_custom, output dfcip
