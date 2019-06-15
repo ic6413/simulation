@@ -29,8 +29,7 @@ module list
 #ulimit -s 10240
 env
 
-. ./input_variable_script.sh
-
-srun ~/work_script/lmp_mpi -var rst_from ${step1} -var runstep 1000000 -log log_${step1}.lammps -in in.lmpscript_20190114_v11
+step1 = 0
+srun --cpu_bind=verbose,cores --distribution=block:cyclic ~/work_script/lmp_mpi -var rst_from ${step1} -var runstep 1000000 -log log_${step1}.lammps -in in.lmpscript_20190114_v11
 
 echo "All Done!"
