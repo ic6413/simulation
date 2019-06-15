@@ -50,7 +50,7 @@ variable  deposit_number equal 120000
 # chunk method
 variable	chunk_method		string no #x xy xyz r rz rzt NONE
 # store force
-variable	ifstoreforce		string yes
+variable	ifstoreforce		string no
 # ifsetvelocity
 variable	ifsetvelocity		string no
 # reset dt
@@ -64,12 +64,12 @@ else &
 variable	freq_restart		equal 500000
 
 variable	freq_dump_trace_image	equal 0
-variable	freq_dump_all_image	equal 500000
+variable	freq_dump_all_image	equal 0
 
 variable	freq_dump_trace_custom	equal 0
 variable	freq_dump_all_custom	equal 0
 variable  if_all_custom_sep string no
-variable	freq_print_single_trace_max	equal 1
+variable	freq_print_single_trace_max	equal 0
 variable	freq_print_single_trace_1	equal 0
 variable	freq_print_single_trace_2	equal 0
 variable	freq_print_single_trace_3	equal 0
@@ -78,7 +78,7 @@ variable	freq_dump_trace_pair	equal 0
 variable	freq_dump_all_pair	equal 0
 
 variable	freq_dump_other		equal 0
-variable	freq_thermo		equal 1
+variable	freq_thermo		equal 10000
 variable	freq_fixvector		equal 0
 variable	every_fixvector		equal 1
 variable	freq_ave_chunk		equal 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100
@@ -410,8 +410,7 @@ label	end_deposit
 
 label		restart_jump
 
-
-if "${reset_history} == no" then &
+if "${reset_history} == no || ${rst_from} == 0" then &
   "jump SELF reset_pair_history_end"
 pair_style none
 run 1
