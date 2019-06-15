@@ -5,12 +5,12 @@ import createdata.datatofile as cd
 import calculate.checkoutputfile as cco
 import plotfigure.plottofile as ppf
 
-"""
+
 # thermo
 cd.thermo_hdf5_csv()
-"""
-step1 = 1
-step2 = 10000000
+
+step1 = 6300001
+step2 = 7200001
 
 # thermo plot
 y_variable_name_list = 'all'
@@ -22,11 +22,11 @@ fromtraceorall_input = 'all'
 fromtraceorall_input = 'trace'
 
 cd.dumptofile(fromtraceorall=fromtraceorall_input).dump_custom_max("c_KEt_atom")
-"""
+
 cco.checkmaxid("c_KEt_atom", step1, step2).checkprint()
 
 y_variable_name_list2 = ['c_KEt_atom','c_KEr_atom','v_KEtr_atom','id',]
-"""
+
 y_variables = [
         'fx',
         'fy',
@@ -53,11 +53,11 @@ ppf.plotfromcustom(step1, step2,fromtraceorall=fromtraceorall_input).plotmaxKE_e
     )
 
 
-"""
+
 # custom
 
 cd.dumptofile(fromtraceorall=fromtraceorall_input).dump_custom()
-id_i = 250
+id_i = 4195
 
 
 cco.checkoverlap(id_i, step1, step2).checkprint()
@@ -71,10 +71,10 @@ cco.check_ft_1j_contact(id_i, step1, step2, error_tolerence, method_list).checkp
 cco.check_ft_1w_contact(id_i, step1, step2, error_tolerence, method_list).checkprint()
 
 cd.dumptofile(fromtraceorall=fromtraceorall_input).dump_custom_select([id_i])
-x_variable_name_list = 'step'
+x_variable_name_list = ['step']
 ppf.plotfromcustomselect(step1, step2, id_i, fromtraceorall=fromtraceorall_input).plotsingle(x_variable_name_list, y_variable_name_list)
 ppf.plotfromcustom(step1, step2,fromtraceorall=fromtraceorall_input).plotij(id_i)
-"""
+
 
 """
 id_i = 15556

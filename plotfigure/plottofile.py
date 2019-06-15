@@ -271,24 +271,24 @@ class plotfromcustom(plotclass):
             [y_label1, y_label2, y_label3] = addxyzlabel(y_label)
             [y_array1, y_array2, y_array3] = splitxyzarray(y_array)
 
-        ## velocity
-        #vijt = manystepsclass.vijt()
-        #vijn = manystepsclass.vijn()
-        #vijt_contactpoint = manystepsclass.vijt_contactpoint()
-        #vijt_half_pre = manystepsclass.vijt_half_pre()
-        ## overlap
-        #overlap_length = manystepsclass.overlap_length()
+        # velocity
+        vijt = manystepsclass.vijt()
+        vijn = manystepsclass.vijn()
+        vijt_contactpoint = manystepsclass.vijt_contactpoint()
+        vijt_half_pre = manystepsclass.vijt_half_pre()
+        # overlap
+        overlap_length = manystepsclass.overlap_length()
         # force
         [fnk,fngamma,ftk_include_his,ftgamma] = manystepsclass.f_many_steps()
         fn = fnk + fngamma
         ft = ftk_include_his + ftgamma
         # work
-        #[work_ft, work_fn] = manystepsclass.work_ftfn_many_steps()
-        #[work_ftgamma, work_fngamma] = manystepsclass.work_ftgammafngamma_many_steps()
-        #[work_ftk, work_fnk] = manystepsclass.work_ftkfnk_many_steps()
-        #[sum_ftwork, sum_fnwork] = manystepsclass.cumsum_work()
-        #sum_ftkwork = np.cumsum(work_ftk, axis=0)
-        #sum_fnkwork = np.cumsum(work_fnk, axis=0)
+        [work_ft, work_fn] = manystepsclass.work_ftfn_many_steps()
+        [work_ftgamma, work_fngamma] = manystepsclass.work_ftgammafngamma_many_steps()
+        [work_ftk, work_fnk] = manystepsclass.work_ftkfnk_many_steps()
+        [sum_ftwork, sum_fnwork] = manystepsclass.cumsum_work()
+        sum_ftkwork = np.cumsum(work_ftk, axis=0)
+        sum_fnkwork = np.cumsum(work_fnk, axis=0)
         # gravity
         gravity = manystepsclass.gravity()
         x_array_label_list = [
@@ -296,30 +296,30 @@ class plotfromcustom(plotclass):
         ]
         y_array_label_list = [
             [cs.projection_scalar(fn,xij),'fprojectxij'],
-            #[xij, 'xij'],
-            #[vijt,'vijt'],
-            #[vijn,'vijn'],
-            #[vijt_half_pre,'vijt_half_pre'],
-            #[vijt_contactpoint,'vijt_contactpoint'],
-            #[overlap_length,'overlap_length'],
-            #[fnk,'fnk'],
-            #[fngamma,'fngamma'],
-            #[ftk_include_his,'ftk_include_his'],
-            #[ftgamma,'ftgamma'],
-            #[fn,'fn'],
-            #[ft,'ft'],
-            #[fn+ft,'fn+ft'],
-            #[work_ft,'work_ft'],
-            #[work_fn,'work_fn'],
-            #[work_ftgamma,'work_ftgamma'],
-            #[work_fngamma,'work_fngamma'],
-            #[work_ftk,'work_ftk'],
-            #[work_fnk,'work_fnk'],
-            #[sum_ftwork,'sum_ftwork'],
-            #[sum_fnwork,'sum_fnwork'],
-            #[sum_ftkwork,'sum_ftkwork'],
-            #[sum_fnkwork,'sum_fnkwork'],
-            #[gravity,'gravity'],
+            [xij, 'xij'],
+            [vijt,'vijt'],
+            [vijn,'vijn'],
+            [vijt_half_pre,'vijt_half_pre'],
+            [vijt_contactpoint,'vijt_contactpoint'],
+            [overlap_length,'overlap_length'],
+            [fnk,'fnk'],
+            [fngamma,'fngamma'],
+            [ftk_include_his,'ftk_include_his'],
+            [ftgamma,'ftgamma'],
+            [fn,'fn'],
+            [ft,'ft'],
+            [fn+ft,'fn+ft'],
+            [work_ft,'work_ft'],
+            [work_fn,'work_fn'],
+            [work_ftgamma,'work_ftgamma'],
+            [work_fngamma,'work_fngamma'],
+            [work_ftk,'work_ftk'],
+            [work_fnk,'work_fnk'],
+            [sum_ftwork,'sum_ftwork'],
+            [sum_fnwork,'sum_fnwork'],
+            [sum_ftkwork,'sum_ftkwork'],
+            [sum_fnkwork,'sum_fnkwork'],
+            [gravity,'gravity'],
         ]
         # plot x y z component
         for variable_string in y_array_label_list:
@@ -442,9 +442,11 @@ class plotfromcustom(plotclass):
 
         df = pd.read_hdf(dp.put_maxlabel_on_file(maxlabel, dp.f_custom))
 
+        df_step = cs.extract_dataframe(df, self.step1, self.step2)
+
         def redefine_variable_name(variable_name_list):
             if variable_name_list == 'all':
-                new_variable_name_list = df.columns.values.tolist()
+                new_variable_name_list = df_step.columns.values.tolist()
             else:
                 new_variable_name_list = variable_name_list
             return new_variable_name_list
@@ -453,9 +455,9 @@ class plotfromcustom(plotclass):
         new_y_variable_name_list = redefine_variable_name(y_variable_name_list)
 
         for x_label in new_x_variable_name_list:
-            x_array = df[x_label].values
+            x_array = df_step[x_label].values
             for y_label in new_y_variable_name_list:
-                y_array = df[y_label].values
+                y_array = df_step[y_label].values
                 figclass = lammp_figure_max(self.step1, self.step2, x_label, y_label, maxlabel)
                 figclass.create_and_save(debug_fig_max_path, x_array, y_array)
                 plt.close('all')
@@ -479,9 +481,11 @@ class plotfromcustomselect(plotclass):
     def plotsingle(self, x_variable_name_list, y_variable_name_list):
         df = pd.read_hdf(self.f_read_custom_single)
 
+        df_step = cs.extract_dataframe(df, self.step1, self.step2)
+
         def redefine_variable_name(variable_name_list):
             if variable_name_list == 'all':
-                new_variable_name_list = df.columns.values.tolist()
+                new_variable_name_list = df_step.columns.values.tolist()
             else:
                 new_variable_name_list = variable_name_list
             return new_variable_name_list
@@ -490,9 +494,9 @@ class plotfromcustomselect(plotclass):
         new_y_variable_name_list = redefine_variable_name(y_variable_name_list)
 
         for x_label in new_x_variable_name_list:
-            x_array = df[x_label].values
+            x_array = df_step[x_label].values
             for y_label in new_y_variable_name_list:
-                y_array = df[y_label].values
+                y_array = df_step[y_label].values
                 figclass = lammp_figure_atom_single(self.step1, self.step2, x_label, y_label, self.id_i)
                 figclass.create_and_save(dp.debug_fig_oneatom_path, x_array, y_array)
                 plt.close('all')
@@ -529,10 +533,10 @@ class plotfromthermo(plotclass):
     def plotthermo(self, x_variable_name_list, y_variable_name_list):
 
         df = pd.read_hdf(dp.f_thermo)
-
+        df_step = cs.extract_dataframe(df, self.step1, self.step2)
         def redefine_variable_name(variable_name_list):
             if variable_name_list == 'all':
-                new_variable_name_list = df.columns.values.tolist()
+                new_variable_name_list = df_step.columns.values.tolist()
 
             else:
                 new_variable_name_list = variable_name_list
@@ -543,11 +547,11 @@ class plotfromthermo(plotclass):
 
 
         for x_label in new_x_variable_name_list:
-            x_array = df[x_label].values
+            x_array = df_step[x_label].values
             for y_label in new_y_variable_name_list:
-                y_array = df[y_label].values
+                y_array = df_step[y_label].values
                 figclass = lammp_figure_thermo(self.step1, self.step2, x_label, y_label)
-                figclass.create_and_save(dp.debug_fig_oneatom_path, x_array, y_array)
+                figclass.create_and_save(dp.debug_fig_thermo_path, x_array, y_array)
                 plt.close('all')
 
         print("finish plot thermo")
