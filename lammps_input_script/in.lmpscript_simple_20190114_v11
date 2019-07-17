@@ -132,7 +132,7 @@ variable	dp_small_dp_unit 	equal 0.9
 variable	skin_dp_unit		equal 0.5
 
 # container size simulation box size
-variable	ri_dp_unit		equal 2	#inner radius
+variable	ri_dp_unit		equal 36	#inner radius
 variable	width_dp_unit		equal 17	#width
 variable  z_bottom_dp_unit equal 0
 # calculate ro
@@ -147,7 +147,7 @@ else &
 variable	ri_delete_dp_unit	equal $(0.5*v_dp_big_dp_unit + v_ri_dp_unit)
 variable	ro_insert_dp_unit	equal $(-0.5*v_dp_big_dp_unit + v_ro_dp_unit)
 variable	zlo_create_dp_unit	equal 0.55
-variable  zhi_create_dp_unit	equal 10
+variable  zhi_create_dp_unit	equal 20
 # zhi for box
 variable	zhi_box_dp_unit		equal $(1.1*v_zhi_create_dp_unit+1)
 # chunk height
