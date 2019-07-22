@@ -44,7 +44,7 @@ variable	iffreeze		string no
 # create atom method
 # no means no create , latt means lattice, test_collide_1wall1atom means test collide of 1 wall and 1 atom
 # test_collide_twoatoms means test collide of two atoms
-variable	create_atom_method			string latt 
+variable	create_atom_method			string test_collide_1wall1atom 
 variable	ifpour			string no
 variable  pourstep    equal 100
 variable  pour_number equal 240000
@@ -71,7 +71,7 @@ variable	freq_dump_trace_image	equal 0
 variable	freq_dump_all_image	equal 0
 
 variable	freq_dump_trace_custom	equal 0
-variable	freq_dump_all_custom	equal 0
+variable	freq_dump_all_custom	equal 1
 variable  if_all_custom_sep string no
 variable	freq_print_single_trace_max	equal 0
 variable	freq_print_single_trace_1	equal 0
@@ -82,7 +82,7 @@ variable	freq_dump_trace_pair	equal 0
 variable	freq_dump_all_pair	equal 0
 
 variable	freq_dump_other		equal 0
-variable	freq_thermo		equal 10000
+variable	freq_thermo		equal 1
 variable	freq_fixvector		equal 0
 variable	every_fixvector		equal 1
 variable	freq_ave_chunk		equal 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100
@@ -99,7 +99,7 @@ if		"${rst_from} != 0" then &
 
 
 # number of type
-variable	n_type			equal 3 #1 or 3 or  0 means no create
+variable	n_type			equal 1 #1 or 3 or  0 means no create
 print "n_type ${n_type}" screen no append output/simulation_setting/attribute.lammps
 
 # if air viscous
@@ -129,7 +129,7 @@ variable	dp_small_dp_unit 	equal 0.9
 variable	skin_dp_unit		equal 0.5
 
 # container size simulation box size
-variable	ri_dp_unit		equal 2	#inner radius
+variable	ri_dp_unit		equal 36	#inner radius
 variable	width_dp_unit		equal 17	#width
 variable  z_bottom_dp_unit equal 0
 # calculate ro
@@ -260,7 +260,7 @@ timestep     ${ts}
 # communication, no restart
 comm_style	brick
 comm_modify	vel yes
-processors  2 * *
+#processors  2 * *
 
 # reg to define box, no restart
 region		simulation_box cylinder z 0. 0. ${r_box} 0. ${zhi_box} units box
@@ -293,7 +293,9 @@ if "${create_atom_method} == no" then &
 
 # create particle at lattice, no restart
 # with scale = 1, a1 = 1 0 0, a2 = 0 1 0, and a3 = 0 0 1, no restart
+
 lattice       bcc ${edge_lattice} origin 0 0 ${z_fraction_of_lattice}
+
 
 
 
@@ -870,12 +872,12 @@ label skip_dump_trace_custom
 if "${freq_dump_all_custom} == 0" then "jump SELF skip_dump_all_custom"
 
 if "${if_all_custom_sep} == no" then "jump SELF skip_dump_all_custom_sepfile"
-dump		dump_debug all custom ${freq_dump_all_custom} output/dump/all*.dump id type radius c_KEt_atom c_KEr_atom x y z vx vy vz fx fy fz omegax omegay omegaz tqx tqy tqz v_EKP_atom f_force_all[*] f_force_pair[*] c_n_contact v_check_nb_all v_KEtr_atom
+dump		dump_debug all custom ${freq_dump_all_custom} output/dump/all*.dump id type radius c_KEt_atom c_KEr_atom x y z vx vy vz fx fy fz #omegax omegay omegaz tqx tqy tqz v_EKP_atom f_force_all[*] f_force_pair[*] c_n_contact v_check_nb_all v_KEtr_atom
 dump_modify	dump_debug append no format float %.16g
 label skip_dump_all_custom_sepfile
 
 if "${if_all_custom_sep} == yes" then "jump SELF skip_dump_all_custom_allinonefile"
-dump		dump_debug all custom ${freq_dump_all_custom} output/dump/all_${rst_from}.dump id type radius c_KEt_atom c_KEr_atom x y z vx vy vz fx fy fz omegax omegay omegaz tqx tqy tqz v_EKP_atom f_force_all[*] f_force_pair[*] c_n_contact v_check_nb_all v_KEtr_atom
+dump		dump_debug all custom ${freq_dump_all_custom} output/dump/all_${rst_from}.dump id type radius c_KEt_atom c_KEr_atom x y z vx vy vz fx fy fz #omegax omegay omegaz tqx tqy tqz v_EKP_atom f_force_all[*] f_force_pair[*] c_n_contact v_check_nb_all v_KEtr_atom
 dump_modify	dump_debug append no format float %.16g
 label skip_dump_all_custom_allinonefile
 label skip_dump_all_custom
