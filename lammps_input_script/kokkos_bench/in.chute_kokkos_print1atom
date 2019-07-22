@@ -1,0 +1,48 @@
+# LAMMPS benchmark of granular flow
+# chute flow of 32000 atoms with frozen base at 26 degrees
+
+units		lj
+atom_style	sphere
+atom_modify map yes
+boundary	p p fs
+newton		off
+comm_modify	vel yes
+
+read_data	"/home/hllin/python/simulation/lammps_input_script/kokkos_bench/data.chute"
+pair_style	gran/hooke/history 200000.0 NULL 50.0 NULL 0.5 0
+pair_coeff	* *
+
+neighbor	0.1 bin
+neigh_modify	every 1 delay 0
+
+timestep	0.0001
+
+group		bottom type 2
+group		active subtract all bottom
+neigh_modify	exclude group bottom bottom
+
+fix		1 all gravity 1.0 chute 26.0
+fix		2 bottom freeze
+fix		3 active nve/sphere
+
+#compute max atom
+compute         KEt_atom all ke/atom
+compute         id_atom all property/atom id
+compute         id_maxKEt all reduce max c_id_atom c_KEt_atom replace 1 2
+#compute sum
+compute         sum_KEt all reduce sum c_KEt_atom
+# 1atom
+variable        fx2 equal fx[2]
+variable        id2 equal id[2]
+variable        x2  equal x[2]
+variable        vx2 equal vx[2]
+compute		1 all erotate/sphere
+compute         2 all pressure NULL virial
+#thermo, max,
+thermo_style	custom step atoms ke c_1 vol v_id2 v_x2 v_vx2 v_fx2 c_id_maxKEt[*] c_sum_KEt
+thermo_modify	norm no
+thermo		100
+
+run		500
+thermo          1
+run             100
