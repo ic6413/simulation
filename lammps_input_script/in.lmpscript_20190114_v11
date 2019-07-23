@@ -23,7 +23,7 @@
 #timer loop # loop off full sync
 # set step
 variable rst_from equal 0
-variable runstep equal 1000
+variable runstep equal 100
 # cd to output
 shell	mkdir	output
 # create output folders
@@ -38,13 +38,13 @@ variable	ifrotate		string no
 variable	trace_id1		equal 0  # 0 means no trace
 variable	trace_id2		equal 0  # 0 means no trace
 variable	trace_id3		equal 0  # 0 means no trace
-variable	iftrace_maxKE		string yes
+variable	iftrace_maxKE		string no
 variable	ifappend		string no
 variable	iffreeze		string no
 # create atom method
 # no means no create , latt means lattice, test_collide_1wall1atom means test collide of 1 wall and 1 atom
 # test_collide_twoatoms means test collide of two atoms
-variable	create_atom_method			string test_collide_1wall1atom 
+variable	create_atom_method	string latt	
 variable	ifpour			string no
 variable  pourstep    equal 100
 variable  pour_number equal 240000
@@ -71,7 +71,7 @@ variable	freq_dump_trace_image	equal 0
 variable	freq_dump_all_image	equal 0
 
 variable	freq_dump_trace_custom	equal 0
-variable	freq_dump_all_custom	equal 1
+variable	freq_dump_all_custom	equal 0
 variable  if_all_custom_sep string no
 variable	freq_print_single_trace_max	equal 0
 variable	freq_print_single_trace_1	equal 0
@@ -82,7 +82,7 @@ variable	freq_dump_trace_pair	equal 0
 variable	freq_dump_all_pair	equal 0
 
 variable	freq_dump_other		equal 0
-variable	freq_thermo		equal 1
+variable	freq_thermo		equal 0 
 variable	freq_fixvector		equal 0
 variable	every_fixvector		equal 1
 variable	freq_ave_chunk		equal 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100
@@ -144,7 +144,7 @@ else &
 variable	ri_delete_dp_unit	equal $(0.5*v_dp_big_dp_unit + v_ri_dp_unit)
 variable	ro_insert_dp_unit	equal $(-0.5*v_dp_big_dp_unit + v_ro_dp_unit)
 variable	zlo_create_dp_unit	equal 0.55
-variable  zhi_create_dp_unit	equal 10
+variable  zhi_create_dp_unit	equal 30
 # zhi for box
 variable	zhi_box_dp_unit		equal $(1.1*v_zhi_create_dp_unit+1)
 # chunk height
@@ -260,7 +260,7 @@ timestep     ${ts}
 # communication, no restart
 comm_style	brick
 comm_modify	vel yes
-#processors  2 * *
+processors  1 * *
 
 # reg to define box, no restart
 region		simulation_box cylinder z 0. 0. ${r_box} 0. ${zhi_box} units box
@@ -337,13 +337,13 @@ if "${create_atom_method} != test_collide_1wall1atom" then &
   "jump SELF end_test_collide_1wall1atom"
 #create_atoms	1 region region_ins units lattice 
 # test create 1 single atoms let inner wall collision
-create_atoms 1 single $(0*0.00083) $(40*0.00083) $(0.50001*0.00083) units box 
+create_atoms 1 single $(0*0.00083) $(36.6*0.00083) $(0.50001*0.00083) units box 
 # test set velocity
 set atom 1 vy $(-1.0*0.00083)
 #set atom 1 vz $(-1.0*0.00083)
 #set atom 2 vy $(1.0*0.00083)
 # test non parallel rotate (Say contact point is c, the plane composited by vc and ac will changed over the contact time.)
-set atom 1 omega 0.0 0 0
+set atom 1 omega 1.0 0 0
 label   end_test_collide_1wall1atom
 
 if "${create_atom_method} != test_collide_twoatoms" then &
