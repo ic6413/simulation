@@ -5,7 +5,7 @@
 #SBATCH --time=00:02:00   # walltime
 #SBATCH --mem=20000M               # memory (per node)
 #SBATCH --nodes=1
-#SBATCH -B=1:1:1
+#SBATCH -B 1:1:1
 #SBATCH --ntasks-per-node=1 #for distributed memory mpi
 
 # ncpus per MPI task, choose ncpus processors per allocated GPU or CPU. (only use one)
