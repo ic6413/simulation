@@ -1,37 +1,40 @@
 #!/bin/bash
 #Submit this script with: sbatch thefilename
 
-#asking for resources
-
+# asking for resources
 #SBATCH --time=00:02:00   # walltime
 #SBATCH --mem=20000M               # memory (per node)
 #SBATCH --nodes=1
-
-#SBATCH --ntasks=1   # number of processor cores (i.e. tasks)
-##SBATCH --gpu-per-node=4
-#SBATCH --sockets-per-node=1
-#SBATCH --cores-per-socket=1
+#SBATCH -B=1:1:1
 #SBATCH --ntasks-per-node=1 #for distributed memory mpi
-#SBATCH --ntasks-per-socket=11
-##SBATCH --cpus-per-gpu=1
-#SBATCH --cpus-per-task=1  #for shared memory openmp
 
+# ncpus per MPI task, choose ncpus processors per allocated GPU or CPU. (only use one)
+##SBATCH --cpus-per-task=1  #for shared memory openmp
+#SBATCH --cpus-per-gpu=1
+
+# test job
+#SBATCH --qos=debug
+
+# job info
 #SBATCH -J "speedtest"   # job name
 #SBATCH --mail-user=hllin@caltech.edu   # email address
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
 
-#SBATCH --qos=debug
+# gpu per node
 #SBATCH --gres=gpu:1
-
+##SBATCH --gpu-per-node=1
 SBATCH_GPUS_PER_NODE_local=1
+
+
 
 # export environment
 export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
 #export OMP_PROC_BIND=true
 export OMP_PROC_BIND=spread
 export OMP_PLACES=threads
+# ulimit -s 10240
 
 # RETURN ENV
 echo "SLURM_JOBID="$SLURM_JOBID
@@ -41,21 +44,22 @@ echo "SLURM_NTASKS_PER_NODE="$SLURM_NTASKS_PER_NODE
 echo "SLURM_NTASKS_PER_SOCKET="$SLURM_NTASKS_PER_SOCKET
 echo "SLURM_CPUS_PER_TASK="$SLURM_CPUS_PER_TASK
 echo "SLURMTMPDIR="$SLURMTMPDIR
+echo "working directory = "$SLURM_SUBMIT_DIR
+env
+lscpu
+
+# RETURN env related to GPU
 echo "SLURM_GPUS_PER_NODE="$SLURM_GPUS_PER_NODE
 echo "SBATCH_GRES="$SBATCH_GRES
-echo "working directory = "$SLURM_SUBMIT_DIR
-nvidia-smi
-env
-echo $PSM2_CUDA
-lscpu
+echo "PSM2_CUDA="$PSM2_CUDA
+# check CUDA_LAUNCH_BLOCKING not set to 1
+echo "CUDA_LAUNCH_BLOCKING="${CUDA_LAUNCH_BLOCKING}  
 service nv_peer_mem status
 lsmod | grep nv_peer_mem
 lsmod | grep gdrdrv
-# check CUDA_LAUNCH_BLOCKING dont set to 1
-echo "CUDA_LAUNCH_BLOCKING="${CUDA_LAUNCH_BLOCKING} 
+nvidia-smi
 
-# ulimit -s 10240
-
+#=================control MPI and LAMMPS job====================
 #srun
 SRUN_basic="srun --mpi=pmi2"
 SRUNBIND_c="--cpu-bind=cores"
@@ -65,20 +69,16 @@ OMPIRUN_basic="mpirun"
 OMPIRUNBIND_c="--bind-to core"   #when the number of processes is <= 2
 OMPIRUNBIND_s="--bind-to socket --map-by socket"  #when the number of processes is > 2
 
-#====ompi environment====
-#echo $OMPI_MCA_pml
-#OMPI_MCA_pml=ucx
-#export OMPI_MCA_pml
-
-# ompi set gpu direct
-export PSM2_GPUDIRECT=1
-export OMPI_MCA_btl_openib_want_cuda_gdr=1
-#ompi test
+#====set ompi MCA environment====
 export OMPI_MCA_btl=^openib
 #test
 #export OMPI_MCA_btl="self,sm,tcp,^openib"
 
-#====mvapich environment====
+#====set ompi GPU environment====
+export PSM2_GPUDIRECT=1
+export OMPI_MCA_btl_openib_want_cuda_gdr=1
+
+#====set mvapich2 GPU environment====
 export MV2_USE_CUDA=1
 export MV2_USE_GPUDIRECT_RDMA=1
 
@@ -89,7 +89,6 @@ LMP_CMD_kkomp="-k on t ${SLURM_CPUS_PER_TASK} -sf kk"
 LMP_CMD_kkgpuomp="-k on g ${SBATCH_GPUS_PER_NODE_local} t ${SLURM_CPUS_PER_TASK} -sf kk"
 NEIGHDIRECT="-pk kokkos neigh half gpu/direct on"
 NEIGHnoDIRECT="-pk kokkos neigh half gpu/direct off"
-
 LMP_OMP="-pk omp ${SLURM_CPUS_PER_TASK} -sf omp"
 
 #=======Script========================
@@ -155,40 +154,7 @@ ${OMPIRUN_basic} lmp ${LMP_CMD_kno} -in ${LMP_INSCRIPT}
 ${OMPIRUN_basic} lmp ${LMP_CMD_kkgpu} ${NEIGHDIRECT} -in ${LMP_INSCRIPT}
 '
 
-:'
-##===========kkomp============
-#LOAD MODULES, INSERT CODE, AND RUN YOUR PROGRAMS HERE
-module purge
-module load lmp/190723_master_ompi401_kkcpu ompi/4.0.1_yesucx_computenode
 
-#check setting after load module
-module list
-#ompi setting check
-ompi_info --parsable --all | grep mpi_built_with_cuda_support:value
-ompi_info --all | grep btl_openib_have_cuda_gdr
-ompi_info --all | grep btl_openib_have_driver_gdr
-#====run=====
-${OMPIRUN_basic} ${OMPIRUNBIND_s} lmp ${LMP_CMD_kno} -in ${LMP_INSCRIPT}
-${OMPIRUN_basic} ${OMPIRUNBIND_s} lmp ${LMP_CMD_kkomp} -in ${LMP_INSCRIPT}
-${SRUN_basic} ${SRUNBIND_s} lmp ${LMP_CMD_kno} -in ${LMP_INSCRIPT}
-${SRUN_basic} ${SRUNBIND_s} lmp ${LMP_CMD_kkomp} -in ${LMP_INSCRIPT}
-
-
-##===========user omp============
-#LOAD MODULES, INSERT CODE, AND RUN YOUR PROGRAMS HERE
-module purge
-module load lmp/190723_master_ompi401_useromp ompi/4.0.1_yesucx_computenode
-
-#check setting after load module
-module list
-#ompi setting check
-ompi_info --parsable --all | grep mpi_built_with_cuda_support:value
-ompi_info --all | grep btl_openib_have_cuda_gdr
-ompi_info --all | grep btl_openib_have_driver_gdr
-#====run=====
-${OMPIRUN_basic} ${OMPIRUNBIND_s} lmp ${LMP_CMD_OMP} -in ${LMP_INSCRIPT}
-${SRUN_basic} ${SRUNBIND_s} lmp ${LMP_CMD_OMP} -in ${LMP_INSCRIPT}
-'
 :'
 ##===========mvapich2============
 #LOAD MODULES, INSERT CODE, AND RUN YOUR PROGRAMS HERE
