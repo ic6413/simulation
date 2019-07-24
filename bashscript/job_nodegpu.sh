@@ -21,8 +21,8 @@
 #SBATCH --mail-type=FAIL
 
 # gpu per node
-#SBATCH --gres=gpu:2
-SBATCH_GPUS_PER_NODE_local=2
+#SBATCH --gres=gpu:4
+SBATCH_GPUS_PER_NODE_local=4
 
 # export environment
 export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
@@ -81,7 +81,7 @@ LMP_CMD_kno="-k off"
 LMP_CMD_kkgpu="-k on g ${SBATCH_GPUS_PER_NODE_local} -sf kk"
 LMP_CMD_kkomp="-k on t ${SLURM_CPUS_PER_TASK} -sf kk"
 LMP_CMD_kkgpuomp="-k on g ${SBATCH_GPUS_PER_NODE_local} t ${SLURM_CPUS_PER_TASK} -sf kk"
-NEIGHDIRECT="-pk kokkos neigh half gpu/direct on"
+NEIGHDIRECT="-pk kokkos neigh half gpu/direct on" #newton off comm host
 NEIGHnoDIRECT="-pk kokkos neigh half gpu/direct off"
 LMP_OMP="-pk omp ${SLURM_CPUS_PER_TASK} -sf omp"
 
@@ -91,11 +91,11 @@ LMP_INSCRIPT_kkbench_kokkos="/home/hllin/python/simulation/lammps_input_script/k
 LMP_INSCRIPT_kkbench_kokkos_print1="/home/hllin/python/simulation/lammps_input_script/kokkos_bench/in.chute_kokkos_print1atom"
 LMP_INSCRIPT_ch="in.chute_print1atom"
 LMP_INSCRIPT_lj="in.lj_print1atom"
-LMP_INSCRIPT_myclinder="/home/hllin/python/simulation/lammps_input_script/in.lmpscript_20190114_v11"
+LMP_INSCRIPT_mycylinder="/home/hllin/python/simulation/lammps_input_script/in.lmpscript_20190114_v11"
 
-LMP_INSCRIPT=${LMP_INSCRIPT_myclinder}
+LMP_INSCRIPT=${LMP_INSCRIPT_sm}
 
-
+:'
 ##===========ompi self usually slow============
 #LOAD MODULES, INSERT CODE, AND RUN YOUR PROGRAMS HERE
 module purge
@@ -112,7 +112,7 @@ ${OMPIRUN_basic} lmp ${LMP_CMD_kno} -in ${LMP_INSCRIPT} # 14coreMPI best
 ${OMPIRUN_basic} lmp ${LMP_CMD_kkgpu} ${NEIGHnoDIRECT} -in ${LMP_INSCRIPT}
 ${SRUN_basic} lmp ${LMP_CMD_kno} -in ${LMP_INSCRIPT}
 ${SRUN_basic} lmp ${LMP_CMD_kkgpu} ${NEIGHnoDIRECT} -in ${LMP_INSCRIPT}
-
+'
 
 ##===========ompi self using HPC ucx, must use gpu node============
 #LOAD MODULES, INSERT CODE, AND RUN YOUR PROGRAMS HERE
