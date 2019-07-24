@@ -245,7 +245,8 @@ variable	edge_lattice		equal $(2/(sqrt(3))*v_dp_big)
 variable	z_fraction_of_lattice	equal $(sqrt(3)/4)
 
 #newton
-newton       on
+# default is on so only need when off
+#newton       on
 
 # jump to restart section
 if	"${rst_from} > 0" 	then "jump SELF restart_jump"
