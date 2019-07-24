@@ -5,27 +5,27 @@
 
 #SBATCH --time=00:08:00   # walltime
 #SBATCH --mem=4000M               # memory (per node)
-SBATCH_GPUS_PER_NODE_local="2"
-#SBATCH --gres=gpu:${SBATCH_GPUS_PER_NODE_local}
 #SBATCH --nodes=1
 
 #SBATCH --ntasks=1   # number of processor cores (i.e. tasks)
 ##SBATCH --gpu-per-node=1
 #SBATCH --sockets-per-node=1
-
-#SBATCH --cores-per-socket=2
+#SBATCH --cores-per-socket=1
 #SBATCH --ntasks-per-node=1 #for distributed memory mpi
 #SBATCH --ntasks-per-socket=1
 ##SBATCH --cpus-per-gpu=2
-#SBATCH --cpus-per-task=2  #for shared memory openmp
+#SBATCH --cpus-per-task=1  #for shared memory openmp
 
-#SBATCH -J "20190708"   # job name
+#SBATCH -J "speedtest"   # job name
 #SBATCH --mail-user=hllin@caltech.edu   # email address
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
 
 #SBATCH --qos=debug
+#SBATCH --gres=gpu:1
+
+SBATCH_GPUS_PER_NODE_local=1
 
 # export environment
 export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
