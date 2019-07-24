@@ -23,7 +23,7 @@
 #timer loop # loop off full sync
 # set step
 variable rst_from equal 0
-variable runstep equal 10
+variable runstep equal 100
 # cd to output
 shell	mkdir	output
 # create output folders
