@@ -4,12 +4,12 @@
 # asking for resources
 #SBATCH --time=00:02:00   # walltime
 #SBATCH --mem=20000M               # memory (per node)
-#SBATCH --nodes=1
+#SBATCH --nodes=2
 #SBATCH -B 2:2:1
 #SBATCH --ntasks-per-node=4 #for distributed memory mpi
 
 # ncpus per MPI task, choose ncpus processors per allocated GPU or CPU. (only use one)
-#SBATCH --cpus-per-task=1  #for shared memory openmp
+#SBATCH --cpus-per-task=7  #for shared memory openmp
 # test job
 #SBATCH --qos=debug
 
@@ -117,7 +117,7 @@ ${SRUN_basic} lmp ${LMP_CMD_kkgpu} ${NEIGHnoDIRECT} -in ${LMP_INSCRIPT}
 ##===========ompi self using HPC ucx, must use gpu node============
 #LOAD MODULES, INSERT CODE, AND RUN YOUR PROGRAMS HERE
 module purge
-module load cuda/10.0 ucx/1.5.1_cuda-10.0 ompi/4.0.1_cuda10.0_yesucx lmp/190723_master_ucxHPC_selfompi401_cuda10
+module load cuda/10.0 ucx/1.5.1_cuda-10.0 ompi/4.0.1_cuda10.0_yesucx lmp/190724_master_ucxHPC_selfompi401_kk_cuda10_omp
 
 #check setting after load module
 module list
@@ -133,7 +133,27 @@ ${SRUN_basic} lmp ${LMP_CMD_kno} -in ${LMP_INSCRIPT}
 ${SRUN_basic} lmp ${LMP_CMD_kkgpu} ${NEIGHDIRECT} -in ${LMP_INSCRIPT}
 ${SRUN_basic} lmp ${LMP_CMD_kkgpuomp} ${NEIGHDIRECT} -in ${LMP_INSCRIPT}
 
+:'
+##===========ompi self using HPC ucx, must use gpu node============
+#LOAD MODULES, INSERT CODE, AND RUN YOUR PROGRAMS HERE
+module purge
+module load cuda/10.0 ucx/1.5.1_cuda-10.0 ompi/4.0.1_cuda10.0_yesucx lmp/190723_master_ucxHPC_selfompi401_cuda10
 
+#check setting after load module
+module list
+#ompi setting check
+ompi_info --parsable --all | grep mpi_built_with_cuda_support:value
+ompi_info --all | grep btl_openib_have_cuda_gdr
+ompi_info --all | grep btl_openib_have_driver_gdr
+#====run=====
+${OMPIRUN_basic} lmp ${LMP_CMD_kno} -in ${LMP_INSCRIPT}
+${OMPIRUN_basic} lmp ${LMP_CMD_kkgpu} ${NEIGHDIRECT} -in ${LMP_INSCRIPT}
+${OMPIRUN_basic} lmp ${LMP_CMD_kkgpuomp} ${NEIGHDIRECT} -in ${LMP_INSCRIPT}
+${SRUN_basic} lmp ${LMP_CMD_kno} -in ${LMP_INSCRIPT}
+${SRUN_basic} lmp ${LMP_CMD_kkgpu} ${NEIGHDIRECT} -in ${LMP_INSCRIPT}
+${SRUN_basic} lmp ${LMP_CMD_kkgpuomp} ${NEIGHDIRECT} -in ${LMP_INSCRIPT}
+'
+:'
 ##===========ompi HPC can not use srun============
 #LOAD MODULES, INSERT CODE, AND RUN YOUR PROGRAMS HERE
 module purge
@@ -148,7 +168,7 @@ ompi_info --all | grep btl_openib_have_driver_gdr
 #====run=====
 ${OMPIRUN_basic} lmp ${LMP_CMD_kno} -in ${LMP_INSCRIPT}
 ${OMPIRUN_basic} lmp ${LMP_CMD_kkgpu} ${NEIGHDIRECT} -in ${LMP_INSCRIPT}
-
+'
 
 
 :'

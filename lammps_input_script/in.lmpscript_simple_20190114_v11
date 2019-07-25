@@ -23,7 +23,7 @@
 
 # set simple start variable
 variable  rst_from          equal 0
-variable  runstep           equal 1000
+variable  runstep           equal 100
 
 # initialization:
 # timer
