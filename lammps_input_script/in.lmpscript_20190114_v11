@@ -23,7 +23,15 @@
 #timer loop # loop off full sync
 # set step
 variable rst_from equal 0
-variable runstep equal 100
+variable runstep equal 200
+variable runstep_loop equal 100
+if "${runstep_loop} == 0" then &
+"variable n_loop equal 0" &
+else &
+"variable n_loop equal floor(v_runstep/v_runstep_loop)" &
+variable KEtr_to_jumpout equal 1e-26
+
+
 # cd to output
 shell	mkdir	output
 # create output folders
@@ -65,10 +73,10 @@ if		"(${ifpour} == yes) || (${ifdeposit} == yes)" then &
 else &
   "variable	recount_dof		string no"
 # frequency output
-variable	freq_restart		equal 500000
+variable	freq_restart		equal 100
 
 variable	freq_dump_trace_image	equal 0
-variable	freq_dump_all_image	equal 0
+variable	freq_dump_all_image	equal 100
 
 variable	freq_dump_trace_custom	equal 0
 variable	freq_dump_all_custom	equal 0
@@ -82,7 +90,7 @@ variable	freq_dump_trace_pair	equal 0
 variable	freq_dump_all_pair	equal 0
 
 variable	freq_dump_other		equal 0
-variable	freq_thermo		equal 0 
+variable	freq_thermo		equal stagger(100,20)       #
 variable	freq_fixvector		equal 0
 variable	every_fixvector		equal 1
 variable	freq_ave_chunk		equal 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100
@@ -92,6 +100,8 @@ variable	freq_ave_wall		equal 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92
 variable	repeat_ave_wall		equal 1
 variable	every_ave_wall		equal 1
 
+variable  freq_balance      equal 50
+
 # jump if restart from nonzero step
 # this command specify in jobscribe "variable	rst_from equal N" be used as suffix in output file name
 if		"${rst_from} != 0" then &
@@ -99,7 +109,7 @@ if		"${rst_from} != 0" then &
 
 
 # number of type
-variable	n_type			equal 1 #1 or 3 or  0 means no create
+variable	n_type			equal 3 #1 or 3 or  0 means no create
 print "n_type ${n_type}" screen no append output/simulation_setting/attribute.lammps
 
 # if air viscous
@@ -144,7 +154,7 @@ else &
 variable	ri_delete_dp_unit	equal $(0.5*v_dp_big_dp_unit + v_ri_dp_unit)
 variable	ro_insert_dp_unit	equal $(-0.5*v_dp_big_dp_unit + v_ro_dp_unit)
 variable	zlo_create_dp_unit	equal 0.55
-variable  zhi_create_dp_unit	equal 30
+variable  zhi_create_dp_unit	equal 31
 # zhi for box
 variable	zhi_box_dp_unit		equal $(1.1*v_zhi_create_dp_unit+1)
 # chunk height
@@ -296,9 +306,6 @@ if "${create_atom_method} == no" then &
 # with scale = 1, a1 = 1 0 0, a2 = 0 1 0, and a3 = 0 0 1, no restart
 
 lattice       bcc ${edge_lattice} origin 0 0 ${z_fraction_of_lattice}
-
-
-
 
 if "${n_type} == 3" then &
   "jump SELF begin3type" &
@@ -561,9 +568,8 @@ label skip_ave_chunk
 
 compute		KEt all ke
 compute		KEr all erotate/sphere
-variable	KEtr equal "c_KEt + c_KEr"
-compute		PE all pe
-variable	EKP equal "c_KEt + c_KEr + c_PE"
+variable	KEtr equal "ke + c_KEr"
+variable	EKP equal "ke + c_KEr + pe"
 # compute
 compute		n_contact all contact/atom
 compute		m_d all property/atom mass diameter
@@ -914,7 +920,7 @@ dump		dump_image_all all image ${freq_dump_all_image} output/dumpimage/all_image
 label skip_dump_all_image
 
 # file, thermo
-thermo_style	custom step atoms ke c_KEr v_KEtr v_EKP c_id_maxKEt[1] c_id_maxKEt[2]
+thermo_style	custom step atoms ke c_KEr pe v_KEtr v_EKP c_id_maxKEt[1] c_id_maxKEt[2]
 thermo_modify   lost error norm no
 if "${freq_thermo} == 0" then "jump SELF skip_thermo"
 thermo		${freq_thermo}
@@ -930,8 +936,6 @@ if "${freq_ave_wall} == 0" then "jump SELF skip_ave_wall"
 fix		timeav_wall_force all ave/time ${every_ave_wall} ${repeat_ave_wall} ${freq_ave_wall} v_t v_fr_in v_ftheta_in v_fz_in v_fr_out v_ftheta_out v_fz_out v_fr_zplane v_ftheta_zplane v_fz_zplane mode scalar ave one file output/fix/file_timeav_wall_${rst_from}
 label skip_ave_wall
 
-
-
 # run pour and delete and add inner wall
 if "${ifpour} == no || ${rst_from} != 0" then "jump SELF end_pour2_innerwall"
 run 10
@@ -943,10 +947,26 @@ else &
   "fix	inwall		all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri}"
 label	end_pour2_innerwall
 
-
+# balance every freq_balance step
+if "${freq_balance} == 0" then "jump SELF skip_balance1"
+balance 	1.0 shift yz 50 1.05
+fix balance1 all balance ${freq_balance} 1.02 shift yz 50 1.01 weight time 1.0
+label skip_balance1
 
 # run
-run ${runstep}
+
+if "${runstep_loop} == 0" then "jump SELF skip_loop1"
+label loop
+variable a loop ${n_loop}
+run ${runstep_loop}
+if "$(c_id_maxKEt[2]) < 1e-26" then "jump SELF break1"
+next a
+jump SELF loop
+label break1
+print "Loop condition satisfied"
+label skip_loop1
+
+run $(v_runstep-v_runstep_loop*v_n_loop)
 
 #start to move inwall
 #define inner wall speed again
