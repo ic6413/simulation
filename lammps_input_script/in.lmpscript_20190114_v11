@@ -23,13 +23,15 @@
 #timer loop # loop off full sync
 # set step
 variable rst_from equal 0
-variable runstep equal 200
-variable runstep_loop equal 100
+variable runstep equal 100000000
+
+variable runstep_loop equal 1000000
 if "${runstep_loop} == 0" then &
 "variable n_loop equal 0" &
 else &
-"variable n_loop equal floor(v_runstep/v_runstep_loop)" &
-variable KEtr_to_jumpout equal 1e-26
+"variable n_loop equal floor(v_runstep/v_runstep_loop)"
+
+variable KEtr_to_jumpout equal 1e-25
 
 
 # cd to output
@@ -73,10 +75,10 @@ if		"(${ifpour} == yes) || (${ifdeposit} == yes)" then &
 else &
   "variable	recount_dof		string no"
 # frequency output
-variable	freq_restart		equal 100
+variable	freq_restart		equal 1000000
 
 variable	freq_dump_trace_image	equal 0
-variable	freq_dump_all_image	equal 100
+variable	freq_dump_all_image	equal 0
 
 variable	freq_dump_trace_custom	equal 0
 variable	freq_dump_all_custom	equal 0
@@ -90,7 +92,7 @@ variable	freq_dump_trace_pair	equal 0
 variable	freq_dump_all_pair	equal 0
 
 variable	freq_dump_other		equal 0
-variable	freq_thermo		equal stagger(100,20)       #
+variable	freq_thermo		equal stagger(100000,20000)       #
 variable	freq_fixvector		equal 0
 variable	every_fixvector		equal 1
 variable	freq_ave_chunk		equal 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100
@@ -100,7 +102,7 @@ variable	freq_ave_wall		equal 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92
 variable	repeat_ave_wall		equal 1
 variable	every_ave_wall		equal 1
 
-variable  freq_balance      equal 50
+variable  freq_balance      equal 1000000
 
 # jump if restart from nonzero step
 # this command specify in jobscribe "variable	rst_from equal N" be used as suffix in output file name
@@ -959,14 +961,16 @@ if "${runstep_loop} == 0" then "jump SELF skip_loop1"
 label loop
 variable a loop ${n_loop}
 run ${runstep_loop}
-if "$(c_id_maxKEt[2]) < 1e-26" then "jump SELF break1"
+if "$(c_id_maxKEt[2]) < ${KEtr_to_jumpout}" then "jump SELF break1"
 next a
 jump SELF loop
 label break1
 print "Loop condition satisfied"
 label skip_loop1
 
-run $(v_runstep-v_runstep_loop*v_n_loop)
+if "${runstep_loop} != 0" then "jump SELF skip_run1"
+run ${runstep}
+label skip_run1
 
 #start to move inwall
 #define inner wall speed again
