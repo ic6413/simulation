@@ -1,34 +1,9 @@
-#!/bin/bash
-#Submit this script with: sbatch thefilename
-
-# asking for resources
-#SBATCH --time=00:02:00   # walltime
-#SBATCH --mem=20000M               # memory (per node)
-#SBATCH --nodes=2
-#SBATCH -B 2:2:1
-#SBATCH --ntasks-per-node=4 #for distributed memory mpi
-
-# ncpus per MPI task, choose ncpus processors per allocated GPU or CPU. (only use one)
-#SBATCH --cpus-per-task=7  #for shared memory openmp
-# test job
-#SBATCH --qos=debug
-
-# job info
-#SBATCH -J "speedtest"   # job name
-#SBATCH --mail-user=hllin@caltech.edu   # email address
-#SBATCH --mail-type=BEGIN
-#SBATCH --mail-type=END
-#SBATCH --mail-type=FAIL
-
-# gpu per node
-#SBATCH --gres=gpu:4
-SBATCH_GPUS_PER_NODE_local=4
 
 # export environment
 export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
 #export OMP_PROC_BIND=true
-export OMP_PROC_BIND=spread
-export OMP_PLACES=threads
+#export OMP_PROC_BIND=spread
+#export OMP_PLACES=threads
 # ulimit -s 10240
 
 # RETURN ENV
@@ -55,7 +30,7 @@ nvidia-smi
 
 #=================control MPI and LAMMPS job====================
 #srun
-SRUN_basic="srun --mpi=pmi2"
+SRUN_basic="srun --mpi=pmi2 --accel-bind=g"
 SRUNBIND_c="--cpu-bind=cores"
 SRUNBIND_s="--cpu-bind=sockets"
 #mpirun
@@ -93,7 +68,7 @@ LMP_INSCRIPT_ch="in.chute_print1atom"
 LMP_INSCRIPT_lj="in.lj_print1atom"
 LMP_INSCRIPT_mycylinder="/home/hllin/python/simulation/lammps_input_script/in.lmpscript_20190114_v11"
 
-LMP_INSCRIPT=${LMP_INSCRIPT_sm}
+LMP_INSCRIPT=${LMP_INSCRIPT_kkbench_kokkos}
 
 :'
 ##===========ompi self usually slow============
@@ -114,7 +89,7 @@ ${SRUN_basic} lmp ${LMP_CMD_kno} -in ${LMP_INSCRIPT}
 ${SRUN_basic} lmp ${LMP_CMD_kkgpu} ${NEIGHnoDIRECT} -in ${LMP_INSCRIPT}
 '
 
-##===========ompi self using HPC ucx, must use gpu node============
+##===========kkcudaomp, ompi self using HPC ucx, must use gpu node============
 #LOAD MODULES, INSERT CODE, AND RUN YOUR PROGRAMS HERE
 module purge
 module load cuda/10.0 ucx/1.5.1_cuda-10.0 ompi/4.0.1_cuda10.0_yesucx lmp/190724_master_ucxHPC_selfompi401_kk_cuda10_omp
@@ -126,15 +101,19 @@ ompi_info --parsable --all | grep mpi_built_with_cuda_support:value
 ompi_info --all | grep btl_openib_have_cuda_gdr
 ompi_info --all | grep btl_openib_have_driver_gdr
 #====run=====
+:'
 ${OMPIRUN_basic} lmp ${LMP_CMD_kno} -in ${LMP_INSCRIPT}
 ${OMPIRUN_basic} lmp ${LMP_CMD_kkgpu} ${NEIGHDIRECT} -in ${LMP_INSCRIPT}
+${OMPIRUN_basic} lmp ${LMP_CMD_kkgpu} ${NEIGHnoDIRECT} -in ${LMP_INSCRIPT}
 ${OMPIRUN_basic} lmp ${LMP_CMD_kkgpuomp} ${NEIGHDIRECT} -in ${LMP_INSCRIPT}
+'
 ${SRUN_basic} lmp ${LMP_CMD_kno} -in ${LMP_INSCRIPT}
-${SRUN_basic} lmp ${LMP_CMD_kkgpu} ${NEIGHDIRECT} -in ${LMP_INSCRIPT}
 ${SRUN_basic} lmp ${LMP_CMD_kkgpuomp} ${NEIGHDIRECT} -in ${LMP_INSCRIPT}
+${SRUN_basic} lmp ${LMP_CMD_kkgpuomp} ${NEIGHnoDIRECT} -in ${LMP_INSCRIPT}
+${SRUN_basic} lmp ${LMP_CMD_kkgpuomp} ${NEIGHDIRECT} comm host -in ${LMP_INSCRIPT}
+${SRUN_basic} lmp ${LMP_CMD_kkgpuomp} ${NEIGHnoDIRECT} comm host -in ${LMP_INSCRIPT}
 
-:'
-##===========ompi self using HPC ucx, must use gpu node============
+##===========kkcuda, ompi self using HPC ucx, must use gpu node============
 #LOAD MODULES, INSERT CODE, AND RUN YOUR PROGRAMS HERE
 module purge
 module load cuda/10.0 ucx/1.5.1_cuda-10.0 ompi/4.0.1_cuda10.0_yesucx lmp/190723_master_ucxHPC_selfompi401_cuda10
@@ -146,13 +125,17 @@ ompi_info --parsable --all | grep mpi_built_with_cuda_support:value
 ompi_info --all | grep btl_openib_have_cuda_gdr
 ompi_info --all | grep btl_openib_have_driver_gdr
 #====run=====
+:'
 ${OMPIRUN_basic} lmp ${LMP_CMD_kno} -in ${LMP_INSCRIPT}
 ${OMPIRUN_basic} lmp ${LMP_CMD_kkgpu} ${NEIGHDIRECT} -in ${LMP_INSCRIPT}
 ${OMPIRUN_basic} lmp ${LMP_CMD_kkgpuomp} ${NEIGHDIRECT} -in ${LMP_INSCRIPT}
+'
 ${SRUN_basic} lmp ${LMP_CMD_kno} -in ${LMP_INSCRIPT}
 ${SRUN_basic} lmp ${LMP_CMD_kkgpu} ${NEIGHDIRECT} -in ${LMP_INSCRIPT}
-${SRUN_basic} lmp ${LMP_CMD_kkgpuomp} ${NEIGHDIRECT} -in ${LMP_INSCRIPT}
-'
+${SRUN_basic} lmp ${LMP_CMD_kkgpu} ${NEIGHnoDIRECT} -in ${LMP_INSCRIPT}
+${SRUN_basic} lmp ${LMP_CMD_kkgpu} ${NEIGHDIRECT} comm host -in ${LMP_INSCRIPT}
+${SRUN_basic} lmp ${LMP_CMD_kkgpu} ${NEIGHnoDIRECT} comm host -in ${LMP_INSCRIPT}
+
 :'
 ##===========ompi HPC can not use srun============
 #LOAD MODULES, INSERT CODE, AND RUN YOUR PROGRAMS HERE

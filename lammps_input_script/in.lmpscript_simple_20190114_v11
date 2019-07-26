@@ -27,7 +27,7 @@ variable  runstep           equal 100
 
 # initialization:
 # timer
-#timer loop # loop off full sync
+timer loop # loop off full sync
 
 # cd to output
 shell	mkdir	output
@@ -147,7 +147,7 @@ else &
 variable	ri_delete_dp_unit	equal $(0.5*v_dp_big_dp_unit + v_ri_dp_unit)
 variable	ro_insert_dp_unit	equal $(-0.5*v_dp_big_dp_unit + v_ro_dp_unit)
 variable	zlo_create_dp_unit	equal 0.55
-variable  zhi_create_dp_unit	equal 20
+variable  zhi_create_dp_unit	equal 40
 # zhi for box
 variable	zhi_box_dp_unit		equal $(1.1*v_zhi_create_dp_unit+1)
 # chunk height
@@ -248,7 +248,7 @@ variable	edge_lattice		equal $(2/(sqrt(3))*v_dp_big)
 variable	z_fraction_of_lattice	equal $(sqrt(3)/4)
 
 #newton
-newton       on
+#newton       on
 
 # jump to restart section
 if	"${rst_from} > 0" 	then "jump SELF restart_jump"
@@ -354,7 +354,7 @@ label		end_create
 
 
 # balance
-balance 	1.0 shift yz 50 1.05
+#balance 	1.0 shift yz 50 1.05
 
 # file, restart 0 step
 write_restart	output/rst/restart_0

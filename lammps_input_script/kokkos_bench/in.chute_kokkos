@@ -30,9 +30,4 @@ thermo_style	custom step atoms ke c_1 vol c_2
 thermo_modify	norm no
 thermo		100
 
-run             3000
-<<<<<<< HEAD
-run		3000
-=======
-run		10000
->>>>>>> 4c2b9d827ac4806721e8979e02a39317d0701a6f
+run		1000

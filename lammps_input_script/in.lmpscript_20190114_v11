@@ -261,7 +261,7 @@ timestep     ${ts}
 # communication, no restart
 comm_style	brick
 comm_modify	vel yes
-processors  1 * *
+processors  2 * *
 
 # reg to define box, no restart
 region		simulation_box cylinder z 0. 0. ${r_box} 0. ${zhi_box} units box
