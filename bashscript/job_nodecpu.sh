@@ -1,9 +1,9 @@
 
 # export environment
-export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
+#export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
 #export OMP_PROC_BIND=true
-export OMP_PROC_BIND=spread
-export OMP_PLACES=threads
+#export OMP_PROC_BIND=spread
+#export OMP_PLACES=threads
 # ulimit -s 10240
 
 # RETURN ENV
@@ -48,39 +48,12 @@ LMP_INSCRIPT_mycy="/home/hllin/python/simulation/lammps_input_script/in.lmpscrip
 
 LMP_INSCRIPT=${LMP_INSCRIPT_mycy}
 
-
-##===========kkomp============
-#LOAD MODULES, INSERT CODE, AND RUN YOUR PROGRAMS HERE
-module purge
-module load lmp/190723_master_ompi401_kkcpu ompi/4.0.1_yesucx_computenode
-
-#check setting after load module
-module list
-
-#====run=====
-${SRUN_basic} lmp ${LMP_CMD_kno} -in ${LMP_INSCRIPT}
-
-#bad than kno
-${SRUN_basic} lmp ${LMP_CMD_kkomp} -in ${LMP_INSCRIPT}
-
-
-##===========user omp============
-#LOAD MODULES, INSERT CODE, AND RUN YOUR PROGRAMS HERE
-module purge
-module load lmp/190723_master_ompi401_useromp ompi/4.0.1_yesucx_computenode
-#check setting after load module
-module list
-#====run=====
-${SRUN_basic} lmp ${LMP_CMD_OMP} -in ${LMP_INSCRIPT}
-
 ##===========normal do not bind socket============
 #LOAD MODULES, INSERT CODE, AND RUN YOUR PROGRAMS HERE
 module purge
 module load lmp/190724_master_selfompi401ucx_normal ompi/4.0.1_yesucx_computenode
 #check setting after load module
 module list
-#====run=====
-${SRUN_basic} lmp -in ${LMP_INSCRIPT}
-${SRUN_basic} lmp ${LMP_CMD_OMP} -in ${LMP_INSCRIPT}
+${OMPIRUN_basic} lmp -in ${LMP_INSCRIPT}
 
 echo "All Done!"
