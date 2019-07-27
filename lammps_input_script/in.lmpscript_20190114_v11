@@ -22,7 +22,7 @@
 # timer
 #timer loop # loop off full sync
 # set step
-variable rst_from equal 0
+variable rst_from equal 5000000
 variable runstep equal 100000000
 
 variable runstep_loop equal 1000000
@@ -43,7 +43,7 @@ print "startstep ${rst_from}" screen no append output/simulation_setting/attribu
 # step start from. weather rotate start.
 variable  ts          equal 4e-7
 print "timestep ${ts}" screen no append output/simulation_setting/attribute.lammps
-variable  reset_history   string yes
+variable  eliminate_history   string no
 variable	ifrotate		string no
 variable	trace_id1		equal 0  # 0 means no trace
 variable	trace_id2		equal 0  # 0 means no trace
@@ -115,7 +115,7 @@ variable	n_type			equal 3 #1 or 3 or  0 means no create
 print "n_type ${n_type}" screen no append output/simulation_setting/attribute.lammps
 
 # if air viscous
-variable	ifairviscous		string no
+variable	ifairviscous		string yes
 variable  gamma_air       equal 1
 
 # gravitational acceleration
@@ -444,7 +444,7 @@ label	end_deposit
 
 label		restart_jump
 
-if "${reset_history} == no || ${rst_from} == 0" then &
+if "${eliminate_history} == no || ${rst_from} == 0" then &
   "jump SELF reset_pair_history_end"
 pair_style none
 run 1
