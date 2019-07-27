@@ -22,10 +22,10 @@
 # timer
 #timer loop # loop off full sync
 # set step
-variable rst_from equal 5000000
-variable runstep equal 100000000
+variable rst_from equal 100
+variable runstep equal 100
 
-variable runstep_loop equal 1000000
+variable runstep_loop equal 10
 if "${runstep_loop} == 0" then &
 "variable n_loop equal 0" &
 else &
@@ -75,7 +75,7 @@ if		"(${ifpour} == yes) || (${ifdeposit} == yes)" then &
 else &
   "variable	recount_dof		string no"
 # frequency output
-variable	freq_restart		equal 1000000
+variable	freq_restart		equal 10
 
 variable	freq_dump_trace_image	equal 0
 variable	freq_dump_all_image	equal 0
