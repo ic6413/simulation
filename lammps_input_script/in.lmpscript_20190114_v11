@@ -25,7 +25,7 @@
 variable rst_from equal 100
 variable runstep equal 100
 
-variable runstep_loop equal 10
+variable runstep_loop equal 0
 if "${runstep_loop} == 0" then &
 "variable n_loop equal 0" &
 else &
@@ -107,7 +107,7 @@ variable  freq_balance      equal 1000000
 # jump if restart from nonzero step
 # this command specify in jobscribe "variable	rst_from equal N" be used as suffix in output file name
 if		"${rst_from} != 0" then &
-  "read_restart restart.${rst_from}"
+  "read_restart restart.${rst_from}.%"
 
 
 # number of type
@@ -384,7 +384,7 @@ label		end_create
 balance 	1.0 shift yz 50 1.05
 
 # file, restart 0 step
-write_restart	output/rst/restart_0
+write_restart	output/rst/restart.*.% nfile 1
 
 # jump gravity ifpour and step from 0
 if "${ifpour} == no || ${rst_from} != 0" then "jump SELF end_pour5"
@@ -930,7 +930,7 @@ label skip_thermo
 
 # file, restart file
 if "${freq_restart} == 0" then "jump SELF skip_restart"
-restart		${freq_restart} output/rst/restart.*
+restart		${freq_restart} output/rst/restart.*.% nfile 1
 label skip_restart
 
 # file, time average of total force of wall to particles
