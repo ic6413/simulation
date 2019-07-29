@@ -22,7 +22,7 @@
 # timer
 #timer loop # loop off full sync
 # set step
-variable rst_from equal 0
+variable rst_from equal 0 
 variable runstep equal 1e8
 
 variable runstep_loop equal 1e6
@@ -43,7 +43,7 @@ print "startstep ${rst_from}" screen no append output/simulation_setting/attribu
 # step start from. weather rotate start.
 variable  ts          equal 4e-7
 print "timestep ${ts}" screen no append output/simulation_setting/attribute.lammps
-variable  eliminate_history   string no
+variable  eliminate_history   string no 
 variable	ifrotate		string no
 variable	trace_id1		equal 0  # 0 means no trace
 variable	trace_id2		equal 0  # 0 means no trace
@@ -115,6 +115,7 @@ variable	n_type			equal 3 #1 or 3 or  0 means no create
 print "n_type ${n_type}" screen no append output/simulation_setting/attribute.lammps
 
 # if air viscous
+variable	ifairviscous_change		string yes
 variable	ifairviscous		string yes
 variable  gamma_air       equal 1
 
@@ -175,7 +176,7 @@ variable	kn		equal $(1.e6*v_mp*v_g/v_dp)
 variable	kt		equal $(2/7*v_kn)
 variable	gamma_n		equal $(317*sqrt(v_g/v_dp))
 variable	gamma_t 	equal $(v_gamma_n/2)
-variable	xmu		equal 0.5
+variable	xmu		equal 0
 print "kn ${kn}" screen no append output/simulation_setting/attribute.lammps
 print "kt ${kt}" screen no append output/simulation_setting/attribute.lammps
 print "gamma_n ${gamma_n}" screen no append output/simulation_setting/attribute.lammps
@@ -960,6 +961,14 @@ label skip_balance1
 if "${runstep_loop} == 0" then "jump SELF skip_loop1"
 label loop
 variable a loop ${n_loop}
+
+# air viscous
+if "${ifairviscous} == no || ${ifairviscous_change} == no" then &
+  "jump SELF end_airviscous2"
+unfix airviscous
+fix airviscous all viscous $(v_gamma_air*v_mp*step/v_runstep_loop)
+label   end_airviscous2
+
 run ${runstep_loop}
 if "$(c_id_maxKEt[2]) < ${KEtr_to_jumpout}" then "jump SELF break1"
 next a
