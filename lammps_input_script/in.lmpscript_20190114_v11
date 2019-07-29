@@ -22,10 +22,10 @@
 # timer
 #timer loop # loop off full sync
 # set step
-variable rst_from equal 100
-variable runstep equal 100
+variable rst_from equal 0
+variable runstep equal 1e8
 
-variable runstep_loop equal 0
+variable runstep_loop equal 1e6
 if "${runstep_loop} == 0" then &
 "variable n_loop equal 0" &
 else &
@@ -75,7 +75,7 @@ if		"(${ifpour} == yes) || (${ifdeposit} == yes)" then &
 else &
   "variable	recount_dof		string no"
 # frequency output
-variable	freq_restart		equal 10
+variable	freq_restart		equal 5e5
 
 variable	freq_dump_trace_image	equal 0
 variable	freq_dump_all_image	equal 0
@@ -92,7 +92,7 @@ variable	freq_dump_trace_pair	equal 0
 variable	freq_dump_all_pair	equal 0
 
 variable	freq_dump_other		equal 0
-variable	freq_thermo		equal stagger(100000,20000)       #
+variable	freq_thermo		equal stagger(5e5,2e4)       #
 variable	freq_fixvector		equal 0
 variable	every_fixvector		equal 1
 variable	freq_ave_chunk		equal 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100
@@ -925,7 +925,7 @@ label skip_dump_all_image
 thermo_style	custom step atoms ke c_KEr pe v_KEtr v_EKP c_id_maxKEt[1] c_id_maxKEt[2]
 thermo_modify   lost error norm no
 if "${freq_thermo} == 0" then "jump SELF skip_thermo"
-thermo		${freq_thermo}
+thermo		v_freq_thermo
 label skip_thermo
 
 # file, restart file
