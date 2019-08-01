@@ -51,7 +51,7 @@ LMP_INSCRIPT=${LMP_INSCRIPT_mycy}
 ##===========normal do not bind socket============
 #LOAD MODULES, INSERT CODE, AND RUN YOUR PROGRAMS HERE
 module purge
-module load lmp/190724_master_selfompi401ucx_normal ompi/4.0.1_yesucx_computenode
+module load lmp/190729_master_selfompi401ucx_normal_mpiio ompi/4.0.1_yesucx_computenode
 #check setting after load module
 module list
 ${OMPIRUN_basic} lmp -in ${LMP_INSCRIPT}

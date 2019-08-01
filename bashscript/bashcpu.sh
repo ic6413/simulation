@@ -15,7 +15,7 @@
 ##SBATCH --qos=debug
 
 # job info
-#SBATCH -J "speedtest"   # job name
+#SBATCH -J "0729"   # job name
 #SBATCH --mail-user=hllin@caltech.edu   # email address
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-type=END
