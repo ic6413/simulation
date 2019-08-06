@@ -18,14 +18,15 @@
 #      correct unit of freeze region to box. set no output if freq_* =0
 # v5:  rounding number
 # v4:  store force before fix (after pair). so get pair force
+include ./in.override
 # initialization:
 # timer
 #timer loop # loop off full sync
 # set step
-variable rst_from equal 52e6 
-variable runstep equal 1e8
+variable rst_from index 15000000 
+variable runstep index 1e7
 
-variable runstep_loop equal 1e6
+variable runstep_loop index 1000000
 if "${runstep_loop} == 0" then &
 "variable n_loop equal 0" &
 else &
@@ -41,6 +42,7 @@ shell	mkdir	output/fix output/rst output/dump output/dumpimage output/dumpvtk ou
 # print start step
 print "startstep ${rst_from}" screen no append output/simulation_setting/attribute.lammps
 # step start from. weather rotate start.
+variable  n_processor_x index 2
 variable  ts          equal 4e-7
 print "timestep ${ts}" screen no append output/simulation_setting/attribute.lammps
 variable  eliminate_history   string no 
@@ -75,7 +77,7 @@ if		"(${ifpour} == yes) || (${ifdeposit} == yes)" then &
 else &
   "variable	recount_dof		string no"
 # frequency output
-variable	freq_restart_big	equal 1e5
+variable	freq_restart_big	equal 2e5
 variable	freq_restart_small	equal 0
 
 variable	freq_dump_trace_image	equal 0
@@ -107,7 +109,7 @@ variable  freq_balance      equal 5e4
 
 # jump if restart from nonzero step
 # this command specify in jobscribe "variable	rst_from equal N" be used as suffix in output file name
-processors  2 * *
+processors  ${n_processor_x} * *
 if		"${rst_from} != 0" then &
   "read_restart restart.${rst_from}.mpiio"
 
@@ -117,9 +119,8 @@ variable	n_type			equal 3 #1 or 3 or  0 means no create
 print "n_type ${n_type}" screen no append output/simulation_setting/attribute.lammps
 
 # if air viscous
-variable	ifairviscous_change		string no
-variable	ifairviscous		string yes 
-variable  gamma_air       equal 10
+variable	ifairviscous		index yes 
+variable  gamma_air       index 100
 
 # gravitational acceleration
 variable	g			equal 9.8
@@ -159,7 +160,7 @@ else &
 variable	ri_delete_dp_unit	equal $(0.5*v_dp_big_dp_unit + v_ri_dp_unit)
 variable	ro_insert_dp_unit	equal $(-0.5*v_dp_big_dp_unit + v_ro_dp_unit)
 variable	zlo_create_dp_unit	equal 0.55
-variable  zhi_create_dp_unit	equal 31
+variable  zhi_create_dp_unit	index 31
 # zhi for box
 variable	zhi_box_dp_unit		equal $(1.1*v_zhi_create_dp_unit+1)
 # chunk height
@@ -503,9 +504,10 @@ fix	freeze_fix	freeze_group freeze
 label	label_end_freeze
 
 # air viscous
+print "ifairviscous ${ifairviscous}" screen no append output/simulation_setting/attribute.lammps
+print "gamma_air ${gamma_air}" screen no append output/simulation_setting/attribute.lammps
 if "${ifairviscous} == no" then &
   "jump SELF end_airviscous"
-print "gamma_air ${gamma_air}" screen no append output/simulation_setting/attribute.lammps
 fix airviscous all viscous $(v_gamma_air*v_mp)
 label   end_airviscous
 
@@ -966,17 +968,6 @@ label skip_balance1
 if "${runstep_loop} == 0" then "jump SELF skip_loop1"
 variable a loop ${n_loop}
 label loop
-
-# air viscous
-if "${ifairviscous} == no || ${ifairviscous_change} == no" then &
-  "jump SELF end_airviscous2"
-unfix airviscous
-variable step_current equal step
-variable step_loopbegin equal ${step_current} 
-variable gamma_air_new equal v_gamma_air*v_mp*v_step_loopbegin/v_runstep_loop
-fix airviscous all viscous ${gamma_air_new}
-label   end_airviscous2
-
 run ${runstep_loop}
 if "$(c_id_maxKEt[2]) < ${KEtr_to_jumpout}" then "jump SELF break1"
 next a

@@ -1,0 +1,8 @@
+# override variables
+variable    zhi_create_dp_unit	index 31
+variable    ifairviscous		index yes 
+variable    gamma_air           index 100
+variable    n_processor_x       index 2
+variable    rst_from            index 0
+variable    runstep 		index 100
+variable    runstep_loop        index 0
