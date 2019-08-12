@@ -96,7 +96,7 @@ variable	freq_dump_trace_pair	equal 0
 variable	freq_dump_all_pair	equal 0
 
 variable	freq_dump_other		equal 0
-variable	freq_thermo		equal stagger(1e5,2e4)       #
+variable	freq_thermo		equal stagger(1e3,2e2)       #
 variable	freq_fixvector		equal 0
 variable	every_fixvector		equal 1
 variable	freq_ave_chunk		equal 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100
@@ -289,7 +289,7 @@ create_box	${n_type} simulation_box
 if "${contact_model} == hooke_his" &
  then "pair_style	gran/hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent}" &
 elif "${contact_model} == hooke" &
- then "pair_style	gran/hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent}" &
+ "pair_style	gran/hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent}" &
 else &
  "quit 1"
 pair_coeff	* *
@@ -342,6 +342,10 @@ set		type 1 diameter ${dp_small}
 set		type 2 diameter ${dp}
 set		type 3 diameter ${dp_big}
 set		atom * density 	${den}
+
+#displace
+displace_atoms all random 1e-11 1e-11 0 987 units box
+
 # 3type end
 jump		SELF end_create
 
@@ -476,20 +480,20 @@ if "${ifstoreforce} == yes" then "fix	force_pair	all store/force"
 if "${ifpour} == yes && ${rst_from} == 0" then "jump SELF end_pour6_innerwall"
 
 if "${contact_model} != hooke_his" &
- then "jump hooke_his_end1"
+ then "jump SELF hooke_his_end1"
 if "${ifrotate} == yes" then &
   "fix	inwall		all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri} shear x ${in_velocity}" &
 else &
   "fix	inwall		all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri}"
-label jump hooke_his_end1
+label hooke_his_end1
 
 if "${contact_model} != hooke" &
- then "jump hooke_end1"
+ then "jump SELF hooke_end1"
 if "${ifrotate} == yes" then &
   "fix	inwall		all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri} shear x ${in_velocity}" &
 else &
   "fix	inwall		all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri}"
-label jump hooke_end1
+label hooke_end1
 
 label	end_pour6_innerwall
 
@@ -497,20 +501,20 @@ label	end_pour6_innerwall
 if "${ifstoreforce} == yes" then "fix	force_in	all store/force"
 
 if "${contact_model} != hooke_his" &
- then "jump hooke_his_end2"
+ then "jump SELF hooke_his_end2"
 fix	outwall 	all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ro}
 if "${ifstoreforce} == yes" then "fix	force_in_out	all store/force"
 fix	zplane_bottom 	all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane ${z_bottom} NULL
 if "${ifstoreforce} == yes" then "fix	force_in_out_zplane	all store/force"
-label jump hooke_his_end2
+label hooke_his_end2
 
 if "${contact_model} != hooke" &
- then "jump hooke_end2"
+ then "jump SELF hooke_end2"
 fix	outwall 	all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ro}
 if "${ifstoreforce} == yes" then "fix	force_in_out	all store/force"
 fix	zplane_bottom 	all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane ${z_bottom} NULL
 if "${ifstoreforce} == yes" then "fix	force_in_out_zplane	all store/force"
-label jump hooke_end2
+label hooke_end2
 
 
 # jump gravity ifpour and step from 0
@@ -982,20 +986,20 @@ region       	delete_in_small cylinder z 0. 0. ${ri_delete} 0 ${zhi_box} units b
 delete_atoms 	region delete_in_small
 
 if "${contact_model} != hooke_his" &
- then "jump hooke_his_end3"
+ then "jump SELF hooke_his_end3"
 if "${ifrotate} == yes" then &
   "fix	inwall		all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri} shear x ${in_velocity}" &
 else &
   "fix	inwall		all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri}"
-label jump hooke_his_end3
+label hooke_his_end3
 
 if "${contact_model} != hooke" &
- then "jump hooke_end3"
+ then "jump SELF hooke_end3"
 if "${ifrotate} == yes" then &
   "fix	inwall		all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri} shear x ${in_velocity}" &
 else &
   "fix	inwall		all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri}"
-label jump hooke_end3
+label hooke_end3
 
 label	end_pour2_innerwall
 
