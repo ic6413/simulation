@@ -1,4 +1,3 @@
-
 # export environment
 #export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
 #export OMP_PROC_BIND=true
@@ -51,9 +50,23 @@ LMP_INSCRIPT=${LMP_INSCRIPT_mycy}
 ##===========normal do not bind socket============
 #LOAD MODULES, INSERT CODE, AND RUN YOUR PROGRAMS HERE
 module purge
-module load lmp/190729_master_selfompi401ucx_normal_mpiio ompi/4.0.1_yesucx_computenode
+module load openmpi/4.0.1
+module load lmp/190809unstable_openmpi401_mpiio
+#check setting after load module
+module list
+#${OMPIRUN_basic} lmp -in ${LMP_INSCRIPT}
+${OMPIRUN_basic} ${OMPIRUNBIND_c} lmp -in ${LMP_INSCRIPT}
+
+:'
+##===========normal do not bind socket============
+#LOAD MODULES, INSERT CODE, AND RUN YOUR PROGRAMS HERE
+module purge
+module load ompi/4.0.1_yesucx_computenode
+module load lmp/190729_master_selfompi401ucx_normal_mpiio 
 #check setting after load module
 module list
 ${OMPIRUN_basic} lmp -in ${LMP_INSCRIPT}
+${OMPIRUN_basic} ${OMPIRUNBIND_c} lmp -in ${LMP_INSCRIPT}
+'
 
 echo "All Done!"

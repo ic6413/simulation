@@ -6,3 +6,5 @@ variable	n_processor_x		index 2
 variable	rst_from		index 0
 variable	runstep			index 100
 variable	runstep_loop		index 0
+variable	xmu			index 0.5
+variable	contact_model		index hooke #hooke hooke_his hertz hertz_his
