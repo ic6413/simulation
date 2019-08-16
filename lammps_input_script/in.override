@@ -1,4 +1,7 @@
 # override variables
+variable  gamma_n_scale index 10
+variable  contact_change index yes 
+variable  eliminate_history   index yes 
 variable	zhi_create_dp_unit	index 31
 variable	ifairviscous		index yes 
 variable	gamma_air		index 100
