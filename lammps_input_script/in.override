@@ -16,4 +16,4 @@ variable	ifrotate		index yes
 variable	freq_dump_trace_image	index 0
 variable	freq_dump_all_image	index 0
 variable	freq_thermo		index 100 #stagger(1e3,2e2)       #
-
+variable	Sa 		index 0.000002

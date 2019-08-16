@@ -66,7 +66,7 @@ variable  ifdeposit   string no
 variable  deposit_number equal 120000
 
 # chunk method
-variable	chunk_method		string no #x xy xyz r rz rzt NONE
+variable	chunk_method		string rz #x xy xyz r rz rzt NONE
 # store force
 variable	ifstoreforce		string no
 # ifsetvelocity
@@ -100,9 +100,9 @@ variable	freq_dump_other		equal 0
 variable	freq_thermo		index 100 #stagger(1e3,2e2)       #
 variable	freq_fixvector		equal 0
 variable	every_fixvector		equal 1
-variable	freq_ave_chunk		equal 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100
+variable	freq_ave_chunk		equal 100  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100
 variable	repeat_ave_chunk	equal 1
-variable	every_ave_chunk		equal 1
+variable	every_ave_chunk		equal 100
 variable	freq_ave_wall		equal 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100
 variable	repeat_ave_wall		equal 1
 variable	every_ave_wall		equal 1
@@ -167,7 +167,7 @@ variable	ro_insert_dp_unit	equal $(-(0.00001+0.5)*v_dp_big_dp_unit + v_ro_dp_uni
 variable	zlo_create_dp_unit	equal 0.55
 variable  zhi_create_dp_unit	index 31
 # zhi for box
-variable	zhi_box_dp_unit		equal $(1.2*v_zhi_create_dp_unit+3)
+variable	zhi_box_dp_unit		equal $(1.1*v_zhi_create_dp_unit+3)
 # chunk height
 variable	zhi_chunk_dp_unit	equal $(v_zhi_box_dp_unit)	#height
 # pour zlo zhi
@@ -192,14 +192,14 @@ print "gamma_t ${gamma_t}" screen no append output/simulation_setting/attribute.
 print "friction_coefficient ${xmu}" screen no append output/simulation_setting/attribute.lammps
 variable	ifdamp_tangent	equal 1
 # number of chunk
-variable	N_bin_x 	equal 50 
-variable	N_bin_y 	equal 50
-variable	N_bin_z 	equal 50
-variable	N_bin_r 	equal v_width_dp_unit 
-variable	N_bin_theta	equal 50
+variable	N_bin_x 	equal 10 
+variable	N_bin_y 	equal 10
+variable	N_bin_z 	equal 2
+variable	N_bin_r 	equal v_width_dp_unit
+variable	N_bin_theta	equal 10
 
 # salvage number
-variable	Sa 		equal 2e-6
+variable	Sa 		index 0.000002
 
 # calculate container size
 variable	ro		equal $(v_ro_dp_unit*v_dp)
@@ -238,7 +238,7 @@ variable	N_total_bin 	equal v_N_bin_r*v_N_bin_theta*v_N_bin_z
 variable	N_total_rz 	equal v_N_bin_r*v_N_bin_z
 
 # calculate inner wall speed
-if           "${ifrotate} == no" then "variable Sa equal 0" #change
+if           "${ifrotate} == no" then "variable Sa index 0" #change
 variable	omega_in 	equal $(sqrt(v_Sa*v_g*(v_ro-v_ri)^3/(v_dp)^2/v_ri^2))
 variable	in_velocity 	equal $(v_omega_in*v_ri)
 
@@ -1045,7 +1045,7 @@ label skip_run1
 
 #start to move inwall
 #define inner wall speed again
-#variable        Sa equal 2e-6
+#variable        Sa index 0.000002
 #variable     omega_in equal $(sqrt(v_Sa*v_g*(v_ro-v_ri)^3/(v_dp)^2/v_ri^2))
 #variable     in_velocity equal $(v_omega_in*v_ri)
 #fix           inwall all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} 0.5 1 zcylinder ${ri} shear x ${in_velocity}
