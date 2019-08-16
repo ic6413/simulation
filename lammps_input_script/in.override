@@ -11,3 +11,9 @@ variable	runstep			index 100
 variable	runstep_loop		index 0
 variable	xmu			index 0.5
 variable	contact_model		index hooke #hooke hooke_his hertz hertz_his
+variable	ifrotate		index yes
+
+variable	freq_dump_trace_image	index 0
+variable	freq_dump_all_image	index 0
+variable	freq_thermo		index 100 #stagger(1e3,2e2)       #
+

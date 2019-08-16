@@ -48,7 +48,7 @@ variable  n_processor_x index 2
 variable  ts          equal 4e-7
 print "timestep ${ts}" screen no append output/simulation_setting/attribute.lammps
 variable  eliminate_history   index no 
-variable	ifrotate		string no
+variable	ifrotate		index no
 variable	trace_id1		equal 0  # 0 means no trace
 variable	trace_id2		equal 0  # 0 means no trace
 variable	trace_id3		equal 0  # 0 means no trace
@@ -82,8 +82,8 @@ else &
 variable	freq_restart_big	equal 2e5
 variable	freq_restart_small	equal 0
 
-variable	freq_dump_trace_image	equal 0
-variable	freq_dump_all_image	equal 0
+variable	freq_dump_trace_image	index 0
+variable	freq_dump_all_image	index 0
 
 variable	freq_dump_trace_custom	equal 0
 variable	freq_dump_all_custom	equal 0
@@ -97,7 +97,7 @@ variable	freq_dump_trace_pair	equal 0
 variable	freq_dump_all_pair	equal 0
 
 variable	freq_dump_other		equal 0
-variable	freq_thermo		equal 10000 #stagger(1e3,2e2)       #
+variable	freq_thermo		index 100 #stagger(1e3,2e2)       #
 variable	freq_fixvector		equal 0
 variable	every_fixvector		equal 1
 variable	freq_ave_chunk		equal 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100
@@ -162,12 +162,12 @@ else &
   " variable r_box_dp_unit equal $(v_ro_dp_unit+2) "
 
 # size of region to insert atoms
-variable	ri_delete_dp_unit	equal $(0.5*v_dp_big_dp_unit + v_ri_dp_unit)
-variable	ro_insert_dp_unit	equal $(-0.5*v_dp_big_dp_unit + v_ro_dp_unit)
+variable	ri_delete_dp_unit	equal $((0.00001+0.5)*v_dp_big_dp_unit + v_ri_dp_unit)
+variable	ro_insert_dp_unit	equal $(-(0.00001+0.5)*v_dp_big_dp_unit + v_ro_dp_unit)
 variable	zlo_create_dp_unit	equal 0.55
 variable  zhi_create_dp_unit	index 31
 # zhi for box
-variable	zhi_box_dp_unit		equal $(1.1*v_zhi_create_dp_unit+1)
+variable	zhi_box_dp_unit		equal $(1.2*v_zhi_create_dp_unit+3)
 # chunk height
 variable	zhi_chunk_dp_unit	equal $(v_zhi_box_dp_unit)	#height
 # pour zlo zhi
