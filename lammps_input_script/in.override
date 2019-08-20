@@ -1,19 +1,18 @@
 # override variables
-variable  gamma_n_scale index 10
-variable  contact_change index yes 
-variable  eliminate_history   index yes 
+variable  gamma_n_scale index 1
+variable  contact_change index no
+variable  eliminate_history   index no 
 variable	zhi_create_dp_unit	index 31
-variable	ifairviscous		index yes 
-variable	gamma_air		index 100
+variable	ifairviscous		index no 
+variable	gamma_air		index 0
 variable	n_processor_x		index 2
 variable	rst_from		index 0
-variable	runstep			index 100
+variable	runstep			index 70000
 variable	runstep_loop		index 0
 variable	xmu			index 0.5
 variable	contact_model		index hooke #hooke hooke_his hertz hertz_his
 variable	ifrotate		index yes
-
 variable	freq_dump_trace_image	index 0
 variable	freq_dump_all_image	index 0
-variable	freq_thermo		index 100 #stagger(1e3,2e2)       #
-variable	Sa 		index 0.000002
+variable	freq_thermo		index 1000 #stagger(1e3,2e2)       #
+variable	Sa 		index 0.00000002

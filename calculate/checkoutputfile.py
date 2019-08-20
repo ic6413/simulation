@@ -10,7 +10,7 @@ import datapath as dp
 import calculate.checksimulation as cs
 
 # input
-f_custom_path = dp.f_custom
+f_custom_near_trace_path = dp.f_custom
 debug_print_path = dp.debug_print_path
 
 class checkfile(object):
@@ -83,7 +83,7 @@ class checkforce(checkfile_look_idi):
 
         for method_i in self.method_list:
 
-            [f_step_error_array, fi_cal_in_error_step, fi_plus_in_error_step] = check_f_function(f_custom_path, self.id_i, self.step1, self.step2, self.error_tolerence, method=method_i)
+            [f_step_error_array, fi_cal_in_error_step, fi_plus_in_error_step] = check_f_function(f_custom_near_trace_path, self.id_i, self.step1, self.step2, self.error_tolerence, method=method_i)
             self.print_string_list([
                 "method {method_i}".format(method_i=method_i),
                 "f_step_error_array",
@@ -122,11 +122,11 @@ class check_ft_1j_contact(check_ft_1_contact):
         return 'check_1contact_force_' + 'j' + '_' + self.string_idi_step()
 
     def number_contact(self):
-        [n, id_collection] = cs.number_contact_atom_id_collection(f_custom_path, self.id_i, self.step1, self.step2)
+        [n, id_collection] = cs.number_contact_atom_id_collection(f_custom_near_trace_path, self.id_i, self.step1, self.step2)
         return n
 
     def check_f(self, method_i):
-        result = cs.fjwi_plus_check_multistep_1contact_fromcustom(f_custom_path, self.id_i, self.step1, self.step2, self.error_tolerence, method_i, 'j')
+        result = cs.fjwi_plus_check_multistep_1contact_fromcustom(f_custom_near_trace_path, self.id_i, self.step1, self.step2, self.error_tolerence, method_i, 'j')
         return result
 
     def checkprint(self):
@@ -172,11 +172,11 @@ class check_ft_1w_contact(check_ft_1_contact):
         return 'check_1contact_force_' + 'w' + '_' + self.string_idi_step()
 
     def number_contact(self):
-        [n, id_collection] = cs.number_contact_wall_id_collection(f_custom_path, self.id_i, self.step1, self.step2)
+        [n, id_collection] = cs.number_contact_wall_id_collection(f_custom_near_trace_path, self.id_i, self.step1, self.step2)
         return n
 
     def check_f(self, method_i):
-        result = cs.fjwi_plus_check_multistep_1contact_fromcustom(f_custom_path, self.id_i, self.step1, self.step2, self.error_tolerence, method_i, 'w')
+        result = cs.fjwi_plus_check_multistep_1contact_fromcustom(f_custom_near_trace_path, self.id_i, self.step1, self.step2, self.error_tolerence, method_i, 'w')
         return result
 
     def checkprint(self):
@@ -224,7 +224,7 @@ class checkoverlap(checkfile_look_idi):
         return 'check_overlap_' + self.string_idi_step()
     
     def contact_check_multistep(self):
-        result_contact_check_multistep = cs.contact_check_multistep(f_custom_path, self.id_i, self.step1, self.step2)
+        result_contact_check_multistep = cs.contact_check_multistep(f_custom_near_trace_path, self.id_i, self.step1, self.step2)
         return result_contact_check_multistep
     
     def checkprint(self):
@@ -252,7 +252,7 @@ class checkoverlap_v1(checkoverlap):
         super().__init__(id_i, step1, step2)
 
     def contact_check_multistep(self):
-        result_contact_check_multistep = cs.contact_check_multistep_v1(f_custom_path, self.id_i, self.step1, self.step2)
+        result_contact_check_multistep = cs.contact_check_multistep_v1(f_custom_near_trace_path, self.id_i, self.step1, self.step2)
         return result_contact_check_multistep
 
 

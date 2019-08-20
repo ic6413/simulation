@@ -21,4 +21,4 @@ custom_id_i_list = 'all'
 # create folder
 om.create_directory(dp.post_process_path)
 om.create_directory(dp.hdf5_csv_path)
-da.file_to_h5_csv(None, dp.custom_path, custom_id_i_list, dp.f_custom, override ='yes')
+da.file_to_h5_csv(None, dp.custom_near_trace_path, custom_id_i_list, dp.f_custom, override ='yes')

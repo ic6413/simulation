@@ -22,7 +22,11 @@ if os.path.isfile(attribute_lammps_path):
             linesplit = line.split()
             first_column = linesplit[0]
             second_column = linesplit[1]
-            attribute_dict[first_column] = float(second_column)
+            try:
+                attribute_dict[first_column] = float(second_column)
+            except:
+                attribute_dict[first_column] = second_column
+            
         # startstep
         startstep = attribute_dict['startstep']
         startstep = int(startstep)
@@ -134,21 +138,13 @@ def put_maxlabel_on_file(maxlabel, f_name_without_id):
     f_name_add_id = f_name_without_id[:-3] + '_maxlabel_' + maxlabel + ".h5"
     return f_name_add_id
 
-# Lammps output file name
-dumpname_custom_all = "all_" + str(startstep) + ".dump"
-dumpname_custom = "nb_maxKEatom_" + str(startstep) + ".dump"
-dumpname_pair = "pair_trace_" + str(startstep) + ".dump"
-logname = "log_" + str(startstep) + ".lammps"
-# specify the path of inputvariable files
-pair_path = lammps_directory + 'output/dump/' + dumpname_pair
-custom_all_path = lammps_directory + 'output/dump/' + dumpname_custom_all
-custom_path = lammps_directory + 'output/dump/' + dumpname_custom
-thermo_path = lammps_directory + logname
-def add_label_max_tracepath(label):
-    path = lammps_directory + 'output/trace_print/' + "trace_atom_" + "max" + "_" + label + ".txt"
-    return path
-def add_label_put_id_tracepath(label, id):
-    path = lammps_directory + 'output/trace_print/' + "trace_atom_" + str(id) + "_" + label + ".txt" 
+# Lammps output path of inputvariable files
+pair_all_path = lammps_directory + 'output/pair_all/dump.all.pair.allstep'
+custom_all_path = lammps_directory + 'output/single_all/dump.all.single.allstep'
+custom_near_trace_path = lammps_directory + 'output/single_near_trace/dump.near_trace.single.allstep'
+thermo_path = lammps_directory + "log.lammps"
+def trace_print_path(label, id):
+    path = lammps_directory + 'output/trace/' + str(id) + "/" + label
     return path
 ## folder path of output
 post_process_path = lammps_directory + 'postprocess/'

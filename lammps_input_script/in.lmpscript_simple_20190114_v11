@@ -32,7 +32,7 @@ timer loop # loop off full sync
 # cd to output
 shell	mkdir	output
 # create output folders
-shell	mkdir	output/fix output/rst output/dump output/dumpimage output/dumpvtk output/dumpstl output/dumpmovie output/simulation_setting output/trace_print
+shell	mkdir	output/fix output/rst output/dump output/dumpimage output/dumpvtk output/dumpstl output/dumpmovie output/simulation_setting output/trace
 # print start step
 print "startstep ${rst_from}" screen no append output/simulation_setting/attribute.lammps
 # step start from. weather rotate start.
@@ -55,7 +55,7 @@ variable  ifdeposit   string no
 variable  deposit_number equal 120000
 
 # chunk method
-variable	chunk_method		string no #x xy xyz r rz rzt NONE
+variable	chunk_method		string rz #x xy xyz r rz rzt NONE
 # store force
 variable	ifstoreforce		string no
 # ifsetvelocity
@@ -177,7 +177,7 @@ variable	ifdamp_tangent	equal 1
 variable	N_bin_x 	equal 50 
 variable	N_bin_y 	equal 50
 variable	N_bin_z 	equal 50
-variable	N_bin_r 	equal v_width_dp_unit 
+variable	N_bin_r 	equal ${width_dp_unit} 
 variable	N_bin_theta	equal 50
 
 # salvage number

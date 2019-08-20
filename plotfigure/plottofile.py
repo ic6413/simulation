@@ -570,7 +570,7 @@ class plotfromtraceprint_idi(plotclass):
         return array
 
     def labeltoarray(self, label):
-        file = dp.add_label_put_id_tracepath(label, self.id_i)
+        file = dp.trace_print_path(label, self.id_i)
         return self.traceprinttexttoarray(file)
 
     def labelorstepto1Darray(self, label, step1, step2):
@@ -625,7 +625,7 @@ class plotfromtraceprint_max(plotclass):
         return array
 
     def labeltoarray(self, label):
-        file = dp.add_label_max_tracepath(label)
+        file = dp.trace_print_path(label, 'maxKEt')
         return self.traceprinttexttoarray(file)
 
     def labelorstepto1Darray(self, label, step1, step2):

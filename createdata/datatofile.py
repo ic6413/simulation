@@ -15,6 +15,9 @@ ifcsv='no'
 def thermo_hdf5_csv():
     da.handlelog(override, ifcsv).tohdf5()
 
+def chunk_hdf5_csv():
+    da.handlechunk(override, ifcsv).tohdf5()
+
 class dumptofile:
 
     def __init__(self, fromtraceorall):

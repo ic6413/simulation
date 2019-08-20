@@ -38,21 +38,39 @@ variable KEtr_to_jumpout equal 1e-25
 # cd to output
 shell	mkdir	output
 # create output folders
-shell	mkdir	output/fix output/rst output/dump output/dumpimage output/dumpvtk output/dumpstl output/dumpmovie output/simulation_setting output/trace_print
+shell	mkdir output/rst output/trace output/image/ output/image/all output/image/trace 
+shell	mkdir output/velocity_field output/vtk output/stl output/movie output/setting 
+shell	mkdir output/pair_trace output/single_trace output/pair_all output/single_all
 # print start step
-print "startstep ${rst_from}" screen no append output/simulation_setting/attribute.lammps
+print "startstep ${rst_from}" screen no append output/setting/attribute.lammps
 # step start from. weather rotate start.
 variable  contact_change index no
 variable  contact_model index hooke_his #hooke hooke_his hertz hertz_his
 variable  n_processor_x index 2
 variable  ts          equal 4e-7
-print "timestep ${ts}" screen no append output/simulation_setting/attribute.lammps
+print "timestep ${ts}" screen no append output/setting/attribute.lammps
 variable  eliminate_history   index no 
 variable	ifrotate		index no
-variable	trace_id1		equal 0  # 0 means no trace
+variable	trace_id1		equal 131923  # 0 means no trace
 variable	trace_id2		equal 0  # 0 means no trace
 variable	trace_id3		equal 0  # 0 means no trace
-variable	iftrace_maxKE		string no
+variable	iftrace_maxKEt		string yes
+variable	iftrace_maxKEr		string no
+variable	iftrace_maxKEtr		string no
+shell	mkdir output/trace/
+if "${trace_id1} != 0" then &
+"shell	mkdir output/trace/${trace_id1}"
+if "${trace_id2} != 0" then &
+"shell	mkdir output/trace/${trace_id2}"
+if "${trace_id3} != 0" then &
+"shell	mkdir output/trace/${trace_id3}"
+if "${iftrace_maxKEt} == yes" then &
+"shell	mkdir output/trace/maxKEt"
+if "${iftrace_maxKEr} == yes" then &
+"shell	mkdir output/trace/maxKEr"
+if "${iftrace_maxKEtr} == yes" then &
+"shell	mkdir output/trace/maxKEtr"
+
 variable	ifappend		string no
 variable	iffreeze		string no
 # create atom method
@@ -67,6 +85,7 @@ variable  deposit_number equal 120000
 
 # chunk method
 variable	chunk_method		string rz #x xy xyz r rz rzt NONE
+print "chunk_method ${chunk_method}" screen no append output/setting/attribute.lammps
 # store force
 variable	ifstoreforce		string no
 # ifsetvelocity
@@ -81,26 +100,20 @@ else &
 # frequency output
 variable	freq_restart_big	equal 2e5
 variable	freq_restart_small	equal 0
-
 variable	freq_dump_trace_image	index 0
 variable	freq_dump_all_image	index 0
-
-variable	freq_dump_trace_custom	equal 0
-variable	freq_dump_all_custom	equal 0
-variable  if_all_custom_sep string no
-variable	freq_print_single_trace_max	equal 0
-variable	freq_print_single_trace_1	equal 0
-variable	freq_print_single_trace_2	equal 0
-variable	freq_print_single_trace_3	equal 0
-
-variable	freq_dump_trace_pair	equal 0
-variable	freq_dump_all_pair	equal 0
+variable	freq_dump_single_trace	equal 100
+variable	freq_dump_single_all	equal 0
+variable	freq_print_trace	equal 100
+variable	freq_dump_pair_trace	equal 100
+variable	freq_dump_pair_all	equal 0
 
 variable	freq_dump_other		equal 0
 variable	freq_thermo		index 100 #stagger(1e3,2e2)       #
 variable	freq_fixvector		equal 0
 variable	every_fixvector		equal 1
 variable	freq_ave_chunk		equal 100  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100
+print "freq_ave_chunk ${freq_ave_chunk}" screen no append output/setting/attribute.lammps
 variable	repeat_ave_chunk	equal 1
 variable	every_ave_chunk		equal 100
 variable	freq_ave_wall		equal 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100
@@ -113,33 +126,29 @@ variable  freq_balance      equal 5e4
 # this command specify in jobscribe "variable	rst_from equal N" be used as suffix in output file name
 processors  ${n_processor_x} * *
 if		"${rst_from} != 0" then &
-  "read_restart restart.${rst_from}.mpiio"
-
+  "read_restart restart.mpiio.${rst_from}"
 
 # number of type
 variable	n_type			equal 3 #1 or 3 or  0 means no create
-print "n_type ${n_type}" screen no append output/simulation_setting/attribute.lammps
+print "n_type ${n_type}" screen no append output/setting/attribute.lammps
 
 # if air viscous
 variable	ifairviscous		index yes 
-
 variable  gamma_air       index 100
-
-
 
 # gravitational acceleration
 variable	g			equal 9.8
-print "gravitational_acceleration ${g}" screen no append output/simulation_setting/attribute.lammps
+print "gravitational_acceleration ${g}" screen no append output/setting/attribute.lammps
 
 
 # particle diameter
 variable	dp 			equal 8.3e-4		#particle diameter
-print "diameter ${dp}" screen no append output/simulation_setting/attribute.lammps
+print "diameter ${dp}" screen no append output/setting/attribute.lammps
 # calculate radius
 variable	rp		equal $(v_dp/2)		#particle radius
 # particle density
 variable	den 			equal 2500
-print "density ${den}" screen no append output/simulation_setting/attribute.lammps
+print "density ${den}" screen no append output/setting/attribute.lammps
 # calculate mass
 variable	mp 		equal $(4/3*PI*v_rp^3*v_den)
 # radius of big and small atom
@@ -185,29 +194,33 @@ variable	kt		equal $(2/7*v_kn)
 variable	gamma_n		equal $(317*sqrt(v_g/v_dp)*v_gamma_n_scale)
 variable	gamma_t 	equal $(v_gamma_n/2)
 variable	xmu		index 0.5
-print "kn ${kn}" screen no append output/simulation_setting/attribute.lammps
-print "kt ${kt}" screen no append output/simulation_setting/attribute.lammps
-print "gamma_n ${gamma_n}" screen no append output/simulation_setting/attribute.lammps
-print "gamma_t ${gamma_t}" screen no append output/simulation_setting/attribute.lammps
-print "friction_coefficient ${xmu}" screen no append output/simulation_setting/attribute.lammps
+print "kn ${kn}" screen no append output/setting/attribute.lammps
+print "kt ${kt}" screen no append output/setting/attribute.lammps
+print "gamma_n ${gamma_n}" screen no append output/setting/attribute.lammps
+print "gamma_t ${gamma_t}" screen no append output/setting/attribute.lammps
+print "friction_coefficient ${xmu}" screen no append output/setting/attribute.lammps
 variable	ifdamp_tangent	equal 1
 # number of chunk
 variable	N_bin_x 	equal 10 
 variable	N_bin_y 	equal 10
-variable	N_bin_z 	equal 2
-variable	N_bin_r 	equal v_width_dp_unit
+variable	N_bin_z 	equal 10
+variable	N_bin_r 	equal ${width_dp_unit} 
 variable	N_bin_theta	equal 10
-
+print "N_bin_x ${N_bin_x}" screen no append output/setting/attribute.lammps
+print "N_bin_y ${N_bin_y}" screen no append output/setting/attribute.lammps
+print "N_bin_z ${N_bin_z}" screen no append output/setting/attribute.lammps
+print "N_bin_r ${N_bin_r}" screen no append output/setting/attribute.lammps
+print "N_bin_theta ${N_bin_theta}" screen no append output/setting/attribute.lammps
 # salvage number
-variable	Sa 		index 0.000002
+variable	Sa 		index 0.00000002
 
 # calculate container size
 variable	ro		equal $(v_ro_dp_unit*v_dp)
 variable	ri 		equal $(v_ri_dp_unit*v_dp)
 variable  z_bottom equal $(v_z_bottom_dp_unit*v_dp)
-print "ro ${ro}" screen no append output/simulation_setting/attribute.lammps
-print "ri ${ri}" screen no append output/simulation_setting/attribute.lammps
-print "z_bottom ${z_bottom}" screen no append output/simulation_setting/attribute.lammps
+print "ro ${ro}" screen no append output/setting/attribute.lammps
+print "ri ${ri}" screen no append output/setting/attribute.lammps
+print "z_bottom ${z_bottom}" screen no append output/setting/attribute.lammps
 
 # calculate chunk height
 variable	zhi_chunk	equal v_zhi_chunk_dp_unit*v_dp
@@ -217,8 +230,8 @@ variable zhi_box 	equal $(v_zhi_box_dp_unit*v_dp)
 # calculate diameter of big and small
 variable	dp_big		equal $(v_dp_big_dp_unit*v_dp)
 variable	dp_small	equal $(v_dp_small_dp_unit*v_dp)
-print "dp_big ${dp_big}" screen no append output/simulation_setting/attribute.lammps
-print "dp_small ${dp_small}" screen no append output/simulation_setting/attribute.lammps
+print "dp_big ${dp_big}" screen no append output/setting/attribute.lammps
+print "dp_small ${dp_small}" screen no append output/setting/attribute.lammps
 
 # calculate skin
 variable	skin		equal $(v_skin_dp_unit*v_dp)
@@ -400,7 +413,7 @@ label		end_create
 
 
 # file, restart 0 step
-write_restart	output/rst/restart.*.mpiio
+write_restart	output/rst/restart.mpiio.*
 
 # jump gravity ifpour and step from 0
 if "${ifpour} == no || ${rst_from} != 0" then "jump SELF end_pour5"
@@ -457,9 +470,7 @@ set		atom * density 	${den}
 jump SELF end_deposit
 
 label	end_deposit
-
 label		restart_jump
-
 
 # bin size and memory
 neighbor	${skin} bin
@@ -554,8 +565,8 @@ fix	freeze_fix	freeze_group freeze
 label	label_end_freeze
 
 # air viscous
-print "ifairviscous ${ifairviscous}" screen no append output/simulation_setting/attribute.lammps
-print "gamma_air ${gamma_air}" screen no append output/simulation_setting/attribute.lammps
+print "ifairviscous ${ifairviscous}" screen no append output/setting/attribute.lammps
+print "gamma_air ${gamma_air}" screen no append output/setting/attribute.lammps
 if "${ifairviscous} == no" then &
   "jump SELF end_airviscous"
 fix airviscous all viscous $(v_gamma_air*v_mp)
@@ -580,7 +591,7 @@ if "${freq_ave_chunk} == 0" then "jump SELF skip_ave_chunk"
 compute		chunk_r_z all chunk/atom v_chunk_id_r_z limit ${N_total_rz} exact
 # file, output by fix ave/chunk
 if "${freq_ave_chunk} == 0" then "jump SELF skip_ave_chunk"
-fix		avspatial all ave/chunk ${every_ave_chunk} ${repeat_ave_chunk} ${freq_ave_chunk} chunk_r_z v_vr v_vt vz file output/fix/file_avspatial_${rst_from}
+fix		avspatial all ave/chunk ${every_ave_chunk} ${repeat_ave_chunk} ${freq_ave_chunk} chunk_r_z v_vr v_vt vz file output/velocity_field/fix.velocity_field.${rst_from}
 label skip_ave_chunk
 # compute total force on particles excerted by wall 
 #variable	orce_no_r atom (f_force_pair[1]*x+f_force_pair[2]*y)/sqrt(x*x+y*y)
@@ -639,31 +650,44 @@ variable        EKP_atom atom "c_KEt_atom + c_KEr_atom + c_PE_atom"
 # compute id
 compute         id_atom all property/atom id
 # define nbd radius
-variable 	cutoff_dumpnb equal 0.000914
+variable 	cutoff_dumpnb equal (1.01*v_dp_big)
 # compute specific atom id by reduce
 compute		id_maxKEt all reduce max c_id_atom c_KEt_atom replace 1 2
 compute		id_maxKEr all reduce max c_id_atom c_KEr_atom replace 1 2
 compute		id_maxKEtr all reduce max c_id_atom v_KEtr_atom replace 1 2
 
-# define trace id
+# initially define trace id
 variable	check_nbid1 atom false
 variable	check_nbid2 atom false
 variable	check_nbid3 atom false
 variable	check_nbmaxKEt atom false
 variable	check_nbmaxKEr atom false
 variable	check_nbmaxKEtr atom false
-# trace id maxKE
-if "${iftrace_maxKE} == no" then &
-  "jump SELF end_tracemaxKE"
-variable	trace_id_KEt equal c_id_maxKEt[1]
-variable	trace_id_KEr equal c_id_maxKEr[1]
-variable	trace_id_KEtr equal c_id_maxKEtr[1]
 
+# trace id maxKEt
+if "${iftrace_maxKEt} == no" then &
+  "jump SELF end_tracemaxKEt"
 ## define trace group, single atom or region near an atom
-variable	check_nbmaxKEt atom " (x-x[v_trace_id_KEt] )^2 + (y-y[v_trace_id_KEt] )^2 + (z-z[v_trace_id_KEt] )^2 < v_cutoff_dumpnb^2 "
-variable	check_nbmaxKEr atom " (x-x[v_trace_id_KEr] )^2 + (y-y[v_trace_id_KEr] )^2 + (z-z[v_trace_id_KEr] )^2 < v_cutoff_dumpnb^2 "
-variable	check_nbmaxKEtr atom " (x-x[v_trace_id_KEtr] )^2 + (y-y[v_trace_id_KEtr] )^2 + (z-z[v_trace_id_KEtr] )^2 < v_cutoff_dumpnb^2 "
-label		end_tracemaxKE
+variable	trace_id_maxKEt equal c_id_maxKEt[1]
+variable	check_nbmaxKEt atom " (x-x[v_trace_id_maxKEt] )^2 + (y-y[v_trace_id_maxKEt] )^2 + (z-z[v_trace_id_maxKEt] )^2 < v_cutoff_dumpnb^2 "
+label		end_tracemaxKEt
+
+# trace id maxKEr
+if "${iftrace_maxKEr} == no" then &
+  "jump SELF end_tracemaxKEr"
+## define trace group, single atom or region near an atom
+variable	trace_id_maxKEr equal c_id_maxKEr[1]
+variable	check_nbmaxKEr atom " (x-x[v_trace_id_maxKEr] )^2 + (y-y[v_trace_id_maxKEr] )^2 + (z-z[v_trace_id_maxKEr] )^2 < v_cutoff_dumpnb^2 "
+label		end_tracemaxKEr
+
+# trace id maxKEtr
+if "${iftrace_maxKEtr} == no" then &
+  "jump SELF end_tracemaxKEtr"
+## define trace group, single atom or region near an atom
+variable	trace_id_maxKEtr equal c_id_maxKEtr[1]
+variable	check_nbmaxKEtr atom " (x-x[v_trace_id_maxKEtr] )^2 + (y-y[v_trace_id_maxKEtr] )^2 + (z-z[v_trace_id_maxKEtr] )^2 < v_cutoff_dumpnb^2 "
+label		end_tracemaxKEtr
+
 # trace id1 
 if "${trace_id1} == 0" then &
   "jump SELF end_traceid1"
@@ -683,88 +707,178 @@ if "${trace_id3} == 0" then &
 variable	check_nbid3 atom " (x-x[v_trace_id3] )^2 + (y-y[v_trace_id3] )^2 + (z-z[v_trace_id3] )^2 < v_cutoff_dumpnb^2 "
 label		end_traceid3
 
-
-
-# file, store by fix vector and output by fix ave/time
+# file, store variable of trace particle by fix vector and output by fix ave/time
 if "${freq_fixvector} == 0" then "jump SELF skip_fixvector"
 fix		vector_manytime all vector ${every_fixvector} v_trace_id #z[${trace_id}] vz[${trace_id}] fz[${trace_id}] c_n_contact[${trace_id}]
 variable	fixvector vector f_vector_manytime
 if "${freq_fixvector} == 0" then "jump SELF skip_fixvector"
-fix		manytime all ave/time 1 1 ${freq_fixvector} v_fixvector mode vector file output/fix/manytime_${rst_from} 
+fix		manytime all ave/time 1 1 ${freq_fixvector} v_fixvector mode vector file output/trace/fix.trace.allstep
 label skip_fixvector
 
+# compute for output
+if "${freq_print_trace} == 0" then "jump SELF skip_print_trace"
+compute radius all property/atom radius
+compute omegax all property/atom omegax
+compute omegay all property/atom omegay
+compute omegaz all property/atom omegaz
+compute tqx all property/atom tqx
+compute tqy all property/atom tqy
+compute tqz all property/atom tqz
+# print time and step
+fix print_step all print ${freq_print_trace} "$(step)" screen no append output/trace/step
+fix print_time all print ${freq_print_trace} "$(time)" screen no append output/trace/time
+
+# file print trace atom_maxKEt
+if "${iftrace_maxKEt} == no" then "jump SELF skip_print_trace_maxKEt"
+
+variable print_trace_maxKEt_scalar_id equal v_trace_id_maxKEt
+variable print_trace_maxKEt_scalar_type equal type[v_trace_id_maxKEt]
+variable print_trace_maxKEt_scalar_radius equal c_radius[v_trace_id_maxKEt]
+variable print_trace_maxKEt_scalar_c_KEt_atom equal c_KEt_atom[v_trace_id_maxKEt]
+variable print_trace_maxKEt_scalar_c_KEr_atom equal c_KEr_atom[v_trace_id_maxKEt]
+variable print_trace_maxKEt_scalar_x equal x[v_trace_id_maxKEt]
+variable print_trace_maxKEt_scalar_y equal y[v_trace_id_maxKEt]
+variable print_trace_maxKEt_scalar_z equal z[v_trace_id_maxKEt]
+variable print_trace_maxKEt_scalar_vx equal vx[v_trace_id_maxKEt]
+variable print_trace_maxKEt_scalar_vy equal vy[v_trace_id_maxKEt]
+variable print_trace_maxKEt_scalar_vz equal vz[v_trace_id_maxKEt]
+variable print_trace_maxKEt_scalar_fx equal fx[v_trace_id_maxKEt]
+variable print_trace_maxKEt_scalar_fy equal fy[v_trace_id_maxKEt]
+variable print_trace_maxKEt_scalar_fz equal fz[v_trace_id_maxKEt]
+variable print_trace_maxKEt_scalar_omegax equal c_omegax[v_trace_id_maxKEt]
+variable print_trace_maxKEt_scalar_omegay equal c_omegay[v_trace_id_maxKEt]
+variable print_trace_maxKEt_scalar_omegaz equal c_omegaz[v_trace_id_maxKEt]
+variable print_trace_maxKEt_scalar_tqx equal c_tqx[v_trace_id_maxKEt]
+variable print_trace_maxKEt_scalar_tqy equal c_tqy[v_trace_id_maxKEt]
+variable print_trace_maxKEt_scalar_tqz equal c_tqz[v_trace_id_maxKEt]
 
 
-# file print trace atom_max
-if "${freq_print_single_trace_max} == 0" then "jump SELF skip_print_single_trace_max"
+fix print_maxKEt_id all print ${freq_print_trace} "$(v_print_trace_maxKEt_scalar_id)" screen no append output/trace/maxKEt/id
+fix print_maxKEt_type all print ${freq_print_trace} "$(v_print_trace_maxKEt_scalar_type)" screen no append output/trace/maxKEt/type
+fix print_maxKEt_radius all print ${freq_print_trace} "$(v_print_trace_maxKEt_scalar_radius)" screen no append output/trace/maxKEt/radius
+fix print_maxKEt_c_KEt_atom all print ${freq_print_trace} "$(v_print_trace_maxKEt_scalar_c_KEt_atom)" screen no append output/trace/maxKEt/c_KEt_atom
+fix print_maxKEt_c_KEr_atom all print ${freq_print_trace} "$(v_print_trace_maxKEt_scalar_c_KEr_atom)" screen no append output/trace/maxKEt/c_KEr_atom
+fix print_maxKEt_x all print ${freq_print_trace} "$(v_print_trace_maxKEt_scalar_x)" screen no append output/trace/maxKEt/x
+fix print_maxKEt_y all print ${freq_print_trace} "$(v_print_trace_maxKEt_scalar_y)" screen no append output/trace/maxKEt/y
+fix print_maxKEt_z all print ${freq_print_trace} "$(v_print_trace_maxKEt_scalar_z)" screen no append output/trace/maxKEt/z
+fix print_maxKEt_vx all print ${freq_print_trace} "$(v_print_trace_maxKEt_scalar_vx)" screen no append output/trace/maxKEt/vx
+fix print_maxKEt_vy all print ${freq_print_trace} "$(v_print_trace_maxKEt_scalar_vy)" screen no append output/trace/maxKEt/vy
+fix print_maxKEt_vz all print ${freq_print_trace} "$(v_print_trace_maxKEt_scalar_vz)" screen no append output/trace/maxKEt/vz
+fix print_maxKEt_fx all print ${freq_print_trace} "$(v_print_trace_maxKEt_scalar_fx)" screen no append output/trace/maxKEt/fx
+fix print_maxKEt_fy all print ${freq_print_trace} "$(v_print_trace_maxKEt_scalar_fy)" screen no append output/trace/maxKEt/fy
+fix print_maxKEt_fz all print ${freq_print_trace} "$(v_print_trace_maxKEt_scalar_fz)" screen no append output/trace/maxKEt/fz
+fix print_maxKEt_omegax all print ${freq_print_trace} "$(v_print_trace_maxKEt_scalar_omegax)" screen no append output/trace/maxKEt/omegax
+fix print_maxKEt_omegay all print ${freq_print_trace} "$(v_print_trace_maxKEt_scalar_omegay)" screen no append output/trace/maxKEt/omegay
+fix print_maxKEt_omegaz all print ${freq_print_trace} "$(v_print_trace_maxKEt_scalar_omegaz)" screen no append output/trace/maxKEt/omegaz
+fix print_maxKEt_tqx all print ${freq_print_trace} "$(v_print_trace_maxKEt_scalar_tqx)" screen no append output/trace/maxKEt/tqx
+fix print_maxKEt_tqy all print ${freq_print_trace} "$(v_print_trace_maxKEt_scalar_tqy)" screen no append output/trace/maxKEt/tqy
+fix print_maxKEt_tqz all print ${freq_print_trace} "$(v_print_trace_maxKEt_scalar_tqz)" screen no append output/trace/maxKEt/tqz
 
-variable print_trace_max_scalar_id equal id[v_trace_id_KEt]
-variable print_trace_max_scalar_type equal type[v_trace_id_KEt]
+label skip_print_trace_maxKEt
 
-compute max_radius all property/atom radius
-compute max_omegax all property/atom omegax
-compute max_omegay all property/atom omegay
-compute max_omegaz all property/atom omegaz
-compute max_tqx all property/atom tqx
-compute max_tqy all property/atom tqy
-compute max_tqz all property/atom tqz
-variable print_trace_max_scalar_radius equal c_max_radius[v_trace_id_KEt]
-variable print_trace_max_scalar_c_KEt_atom equal c_KEt_atom[v_trace_id_KEt]
-variable print_trace_max_scalar_c_KEr_atom equal c_KEr_atom[v_trace_id_KEt]
-variable print_trace_max_scalar_x equal x[v_trace_id_KEt]
-variable print_trace_max_scalar_y equal y[v_trace_id_KEt]
-variable print_trace_max_scalar_z equal z[v_trace_id_KEt]
-variable print_trace_max_scalar_vx equal vx[v_trace_id_KEt]
-variable print_trace_max_scalar_vy equal vy[v_trace_id_KEt]
-variable print_trace_max_scalar_vz equal vz[v_trace_id_KEt]
-variable print_trace_max_scalar_fx equal fx[v_trace_id_KEt]
-variable print_trace_max_scalar_fy equal fy[v_trace_id_KEt]
-variable print_trace_max_scalar_fz equal fz[v_trace_id_KEt]
-variable print_trace_max_scalar_omegax equal c_max_omegax[v_trace_id_KEt]
-variable print_trace_max_scalar_omegay equal c_max_omegay[v_trace_id_KEt]
-variable print_trace_max_scalar_omegaz equal c_max_omegaz[v_trace_id_KEt]
-variable print_trace_max_scalar_tqx equal c_max_tqx[v_trace_id_KEt]
-variable print_trace_max_scalar_tqy equal c_max_tqy[v_trace_id_KEt]
-variable print_trace_max_scalar_tqz equal c_max_tqz[v_trace_id_KEt]
+# file print trace atom_maxKEr
+if "${iftrace_maxKEr} == no" then "jump SELF skip_print_trace_maxKEr"
+
+variable print_trace_maxKEr_scalar_id equal v_trace_id_maxKEr
+variable print_trace_maxKEr_scalar_type equal type[v_trace_id_maxKEr]
+variable print_trace_maxKEr_scalar_radius equal c_radius[v_trace_id_maxKEr]
+variable print_trace_maxKEr_scalar_c_KEt_atom equal c_KEt_atom[v_trace_id_maxKEr]
+variable print_trace_maxKEr_scalar_c_KEr_atom equal c_KEr_atom[v_trace_id_maxKEr]
+variable print_trace_maxKEr_scalar_x equal x[v_trace_id_maxKEr]
+variable print_trace_maxKEr_scalar_y equal y[v_trace_id_maxKEr]
+variable print_trace_maxKEr_scalar_z equal z[v_trace_id_maxKEr]
+variable print_trace_maxKEr_scalar_vx equal vx[v_trace_id_maxKEr]
+variable print_trace_maxKEr_scalar_vy equal vy[v_trace_id_maxKEr]
+variable print_trace_maxKEr_scalar_vz equal vz[v_trace_id_maxKEr]
+variable print_trace_maxKEr_scalar_fx equal fx[v_trace_id_maxKEr]
+variable print_trace_maxKEr_scalar_fy equal fy[v_trace_id_maxKEr]
+variable print_trace_maxKEr_scalar_fz equal fz[v_trace_id_maxKEr]
+variable print_trace_maxKEr_scalar_omegax equal c_omegax[v_trace_id_maxKEr]
+variable print_trace_maxKEr_scalar_omegay equal c_omegay[v_trace_id_maxKEr]
+variable print_trace_maxKEr_scalar_omegaz equal c_omegaz[v_trace_id_maxKEr]
+variable print_trace_maxKEr_scalar_tqx equal c_tqx[v_trace_id_maxKEr]
+variable print_trace_maxKEr_scalar_tqy equal c_tqy[v_trace_id_maxKEr]
+variable print_trace_maxKEr_scalar_tqz equal c_tqz[v_trace_id_maxKEr]
 
 
-fix print_max_id all print ${freq_print_single_trace_max} "$(v_print_trace_max_scalar_id)" screen no append output/trace_print/trace_atom_max_id.txt
-fix print_max_type all print ${freq_print_single_trace_max} "$(v_print_trace_max_scalar_type)" screen no append output/trace_print/trace_atom_max_type.txt
-fix print_max_radius all print ${freq_print_single_trace_max} "$(v_print_trace_max_scalar_radius)" screen no append output/trace_print/trace_atom_max_radius.txt
-fix print_max_c_KEt_atom all print ${freq_print_single_trace_max} "$(v_print_trace_max_scalar_c_KEt_atom)" screen no append output/trace_print/trace_atom_max_c_KEt_atom.txt
-fix print_max_c_KEr_atom all print ${freq_print_single_trace_max} "$(v_print_trace_max_scalar_c_KEr_atom)" screen no append output/trace_print/trace_atom_max_c_KEr_atom.txt
-fix print_max_x all print ${freq_print_single_trace_max} "$(v_print_trace_max_scalar_x)" screen no append output/trace_print/trace_atom_max_x.txt
-fix print_max_y all print ${freq_print_single_trace_max} "$(v_print_trace_max_scalar_y)" screen no append output/trace_print/trace_atom_max_y.txt
-fix print_max_z all print ${freq_print_single_trace_max} "$(v_print_trace_max_scalar_z)" screen no append output/trace_print/trace_atom_max_z.txt
-fix print_max_vx all print ${freq_print_single_trace_max} "$(v_print_trace_max_scalar_vx)" screen no append output/trace_print/trace_atom_max_vx.txt
-fix print_max_vy all print ${freq_print_single_trace_max} "$(v_print_trace_max_scalar_vy)" screen no append output/trace_print/trace_atom_max_vy.txt
-fix print_max_vz all print ${freq_print_single_trace_max} "$(v_print_trace_max_scalar_vz)" screen no append output/trace_print/trace_atom_max_vz.txt
-fix print_max_fx all print ${freq_print_single_trace_max} "$(v_print_trace_max_scalar_fx)" screen no append output/trace_print/trace_atom_max_fx.txt
-fix print_max_fy all print ${freq_print_single_trace_max} "$(v_print_trace_max_scalar_fy)" screen no append output/trace_print/trace_atom_max_fy.txt
-fix print_max_fz all print ${freq_print_single_trace_max} "$(v_print_trace_max_scalar_fz)" screen no append output/trace_print/trace_atom_max_fz.txt
-fix print_max_omegax all print ${freq_print_single_trace_max} "$(v_print_trace_max_scalar_omegax)" screen no append output/trace_print/trace_atom_max_omegax.txt
-fix print_max_omegay all print ${freq_print_single_trace_max} "$(v_print_trace_max_scalar_omegay)" screen no append output/trace_print/trace_atom_max_omegay.txt
-fix print_max_omegaz all print ${freq_print_single_trace_max} "$(v_print_trace_max_scalar_omegaz)" screen no append output/trace_print/trace_atom_max_omegaz.txt
-fix print_max_tqx all print ${freq_print_single_trace_max} "$(v_print_trace_max_scalar_tqx)" screen no append output/trace_print/trace_atom_max_tqx.txt
-fix print_max_tqy all print ${freq_print_single_trace_max} "$(v_print_trace_max_scalar_tqy)" screen no append output/trace_print/trace_atom_max_tqy.txt
-fix print_max_tqz all print ${freq_print_single_trace_max} "$(v_print_trace_max_scalar_tqz)" screen no append output/trace_print/trace_atom_max_tqz.txt
+fix print_maxKEr_id all print ${freq_print_trace} "$(v_print_trace_maxKEr_scalar_id)" screen no append output/trace/maxKEr/id
+fix print_maxKEr_type all print ${freq_print_trace} "$(v_print_trace_maxKEr_scalar_type)" screen no append output/trace/maxKEr/type
+fix print_maxKEr_radius all print ${freq_print_trace} "$(v_print_trace_maxKEr_scalar_radius)" screen no append output/trace/maxKEr/radius
+fix print_maxKEr_c_KEt_atom all print ${freq_print_trace} "$(v_print_trace_maxKEr_scalar_c_KEt_atom)" screen no append output/trace/maxKEr/c_KEt_atom
+fix print_maxKEr_c_KEr_atom all print ${freq_print_trace} "$(v_print_trace_maxKEr_scalar_c_KEr_atom)" screen no append output/trace/maxKEr/c_KEr_atom
+fix print_maxKEr_x all print ${freq_print_trace} "$(v_print_trace_maxKEr_scalar_x)" screen no append output/trace/maxKEr/x
+fix print_maxKEr_y all print ${freq_print_trace} "$(v_print_trace_maxKEr_scalar_y)" screen no append output/trace/maxKEr/y
+fix print_maxKEr_z all print ${freq_print_trace} "$(v_print_trace_maxKEr_scalar_z)" screen no append output/trace/maxKEr/z
+fix print_maxKEr_vx all print ${freq_print_trace} "$(v_print_trace_maxKEr_scalar_vx)" screen no append output/trace/maxKEr/vx
+fix print_maxKEr_vy all print ${freq_print_trace} "$(v_print_trace_maxKEr_scalar_vy)" screen no append output/trace/maxKEr/vy
+fix print_maxKEr_vz all print ${freq_print_trace} "$(v_print_trace_maxKEr_scalar_vz)" screen no append output/trace/maxKEr/vz
+fix print_maxKEr_fx all print ${freq_print_trace} "$(v_print_trace_maxKEr_scalar_fx)" screen no append output/trace/maxKEr/fx
+fix print_maxKEr_fy all print ${freq_print_trace} "$(v_print_trace_maxKEr_scalar_fy)" screen no append output/trace/maxKEr/fy
+fix print_maxKEr_fz all print ${freq_print_trace} "$(v_print_trace_maxKEr_scalar_fz)" screen no append output/trace/maxKEr/fz
+fix print_maxKEr_omegax all print ${freq_print_trace} "$(v_print_trace_maxKEr_scalar_omegax)" screen no append output/trace/maxKEr/omegax
+fix print_maxKEr_omegay all print ${freq_print_trace} "$(v_print_trace_maxKEr_scalar_omegay)" screen no append output/trace/maxKEr/omegay
+fix print_maxKEr_omegaz all print ${freq_print_trace} "$(v_print_trace_maxKEr_scalar_omegaz)" screen no append output/trace/maxKEr/omegaz
+fix print_maxKEr_tqx all print ${freq_print_trace} "$(v_print_trace_maxKEr_scalar_tqx)" screen no append output/trace/maxKEr/tqx
+fix print_maxKEr_tqy all print ${freq_print_trace} "$(v_print_trace_maxKEr_scalar_tqy)" screen no append output/trace/maxKEr/tqy
+fix print_maxKEr_tqz all print ${freq_print_trace} "$(v_print_trace_maxKEr_scalar_tqz)" screen no append output/trace/maxKEr/tqz
 
-label skip_print_single_trace_max
+label skip_print_trace_maxKEr
+
+# file print trace atom_maxKEtr
+if "${iftrace_maxKEtr} == no" then "jump SELF skip_print_trace_maxKEtr"
+
+variable print_trace_maxKEtr_scalar_id equal v_trace_id_maxKEtr
+variable print_trace_maxKEtr_scalar_type equal type[v_trace_id_maxKEtr]
+variable print_trace_maxKEtr_scalar_radius equal c_radius[v_trace_id_maxKEtr]
+variable print_trace_maxKEtr_scalar_c_KEt_atom equal c_KEt_atom[v_trace_id_maxKEtr]
+variable print_trace_maxKEtr_scalar_c_KEr_atom equal c_KEr_atom[v_trace_id_maxKEtr]
+variable print_trace_maxKEtr_scalar_x equal x[v_trace_id_maxKEtr]
+variable print_trace_maxKEtr_scalar_y equal y[v_trace_id_maxKEtr]
+variable print_trace_maxKEtr_scalar_z equal z[v_trace_id_maxKEtr]
+variable print_trace_maxKEtr_scalar_vx equal vx[v_trace_id_maxKEtr]
+variable print_trace_maxKEtr_scalar_vy equal vy[v_trace_id_maxKEtr]
+variable print_trace_maxKEtr_scalar_vz equal vz[v_trace_id_maxKEtr]
+variable print_trace_maxKEtr_scalar_fx equal fx[v_trace_id_maxKEtr]
+variable print_trace_maxKEtr_scalar_fy equal fy[v_trace_id_maxKEtr]
+variable print_trace_maxKEtr_scalar_fz equal fz[v_trace_id_maxKEtr]
+variable print_trace_maxKEtr_scalar_omegax equal c_omegax[v_trace_id_maxKEtr]
+variable print_trace_maxKEtr_scalar_omegay equal c_omegay[v_trace_id_maxKEtr]
+variable print_trace_maxKEtr_scalar_omegaz equal c_omegaz[v_trace_id_maxKEtr]
+variable print_trace_maxKEtr_scalar_tqx equal c_tqx[v_trace_id_maxKEtr]
+variable print_trace_maxKEtr_scalar_tqy equal c_tqy[v_trace_id_maxKEtr]
+variable print_trace_maxKEtr_scalar_tqz equal c_tqz[v_trace_id_maxKEtr]
+
+
+fix print_maxKEtr_id all print ${freq_print_trace} "$(v_print_trace_maxKEtr_scalar_id)" screen no append output/trace/maxKEtr/id
+fix print_maxKEtr_type all print ${freq_print_trace} "$(v_print_trace_maxKEtr_scalar_type)" screen no append output/trace/maxKEtr/type
+fix print_maxKEtr_radius all print ${freq_print_trace} "$(v_print_trace_maxKEtr_scalar_radius)" screen no append output/trace/maxKEtr/radius
+fix print_maxKEtr_c_KEt_atom all print ${freq_print_trace} "$(v_print_trace_maxKEtr_scalar_c_KEt_atom)" screen no append output/trace/maxKEtr/c_KEt_atom
+fix print_maxKEtr_c_KEr_atom all print ${freq_print_trace} "$(v_print_trace_maxKEtr_scalar_c_KEr_atom)" screen no append output/trace/maxKEtr/c_KEr_atom
+fix print_maxKEtr_x all print ${freq_print_trace} "$(v_print_trace_maxKEtr_scalar_x)" screen no append output/trace/maxKEtr/x
+fix print_maxKEtr_y all print ${freq_print_trace} "$(v_print_trace_maxKEtr_scalar_y)" screen no append output/trace/maxKEtr/y
+fix print_maxKEtr_z all print ${freq_print_trace} "$(v_print_trace_maxKEtr_scalar_z)" screen no append output/trace/maxKEtr/z
+fix print_maxKEtr_vx all print ${freq_print_trace} "$(v_print_trace_maxKEtr_scalar_vx)" screen no append output/trace/maxKEtr/vx
+fix print_maxKEtr_vy all print ${freq_print_trace} "$(v_print_trace_maxKEtr_scalar_vy)" screen no append output/trace/maxKEtr/vy
+fix print_maxKEtr_vz all print ${freq_print_trace} "$(v_print_trace_maxKEtr_scalar_vz)" screen no append output/trace/maxKEtr/vz
+fix print_maxKEtr_fx all print ${freq_print_trace} "$(v_print_trace_maxKEtr_scalar_fx)" screen no append output/trace/maxKEtr/fx
+fix print_maxKEtr_fy all print ${freq_print_trace} "$(v_print_trace_maxKEtr_scalar_fy)" screen no append output/trace/maxKEtr/fy
+fix print_maxKEtr_fz all print ${freq_print_trace} "$(v_print_trace_maxKEtr_scalar_fz)" screen no append output/trace/maxKEtr/fz
+fix print_maxKEtr_omegax all print ${freq_print_trace} "$(v_print_trace_maxKEtr_scalar_omegax)" screen no append output/trace/maxKEtr/omegax
+fix print_maxKEtr_omegay all print ${freq_print_trace} "$(v_print_trace_maxKEtr_scalar_omegay)" screen no append output/trace/maxKEtr/omegay
+fix print_maxKEtr_omegaz all print ${freq_print_trace} "$(v_print_trace_maxKEtr_scalar_omegaz)" screen no append output/trace/maxKEtr/omegaz
+fix print_maxKEtr_tqx all print ${freq_print_trace} "$(v_print_trace_maxKEtr_scalar_tqx)" screen no append output/trace/maxKEtr/tqx
+fix print_maxKEtr_tqy all print ${freq_print_trace} "$(v_print_trace_maxKEtr_scalar_tqy)" screen no append output/trace/maxKEtr/tqy
+fix print_maxKEtr_tqz all print ${freq_print_trace} "$(v_print_trace_maxKEtr_scalar_tqz)" screen no append output/trace/maxKEtr/tqz
+
+label skip_print_trace_maxKEtr
+
 
 # file print trace atom_1
-if "${freq_print_single_trace_1} == 0" then "jump SELF skip_print_single_trace_1"
+if "${trace_id1} == 0" then "jump SELF skip_print_trace_1"
 
-variable print_trace_1_scalar_id equal id[v_trace_id1]
+variable print_trace_1_scalar_id equal v_trace_id1
 variable print_trace_1_scalar_type equal type[v_trace_id1]
-
-compute 1_radius all property/atom radius
-compute 1_omegax all property/atom omegax
-compute 1_omegay all property/atom omegay
-compute 1_omegaz all property/atom omegaz
-compute 1_tqx all property/atom tqx
-compute 1_tqy all property/atom tqy
-compute 1_tqz all property/atom tqz
-variable print_trace_1_scalar_radius equal c_1_radius[v_trace_id1]
+variable print_trace_1_scalar_radius equal c_radius[v_trace_id1]
 variable print_trace_1_scalar_c_KEt_atom equal c_KEt_atom[v_trace_id1]
 variable print_trace_1_scalar_c_KEr_atom equal c_KEr_atom[v_trace_id1]
 variable print_trace_1_scalar_x equal x[v_trace_id1]
@@ -776,51 +890,43 @@ variable print_trace_1_scalar_vz equal vz[v_trace_id1]
 variable print_trace_1_scalar_fx equal fx[v_trace_id1]
 variable print_trace_1_scalar_fy equal fy[v_trace_id1]
 variable print_trace_1_scalar_fz equal fz[v_trace_id1]
-variable print_trace_1_scalar_omegax equal c_1_omegax[v_trace_id1]
-variable print_trace_1_scalar_omegay equal c_1_omegay[v_trace_id1]
-variable print_trace_1_scalar_omegaz equal c_1_omegaz[v_trace_id1]
-variable print_trace_1_scalar_tqx equal c_1_tqx[v_trace_id1]
-variable print_trace_1_scalar_tqy equal c_1_tqy[v_trace_id1]
-variable print_trace_1_scalar_tqz equal c_1_tqz[v_trace_id1]
+variable print_trace_1_scalar_omegax equal c_omegax[v_trace_id1]
+variable print_trace_1_scalar_omegay equal c_omegay[v_trace_id1]
+variable print_trace_1_scalar_omegaz equal c_omegaz[v_trace_id1]
+variable print_trace_1_scalar_tqx equal c_tqx[v_trace_id1]
+variable print_trace_1_scalar_tqy equal c_tqy[v_trace_id1]
+variable print_trace_1_scalar_tqz equal c_tqz[v_trace_id1]
 
-fix print_1_id all print ${freq_print_single_trace_1} "$(v_print_trace_1_scalar_id)" screen no append output/trace_print/trace_atom_${trace_id1}_id.txt
-fix print_1_type all print ${freq_print_single_trace_1} "$(v_print_trace_1_scalar_type)" screen no append output/trace_print/trace_atom_${trace_id1}_type.txt
-fix print_1_radius all print ${freq_print_single_trace_1} "$(v_print_trace_1_scalar_radius)" screen no append output/trace_print/trace_atom_${trace_id1}_radius.txt
-fix print_1_c_KEt_atom all print ${freq_print_single_trace_1} "$(v_print_trace_1_scalar_c_KEt_atom)" screen no append output/trace_print/trace_atom_${trace_id1}_c_KEt_atom.txt
-fix print_1_c_KEr_atom all print ${freq_print_single_trace_1} "$(v_print_trace_1_scalar_c_KEr_atom)" screen no append output/trace_print/trace_atom_${trace_id1}_c_KEr_atom.txt
-fix print_1_x all print ${freq_print_single_trace_1} "$(v_print_trace_1_scalar_x)" screen no append output/trace_print/trace_atom_${trace_id1}_x.txt
-fix print_1_y all print ${freq_print_single_trace_1} "$(v_print_trace_1_scalar_y)" screen no append output/trace_print/trace_atom_${trace_id1}_y.txt
-fix print_1_z all print ${freq_print_single_trace_1} "$(v_print_trace_1_scalar_z)" screen no append output/trace_print/trace_atom_${trace_id1}_z.txt
-fix print_1_vx all print ${freq_print_single_trace_1} "$(v_print_trace_1_scalar_vx)" screen no append output/trace_print/trace_atom_${trace_id1}_vx.txt
-fix print_1_vy all print ${freq_print_single_trace_1} "$(v_print_trace_1_scalar_vy)" screen no append output/trace_print/trace_atom_${trace_id1}_vy.txt
-fix print_1_vz all print ${freq_print_single_trace_1} "$(v_print_trace_1_scalar_vz)" screen no append output/trace_print/trace_atom_${trace_id1}_vz.txt
-fix print_1_fx all print ${freq_print_single_trace_1} "$(v_print_trace_1_scalar_fx)" screen no append output/trace_print/trace_atom_${trace_id1}_fx.txt
-fix print_1_fy all print ${freq_print_single_trace_1} "$(v_print_trace_1_scalar_fy)" screen no append output/trace_print/trace_atom_${trace_id1}_fy.txt
-fix print_1_fz all print ${freq_print_single_trace_1} "$(v_print_trace_1_scalar_fz)" screen no append output/trace_print/trace_atom_${trace_id1}_fz.txt
-fix print_1_omegax all print ${freq_print_single_trace_1} "$(v_print_trace_1_scalar_omegax)" screen no append output/trace_print/trace_atom_${trace_id1}_omegax.txt
-fix print_1_omegay all print ${freq_print_single_trace_1} "$(v_print_trace_1_scalar_omegay)" screen no append output/trace_print/trace_atom_${trace_id1}_omegay.txt
-fix print_1_omegaz all print ${freq_print_single_trace_1} "$(v_print_trace_1_scalar_omegaz)" screen no append output/trace_print/trace_atom_${trace_id1}_omegaz.txt
-fix print_1_tqx all print ${freq_print_single_trace_1} "$(v_print_trace_1_scalar_tqx)" screen no append output/trace_print/trace_atom_${trace_id1}_tqx.txt
-fix print_1_tqy all print ${freq_print_single_trace_1} "$(v_print_trace_1_scalar_tqy)" screen no append output/trace_print/trace_atom_${trace_id1}_tqy.txt
-fix print_1_tqz all print ${freq_print_single_trace_1} "$(v_print_trace_1_scalar_tqz)" screen no append output/trace_print/trace_atom_${trace_id1}_tqz.txt
+fix print_1_id all print ${freq_print_trace} "$(v_print_trace_1_scalar_id)" screen no append output/trace/${trace_id1}/id
+fix print_1_type all print ${freq_print_trace} "$(v_print_trace_1_scalar_type)" screen no append output/trace/${trace_id1}/type
+fix print_1_radius all print ${freq_print_trace} "$(v_print_trace_1_scalar_radius)" screen no append output/trace/${trace_id1}/radius
+fix print_1_c_KEt_atom all print ${freq_print_trace} "$(v_print_trace_1_scalar_c_KEt_atom)" screen no append output/trace/${trace_id1}/c_KEt_atom
+fix print_1_c_KEr_atom all print ${freq_print_trace} "$(v_print_trace_1_scalar_c_KEr_atom)" screen no append output/trace/${trace_id1}/c_KEr_atom
+fix print_1_x all print ${freq_print_trace} "$(v_print_trace_1_scalar_x)" screen no append output/trace/${trace_id1}/x
+fix print_1_y all print ${freq_print_trace} "$(v_print_trace_1_scalar_y)" screen no append output/trace/${trace_id1}/y
+fix print_1_z all print ${freq_print_trace} "$(v_print_trace_1_scalar_z)" screen no append output/trace/${trace_id1}/z
+fix print_1_vx all print ${freq_print_trace} "$(v_print_trace_1_scalar_vx)" screen no append output/trace/${trace_id1}/vx
+fix print_1_vy all print ${freq_print_trace} "$(v_print_trace_1_scalar_vy)" screen no append output/trace/${trace_id1}/vy
+fix print_1_vz all print ${freq_print_trace} "$(v_print_trace_1_scalar_vz)" screen no append output/trace/${trace_id1}/vz
+fix print_1_fx all print ${freq_print_trace} "$(v_print_trace_1_scalar_fx)" screen no append output/trace/${trace_id1}/fx
+fix print_1_fy all print ${freq_print_trace} "$(v_print_trace_1_scalar_fy)" screen no append output/trace/${trace_id1}/fy
+fix print_1_fz all print ${freq_print_trace} "$(v_print_trace_1_scalar_fz)" screen no append output/trace/${trace_id1}/fz
+fix print_1_omegax all print ${freq_print_trace} "$(v_print_trace_1_scalar_omegax)" screen no append output/trace/${trace_id1}/omegax
+fix print_1_omegay all print ${freq_print_trace} "$(v_print_trace_1_scalar_omegay)" screen no append output/trace/${trace_id1}/omegay
+fix print_1_omegaz all print ${freq_print_trace} "$(v_print_trace_1_scalar_omegaz)" screen no append output/trace/${trace_id1}/omegaz
+fix print_1_tqx all print ${freq_print_trace} "$(v_print_trace_1_scalar_tqx)" screen no append output/trace/${trace_id1}/tqx
+fix print_1_tqy all print ${freq_print_trace} "$(v_print_trace_1_scalar_tqy)" screen no append output/trace/${trace_id1}/tqy
+fix print_1_tqz all print ${freq_print_trace} "$(v_print_trace_1_scalar_tqz)" screen no append output/trace/${trace_id1}/tqz
 
-label skip_print_single_trace_1
+label skip_print_trace_1
 
 
 # file print trace atom_2
-if "${freq_print_single_trace_2} == 0" then "jump SELF skip_print_single_trace_2"
+if "${trace_id2} == 0" then "jump SELF skip_print_trace_2"
 
-variable print_trace_2_scalar_id equal id[v_trace_id2]
+variable print_trace_2_scalar_id equal v_trace_id2
 variable print_trace_2_scalar_type equal type[v_trace_id2]
-
-compute 2_radius all property/atom radius
-compute 2_omegax all property/atom omegax
-compute 2_omegay all property/atom omegay
-compute 2_omegaz all property/atom omegaz
-compute 2_tqx all property/atom tqx
-compute 2_tqy all property/atom tqy
-compute 2_tqz all property/atom tqz
-variable print_trace_2_scalar_radius equal c_2_radius[v_trace_id2]
+variable print_trace_2_scalar_radius equal c_radius[v_trace_id2]
 variable print_trace_2_scalar_c_KEt_atom equal c_KEt_atom[v_trace_id2]
 variable print_trace_2_scalar_c_KEr_atom equal c_KEr_atom[v_trace_id2]
 variable print_trace_2_scalar_x equal x[v_trace_id2]
@@ -832,51 +938,43 @@ variable print_trace_2_scalar_vz equal vz[v_trace_id2]
 variable print_trace_2_scalar_fx equal fx[v_trace_id2]
 variable print_trace_2_scalar_fy equal fy[v_trace_id2]
 variable print_trace_2_scalar_fz equal fz[v_trace_id2]
-variable print_trace_2_scalar_omegax equal c_2_omegax[v_trace_id2]
-variable print_trace_2_scalar_omegay equal c_2_omegay[v_trace_id2]
-variable print_trace_2_scalar_omegaz equal c_2_omegaz[v_trace_id2]
-variable print_trace_2_scalar_tqx equal c_2_tqx[v_trace_id2]
-variable print_trace_2_scalar_tqy equal c_2_tqy[v_trace_id2]
-variable print_trace_2_scalar_tqz equal c_2_tqz[v_trace_id2]
+variable print_trace_2_scalar_omegax equal c_omegax[v_trace_id2]
+variable print_trace_2_scalar_omegay equal c_omegay[v_trace_id2]
+variable print_trace_2_scalar_omegaz equal c_omegaz[v_trace_id2]
+variable print_trace_2_scalar_tqx equal c_tqx[v_trace_id2]
+variable print_trace_2_scalar_tqy equal c_tqy[v_trace_id2]
+variable print_trace_2_scalar_tqz equal c_tqz[v_trace_id2]
 
-fix print_2_id all print ${freq_print_single_trace_2} "$(v_print_trace_2_scalar_id)" screen no append output/trace_print/trace_atom_${trace_id2}_id.txt
-fix print_2_type all print ${freq_print_single_trace_2} "$(v_print_trace_2_scalar_type)" screen no append output/trace_print/trace_atom_${trace_id2}_type.txt
-fix print_2_radius all print ${freq_print_single_trace_2} "$(v_print_trace_2_scalar_radius)" screen no append output/trace_print/trace_atom_${trace_id2}_radius.txt
-fix print_2_c_KEt_atom all print ${freq_print_single_trace_2} "$(v_print_trace_2_scalar_c_KEt_atom)" screen no append output/trace_print/trace_atom_${trace_id2}_c_KEt_atom.txt
-fix print_2_c_KEr_atom all print ${freq_print_single_trace_2} "$(v_print_trace_2_scalar_c_KEr_atom)" screen no append output/trace_print/trace_atom_${trace_id2}_c_KEr_atom.txt
-fix print_2_x all print ${freq_print_single_trace_2} "$(v_print_trace_2_scalar_x)" screen no append output/trace_print/trace_atom_${trace_id2}_x.txt
-fix print_2_y all print ${freq_print_single_trace_2} "$(v_print_trace_2_scalar_y)" screen no append output/trace_print/trace_atom_${trace_id2}_y.txt
-fix print_2_z all print ${freq_print_single_trace_2} "$(v_print_trace_2_scalar_z)" screen no append output/trace_print/trace_atom_${trace_id2}_z.txt
-fix print_2_vx all print ${freq_print_single_trace_2} "$(v_print_trace_2_scalar_vx)" screen no append output/trace_print/trace_atom_${trace_id2}_vx.txt
-fix print_2_vy all print ${freq_print_single_trace_2} "$(v_print_trace_2_scalar_vy)" screen no append output/trace_print/trace_atom_${trace_id2}_vy.txt
-fix print_2_vz all print ${freq_print_single_trace_2} "$(v_print_trace_2_scalar_vz)" screen no append output/trace_print/trace_atom_${trace_id2}_vz.txt
-fix print_2_fx all print ${freq_print_single_trace_2} "$(v_print_trace_2_scalar_fx)" screen no append output/trace_print/trace_atom_${trace_id2}_fx.txt
-fix print_2_fy all print ${freq_print_single_trace_2} "$(v_print_trace_2_scalar_fy)" screen no append output/trace_print/trace_atom_${trace_id2}_fy.txt
-fix print_2_fz all print ${freq_print_single_trace_2} "$(v_print_trace_2_scalar_fz)" screen no append output/trace_print/trace_atom_${trace_id2}_fz.txt
-fix print_2_omegax all print ${freq_print_single_trace_2} "$(v_print_trace_2_scalar_omegax)" screen no append output/trace_print/trace_atom_${trace_id2}_omegax.txt
-fix print_2_omegay all print ${freq_print_single_trace_2} "$(v_print_trace_2_scalar_omegay)" screen no append output/trace_print/trace_atom_${trace_id2}_omegay.txt
-fix print_2_omegaz all print ${freq_print_single_trace_2} "$(v_print_trace_2_scalar_omegaz)" screen no append output/trace_print/trace_atom_${trace_id2}_omegaz.txt
-fix print_2_tqx all print ${freq_print_single_trace_2} "$(v_print_trace_2_scalar_tqx)" screen no append output/trace_print/trace_atom_${trace_id2}_tqx.txt
-fix print_2_tqy all print ${freq_print_single_trace_2} "$(v_print_trace_2_scalar_tqy)" screen no append output/trace_print/trace_atom_${trace_id2}_tqy.txt
-fix print_2_tqz all print ${freq_print_single_trace_2} "$(v_print_trace_2_scalar_tqz)" screen no append output/trace_print/trace_atom_${trace_id2}_tqz.txt
+fix print_2_id all print ${freq_print_trace} "$(v_print_trace_2_scalar_id)" screen no append output/trace/${trace_id2}/id
+fix print_2_type all print ${freq_print_trace} "$(v_print_trace_2_scalar_type)" screen no append output/trace/${trace_id2}/type
+fix print_2_radius all print ${freq_print_trace} "$(v_print_trace_2_scalar_radius)" screen no append output/trace/${trace_id2}/radius
+fix print_2_c_KEt_atom all print ${freq_print_trace} "$(v_print_trace_2_scalar_c_KEt_atom)" screen no append output/trace/${trace_id2}/c_KEt_atom
+fix print_2_c_KEr_atom all print ${freq_print_trace} "$(v_print_trace_2_scalar_c_KEr_atom)" screen no append output/trace/${trace_id2}/c_KEr_atom
+fix print_2_x all print ${freq_print_trace} "$(v_print_trace_2_scalar_x)" screen no append output/trace/${trace_id2}/x
+fix print_2_y all print ${freq_print_trace} "$(v_print_trace_2_scalar_y)" screen no append output/trace/${trace_id2}/y
+fix print_2_z all print ${freq_print_trace} "$(v_print_trace_2_scalar_z)" screen no append output/trace/${trace_id2}/z
+fix print_2_vx all print ${freq_print_trace} "$(v_print_trace_2_scalar_vx)" screen no append output/trace/${trace_id2}/vx
+fix print_2_vy all print ${freq_print_trace} "$(v_print_trace_2_scalar_vy)" screen no append output/trace/${trace_id2}/vy
+fix print_2_vz all print ${freq_print_trace} "$(v_print_trace_2_scalar_vz)" screen no append output/trace/${trace_id2}/vz
+fix print_2_fx all print ${freq_print_trace} "$(v_print_trace_2_scalar_fx)" screen no append output/trace/${trace_id2}/fx
+fix print_2_fy all print ${freq_print_trace} "$(v_print_trace_2_scalar_fy)" screen no append output/trace/${trace_id2}/fy
+fix print_2_fz all print ${freq_print_trace} "$(v_print_trace_2_scalar_fz)" screen no append output/trace/${trace_id2}/fz
+fix print_2_omegax all print ${freq_print_trace} "$(v_print_trace_2_scalar_omegax)" screen no append output/trace/${trace_id2}/omegax
+fix print_2_omegay all print ${freq_print_trace} "$(v_print_trace_2_scalar_omegay)" screen no append output/trace/${trace_id2}/omegay
+fix print_2_omegaz all print ${freq_print_trace} "$(v_print_trace_2_scalar_omegaz)" screen no append output/trace/${trace_id2}/omegaz
+fix print_2_tqx all print ${freq_print_trace} "$(v_print_trace_2_scalar_tqx)" screen no append output/trace/${trace_id2}/tqx
+fix print_2_tqy all print ${freq_print_trace} "$(v_print_trace_2_scalar_tqy)" screen no append output/trace/${trace_id2}/tqy
+fix print_2_tqz all print ${freq_print_trace} "$(v_print_trace_2_scalar_tqz)" screen no append output/trace/${trace_id2}/tqz
 
-label skip_print_single_trace_2
+label skip_print_trace_2
 
 
 # file print trace atom_3
-if "${freq_print_single_trace_3} == 0" then "jump SELF skip_print_single_trace_3"
+if "${trace_id3} == 0" then "jump SELF skip_print_trace_3"
 
-variable print_trace_3_scalar_id equal id[v_trace_id3]
+variable print_trace_3_scalar_id equal v_trace_id3
 variable print_trace_3_scalar_type equal type[v_trace_id3]
-
-compute 3_radius all property/atom radius
-compute 3_omegax all property/atom omegax
-compute 3_omegay all property/atom omegay
-compute 3_omegaz all property/atom omegaz
-compute 3_tqx all property/atom tqx
-compute 3_tqy all property/atom tqy
-compute 3_tqz all property/atom tqz
-variable print_trace_3_scalar_radius equal c_3_radius[v_trace_id3]
+variable print_trace_3_scalar_radius equal c_radius[v_trace_id3]
 variable print_trace_3_scalar_c_KEt_atom equal c_KEt_atom[v_trace_id3]
 variable print_trace_3_scalar_c_KEr_atom equal c_KEr_atom[v_trace_id3]
 variable print_trace_3_scalar_x equal x[v_trace_id3]
@@ -888,35 +986,37 @@ variable print_trace_3_scalar_vz equal vz[v_trace_id3]
 variable print_trace_3_scalar_fx equal fx[v_trace_id3]
 variable print_trace_3_scalar_fy equal fy[v_trace_id3]
 variable print_trace_3_scalar_fz equal fz[v_trace_id3]
-variable print_trace_3_scalar_omegax equal c_3_omegax[v_trace_id3]
-variable print_trace_3_scalar_omegay equal c_3_omegay[v_trace_id3]
-variable print_trace_3_scalar_omegaz equal c_3_omegaz[v_trace_id3]
-variable print_trace_3_scalar_tqx equal c_3_tqx[v_trace_id3]
-variable print_trace_3_scalar_tqy equal c_3_tqy[v_trace_id3]
-variable print_trace_3_scalar_tqz equal c_3_tqz[v_trace_id3]
+variable print_trace_3_scalar_omegax equal c_omegax[v_trace_id3]
+variable print_trace_3_scalar_omegay equal c_omegay[v_trace_id3]
+variable print_trace_3_scalar_omegaz equal c_omegaz[v_trace_id3]
+variable print_trace_3_scalar_tqx equal c_tqx[v_trace_id3]
+variable print_trace_3_scalar_tqy equal c_tqy[v_trace_id3]
+variable print_trace_3_scalar_tqz equal c_tqz[v_trace_id3]
 
-fix print_3_id all print ${freq_print_single_trace_3} "$(v_print_trace_3_scalar_id)" screen no append output/trace_print/trace_atom_${trace_id3}_id.txt
-fix print_3_type all print ${freq_print_single_trace_3} "$(v_print_trace_3_scalar_type)" screen no append output/trace_print/trace_atom_${trace_id3}_type.txt
-fix print_3_radius all print ${freq_print_single_trace_3} "$(v_print_trace_3_scalar_radius)" screen no append output/trace_print/trace_atom_${trace_id3}_radius.txt
-fix print_3_c_KEt_atom all print ${freq_print_single_trace_3} "$(v_print_trace_3_scalar_c_KEt_atom)" screen no append output/trace_print/trace_atom_${trace_id3}_c_KEt_atom.txt
-fix print_3_c_KEr_atom all print ${freq_print_single_trace_3} "$(v_print_trace_3_scalar_c_KEr_atom)" screen no append output/trace_print/trace_atom_${trace_id3}_c_KEr_atom.txt
-fix print_3_x all print ${freq_print_single_trace_3} "$(v_print_trace_3_scalar_x)" screen no append output/trace_print/trace_atom_${trace_id3}_x.txt
-fix print_3_y all print ${freq_print_single_trace_3} "$(v_print_trace_3_scalar_y)" screen no append output/trace_print/trace_atom_${trace_id3}_y.txt
-fix print_3_z all print ${freq_print_single_trace_3} "$(v_print_trace_3_scalar_z)" screen no append output/trace_print/trace_atom_${trace_id3}_z.txt
-fix print_3_vx all print ${freq_print_single_trace_3} "$(v_print_trace_3_scalar_vx)" screen no append output/trace_print/trace_atom_${trace_id3}_vx.txt
-fix print_3_vy all print ${freq_print_single_trace_3} "$(v_print_trace_3_scalar_vy)" screen no append output/trace_print/trace_atom_${trace_id3}_vy.txt
-fix print_3_vz all print ${freq_print_single_trace_3} "$(v_print_trace_3_scalar_vz)" screen no append output/trace_print/trace_atom_${trace_id3}_vz.txt
-fix print_3_fx all print ${freq_print_single_trace_3} "$(v_print_trace_3_scalar_fx)" screen no append output/trace_print/trace_atom_${trace_id3}_fx.txt
-fix print_3_fy all print ${freq_print_single_trace_3} "$(v_print_trace_3_scalar_fy)" screen no append output/trace_print/trace_atom_${trace_id3}_fy.txt
-fix print_3_fz all print ${freq_print_single_trace_3} "$(v_print_trace_3_scalar_fz)" screen no append output/trace_print/trace_atom_${trace_id3}_fz.txt
-fix print_3_omegax all print ${freq_print_single_trace_3} "$(v_print_trace_3_scalar_omegax)" screen no append output/trace_print/trace_atom_${trace_id3}_omegax.txt
-fix print_3_omegay all print ${freq_print_single_trace_3} "$(v_print_trace_3_scalar_omegay)" screen no append output/trace_print/trace_atom_${trace_id3}_omegay.txt
-fix print_3_omegaz all print ${freq_print_single_trace_3} "$(v_print_trace_3_scalar_omegaz)" screen no append output/trace_print/trace_atom_${trace_id3}_omegaz.txt
-fix print_3_tqx all print ${freq_print_single_trace_3} "$(v_print_trace_3_scalar_tqx)" screen no append output/trace_print/trace_atom_${trace_id3}_tqx.txt
-fix print_3_tqy all print ${freq_print_single_trace_3} "$(v_print_trace_3_scalar_tqy)" screen no append output/trace_print/trace_atom_${trace_id3}_tqy.txt
-fix print_3_tqz all print ${freq_print_single_trace_3} "$(v_print_trace_3_scalar_tqz)" screen no append output/trace_print/trace_atom_${trace_id3}_tqz.txt
+fix print_3_id all print ${freq_print_trace} "$(v_print_trace_3_scalar_id)" screen no append output/trace/${trace_id3}/id
+fix print_3_type all print ${freq_print_trace} "$(v_print_trace_3_scalar_type)" screen no append output/trace/${trace_id3}/type
+fix print_3_radius all print ${freq_print_trace} "$(v_print_trace_3_scalar_radius)" screen no append output/trace/${trace_id3}/radius
+fix print_3_c_KEt_atom all print ${freq_print_trace} "$(v_print_trace_3_scalar_c_KEt_atom)" screen no append output/trace/${trace_id3}/c_KEt_atom
+fix print_3_c_KEr_atom all print ${freq_print_trace} "$(v_print_trace_3_scalar_c_KEr_atom)" screen no append output/trace/${trace_id3}/c_KEr_atom
+fix print_3_x all print ${freq_print_trace} "$(v_print_trace_3_scalar_x)" screen no append output/trace/${trace_id3}/x
+fix print_3_y all print ${freq_print_trace} "$(v_print_trace_3_scalar_y)" screen no append output/trace/${trace_id3}/y
+fix print_3_z all print ${freq_print_trace} "$(v_print_trace_3_scalar_z)" screen no append output/trace/${trace_id3}/z
+fix print_3_vx all print ${freq_print_trace} "$(v_print_trace_3_scalar_vx)" screen no append output/trace/${trace_id3}/vx
+fix print_3_vy all print ${freq_print_trace} "$(v_print_trace_3_scalar_vy)" screen no append output/trace/${trace_id3}/vy
+fix print_3_vz all print ${freq_print_trace} "$(v_print_trace_3_scalar_vz)" screen no append output/trace/${trace_id3}/vz
+fix print_3_fx all print ${freq_print_trace} "$(v_print_trace_3_scalar_fx)" screen no append output/trace/${trace_id3}/fx
+fix print_3_fy all print ${freq_print_trace} "$(v_print_trace_3_scalar_fy)" screen no append output/trace/${trace_id3}/fy
+fix print_3_fz all print ${freq_print_trace} "$(v_print_trace_3_scalar_fz)" screen no append output/trace/${trace_id3}/fz
+fix print_3_omegax all print ${freq_print_trace} "$(v_print_trace_3_scalar_omegax)" screen no append output/trace/${trace_id3}/omegax
+fix print_3_omegay all print ${freq_print_trace} "$(v_print_trace_3_scalar_omegay)" screen no append output/trace/${trace_id3}/omegay
+fix print_3_omegaz all print ${freq_print_trace} "$(v_print_trace_3_scalar_omegaz)" screen no append output/trace/${trace_id3}/omegaz
+fix print_3_tqx all print ${freq_print_trace} "$(v_print_trace_3_scalar_tqx)" screen no append output/trace/${trace_id3}/tqx
+fix print_3_tqy all print ${freq_print_trace} "$(v_print_trace_3_scalar_tqy)" screen no append output/trace/${trace_id3}/tqy
+fix print_3_tqz all print ${freq_print_trace} "$(v_print_trace_3_scalar_tqz)" screen no append output/trace/${trace_id3}/tqz
 
-label skip_print_single_trace_3
+label skip_print_trace_3
+
+label skip_print_trace
 
 variable	check_nb_all atom v_check_nbid1||v_check_nbid2||v_check_nbid3||v_check_nbmaxKEt||v_check_nbmaxKEr||v_check_nbmaxKEtr
 if "${ifpour} == no || ${rst_from} != 0" then "jump SELF end_pour3"
@@ -928,52 +1028,46 @@ label	end_deposit2
 group 		group_nb_all dynamic all var check_nb_all every 1
 
 # file dump custom trace atoms
-if "${freq_dump_trace_custom} == 0" then "jump SELF skip_dump_trace_custom"
-dump		dump_nb_maxKEatom group_nb_all custom ${freq_dump_trace_custom} output/dump/nb_maxKEatom_${rst_from}.dump id type radius c_KEt_atom c_KEr_atom x y z vx vy vz fx fy fz omegax omegay omegaz tqx tqy tqz v_EKP_atom f_force_all[*] f_force_pair[*] c_n_contact v_check_nb_all v_KEtr_atom
-dump_modify     dump_nb_maxKEatom append yes format float %.16g
-label skip_dump_trace_custom
+if "${freq_dump_single_trace} == 0" then "jump SELF skip_dump_single_trace"
+if "${ifstoreforce} == no" then &
+"dump		dump_trace group_nb_all custom ${freq_dump_single_trace} output/single_trace/dump.trace.single.* id type radius c_KEt_atom c_KEr_atom x y z vx vy vz fx fy fz omegax omegay omegaz tqx tqy tqz v_EKP_atom c_n_contact v_check_nb_all v_KEtr_atom" &
+else &
+"dump		dump_trace group_nb_all custom ${freq_dump_single_trace} output/single_trace/dump.trace.single.* id type radius c_KEt_atom c_KEr_atom x y z vx vy vz fx fy fz omegax omegay omegaz tqx tqy tqz v_EKP_atom c_n_contact v_check_nb_all v_KEtr_atom f_force_pair[*]"
+dump_modify     dump_trace format float %.16g
+label skip_dump_single_trace
 # file, dump custom all atoms
-if "${freq_dump_all_custom} == 0" then "jump SELF skip_dump_all_custom"
-
-if "${if_all_custom_sep} == no" then "jump SELF skip_dump_all_custom_sepfile"
-dump		dump_debug all custom ${freq_dump_all_custom} output/dump/all*.dump id type radius c_KEt_atom c_KEr_atom x y z vx vy vz fx fy fz #omegax omegay omegaz tqx tqy tqz v_EKP_atom f_force_all[*] f_force_pair[*] c_n_contact v_check_nb_all v_KEtr_atom
-dump_modify	dump_debug append no format float %.16g
-label skip_dump_all_custom_sepfile
-
-if "${if_all_custom_sep} == yes" then "jump SELF skip_dump_all_custom_allinonefile"
-dump		dump_debug all custom ${freq_dump_all_custom} output/dump/all_${rst_from}.dump id type radius c_KEt_atom c_KEr_atom x y z vx vy vz fx fy fz #omegax omegay omegaz tqx tqy tqz v_EKP_atom f_force_all[*] f_force_pair[*] c_n_contact v_check_nb_all v_KEtr_atom
-dump_modify	dump_debug append no format float %.16g
-label skip_dump_all_custom_allinonefile
+if "${freq_dump_single_all} == 0" then "jump SELF skip_dump_all_custom"
+if "${ifstoreforce} == no" then &
+"dump		dump_all all custom ${freq_dump_single_all} output/single_all/dump.all.single.* id type radius c_KEt_atom c_KEr_atom x y z vx vy vz fx fy fz omegax omegay omegaz tqx tqy tqz v_EKP_atom c_n_contact v_check_nb_all v_KEtr_atom" &
+else &
+"dump		dump_all all custom ${freq_dump_single_all} output/single_all/dump.all.single.* id type radius c_KEt_atom c_KEr_atom x y z vx vy vz fx fy fz omegax omegay omegaz tqx tqy tqz v_EKP_atom c_n_contact v_check_nb_all v_KEtr_atom f_force_pair[*]" &
+dump_modify	dump_all format float %.16g
 label skip_dump_all_custom
 
-# compute pair trace atoms
-if "${freq_dump_trace_pair} == 0" then "jump SELF skip_dump_trace_pair"
+# compute and output pair trace atoms
+if "${freq_dump_pair_trace} == 0" then "jump SELF skip_dump_pair_trace"
 compute		p_idtype_trace group_nb_all property/local patom1 patom2 ptype1 ptype2	#id_I id_J type_I type_J
 compute		p_fv_trace group_nb_all pair/local dist fx fy fz force p1 p2 p3 p4 p5 p6 p7 p8 p9 p10 	#p1,p2,p3,ft component. p4 ft magnitude. p5 p6 p7 vn. p8 p9 p10 vt. Force acting on I atom. Velocity is vi-vj
-label skip_compute_pair
 # file, pair trace atoms
-dump		dump_trace_pair group_nb_all local ${freq_dump_trace_pair} output/dump/pair_trace_${rst_from}.dump index c_p_idtype_trace[*] c_p_fv_trace[*]
-dump_modify     dump_trace_pair append yes
-label skip_dump_trace_pair
+dump		dump_pair_trace group_nb_all local ${freq_dump_pair_trace} output/pair_trace/dump.trace.pair.* index c_p_idtype_trace[*] c_p_fv_trace[*]
+label skip_dump_pair_trace
 
 # compute pair all atoms
-if "${freq_dump_all_pair} == 0" then "jump SELF skip_dump_all_pair"
+if "${freq_dump_pair_all} == 0" then "jump SELF skip_dump_pair_all"
 compute		p_idtype_all all property/local patom1 patom2 ptype1 ptype2	#id_I id_J type_I type_J
 compute		p_fv_all all pair/local dist fx fy fz force p1 p2 p3 p4 p5 p6 p7 p8 p9 p10 	#p1,p2,p3,ft component. p4 ft magnitude. p5 p6 p7 vn. p8 p9 p10 vt. Force acting on I atom. Velocity is vi-vj
-label skip_compute_pair
 # file, pair all atoms
-dump		dump_all_pair all local ${freq_dump_all_pair} output/dump/pair_all_${rst_from}.dump index c_p_idtype_all[*] c_p_fv_all[*]
-dump_modify     dump_all_pair append yes
-label skip_dump_all_pair
+dump		dump_pair_all all local ${freq_dump_pair_all} output/pair_all/dump.all.pair.* index c_p_idtype_all[*] c_p_fv_all[*]
+label skip_dump_pair_all
 
 #file, image jpg trace atoms
 if "${freq_dump_trace_image} == 0" then "jump SELF skip_dump_trace_image"
-dump		dump_image_trace group_nb_all image ${freq_dump_trace_image} output/dumpimage/trace_image*.jpg type diameter size 512 512 zoom 1
+dump		dump_image_trace group_nb_all image ${freq_dump_trace_image} output/image_trace/dump.trace_image.*.jpg type diameter size 512 512 zoom 1
 label skip_dump_trace_image
 
 #file, image jpg all atoms
 if "${freq_dump_all_image} == 0" then "jump SELF skip_dump_all_image"
-dump		dump_image_all all image ${freq_dump_all_image} output/dumpimage/all_image*.jpg type diameter size 512 512 zoom 1
+dump		dump_image_all all image ${freq_dump_all_image} output/image_all/dump.all_image.*.jpg type diameter size 512 512 zoom 1
 label skip_dump_all_image
 
 # file, thermo
@@ -985,15 +1079,15 @@ label skip_thermo
 
 # file, restart file
 if "${freq_restart_big} == 0" then "jump SELF skip_restart_big"
-restart		${freq_restart_big} output/rst/restart.*.mpiio
+restart		${freq_restart_big} output/rst/restart.mpiio.*
 label skip_restart_big
 if "${freq_restart_small} == 0" then "jump SELF skip_restart_small"
-restart		${freq_restart_small} output/rst/restart.tmp1.mpiio output/rst/restart.tmp2.mpiio
+restart		${freq_restart_small} output/rst/restart.mpiio.tmp1 output/rst/restart.mpiio.tmp2
 label skip_restart_small
 
 # file, time average of total force of wall to particles
 if "${freq_ave_wall} == 0" then "jump SELF skip_ave_wall"
-fix		timeav_wall_force all ave/time ${every_ave_wall} ${repeat_ave_wall} ${freq_ave_wall} v_t v_fr_in v_ftheta_in v_fz_in v_fr_out v_ftheta_out v_fz_out v_fr_zplane v_ftheta_zplane v_fz_zplane mode scalar ave one file output/fix/file_timeav_wall_${rst_from}
+fix		timeav_wall_force all ave/time ${every_ave_wall} ${repeat_ave_wall} ${freq_ave_wall} v_t v_fr_in v_ftheta_in v_fz_in v_fr_out v_ftheta_out v_fz_out v_fr_zplane v_ftheta_zplane v_fz_zplane mode scalar ave one file output/wall/fix.force_wall_to_particle.allstep
 label skip_ave_wall
 
 # run pour and delete and add inner wall
@@ -1052,12 +1146,12 @@ label skip_run1
 #run             5000 upto
 
 #file, vtk
-#dump            dmpatom all atom/vtk ${freq_dump_other} vtk/atom_*.vtk
+#dump            dmpatom all atom/vtk ${freq_dump_other} vtk/atom.*.vtk
 #dump            dmpstl1 all mesh/stl ${freq_dump_other} stl/in*.stl cad1
 #dump            dmpstl2 all mesh/stl ${freq_dump_other} stl/out*.stl cad2
 
 #file, movie, have not work
-#dump   m0 all movie ${freq_dump_other} output/dumpmovie/movie_${rst_from}.m4v type type size 640 480
+#dump   m0 all movie ${freq_dump_other} output/movie/movie.allstep.m4v type type size 640 480
 
 #chunk method
 #compute         chunk all chunk/atom bin/3d x lower 0.02 y lower 0.02 z lower 0.02 units reduced

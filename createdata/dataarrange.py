@@ -143,6 +143,27 @@ class handlelog(handlelammpfile):
     def tohdf5(self):
         super().tohdf5()
 
+class handlechunk(handlelammpfile):
+
+    def __init__(self, override, ifcsv):
+        f_out = dp.f_chunk
+        super().__init__(f_out, override, ifcsv)
+        self.f_chunk_in = dp.chunk_path
+        print("handle chunk")
+
+    def todataframe(self):
+
+        if os.path.isfile(self.f_out) and (self.override == 'no'):
+            print ('h5 file exist, so create dataframe from previous saved file')
+            df = pd.read_hdf(self.f_out)
+        else:
+            print ("reading f_chunk_in and creating h5")
+
+            df = chunkfile_to_dataframe(self.f_chunk_in)
+        return df
+
+    def tohdf5(self):
+        super().tohdf5()
 
 class handledump(handlelammpfile):
 
@@ -276,7 +297,7 @@ class handledumpcustom(handledump):
     def __init__(self, override, ifcsv, fromtraceorall):
         f_out = dp.f_custom
         if fromtraceorall == 'trace':
-            f_in = dp.custom_path
+            f_in = dp.custom_near_trace_path
         elif fromtraceorall == 'all':
             f_in = dp.custom_all_path
         else:
@@ -288,7 +309,7 @@ class handledumppair(handledump):
 
     def __init__(self, override, ifcsv, fromtraceorall):
         f_out = dp.f_pair
-        f_in = dp.pair_path
+        f_in = dp.pair_all_path
         super().__init__(f_in, f_out, override, ifcsv, fromtraceorall)
         print("handle dumppair")
 
@@ -638,4 +659,34 @@ def file_to_h5_csv(f_dumppair, f_dumpcustom, id_i_list, f_output_name, override 
             dfc_select = select_custom(dfc, id_i_list)
             dfc_select.to_hdf(f_output_name + '.h5', key='df', mode='w')
             dfc_select.to_csv(f_output_name + '.csv', encoding='utf-8')
+
+# ====================================== fix chunk =====================
+
+# define function for extract data from fix txt to dataframe
+def chunkfile_to_dataframe(file):
+
+    with open(file) as f:
+        lines = f.read().strip().split('\n')
+        id_line_timestep = [n for n, line in enumerate(lines) if line.startswith('# Timestep')]
+        n_chunks = int(lines[id_line_timestep[0]+2].split()[2])
+        header = lines[id_line_timestep[0]+1].split()[1:]
+        id_line_timestep.append(len(lines))
+        iter = chain.from_iterable(range(id + 3, id_line_timestep[i + 1] - 1) for i, id in enumerate(id_line_timestep[0: -1]))
+        ## select data
+        data = [lines[t].split() for t in iter]
+        ## attach data
+        df = pd.DataFrame(data = data, columns = header, dtype = 'float64')
+        ## repeat timestep
+        steps = list(
+            chain.from_iterable(
+                repeat(
+                    lines[id + 2].split()[0], id_line_timestep[i + 1] - -id - 4) for i, id in enumerate(id_line_timestep[0: -1]
+                    )
+                )
+            )
+        steps = np.asarray(steps,dtype=np.float64)
+        ## insert timesteps
+        df.insert(1, 'step', steps)
+        
+    return df
 
