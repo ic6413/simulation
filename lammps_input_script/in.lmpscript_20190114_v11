@@ -594,7 +594,7 @@ if "${freq_ave_chunk} == 0" then "jump SELF skip_ave_chunk"
 compute		chunk_r_z all chunk/atom v_chunk_id_r_z limit ${N_total_rz} exact
 # file, output by fix ave/chunk
 if "${freq_ave_chunk} == 0" then "jump SELF skip_ave_chunk"
-fix		avspatial all ave/chunk ${every_ave_chunk} ${repeat_ave_chunk} ${freq_ave_chunk} chunk_r_z v_vr v_vt vz file output/velocity_field/fix.velocity_field.${rst_from}
+fix		avspatial all ave/chunk ${every_ave_chunk} ${repeat_ave_chunk} ${freq_ave_chunk} chunk_r_z v_vr v_vt vz file output/velocity_field/fix.velocity_field.all
 label skip_ave_chunk
 # compute total force on particles excerted by wall 
 #variable	orce_no_r atom (f_force_pair[1]*x+f_force_pair[2]*y)/sqrt(x*x+y*y)
