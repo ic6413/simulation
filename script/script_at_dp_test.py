@@ -9,17 +9,19 @@ import plotfigure.plottofile as ppf
 # thermo
 cd.thermo_hdf5_csv()
 
-cd.dumptofile(fromtraceorall='trace').dump_custom()
 cd.dumptofile(fromtraceorall='all').dump_custom()
-step1 = 20000 #23730
-step2 = 20645
-id_i = 131923
+step1 = 22600 #23730
+step2 = 20800
+id_i = 122301
 
 error_tolerence = 1e-15
 method_list = [2, 0, 1] # method 2 has smaller error than method 0, 1
 
-cco.checkoverlap(id_i, 20000, 20645).checkprint()
-cco.checkoverlap(109753, 20000, 20645).checkprint()
+cd.dumptofile('all').dump_custom_max("c_KEt_atom")
+cd.dumptofile('all').dump_custom_max("z")
+
+
+cco.checkoverlap(id_i, step1, step2).checkprint()
 
 """
 cco.checkforce(id_i, 20000, 21000, error_tolerence, method_list).checkprint()

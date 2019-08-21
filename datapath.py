@@ -2,6 +2,7 @@
 import sys
 import os
 import numpy as np
+import osmanage as om
 
 # === current module inputvariable ===
 # set lammps directory (current workspace directory or path)
@@ -179,6 +180,7 @@ def put_maxlabel_on_file(maxlabel, f_name_without_id):
 # Lammps output path of inputvariable files
 pair_all_path = lammps_directory + 'output/pair_all/dump.all.pair.allstep'
 custom_all_path = lammps_directory + 'output/single_all/dump.all.single.allstep'
+custom_all_firststep_path = lammps_directory + 'output/single_all/dump.all.single.' + str(startstep)
 custom_near_trace_path = lammps_directory + 'output/single_trace/dump.trace.single.allstep'
 thermo_path = lammps_directory + "log.lammps"
 def trace_print_path(label, id):
@@ -186,6 +188,7 @@ def trace_print_path(label, id):
     return path
 ## folder path of output
 post_process_path = lammps_directory + 'postprocess/'
+om.create_directory(post_process_path)
 # hdf5
 hdf5_csv_path = post_process_path + 'hdf5_csv/'
 f_thermo = hdf5_csv_path + "thermo.h5"
@@ -195,6 +198,7 @@ f_cipcj = hdf5_csv_path + "cipcj.h5"
 
 # debug
 debug_print_path = post_process_path + 'debug/'
+om.create_directory(debug_print_path)
 debug_fig_path = debug_print_path + 'fig/'
 debug_fig_thermo_path = debug_fig_path + 'thermo/'
 debug_fig_oneatom_path = debug_fig_path + 'oneatom/'
@@ -204,4 +208,6 @@ debug_fig_atomij_path = debug_fig_path + 'atomij/'
 interactive_path = post_process_path + 'interactive/'
 # diagram
 diagram_path = post_process_path + 'diagram/'
-
+om.create_directory(diagram_path)
+f_velocity_field_path = diagram_path + "velocity_field/"
+om.create_directory(f_velocity_field_path)

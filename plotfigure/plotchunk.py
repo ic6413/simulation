@@ -17,7 +17,7 @@ import rename_variable as rv
 import datapath as dp
 # define function for extract data from fix txt to dataframe
 
-step_0 = 0
+step_0 = 20000
 d_step = 100
 n_r = 17
 n_z = 10
@@ -46,7 +46,7 @@ def plotchunk(step, file):
     plt.ylabel('z')
     ax1.set_title('velocity field in r-z direction (average over theta)')
     Q = ax1.quiver(x_array, y_array, vx_array, vy_array, units='width')
-    fig1.savefig(str(step), bbox_inches='tight')
+    fig1.savefig(dp.f_velocity_field_path + str(step), bbox_inches='tight')
     plt.close('all')
 
 

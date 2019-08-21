@@ -186,11 +186,11 @@ class handledump(handlelammpfile):
                 firststring = f.readline().split()[0]
             
                 if firststring.isdigit():
-                    with open("/home/ic6413/lmp_run/test/Shear/Shear_H30_v2/f20000/output/single_all/header") as f_header:
+                    with open(dp.custom_all_firststep_path) as f_first_for_header:
                         # header
                         for i in range(9):
-                            header = f_header.readline().split()[2:]
-
+                            header = f_first_for_header.readline().split()[2:]
+                    header.insert(0, "step")
                     df = pd.read_csv(self.f_in, names=header, delim_whitespace=True)
 
                 else:

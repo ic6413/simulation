@@ -38,9 +38,9 @@ variable	freq_thermo		equal 1
 variable	freq_fixprint		equal 1
 variable	every_fixvector		equal 1
 variable	freq_fixvector		equal 100
-variable	freq_ave_chunk		equal 1  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100
-variable	repeat_ave_chunk	equal 1
-variable	every_ave_chunk		equal 1
+variable	freq_ave_chunk_velocity_field		equal 1  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100
+variable	repeat_ave_chunk_velocity_field	equal 1
+variable	every_ave_chunk_velocity_field		equal 1
 variable	freq_ave_wall		equal 1  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100
 variable	repeat_ave_wall		equal 1
 variable	every_ave_wall		equal 1
@@ -328,7 +328,7 @@ variable	t equal time
 # chunk
 #compute		chunk_r_z all chunk/atom v_chunk_id_r_z limit ${N_total_rz} exact
 # file, output by fix ave/chunk
-#fix		avspatial all ave/chunk ${every_ave_chunk} ${repeat_ave_chunk} ${freq_ave_chunk} chunk_r_z v_vr v_vt vz file fix/file_avspatial_${rst_from}
+#fix		avspatial all ave/chunk ${every_ave_chunk_velocity_field} ${repeat_ave_chunk_velocity_field} ${freq_ave_chunk_velocity_field} chunk_r_z v_vr v_vt vz file fix/file_avspatial_${rst_from}
 
 # compute total force on particles excerted by wall 
 #variable	orce_no_r atom (f_force_no[1]*x+f_force_no[2]*y)/sqrt(x*x+y*y)

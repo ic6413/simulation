@@ -9,7 +9,7 @@ om.create_directory(dp.post_process_path)
 om.create_directory(dp.hdf5_csv_path)
 
 override='yes'
-ifcsv='yes'
+ifcsv='no'
 
 
 def thermo_hdf5_csv():
