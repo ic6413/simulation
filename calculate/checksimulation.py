@@ -22,7 +22,7 @@ import datapath as dp
 # current module variable
 overlap_tolerence = 0
 # see reading value as zero
-abs_error_tolerence = 1e-18
+abs_error_tolerence = 1e-13
 # ==== inputvariable varables end ====
 # timestep
 ts = dp.ts 
@@ -42,24 +42,9 @@ gamma_n = dp.gamma_n
 gamma_t = dp.gamma_t
 type_radius_array = dp.type_radius_array
 z_bottom = dp.z_bottom
-walls_p = dp.walls_p
-walls_cy = dp.walls_cy
-
+walls = dp.walls
 # ====================================== end import attribute
-wall_list = (walls_p + walls_cy)
-wall_list_name = [None]*len(wall_list)
-for i, wall in enumerate(wall_list):
-    
-    if wall[2] == [0, 0, 1] and wall[0]=='p':
-        wall_list_name[i] = 'z_plane'
-    
-    if wall[2] == [0, 0, 1] and wall[0]=='cy' and wall[3] == r_in:
-        wall_list_name[i] = 'z_cylinder_in'
 
-    if wall[2] == [0, 0, 1] and wall[0]=='cy' and wall[3] == r_out:
-        wall_list_name[i] = 'z_cylinder_out'
-
-wall_list_id_name = [(-1-id, name) for id, name in enumerate(wall_list_name)]
 
 # transform list to numpy array
 g = np.asarray(g)
@@ -230,7 +215,7 @@ class wall_overlap_class(overlap_to_i):
                 ):
         super().__init__(typei, xi)
         self.typew = typew
-        self.xw = xw
+        self.xw = np.asarray(xw)
 
     def nearest_point_fun(self, xi):
 	    pass
@@ -261,7 +246,7 @@ class wall_p_overlap_class(wall_overlap_class):
     def __init__(self,
                 typei, xi,
                 center_point, plane_normal,
-                typew=None, xw=np.zeros(3),
+                typew, xw,
                 ):
         super().__init__(
             typei, xi,
@@ -287,7 +272,7 @@ class wall_cy_overlap_class(wall_overlap_class):
     def __init__(self,
                 typei, xi,
                 center_point, axis_vector, r,
-                typew=None, xw=np.zeros(3),
+                typew, xw,
                 ):
         super().__init__(
             typei, xi,
@@ -480,11 +465,11 @@ class wall_class(intersection_to_i):
                 ):
         super().__init__(typei, xi, vi, fi, omi, tqi, history_t_k, total_length, total_displacement, method)
         self.typew = typew
-        self.xw = xw
-        self.vw = vw
-        self.aw = aw
-        self.omw = omw
-        self.alphaw = alphaw
+        self.xw = np.asarray(xw)
+        self.vw = np.asarray(vw)
+        self.aw = np.asarray(aw)
+        self.omw = np.asarray(omw)
+        self.alphaw = np.asarray(alphaw)
 
     def nearest_point_fun(self, xi):
 	    pass
@@ -548,7 +533,7 @@ class wall_p_class(wall_class):
     def __init__(self,
                 typei, xi, vi, fi, omi, tqi,
                 center_point, plane_normal, history_t_k, total_length, total_displacement, method,
-                typew=None, xw=np.zeros(3), vw=np.zeros(3), aw=np.zeros(3), omw=np.zeros(3), alphaw=np.zeros(3),
+                typew, xw, vw, aw, omw, alphaw,
                 ):
         super().__init__(
             typei, xi, vi, fi, omi, tqi, history_t_k, total_length, total_displacement, method,
@@ -583,7 +568,7 @@ class wall_cy_class(wall_class):
     def __init__(self,
                 typei, xi, vi, fi, omi, tqi,
                 center_point, axis_vector, r, history_t_k, total_length, total_displacement, method,
-                typew=None, xw=np.zeros(3), vw=np.zeros(3), aw=np.zeros(3), omw=np.zeros(3), alphaw=np.zeros(3),
+                typew, xw, vw, aw, omw, alphaw,
                 ):
         super().__init__(
             typei, xi, vi, fi, omi, tqi, history_t_k, total_length, total_displacement, method,
@@ -668,17 +653,17 @@ def contact_ids_inonestep(df_onestep, id_i):
 
     contact_idj = dfjs_onestep[['id']].values[ifoverlap_ij_onestep]
 
-    idwalls = np.empty(len(wall_list), dtype=int)
-    ifoverlap_iwall_onestep = np.empty(len(wall_list), dtype=bool)
+    idwalls = np.empty(len(walls), dtype=int)
+    ifoverlap_iwall_onestep = np.empty(len(walls), dtype=bool)
     
-    for n, walllist in enumerate(wall_list):
+    for n, walllist in enumerate(walls):
 
         idwalls[n] = -n-1
 
         if walllist[0] == 'p':
-            wall = wall_p_overlap_class(typei, xi, walllist[1], walllist[2])
+            wall = wall_p_overlap_class(typei, xi, walllist[1], walllist[2], walllist[3], walllist[4])
         elif walllist[0] == 'cy':
-            wall = wall_cy_overlap_class(typei, xi, walllist[1], walllist[2], walllist[3])
+            wall = wall_cy_overlap_class(typei, xi, walllist[1], walllist[2], walllist[3], walllist[4], walllist[5])
         else:
             print('walltype not p not cy')
 
@@ -844,20 +829,19 @@ def calculate_wall_r_vh_xp_omh_pre(wall):
 
 def create_wall_class_from_walllist(
     walllist,type,x,v,f,om,tq, ftk_include_his, total_length, total_displacement, method,
-    typew=None, xw=np.zeros(3), vw=np.zeros(3), aw=np.zeros(3), omw=np.zeros(3), alphaw=np.zeros(3),
 ):
     
     if walllist[0] == 'p':
         wall = wall_p_class(
                             type,x,v,f,om,tq,
                             walllist[1], walllist[2], ftk_include_his, total_length, total_displacement, method,
-                            typew, xw, vw, aw, omw, alphaw,
+                            walllist[3], walllist[4], walllist[5], walllist[6], walllist[7], walllist[8],
                             )
     elif walllist[0] == 'cy':
         wall = wall_cy_class(
                             type,x,v,f,om,tq,
                             walllist[1], walllist[2], walllist[3], ftk_include_his, total_length, total_displacement,method,
-                            typew, xw, vw, aw, omw, alphaw,
+                            walllist[4], walllist[5], walllist[6], walllist[7], walllist[8], walllist[9]
                             )
     else:
         print('walltype not p not cy')
@@ -1082,7 +1066,7 @@ def fjwi_plus_cal_multistep_multicontact_fromcustom(f_read, id_i, step1, step2, 
         sum_fjin_plus_cal_steps = sum_fjin_plus_cal_steps + reset_nan_to_zero(fjin_plus_cal_steps)
         sum_tqji_plus_cal_steps = sum_tqji_plus_cal_steps + reset_nan_to_zero(tqji_plus_cal_steps)
 
-    for walllist in wall_list:
+    for walllist in walls:
 
         fjit_plus_cal_steps = np.empty([step2-step1-1, 3])
         fjin_plus_cal_steps = np.empty([step2-step1-1, 3])
@@ -1109,7 +1093,6 @@ def fjwi_plus_cal_multistep_multicontact_fromcustom(f_read, id_i, step1, step2, 
                         walllist,
                         typei[k:k+1],xi[k:k+1],vi[k:k+1],fi[k:k+1],omi[k:k+1],tqi[k:k+1],
                         ftk_include_his, total_length, total_displacement, method,
-                        typew=None, xw=np.zeros(3), vw=np.zeros(3), aw=np.zeros(3), omw=np.zeros(3), alphaw=np.zeros(3),
                         )
 
 
@@ -1249,7 +1232,7 @@ def fjwi_plus_cal_multistep_multicontact_fromcustom_v1(f_read, id_i, step1, step
 
 
 
-    for walllist in wall_list:
+    for walllist in walls:
 
         fjit_plus_cal_steps = np.empty([step2-step1+1, 3])
         fjin_plus_cal_steps = np.empty([step2-step1+1, 3])
@@ -1375,7 +1358,7 @@ def contact_check_multistep(f_read, id_i, step1, step2):
     id_j_list = np.asarray(id_j_list)
 
     number_idj = len(id_j_list)
-    number_wall = len(wall_list)
+    number_wall = len(walls)
     # overlap array time in first dim. idj in second dim
 
     ifoverlap_ij_array = np.empty((step2 - step1, number_idj), dtype=bool)
@@ -1391,16 +1374,16 @@ def contact_check_multistep(f_read, id_i, step1, step2):
         [ifoverlap_ij, overlapij_vector, overlapij_length] = overlapij(ri, rj, xi, xj)
         ifoverlap_ij_array[:,n:n+1] = ifoverlap_ij
     
-    id_j_wall_list = id_j_list
+    id_j_walls = id_j_list
 
-    for n, walllist in enumerate(wall_list):
+    for n, walllist in enumerate(walls):
 
-        id_j_wall_list = np.append(id_j_wall_list, -n-1)
+        id_j_walls = np.append(id_j_walls, -n-1)
 
         if walllist[0] == 'p':
-            wall = wall_p_overlap_class(typei,xi,walllist[1], walllist[2])
+            wall = wall_p_overlap_class(typei,xi,walllist[1], walllist[2], walllist[3], walllist[4])
         elif walllist[0] == 'cy':
-            wall = wall_cy_overlap_class(typei,xi,walllist[1], walllist[2], walllist[3])
+            wall = wall_cy_overlap_class(typei,xi,walllist[1], walllist[2], walllist[3], walllist[4], walllist[5])
         else:
             print('walltype not p not cy')
 
@@ -1415,7 +1398,7 @@ def contact_check_multistep(f_read, id_i, step1, step2):
     step_id_ifover_diffnext = np.empty((3, len(index_diff_next[0])), dtype=int)
     step_id_ifover_diffnext[2:3, :] = ifoverlap_nantozero[index_diff_next[0], index_diff_next[1]]
     step_id_ifover_diffnext[0:1, :] = index_diff_next[0] + step1
-    step_id_ifover_diffnext[1:2, :] = id_j_wall_list[index_diff_next[1]]
+    step_id_ifover_diffnext[1:2, :] = id_j_walls[index_diff_next[1]]
     step_id_ifover_diffnext = np.transpose(step_id_ifover_diffnext)
 
     step_id_ifover_difflast = step_id_ifover_diffnext
@@ -1427,7 +1410,7 @@ def contact_check_multistep(f_read, id_i, step1, step2):
     # add initial contact
     initial_overlap = ifoverlap_nantozero[0:1] == True
     index_initial_overlap = np.nonzero(initial_overlap)
-    id_j_wall_initial_overlap = id_j_wall_list[index_initial_overlap[1]].astype(int)
+    id_j_wall_initial_overlap = id_j_walls[index_initial_overlap[1]].astype(int)
     step_id_ifover_initial = np.empty([len(id_j_wall_initial_overlap), 3], dtype=int)
     step_id_ifover_initial[:, 0:1] = step1
     step_id_ifover_initial[:, 1] = id_j_wall_initial_overlap
@@ -1475,7 +1458,7 @@ def contact_check_multistep_v1(f_read, id_i, step1, step2):
     id_j_list = np.asarray(id_j_list)
 
     number_idj = len(id_j_list)
-    number_wall = len(wall_list)
+    number_wall = len(walls)
     # overlap array time in first dim. idj in second dim
 
     ifoverlap_ij_array = np.full((step2 - step1, number_idj), False)
@@ -1506,15 +1489,15 @@ def contact_check_multistep_v1(f_read, id_i, step1, step2):
         
         ifoverlap_ij_array[selectindexfori(dfj),n:n+1] = ifoverlap_ij
     
-    id_j_wall_list = id_j_list
+    id_j_walls = id_j_list
 
-    for n, walllist in enumerate(wall_list):
+    for n, walllist in enumerate(walls):
 
-        id_j_wall_list = np.append(id_j_wall_list, -n-1)
+        id_j_walls = np.append(id_j_walls, -n-1)
         if walllist[0] == 'p':
-            wtoi = wall_p_overlap_class(typei,xi,walllist[1], walllist[2])
+            wtoi = wall_p_overlap_class(typei,xi,walllist[1], walllist[2], walllist[3], walllist[4])
         elif walllist[0] == 'cy':
-            wtoi = wall_cy_overlap_class(typei,xi,walllist[1], walllist[2], walllist[3])
+            wtoi = wall_cy_overlap_class(typei,xi,walllist[1], walllist[2], walllist[3], walllist[4], walllist[5])
         else:
             print('walltype not p not cy')
 
@@ -1533,7 +1516,7 @@ def contact_check_multistep_v1(f_read, id_i, step1, step2):
     step_id_ifover_diffnext = np.empty((3, len(index_diff_next[0])), dtype=int)
     step_id_ifover_diffnext[2:3, :] = ifoverlap_ij_iw_array[index_diff_next[0], index_diff_next[1]]
     step_id_ifover_diffnext[0:1, :] = index_diff_next[0] + step1
-    step_id_ifover_diffnext[1:2, :] = id_j_wall_list[index_diff_next[1]]
+    step_id_ifover_diffnext[1:2, :] = id_j_walls[index_diff_next[1]]
     step_id_ifover_diffnext = np.transpose(step_id_ifover_diffnext)
 
     step_id_ifover_difflast = step_id_ifover_diffnext
@@ -1543,7 +1526,7 @@ def contact_check_multistep_v1(f_read, id_i, step1, step2):
     # add initial contact
     initial_overlap = ifoverlap_nantozero[0:1] == True
     index_initial_overlap = np.nonzero(initial_overlap)
-    id_j_wall_initial_overlap = id_j_wall_list[index_initial_overlap[1]]
+    id_j_wall_initial_overlap = id_j_walls[index_initial_overlap[1]]
     step_id_ifover_initial = np.empty([len(id_j_wall_initial_overlap), 3], dtype=int)
     step_id_ifover_initial[:, 0:1] = step1
     step_id_ifover_initial[:, 1] = id_j_wall_initial_overlap
@@ -1693,13 +1676,12 @@ def fjwi_plus_cal_multistep_1contact_fromcustom(f_read, id_i, idj_or_idw, step1,
     if idj_or_idw < 0:
 
         idw = -idj_or_idw-1
-        walllist = wall_list[idw]
+        walllist = walls[idw]
 
         wall = create_wall_class_from_walllist(
                 walllist,
                 typei,xi,vi,fi,omi,tqi, 
                 np.zeros(3), np.zeros(3), np.zeros(3), method,
-                typew=None, xw=np.zeros(3), vw=np.zeros(3), aw=np.zeros(3), omw=np.zeros(3), alphaw=np.zeros(3),
                 )
 
         [rj, vj_half_pre, xj_minus_cal, omj_half_pre] = calculate_wall_r_vh_xp_omh_pre(wall)
@@ -1966,14 +1948,13 @@ class manysteps_wall(manysteps):
     def __init__(self, f_read, id_i, idj_or_idw, step1, step2, method):
         super().__init__(f_read, id_i, idj_or_idw, step1, step2, method)
 
-        id_wall_list = -self.idj_or_idw-1
-        walllist = wall_list[id_wall_list]
+        id_walls = -self.idj_or_idw-1
+        walllist = walls[id_walls]
 
         self.wall = create_wall_class_from_walllist(
                 walllist,
                 self.typei,self.xi,self.vi,self.fi,self.omi,self.tqi, 
                 np.zeros(3), np.zeros(3), np.zeros(3), self.method,
-                typew=None, xw=np.zeros(3), vw=np.zeros(3), aw=np.zeros(3), omw=np.zeros(3), alphaw=np.zeros(3),
                 )
     def vijt(self):
         return get_viwt(self.typei, self.wall, self.xi, self.vi, self.omi)

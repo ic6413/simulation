@@ -8,8 +8,8 @@ import createdata.dataarrange as da
 om.create_directory(dp.post_process_path)
 om.create_directory(dp.hdf5_csv_path)
 
-override='no'
-ifcsv='no'
+override='yes'
+ifcsv='yes'
 
 
 def thermo_hdf5_csv():

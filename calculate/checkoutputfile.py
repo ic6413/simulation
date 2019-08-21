@@ -33,7 +33,7 @@ class checkfile(object):
         return "step_{first}_{second}".format(first=self.step1, second=self.step2)
 
     def string_wallname_id(self):
-        return "(wall_id, wallname) = {first}".format(first=cs.wall_list_id_name)
+        return "(wall_id, wallname) = {first}".format(first=dp.walls_id_name)
 
     def print_string_list(self, string_list):
         pprint.pprint ('\n'.join(string_list), open(self.filepath(), 'a'))

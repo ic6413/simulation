@@ -98,13 +98,13 @@ if		"(${ifpour} == yes) || (${ifdeposit} == yes)" then &
 else &
   "variable	recount_dof		string no"
 # frequency output
-variable	freq_restart_big	equal 2e5
+variable	freq_restart_big	equal 5000
 variable	freq_restart_small	equal 0
 variable	freq_dump_trace_image	index 0
 variable	freq_dump_all_image	index 0
-variable	freq_dump_single_trace	equal 100
-variable	freq_dump_single_all	equal 0
-variable	freq_print_trace	equal 100
+variable	freq_dump_single_trace	equal 1
+variable	freq_dump_single_all	equal 1
+variable	freq_print_trace	equal 1
 variable	freq_dump_pair_trace	equal 100
 variable	freq_dump_pair_all	equal 0
 
@@ -156,7 +156,7 @@ variable        dp_big_dp_unit		equal 1.1
 variable	dp_small_dp_unit 	equal 0.9
 
 # skin
-variable	skin_dp_unit		equal 0.1
+variable	skin_dp_unit		equal 0.5
 
 # container size simulation box size
 variable	ri_dp_unit		equal 36	#inner radius
@@ -218,10 +218,11 @@ variable	Sa 		index 0.00000002
 variable	ro		equal $(v_ro_dp_unit*v_dp)
 variable	ri 		equal $(v_ri_dp_unit*v_dp)
 variable  z_bottom equal $(v_z_bottom_dp_unit*v_dp)
+variable  z_top equal $((v_zhi_box_dp_unit-1)*v_dp)
 print "ro ${ro}" screen no append output/setting/attribute.lammps
 print "ri ${ri}" screen no append output/setting/attribute.lammps
 print "z_bottom ${z_bottom}" screen no append output/setting/attribute.lammps
-
+print "z_top ${z_top}" screen no append output/setting/attribute.lammps
 # calculate chunk height
 variable	zhi_chunk	equal v_zhi_chunk_dp_unit*v_dp
 # calculate simulation box size
@@ -251,9 +252,9 @@ variable	N_total_bin 	equal v_N_bin_r*v_N_bin_theta*v_N_bin_z
 variable	N_total_rz 	equal v_N_bin_r*v_N_bin_z
 
 # calculate inner wall speed
-if           "${ifrotate} == no" then "variable Sa index 0" #change
 variable	omega_in 	equal $(sqrt(v_Sa*v_g*(v_ro-v_ri)^3/(v_dp)^2/v_ri^2))
-variable	in_velocity 	equal $(v_omega_in*v_ri)
+print "omega_in ${omega_in}" screen no append output/setting/attribute.lammps
+variable	in_velocity 	equal $(-v_omega_in*v_ri)
 
 
 # define cylinder coordinate position velocity
@@ -533,6 +534,7 @@ if "${contact_model} != hooke_his" &
 fix	outwall 	all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ro}
 if "${ifstoreforce} == yes" then "fix	force_in_out	all store/force"
 fix	zplane_bottom 	all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane ${z_bottom} NULL
+fix	zplane_top 	all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane NULL ${z_top}
 if "${ifstoreforce} == yes" then "fix	force_in_out_zplane	all store/force"
 label hooke_his_end2
 
@@ -541,6 +543,7 @@ if "${contact_model} != hooke" &
 fix	outwall 	all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ro}
 if "${ifstoreforce} == yes" then "fix	force_in_out	all store/force"
 fix	zplane_bottom 	all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane ${z_bottom} NULL
+fix	zplane_top 	all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane NULL ${z_top}
 if "${ifstoreforce} == yes" then "fix	force_in_out_zplane	all store/force"
 label hooke_end2
 
@@ -1062,12 +1065,12 @@ label skip_dump_pair_all
 
 #file, image jpg trace atoms
 if "${freq_dump_trace_image} == 0" then "jump SELF skip_dump_trace_image"
-dump		dump_image_trace group_nb_all image ${freq_dump_trace_image} output/image_trace/dump.trace_image.*.jpg type diameter size 512 512 zoom 1
+dump		dump_image_trace group_nb_all image ${freq_dump_trace_image} output/image/trace/dump.trace_image.*.jpg type diameter size 512 512 zoom 1
 label skip_dump_trace_image
 
 #file, image jpg all atoms
 if "${freq_dump_all_image} == 0" then "jump SELF skip_dump_all_image"
-dump		dump_image_all all image ${freq_dump_all_image} output/image_all/dump.all_image.*.jpg type diameter size 512 512 zoom 1
+dump		dump_image_all all image ${freq_dump_all_image} output/image/all/dump.all_image.*.jpg type diameter size 512 512 zoom 1
 label skip_dump_all_image
 
 # file, thermo

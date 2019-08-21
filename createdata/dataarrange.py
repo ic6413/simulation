@@ -89,9 +89,9 @@ def thermofile_to_dataframe(file):
     id_ends = [n for n, line in enumerate(lines) if line.startswith('Loop time of')]
     # find data end
     if len(id_ends) < len(id_headers):
-        id_end = len(lines)-2
+        id_end = len(lines)-3
         laststep = lines[id_end].split()[0]
-        print ("simulation not complete, thermo only run to step {laststep}, use the second-last line in log file as end of data".format(laststep=laststep))
+        print ("simulation not complete, thermo only run to step {laststep}, use the 3rd-last line in log file as end of data".format(laststep=laststep))
     else:
         id_end = id_ends[0]
     # header
@@ -182,43 +182,55 @@ class handledump(handlelammpfile):
             print ("reading f_in and creating h5")
 
             with open(self.f_in) as f:
-
-                # header
-                for i in range(9):
-                    header = f.readline().split()[2:]
-                n_col = len(header)
-
-                # timestep
-                pattern_TIMESTEP = re.compile("TIMESTEP\n(.*?)IT", re.DOTALL)
-                f.seek(0)
-                steps = pattern_TIMESTEP.findall(f.read())
-                steps = "".join(steps)
-                steps = np.fromstring(steps, dtype=np.float64 ,sep=' ')
-
-                # data
-                # (?:IT|\Z) means end with IT or fileend but not capture the group in this parentheses
-                pattern_data = re.compile(header[-1] + " \n(.*?)(?:IT|\Z)", re.DOTALL)
-                f.seek(0)
-                data = pattern_data.findall(f.read())
-
-            # check len data and steps
-            if (len(data)!=steps.shape[0]):
-                sys.exit('len(data) not equal len of steps')
+                # if first string in the first line is digit, than see the whole file as a csv without any string
+                firststring = f.readline().split()[0]
             
-            # count number of row in each timestep
-            count_rows = np.asarray([onestepdata.count('\n') for onestepdata in data])
-            steps = np.repeat(steps, count_rows)
+                if firststring.isdigit():
+                    with open("/home/ic6413/lmp_run/test/Shear/Shear_H30_v2/f20000/output/single_all/header") as f_header:
+                        # header
+                        for i in range(9):
+                            header = f_header.readline().split()[2:]
 
-            # data string to numpy array
-            data_combine = "".join(data)
-            data_array = np.fromstring(data_combine, dtype=np.float64 ,sep=' ')
-            data_array = data_array.reshape(-1, n_col)
+                    df = pd.read_csv(self.f_in, names=header, delim_whitespace=True)
 
-            # create dataframe
-            df = pd.DataFrame(data = data_array, columns = header, dtype = np.float64)
-            
-            # insert timesteps
-            df.insert(0, 'step', steps)
+                else:
+                    f.seek(0)
+                    # header
+                    for i in range(9):
+                        header = f.readline().split()[2:]
+                    n_col = len(header)
+
+                    # timestep
+                    pattern_TIMESTEP = re.compile("TIMESTEP\n(.*?)IT", re.DOTALL)
+                    f.seek(0)
+                    steps = pattern_TIMESTEP.findall(f.read())
+                    steps = "".join(steps)
+                    steps = np.fromstring(steps, dtype=np.float64 ,sep=' ')
+
+                    # data
+                    # (?:IT|\Z) means end with IT or fileend but not capture the group in this parentheses
+                    pattern_data = re.compile(header[-1] + " \n(.*?)(?:IT|\Z)", re.DOTALL)
+                    f.seek(0)
+                    data = pattern_data.findall(f.read())
+
+                    # check len data and steps
+                    if (len(data)!=steps.shape[0]):
+                        sys.exit('len(data) not equal len of steps')
+                    
+                    # count number of row in each timestep
+                    count_rows = np.asarray([onestepdata.count('\n') for onestepdata in data])
+                    steps = np.repeat(steps, count_rows)
+
+                    # data string to numpy array
+                    data_combine = "".join(data)
+                    data_array = np.fromstring(data_combine, dtype=np.float64 ,sep=' ')
+                    data_array = data_array.reshape(-1, n_col)
+
+                    # create dataframe
+                    df = pd.DataFrame(data = data_array, columns = header, dtype = np.float64)
+                    
+                    # insert timesteps
+                    df.insert(0, 'step', steps)
 
                 #qqq = re.search(r'^ITEM\:\s([^\n]+)', f_read, re.MULTILINE).group(1)
             #    #ccci = [b.start(0) for b in aaa]

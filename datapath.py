@@ -9,7 +9,7 @@ lammps_directory = os.getcwd() + '/'  #os.path.expanduser('~/lammps_simulation/r
 print('current working directory:' + lammps_directory)
 
 # attribute
-attribute_lammps_path = lammps_directory + 'output/simulation_setting/attribute.lammps'
+attribute_lammps_path = lammps_directory + 'output/setting/attribute.lammps'
 attribute_py_path = lammps_directory + 'attributes.py'
 
 # ====================================== import attribute
@@ -17,77 +17,115 @@ if os.path.isfile(attribute_lammps_path):
     with open(attribute_lammps_path, mode='r') as f:
         lines = f.read().strip().split('\n')
         
-        attribute_dict = {}
-        for line in lines:
-            linesplit = line.split()
-            first_column = linesplit[0]
-            second_column = linesplit[1]
-            try:
-                attribute_dict[first_column] = float(second_column)
-            except:
-                attribute_dict[first_column] = second_column
+    attribute_dict = {}
+    for line in lines:
+        linesplit = line.split()
+        first_column = linesplit[0]
+        second_column = linesplit[1]
+        try:
+            attribute_dict[first_column] = float(second_column)
+        except:
+            attribute_dict[first_column] = second_column
             
-        # startstep
-        startstep = attribute_dict['startstep']
-        startstep = int(startstep)
-        # timestep
-        ts = attribute_dict['timestep']
-        # atom radius
-        dp0 = attribute_dict['diameter']
-        density = attribute_dict['density']
-        # intersection pointmu
-        r_in = attribute_dict['ri']
-        r_out = attribute_dict['ro']
-        # gravity
-        gravitational_acceleration = attribute_dict['gravitational_acceleration']
-        gravitation_direction_x = 0
-        gravitation_direction_y = 0
-        gravitation_direction_z = -1
-        g = gravitational_acceleration*np.array([gravitation_direction_x, gravitation_direction_y, gravitation_direction_z])
-        # parameter
-        mu = attribute_dict['friction_coefficient']
-        kn = attribute_dict['kn'] 
-        kt = attribute_dict['kt'] 
-        gamma_n = attribute_dict['gamma_n']
-        gamma_t = attribute_dict['gamma_t']
-        n_type = int(attribute_dict['n_type'])
-        if n_type == 1:
-            type_radius_list = [
-                [1, 1.0*dp0/2]
-            ]
-        elif n_type == 3:
-            dp_big = attribute_dict['dp_big']
-            dp_small = attribute_dict['dp_small']
-            type_radius_list = [
-                [1, dp_small/2],
-                [2, dp0/2],
-                [3, dp_big/2],
-            ]
-        else:
-            sys.exit("n_type not 3 or 1")
-        type_radius_array = np.transpose(np.asarray(type_radius_list))
-        z_bottom = attribute_dict['z_bottom']
-        walls_p = [
-            [
-                'p',
-                [0,0,z_bottom],
-                [0,0,1],
-            ],
+    # startstep
+    startstep = attribute_dict['startstep']
+    startstep = int(startstep)
+    # timestep
+    ts = attribute_dict['timestep']
+    # atom radius
+    dp0 = attribute_dict['diameter']
+    density = attribute_dict['density']
+    # intersection pointmu
+    r_in = attribute_dict['ri']
+    r_out = attribute_dict['ro']
+    try:
+        om_in = attribute_dict['om_in']
+    except:
+        om_in = 0
+    # gravity
+    gravitational_acceleration = attribute_dict['gravitational_acceleration']
+    gravitation_direction_x = 0
+    gravitation_direction_y = 0
+    gravitation_direction_z = -1
+    g = gravitational_acceleration*np.array([gravitation_direction_x, gravitation_direction_y, gravitation_direction_z])
+    # parameter
+    mu = attribute_dict['friction_coefficient']
+    kn = attribute_dict['kn'] 
+    kt = attribute_dict['kt'] 
+    gamma_n = attribute_dict['gamma_n']
+    gamma_t = attribute_dict['gamma_t']
+    n_type = int(attribute_dict['n_type'])
+    if n_type == 1:
+        type_radius_list = [
+            [1, 1.0*dp0/2]
         ]
-        walls_cy = [
-            [
-                'cy',
-                [0,0,0],
-                [0,0,1],
-                r_in,
-            ],
-            [
-                'cy',
-                [0,0,0],
-                [0,0,1],
-                r_out,
-            ]
+    elif n_type == 3:
+        dp_big = attribute_dict['dp_big']
+        dp_small = attribute_dict['dp_small']
+        type_radius_list = [
+            [1, dp_small/2],
+            [2, dp0/2],
+            [3, dp_big/2],
         ]
+    else:
+        sys.exit("n_type not 3 or 1")
+    type_radius_array = np.transpose(np.asarray(type_radius_list))
+    z_bottom = attribute_dict['z_bottom']
+    walls_p = [
+        [
+            'p',
+            [0,0,z_bottom],
+            [0,0,1],
+            None,
+            [0,0,0],
+            [0,0,0],
+            [0,0,0],
+            [0,0,0],
+            [0,0,0],
+        ],
+    ]
+    walls_cy = [
+        [
+            'cy',
+            [0,0,0],
+            [0,0,1],
+            r_in,
+            None,
+            [0,0,0],
+            [0,0,0],
+            [0,0,0],
+            [0,0,om_in],
+            [0,0,0],
+        ],
+        [
+            'cy',
+            [0,0,0],
+            [0,0,1],
+            r_out,
+            None,
+            [0,0,0],
+            [0,0,0],
+            [0,0,0],
+            [0,0,0],
+            [0,0,0],
+        ]
+    ]
+    walls = walls_p + walls_cy
+
+    walls_name = [None]*len(walls)
+    for i, wall in enumerate(walls):
+        
+        if wall[2] == [0, 0, 1] and wall[0]=='p':
+            walls_name[i] = 'z_plane'
+        
+        if wall[2] == [0, 0, 1] and wall[0]=='cy' and wall[3] == r_in:
+            walls_name[i] = 'z_cylinder_in'
+
+        if wall[2] == [0, 0, 1] and wall[0]=='cy' and wall[3] == r_out:
+            walls_name[i] = 'z_cylinder_out'
+
+    walls_id_name = [(-1-id, name) for id, name in enumerate(walls_name)]
+
 
 elif os.path.isfile(attribute_py_path):
     import imp
@@ -141,7 +179,7 @@ def put_maxlabel_on_file(maxlabel, f_name_without_id):
 # Lammps output path of inputvariable files
 pair_all_path = lammps_directory + 'output/pair_all/dump.all.pair.allstep'
 custom_all_path = lammps_directory + 'output/single_all/dump.all.single.allstep'
-custom_near_trace_path = lammps_directory + 'output/single_near_trace/dump.near_trace.single.allstep'
+custom_near_trace_path = lammps_directory + 'output/single_trace/dump.trace.single.allstep'
 thermo_path = lammps_directory + "log.lammps"
 def trace_print_path(label, id):
     path = lammps_directory + 'output/trace/' + str(id) + "/" + label
