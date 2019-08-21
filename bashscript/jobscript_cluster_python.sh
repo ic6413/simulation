@@ -25,6 +25,6 @@ module list
 #ulimit -s 10240
 env
 
-srun ~/python/simulation/script/script_at_dp.py
+srun ~/simulation/script/script_at_dp.py
 
 echo "All Done!"

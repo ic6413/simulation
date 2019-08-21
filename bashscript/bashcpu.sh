@@ -22,4 +22,4 @@
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
 
-. ~/python/simulation/bashscript/job_nodecpu.sh
+. ~/simulation/bashscript/job_nodecpu.sh

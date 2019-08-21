@@ -24,4 +24,4 @@
 #SBATCH --gres=gpu:4
 SBATCH_GPUS_PER_NODE_local=4
 
-. ~/python/simulation/bashscript/job_nodegpu.sh
+. ~/simulation/bashscript/job_nodegpu.sh

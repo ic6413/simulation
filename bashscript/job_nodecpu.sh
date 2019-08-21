@@ -38,12 +38,12 @@ LMP_CMD_kkomp="-k on t ${SLURM_CPUS_PER_TASK} -sf kk"
 LMP_OMP="-pk omp ${SLURM_CPUS_PER_TASK} -sf omp"
 
 #=======Script========================
-LMP_INSCRIPT_sm="/home/hllin/python/simulation/lammps_input_script/in.lmpscript_simple_20190114_v11"
-LMP_INSCRIPT_kkbench_kokkos="/home/hllin/python/simulation/lammps_input_script/kokkos_bench/in.chute_kokkos"
-LMP_INSCRIPT_kkbench_kokkos_print1="/home/hllin/python/simulation/lammps_input_script/kokkos_bench/in.chute_kokkos_print1atom"
+LMP_INSCRIPT_sm="/home/hllin/simulation/lammps_input_script/in.lmpscript_simple_20190114_v11"
+LMP_INSCRIPT_kkbench_kokkos="/home/hllin/simulation/lammps_input_script/kokkos_bench/in.chute_kokkos"
+LMP_INSCRIPT_kkbench_kokkos_print1="/home/hllin/simulation/lammps_input_script/kokkos_bench/in.chute_kokkos_print1atom"
 LMP_INSCRIPT_ch="in.chute_print1atom"
 LMP_INSCRIPT_lj="in.lj_print1atom"
-LMP_INSCRIPT_mycy="/home/hllin/python/simulation/lammps_input_script/in.lmpscript_20190114_v11"
+LMP_INSCRIPT_mycy="/home/hllin/simulation/lammps_input_script/in.lmpscript_20190114_v11"
 
 LMP_INSCRIPT=${LMP_INSCRIPT_mycy}
 
