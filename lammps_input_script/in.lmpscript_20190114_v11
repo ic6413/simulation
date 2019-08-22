@@ -98,21 +98,21 @@ if		"(${ifpour} == yes) || (${ifdeposit} == yes)" then &
 else &
   "variable	recount_dof		string no"
 # frequency output
-variable	freq_restart_big	equal 200
+variable	freq_restart_big	equal 10000
 variable	freq_restart_small	equal 0
 variable	freq_dump_trace_image	index 0
-variable	freq_dump_all_image	index 0
-variable	freq_dump_single_trace	equal 1
-variable	freq_dump_single_all	equal 1
-variable	freq_print_trace	equal 1
-variable	freq_dump_pair_trace	equal 1
+variable	freq_dump_all_image	index 5000
+variable	freq_dump_single_trace	equal 0
+variable	freq_dump_single_all	equal 0
+variable	freq_print_trace	equal 0
+variable	freq_dump_pair_trace	equal 0
 variable	freq_dump_pair_all	equal 0
 
 variable	freq_dump_other		equal 0
-variable	freq_thermo		index 200 #stagger(1e3,2e2)       #
+variable	freq_thermo		index 1000 #stagger(1e3,2e2)       #
 variable	freq_fixvector		equal 0
-variable	every_fixvector		equal 1
-variable	freq_ave_chunk_velocity_field		equal 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
+variable	every_fixvector		equal 0
+variable	freq_ave_chunk_velocity_field		equal 10000  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
 print "freq_ave_chunk_velocity_field ${freq_ave_chunk_velocity_field}" screen no append output/setting/attribute.lammps
 variable	repeat_ave_chunk_velocity_field	equal 100
 variable	every_ave_chunk_velocity_field		equal 1

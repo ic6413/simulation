@@ -40,9 +40,17 @@ if os.path.isfile(attribute_lammps_path):
     r_in = attribute_dict['ri']
     r_out = attribute_dict['ro']
     try:
-        om_in = attribute_dict['om_in']
+        omega_in = attribute_dict['omega_in']
     except:
-        om_in = 0
+        omega_in = 0
+    try:
+        N_bin_r = attribute_dict['N_bin_r']
+    except:
+        pass
+    try:
+        N_bin_z = attribute_dict['N_bin_z']
+    except:
+        pass
     # gravity
     gravitational_acceleration = attribute_dict['gravitational_acceleration']
     gravitation_direction_x = 0
@@ -95,7 +103,7 @@ if os.path.isfile(attribute_lammps_path):
             [0,0,0],
             [0,0,0],
             [0,0,0],
-            [0,0,om_in],
+            [0,0,omega_in],
             [0,0,0],
         ],
         [
@@ -182,6 +190,7 @@ pair_all_path = lammps_directory + 'output/pair_all/dump.all.pair.allstep'
 custom_all_path = lammps_directory + 'output/single_all/dump.all.single.allstep'
 custom_all_firststep_path = lammps_directory + 'output/single_all/dump.all.single.' + str(startstep)
 custom_near_trace_path = lammps_directory + 'output/single_trace/dump.trace.single.allstep'
+custom_near_trace_firststep_path = lammps_directory + 'output/single_trace/dump.trace.single.' + str(startstep)
 thermo_path = lammps_directory + "log.lammps"
 def trace_print_path(label, id):
     path = lammps_directory + 'output/trace/' + str(id) + "/" + label
@@ -211,3 +220,7 @@ diagram_path = post_process_path + 'diagram/'
 om.create_directory(diagram_path)
 f_velocity_field_path = diagram_path + "velocity_field/"
 om.create_directory(f_velocity_field_path)
+f_velocity_field_rz_path = f_velocity_field_path + "rz/"
+om.create_directory(f_velocity_field_rz_path)
+f_velocity_field_rtheta_path = f_velocity_field_path + "rtheta/"
+om.create_directory(f_velocity_field_rtheta_path)

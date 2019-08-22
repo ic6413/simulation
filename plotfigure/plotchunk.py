@@ -17,12 +17,15 @@ import rename_variable as rv
 import datapath as dp
 # define function for extract data from fix txt to dataframe
 
-step_0 = 20000
-d_step = 100
-n_r = 17
-n_z = 10
-label_x = 'v_vr'
-label_y = 'vz'
+velocity_scale = dp.omega_in*dp.r_in
+quiver_scale = 1000
+label_scale = 100
+step_0 = 10000
+d_step = 10000
+n_r = dp.N_bin_r
+n_z = dp.N_bin_z
+
+
 
 def plotchunk(step, file):
     n_line_0 = (step - step_0)/d_step*(n_r*n_z+1) + 4
@@ -38,16 +41,38 @@ def plotchunk(step, file):
         ## attach data
         df = pd.DataFrame(data = data, columns = header, dtype = 'float64')
         ## repeat timestep
-
+    label_x = 'v_vr'
+    label_y = 'vz'
     vx_array = df[label_x].values
     vy_array = df[label_y].values
     fig1, ax1 = plt.subplots()
     plt.xlabel('r')
     plt.ylabel('z')
-    ax1.set_title('velocity field in r-z direction (average over theta)')
-    Q = ax1.quiver(x_array, y_array, vx_array, vy_array, units='width')
-    fig1.savefig(dp.f_velocity_field_path + str(step), bbox_inches='tight')
+    #ax1.set_title('velocity field r-z direction (average over theta)')
+    Q = ax1.quiver(x_array, y_array, vx_array/velocity_scale, vy_array/velocity_scale, units='width', scale=quiver_scale)
+
+    ax1.quiverkey(Q, 0.2, 0.9, label_scale, label = str(label_scale)+'*arrow length of wall velocity, velocity field r-z direction', labelpos='E',
+                   coordinates='figure')
+
+    fig1.savefig(dp.f_velocity_field_rz_path + str(step))
     plt.close('all')
+
+    label_x = 'v_vt'
+    label_y = 'vz'
+    vx_array = df[label_x].values
+    vy_array = df[label_y].values
+    fig1, ax1 = plt.subplots()
+    plt.xlabel('r')
+    plt.ylabel('z')
+    #ax1.set_title('velocity field r-z direction (average over theta)')
+    Q = ax1.quiver(x_array, y_array, vx_array/velocity_scale, vy_array/velocity_scale, units='width', scale=quiver_scale)
+
+    ax1.quiverkey(Q, 0.2, 0.9, label_scale, label = str(label_scale)+'*arrow length of wall velocity, velocity field r-theta direction', labelpos='E',
+                   coordinates='figure')
+
+    fig1.savefig(dp.f_velocity_field_rtheta_path + str(step))
+    plt.close('all')
+
 
 
 def chunkfile_to_dataframe(file):
