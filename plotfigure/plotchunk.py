@@ -18,8 +18,7 @@ import datapath as dp
 # define function for extract data from fix txt to dataframe
 
 velocity_scale = dp.omega_in*dp.r_in
-quiver_scale = 1000
-label_scale = 100
+
 step_0 = 10000
 d_step = 10000
 n_r = dp.N_bin_r
@@ -28,6 +27,8 @@ n_z = dp.N_bin_z
 
 
 def plotchunk(step, file):
+    quiver_scale = 100
+    label_scale = 10
     n_line_0 = (step - step_0)/d_step*(n_r*n_z+1) + 4
     n_line_1 = n_line_0 + n_r*n_z
     x_array, y_array = np.meshgrid(np.arange(n_r), np.arange(n_z))
@@ -57,12 +58,14 @@ def plotchunk(step, file):
     fig1.savefig(dp.f_velocity_field_rz_path + str(step))
     plt.close('all')
 
+    quiver_scale = 1000
+    label_scale = 100
     label_x = 'v_vt'
     label_y = 'vz'
     vx_array = df[label_x].values
     vy_array = df[label_y].values
     fig1, ax1 = plt.subplots()
-    plt.xlabel('r')
+    plt.xlabel('r(position), theta(velocity)')
     plt.ylabel('z')
     #ax1.set_title('velocity field r-z direction (average over theta)')
     Q = ax1.quiver(x_array, y_array, vx_array/velocity_scale, vy_array/velocity_scale, units='width', scale=quiver_scale)
