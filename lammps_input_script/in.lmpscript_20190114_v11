@@ -86,8 +86,6 @@ variable  deposit_number equal 120000
 # chunk method
 variable	chunk_method		string rz #x xy xyz r rz rzt NONE
 print "chunk_method ${chunk_method}" screen no append output/setting/attribute.lammps
-# store force
-variable	ifstoreforce		string no
 # ifsetvelocity
 variable	ifsetvelocity		string no
 # reset dt
@@ -98,29 +96,40 @@ if		"(${ifpour} == yes) || (${ifdeposit} == yes)" then &
 else &
   "variable	recount_dof		string no"
 # frequency output
-variable	freq_restart_big	equal 100000
-variable	freq_restart_small	equal 0
+# freq restart
+variable	freq_restart_big	index 0
+variable	freq_restart_small	index 0
+# freq image
 variable	freq_dump_trace_image	index 0
-variable	freq_dump_all_image	index 5000
-variable	freq_dump_single_trace	equal 0
-variable	freq_dump_single_all	equal 0
-variable	freq_print_trace	equal 0
-variable	freq_dump_pair_trace	equal 0
-variable	freq_dump_pair_all	equal 0
-
-variable	freq_dump_other		equal 0
-variable	freq_thermo		index 1000 #stagger(1e3,2e2)       #
-variable	freq_fixvector		equal 0
-variable	every_fixvector		equal 0
-variable	freq_ave_chunk_velocity_field		equal 10000  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
+variable	freq_dump_all_image	index 0
+# freq dump
+variable	freq_dump_single_trace	index 0
+variable	freq_dump_single_all	index 0
+variable	freq_dump_pair_trace	index 0
+variable	freq_dump_pair_all	index 0
+variable	freq_dump_vtk		index 0
+variable	freq_dump_stl		index 0
+variable	freq_dump_movie		index 0
+# freq thermo
+variable	freq_thermo		index 0 #stagger(1e3,2e2)       #
+# freq print trace
+variable	freq_print_trace	index 0
+# freq fix vector
+variable	freq_fixvector		index 0
+variable	every_fixvector		index 0
+# freq print velocity field
+variable	freq_ave_chunk_velocity_field		index 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
+variable	repeat_ave_chunk_velocity_field	index 0
+variable	every_ave_chunk_velocity_field		index 0
 print "freq_ave_chunk_velocity_field ${freq_ave_chunk_velocity_field}" screen no append output/setting/attribute.lammps
-variable	repeat_ave_chunk_velocity_field	equal 100
-variable	every_ave_chunk_velocity_field		equal 100
-variable	freq_ave_wall		equal 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
-variable	repeat_ave_wall		equal 1
-variable	every_ave_wall		equal 1
-
-variable  freq_balance      equal 5e4
+# store force
+variable	ifstoreforce		string no
+# freq print wall
+variable	freq_ave_wall		index 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
+variable	repeat_ave_wall		index 0
+variable	every_ave_wall		index 0
+# freq rebalance
+variable  	freq_balance      	index 0
 
 # jump if restart from nonzero step
 # this command specify in jobscribe "variable	rst_from equal N" be used as suffix in output file name
@@ -189,9 +198,11 @@ variable	ri_freeze_dp_unit	equal $(v_ri_dp_unit-v_dp_big_dp_unit/2)
 variable	ro_freeze_dp_unit	equal $(v_ro_dp_unit+v_dp_big_dp_unit/2)
 
 # contact model variable
-variable	kn		equal $(1.e6*v_mp*v_g/v_dp)
+variable	kn_scale	index 1000000
+variable	kn		equal $(v_kn_scale*v_mp*v_g/v_dp)
 variable	kt		equal $(2/7*v_kn)
-variable	gamma_n		equal $(317*sqrt(v_g/v_dp)*v_gamma_n_scale)
+variable	gamma_n_scale	index 317
+variable	gamma_n		equal $(v_gamma_n_scale*sqrt(v_g/v_dp))
 variable	gamma_t 	equal $(v_gamma_n/2)
 variable	xmu		index 0.5
 print "kn ${kn}" screen no append output/setting/attribute.lammps
@@ -1149,12 +1160,12 @@ label skip_run1
 #run             5000 upto
 
 #file, vtk
-#dump            dmpatom all atom/vtk ${freq_dump_other} vtk/atom.*.vtk
-#dump            dmpstl1 all mesh/stl ${freq_dump_other} stl/in*.stl cad1
-#dump            dmpstl2 all mesh/stl ${freq_dump_other} stl/out*.stl cad2
+#dump            dmpatom all atom/vtk ${freq_dump_vtk} vtk/atom.*.vtk
+#dump            dmpstl1 all mesh/stl ${freq_dump_stl} stl/in*.stl cad1
+#dump            dmpstl2 all mesh/stl ${freq_dump_stl} stl/out*.stl cad2
 
 #file, movie, have not work
-#dump   m0 all movie ${freq_dump_other} output/movie/movie.allstep.m4v type type size 640 480
+#dump   m0 all movie ${freq_dump_movie} output/movie/movie.allstep.m4v type type size 640 480
 
 #chunk method
 #compute         chunk all chunk/atom bin/3d x lower 0.02 y lower 0.02 z lower 0.02 units reduced

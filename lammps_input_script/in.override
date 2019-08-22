@@ -1,18 +1,59 @@
 # override variables
-variable  gamma_n_scale index 1
-variable  contact_change index no
-variable  eliminate_history   index no 
+# processor cut in x dimension
+variable	n_processor_x		index 2
+# run step
+variable	rst_from		index 0
+variable	runstep			index 3000000
+variable	runstep_loop		index 0
+# region height
 variable	zhi_create_dp_unit	index 31
+# contact model
+variable	contact_change 		index no
+variable  	eliminate_history   	index no 
+variable	contact_model		index hooke_his #hooke hooke_his hertz hertz_his
+variable	kn_scale		index 1000000
+variable	gamma_n_scale		index 317
+variable	xmu			index 0.5
+# air
 variable	ifairviscous		index no 
 variable	gamma_air		index 0
-variable	n_processor_x		index 2
-variable	rst_from		index 0
-variable	runstep			index 70000
-variable	runstep_loop		index 0
-variable	xmu			index 0.5
-variable	contact_model		index hooke_his #hooke hooke_his hertz hertz_his
+# inner wall
 variable	ifrotate		index yes
+variable	Sa 			index 0.000002
+
+# frequency output
+# freq restart
+variable	freq_restart_big	index 100000
+variable	freq_restart_small	index 0
+# freq image
 variable	freq_dump_trace_image	index 0
 variable	freq_dump_all_image	index 0
-variable	freq_thermo		index 1000 #stagger(1e3,2e2)       #
-variable	Sa 		index 0.00000002
+# freq dump
+variable	freq_dump_single_trace	index 0
+variable	freq_dump_single_all	index 0
+variable	freq_dump_pair_trace	index 0
+variable	freq_dump_pair_all	index 0
+variable	freq_dump_vtk		index 0
+variable	freq_dump_stl		index 0
+variable	freq_dump_movie		index 0
+# freq thermo
+variable	freq_thermo		index 10000 #stagger(1e3,2e2)       #
+# freq print trace
+variable	freq_print_trace	index 0
+# freq fix vector
+variable	freq_fixvector		index 0
+variable	every_fixvector		index 0
+# freq print velocity field
+variable	freq_ave_chunk_velocity_field		index 10000  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
+variable	repeat_ave_chunk_velocity_field	index 100
+variable	every_ave_chunk_velocity_field		index 100
+print "freq_ave_chunk_velocity_field ${freq_ave_chunk_velocity_field}" screen no append output/setting/attribute.lammps
+# store force
+variable	ifstoreforce		string no
+# freq print wall
+variable	freq_ave_wall		index 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
+variable	repeat_ave_wall		index 0
+variable	every_ave_wall		index 0
+# freq rebalance
+variable  	freq_balance      	index 50000
+
