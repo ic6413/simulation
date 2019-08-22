@@ -8,6 +8,7 @@
 #SBATCH --time=03:00:00   # walltime
 #SBATCH --mem=20000M               # memory (per node)
 #SBATCH --ntasks=32
+#SBATCH --hint=nomultithread
 ##SBATCH --nodes=1
 ##SBATCH -B 2:16  # this also bound task to socket/core/thread since the slurm conf with affinity
 ##SBATCH --ntasks-per-node=28 #for distributed memory mpi

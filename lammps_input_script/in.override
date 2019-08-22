@@ -47,7 +47,6 @@ variable	every_fixvector		index 0
 variable	freq_ave_chunk_velocity_field		index 10000  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
 variable	repeat_ave_chunk_velocity_field	index 100
 variable	every_ave_chunk_velocity_field		index 100
-print "freq_ave_chunk_velocity_field ${freq_ave_chunk_velocity_field}" screen no append output/setting/attribute.lammps
 # store force
 variable	ifstoreforce		string no
 # freq print wall
