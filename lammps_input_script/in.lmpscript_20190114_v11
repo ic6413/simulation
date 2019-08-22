@@ -47,7 +47,7 @@ print "startstep ${rst_from}" screen no append output/setting/attribute.lammps
 variable  contact_change index no
 variable  contact_model index hooke_his #hooke hooke_his hertz hertz_his
 variable  n_processor_x index 2
-variable  ts          equal 4e-7
+variable  ts          equal v_ts_scale*4e-7
 print "timestep ${ts}" screen no append output/setting/attribute.lammps
 variable  eliminate_history   index no 
 variable	ifrotate		index no

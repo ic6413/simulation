@@ -5,6 +5,8 @@ variable	n_processor_x		index 2
 variable	rst_from		index 0
 variable	runstep			index 3000000
 variable	runstep_loop		index 0
+# timestep
+variable	ts_scale		index 1
 # region height
 variable	zhi_create_dp_unit	index 31
 # contact model
