@@ -89,7 +89,7 @@ print "chunk_method ${chunk_method}" screen no append output/setting/attribute.l
 # ifsetvelocity
 variable	ifsetvelocity		string no
 # reset dt
-variable	ifresetdt		string no
+variable	ifresetdt		index no
 # recount dof
 if		"(${ifpour} == yes) || (${ifdeposit} == yes)" then &
   "variable	recount_dof		string yes" &
@@ -592,7 +592,7 @@ if "${recount_dof} == yes" then &
 
 # nve integration update position velocity
 if "${ifresetdt} == yes" then &
-  "fix	reset		all dt/reset 1 NULL 0.000001 1e-4 emax 1e-7 units box"
+  "fix	reset		all dt/reset 1 NULL 0.000001 1e-7 emax 1e-7 units box"
 fix	integr		all nve/sphere
 
 
@@ -1085,7 +1085,7 @@ dump		dump_image_all all image ${freq_dump_all_image} output/image/all/dump.all_
 label skip_dump_all_image
 
 # file, thermo
-thermo_style	custom step atoms ke c_KEr pe v_KEtr v_EKP c_id_maxKEt[1] c_id_maxKEt[2]
+thermo_style	custom step time atoms ke c_KEr pe v_KEtr v_EKP c_id_maxKEt[1] c_id_maxKEt[2]
 thermo_modify   lost error norm no
 if "${freq_thermo} == 0" then "jump SELF skip_thermo"
 thermo		${freq_thermo} #${freq_thermo} v_freq_thermo #
