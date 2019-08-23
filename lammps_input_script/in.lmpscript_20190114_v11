@@ -175,7 +175,7 @@ variable  z_bottom_dp_unit equal 0
 variable	ro_dp_unit		equal $(v_ri_dp_unit+v_width_dp_unit)
 # ro for box
 if "${ifappend} == no" then &
-  " variable r_box_dp_unit equal $(v_ro_dp_unit) " &
+  " variable r_box_dp_unit equal $(v_ro_dp_unit+1) " &
 else &
   " variable r_box_dp_unit equal $(v_ro_dp_unit+2) "
 
