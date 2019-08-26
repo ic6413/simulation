@@ -19,19 +19,23 @@ import datapath as dp
 
 velocity_scale = dp.omega_in*dp.r_in
 
+width_dpunit = 17 #(dp.r_out - dp.r_in)/dp.dp0
+height_dpunit = 37
+
 step_0 = 10000
 d_step = 10000
+
 n_r = dp.N_bin_r
 n_z = dp.N_bin_z
 
 
 
 def plotchunk(step, file):
-    quiver_scale = 100
+    quiver_scale = 10
     label_scale = 10
     n_line_0 = (step - step_0)/d_step*(n_r*n_z+1) + 4
     n_line_1 = n_line_0 + n_r*n_z
-    x_array, y_array = np.meshgrid(np.arange(n_r), np.arange(n_z))
+    x_array, y_array = np.meshgrid(np.arange(n_r)/n_r*width_dpunit, np.arange(n_z)/n_z*height_dpunit)
 
     with open(file) as f:
         
@@ -50,15 +54,17 @@ def plotchunk(step, file):
     plt.xlabel('r')
     plt.ylabel('z')
     #ax1.set_title('velocity field r-z direction (average over theta)')
-    Q = ax1.quiver(x_array, y_array, vx_array/velocity_scale, vy_array/velocity_scale, units='width', scale=quiver_scale)
+    Q = ax1.quiver(x_array, y_array, vx_array/velocity_scale, vy_array/velocity_scale,
+                   units='width',angles='xy', scale_units='xy', scale=quiver_scale,
+                   )
 
-    ax1.quiverkey(Q, 0.2, 0.9, label_scale, label = str(label_scale)+'*arrow length of wall velocity, velocity field r-z direction', labelpos='E',
-                   coordinates='figure')
+    ax1.quiverkey(Q, 0.2, 0.9, label_scale, label = str(label_scale)+'*arrow length of wall velocity in 45 degree, velocity field r-z direction', labelpos='E',
+                   coordinates='figure', angle=45)
 
     fig1.savefig(dp.f_velocity_field_rz_path + str(step))
     plt.close('all')
 
-    quiver_scale = 1000
+    quiver_scale = 100
     label_scale = 100
     label_x = 'v_vt'
     label_y = 'vz'
@@ -68,10 +74,11 @@ def plotchunk(step, file):
     plt.xlabel('r(position), theta(velocity)')
     plt.ylabel('z')
     #ax1.set_title('velocity field r-z direction (average over theta)')
-    Q = ax1.quiver(x_array, y_array, vx_array/velocity_scale, vy_array/velocity_scale, units='width', scale=quiver_scale)
-
-    ax1.quiverkey(Q, 0.2, 0.9, label_scale, label = str(label_scale)+'*arrow length of wall velocity, velocity field r-theta direction', labelpos='E',
-                   coordinates='figure')
+    Q = ax1.quiver(x_array, y_array, vx_array/velocity_scale, vy_array/velocity_scale,
+                   units='width',angles='xy', scale_units='xy', scale=quiver_scale,
+                   )
+    ax1.quiverkey(Q, 0.2, 0.9, label_scale, label = str(label_scale)+'*arrow length of wall velocity in 45 degree, velocity field r-theta direction', labelpos='E',
+                   coordinates='figure', angle=45)
 
     fig1.savefig(dp.f_velocity_field_rtheta_path + str(step))
     plt.close('all')

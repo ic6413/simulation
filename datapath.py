@@ -44,11 +44,11 @@ if os.path.isfile(attribute_lammps_path):
     except:
         omega_in = 0
     try:
-        N_bin_r = attribute_dict['N_bin_r']
+        N_bin_r = int(attribute_dict['N_bin_r'])
     except:
         pass
     try:
-        N_bin_z = attribute_dict['N_bin_z']
+        N_bin_z = int(attribute_dict['N_bin_z'])
     except:
         pass
     # gravity
