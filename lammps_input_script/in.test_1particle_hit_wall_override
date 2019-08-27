@@ -1,0 +1,66 @@
+# override variables
+# no means no create , latt means lattice, test_collide_1wall1atom means test collide of 1 wall and 1 atom
+# test_collide_twoatoms means test collide of two atoms
+variable	create_atom_method	index test_collide_1wall1atom
+variable	n_type			index 1 #1 or 3 or  0 means no create
+
+# processor cut in x dimension
+variable	n_processor_x		index 1
+# run step
+variable	rst_from		index 0
+variable	runstep			index 100
+variable	runstep_loop		index 0
+# timestep
+variable	ts_scale		index 1
+# reset dt
+variable	ifresetdt		index no
+# region height
+variable	zhi_create_dp_unit	index 31
+# contact model
+variable	contact_change 		index no
+variable  	eliminate_history   	index no 
+variable	contact_model		index hooke_his #hooke hooke_his hertz hertz_his
+variable	kn_scale		index 1000000
+variable	gamma_n_scale		index 317
+variable	xmu			index 0.5
+# air
+variable	ifairviscous		index no 
+variable	gamma_air		index 0
+# inner wall
+variable	ifrotate		index yes
+variable	Sa 			index 0.000002
+
+# frequency output
+# freq restart
+variable	freq_restart_big	index 0
+variable	freq_restart_small	index 0
+# freq image
+variable	freq_dump_trace_image	index 0
+variable	freq_dump_all_image	index 0
+# freq dump
+variable	freq_dump_single_trace	index 0
+variable	freq_dump_single_all	index 1
+variable	freq_dump_pair_trace	index 0
+variable	freq_dump_pair_all	index 0
+variable	freq_dump_vtk		index 0
+variable	freq_dump_stl		index 0
+variable	freq_dump_movie		index 0
+# freq thermo
+variable	freq_thermo		index 1 #stagger(1e3,2e2)       #
+# freq print trace
+variable	freq_print_trace	index 0
+# freq fix vector
+variable	freq_fixvector		index 0
+variable	every_fixvector		index 0
+# freq print velocity field
+variable	freq_ave_chunk_velocity_field		index 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
+variable	repeat_ave_chunk_velocity_field	index 0
+variable	every_ave_chunk_velocity_field		index 0
+# store force
+variable	ifstoreforce		string yes
+# freq print wall
+variable	freq_ave_wall		index 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
+variable	repeat_ave_wall		index 0
+variable	every_ave_wall		index 0
+# freq rebalance
+variable  	freq_balance      	index 0

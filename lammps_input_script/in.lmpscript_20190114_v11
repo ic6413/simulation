@@ -23,7 +23,7 @@ include ./in.override
 # timer
 #timer loop # loop off full sync
 # set step
-variable rst_from index 15000000 
+variable rst_from index 15000000
 variable runstep index 1e7
 
 variable runstep_loop index 1000000
@@ -54,7 +54,7 @@ variable	ifrotate		index no
 variable	trace_id1		equal 0  # 0 means no trace
 variable	trace_id2		equal 0  # 0 means no trace
 variable	trace_id3		equal 0  # 0 means no trace
-variable	iftrace_maxKEt		string yes
+variable	iftrace_maxKEt		string no
 variable	iftrace_maxKEr		string no
 variable	iftrace_maxKEtr		string no
 shell	mkdir output/trace/
@@ -76,7 +76,7 @@ variable	iffreeze		string no
 # create atom method
 # no means no create , latt means lattice, test_collide_1wall1atom means test collide of 1 wall and 1 atom
 # test_collide_twoatoms means test collide of two atoms
-variable	create_atom_method	string latt	
+variable	create_atom_method	index latt	
 variable	ifpour			string no
 variable  pourstep    equal 100
 variable  pour_number equal 240000
@@ -139,7 +139,7 @@ if		"${rst_from} != 0" then &
   "read_restart restart.mpiio.${rst_from}"
 
 # number of type
-variable	n_type			equal 3 #1 or 3 or  0 means no create
+variable	n_type			index 3 #1 or 3 or  0 means no create
 print "n_type ${n_type}" screen no append output/setting/attribute.lammps
 # type ratio if n_type is 3
 variable	ratio_type1			equal 0.3
@@ -364,9 +364,9 @@ label		begin3type
 # jump create atom by lattice
 if "${create_atom_method} != latt" then &
   "jump SELF end_lattice1"
-
 create_atoms	2 region region_ins units lattice
-label   end_lattice1
+
+
 set		atom * type/fraction 1 0.6 12393
 set		type 1 type/fraction 3 0.5 12235
 # set diameter before density, otherwise mass won't fit, no restart
@@ -380,6 +380,7 @@ set		atom * density 	${den}
 
 # 3type end
 jump		SELF end_create
+label   end_lattice1
 
 # 1type begin
 label		begin1type
@@ -387,19 +388,27 @@ label		begin1type
 if "${create_atom_method} != latt" then &
   "jump SELF end_lattice2"
 create_atoms	1 region region_ins units lattice
+# set diameter before density, otherwise mass won't fit, no restart
+set		atom * diameter ${dp}
+set		atom * density 	${den}
+jump		SELF end_create
 label   end_lattice2
 
 if "${create_atom_method} != test_collide_1wall1atom" then &
   "jump SELF end_test_collide_1wall1atom"
 #create_atoms	1 region region_ins units lattice 
 # test create 1 single atoms let inner wall collision
-create_atoms 1 single $(0*0.00083) $(36.6*0.00083) $(0.50001*0.00083) units box 
+create_atoms 1 single $(0*v_dp) $(36.6*v_dp) $(0.50001*v_dp) units box
+# set diameter before density, otherwise mass won't fit, no restart
+set		atom * diameter ${dp}
+set		atom * density 	${den}
 # test set velocity
-set atom 1 vy $(-1.0*0.00083)
-#set atom 1 vz $(-1.0*0.00083)
-#set atom 2 vy $(1.0*0.00083)
+set atom 1 vy $(-1.0*v_dp)
+#set atom 1 vz $(-1.0*v_dp)
+#set atom 2 vy $(1.0*v_dp)
 # test non parallel rotate (Say contact point is c, the plane composited by vc and ac will changed over the contact time.)
 set atom 1 omega 1.0 0 0
+jump		SELF end_create
 label   end_test_collide_1wall1atom
 
 if "${create_atom_method} != test_collide_twoatoms" then &
@@ -407,22 +416,23 @@ if "${create_atom_method} != test_collide_twoatoms" then &
 
 #create_atoms	1 region region_ins units lattice 
 # test create 3 single atoms let 1 2 collision
-create_atoms 1 single $(39.5*0.00083) $(0.434*0.00083) $(1*0.00083) units box
-create_atoms 1 single $(39*0.00083) $(-0.434*0.00083) $(1*0.00083) units box
-create_atoms 1 single $(-39*0.00083) $(0.5*0.00083) $(1*0.00083) units box
-
+create_atoms 1 single $(39.5*v_dp) $(0.434*v_dp) $(1*v_dp) units box
+create_atoms 1 single $(39*v_dp) $(-0.434*v_dp) $(1*v_dp) units box
+create_atoms 1 single $(-39*v_dp) $(0.5*v_dp) $(1*v_dp) units box
+# set diameter before density, otherwise mass won't fit, no restart
+set		atom * diameter ${dp}
+set		atom * density 	${den}
 # test set velocity
-set atom 1 vy $(-1.0*0.00083)
-set atom 2 vy $(1.0*0.00083)
+set atom 1 vy $(-1.0*v_dp)
+set atom 2 vy $(1.0*v_dp)
 
 # test non parallel rotate (Say contact point is c, the plane composited by vc and ac will changed over the contact time.)
-set atom 1 omega 1.0 0 0 
+set atom 1 omega 1.0 0 0
+jump		SELF end_create
 label   end_test_collide_twoatoms
 
-# set diameter before density, otherwise mass won't fit, no restart
-set		type * diameter ${dp}
-set		atom * density 	${den}
-# 1type end
+
+# create end
 label		end_create
 
 
@@ -1103,7 +1113,10 @@ dump            dmpstl2 all mesh/stl ${freq_dump_stl} stl/out*.stl cad2
 label skip_dump_all_stl
 
 # file, thermo
-thermo_style	custom step time atoms ke c_KEr pe v_KEtr v_EKP c_id_maxKEt[1] c_id_maxKEt[2]
+if "${iftrace_maxKEt} == yes" then &
+"thermo_style	custom step time atoms ke c_KEr pe v_KEtr v_EKP c_id_maxKEt[1] c_id_maxKEt[2]" &
+else &
+"thermo_style	custom step time atoms ke c_KEr pe v_KEtr v_EKP"
 thermo_modify   lost error norm no
 if "${freq_thermo} == 0" then "jump SELF skip_thermo"
 thermo		${freq_thermo} #${freq_thermo} v_freq_thermo #
