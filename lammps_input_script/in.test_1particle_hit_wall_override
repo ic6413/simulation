@@ -8,7 +8,7 @@ variable	n_type			index 1 #1 or 3 or  0 means no create
 variable	n_processor_x		index 1
 # run step
 variable	rst_from		index 0
-variable	runstep			index 100
+variable	runstep			index 10000
 variable	runstep_loop		index 0
 # timestep
 variable	ts_scale		index 1
@@ -64,3 +64,8 @@ variable	repeat_ave_wall		index 0
 variable	every_ave_wall		index 0
 # freq rebalance
 variable  	freq_balance      	index 0
+
+# get simulation path
+variable    home_path     getenv HOME
+variable    simulation_path     string "${home_path}/simulation"
+include ${simulation_path}/lammps_input_script/in.lmpscript_20190114_v11

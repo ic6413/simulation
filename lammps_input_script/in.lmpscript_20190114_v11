@@ -18,12 +18,12 @@
 #      correct unit of freeze region to box. set no output if freq_* =0
 # v5:  rounding number
 # v4:  store force before fix (after pair). so get pair force
-include ./in.override
+
 # initialization:
 # timer
 #timer loop # loop off full sync
 # set step
-variable rst_from index 15000000
+variable rst_from index 0
 variable runstep index 1e7
 
 variable runstep_loop index 1000000
@@ -47,6 +47,8 @@ print "startstep ${rst_from}" screen no append output/setting/attribute.lammps
 variable  contact_change index no
 variable  contact_model index hooke_his #hooke hooke_his hertz hertz_his
 variable  n_processor_x index 2
+# timestep
+variable	ts_scale		index 1
 variable  ts          equal v_ts_scale*4e-7
 print "timestep ${ts}" screen no append output/setting/attribute.lammps
 variable  eliminate_history   index no 

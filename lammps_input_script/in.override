@@ -60,3 +60,7 @@ variable	every_ave_wall		index 0
 # freq rebalance
 variable  	freq_balance      	index 50000
 
+# get simulation path
+variable    home_path     getenv HOME
+variable    simulation_path     string "${home_path}/simulation"
+include ${simulation_path}/lammps_input_script/in.lmpscript_20190114_v11
