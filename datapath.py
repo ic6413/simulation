@@ -40,11 +40,10 @@ try:
 except:
     pass
 # gravity
-gravitational_acceleration = eval(rr.logfile['g'])
 gravitation_direction_x = 0
 gravitation_direction_y = 0
 gravitation_direction_z = -1
-g = gravitational_acceleration*np.array([gravitation_direction_x, gravitation_direction_y, gravitation_direction_z])
+g = eval(rr.logfile['g'])*np.array([gravitation_direction_x, gravitation_direction_y, gravitation_direction_z])
 # parameter
 mu = eval(rr.logfile['xmu'])
 kn = eval(rr.logfile['kn']) 

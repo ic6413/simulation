@@ -1068,7 +1068,7 @@ if "${freq_dump_single_all} == 0" then "jump SELF skip_dump_all_custom"
 if "${ifstoreforce} == no" then &
 "dump		dump_all all custom ${freq_dump_single_all} output/single_all/dump.all.single.* id type radius c_KEt_atom c_KEr_atom x y z vx vy vz fx fy fz omegax omegay omegaz tqx tqy tqz v_EKP_atom c_n_contact v_check_nb_all v_KEtr_atom" &
 else &
-"dump		dump_all all custom ${freq_dump_single_all} output/single_all/dump.all.single.* id type radius c_KEt_atom c_KEr_atom x y z vx vy vz fx fy fz omegax omegay omegaz tqx tqy tqz v_EKP_atom c_n_contact v_check_nb_all v_KEtr_atom f_force_pair[*]" &
+"dump		dump_all all custom ${freq_dump_single_all} output/single_all/dump.all.single.* id type radius c_KEt_atom c_KEr_atom x y z vx vy vz fx fy fz omegax omegay omegaz tqx tqy tqz v_EKP_atom c_n_contact v_check_nb_all v_KEtr_atom f_force_pair[*]"
 dump_modify	dump_all format float %.16g
 label skip_dump_all_custom
 
@@ -1078,6 +1078,7 @@ compute		p_idtype_trace group_nb_all property/local patom1 patom2 ptype1 ptype2	
 compute		p_fv_trace group_nb_all pair/local dist fx fy fz force p1 p2 p3 p4 p5 p6 p7 p8 p9 p10 	#p1,p2,p3,ft component. p4 ft magnitude. p5 p6 p7 vn. p8 p9 p10 vt. Force acting on I atom. Velocity is vi-vj
 # file, pair trace atoms
 dump		dump_pair_trace group_nb_all local ${freq_dump_pair_trace} output/pair_trace/dump.trace.pair.* index c_p_idtype_trace[*] c_p_fv_trace[*]
+dump_modify     dump_pair_trace format float %.16g
 label skip_dump_pair_trace
 
 # compute pair all atoms
@@ -1086,6 +1087,7 @@ compute		p_idtype_all all property/local patom1 patom2 ptype1 ptype2	#id_I id_J 
 compute		p_fv_all all pair/local dist fx fy fz force p1 p2 p3 p4 p5 p6 p7 p8 p9 p10 	#p1,p2,p3,ft component. p4 ft magnitude. p5 p6 p7 vn. p8 p9 p10 vt. Force acting on I atom. Velocity is vi-vj
 # file, pair all atoms
 dump		dump_pair_all all local ${freq_dump_pair_all} output/pair_all/dump.all.pair.* index c_p_idtype_all[*] c_p_fv_all[*]
+dump_modify     dump_pair_all format float %.16g
 label skip_dump_pair_all
 
 #file, image jpg trace atoms
