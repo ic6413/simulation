@@ -79,7 +79,7 @@ def thermofile_to_dataframe(file):
     with open(file) as f:
         lines = f.read().strip().split('\n')
     # index of first row of every block
-    id_headers = [n for n, line in enumerate(lines) if line.startswith('Step Atoms')]
+    id_headers = [n for n, line in enumerate(lines) if line.startswith('Step')]
     if len(id_headers) > 1:
         string = 'log file has {n} sections, only extract the last section'.format(n=len(id_headers))
         print(string)

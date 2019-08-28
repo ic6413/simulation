@@ -3,6 +3,8 @@ import sys
 import os
 import numpy as np
 import osmanage as om
+# import read_setting
+import read_setting.read_setting as rr
 
 # === current module inputvariable ===
 # set lammps directory (current workspace directory or path)
@@ -14,158 +16,112 @@ attribute_lammps_path = lammps_directory + 'output/setting/attribute.lammps'
 attribute_py_path = lammps_directory + 'attributes.py'
 
 # ====================================== import attribute
-if os.path.isfile(attribute_lammps_path):
-    with open(attribute_lammps_path, mode='r') as f:
-        lines = f.read().strip().split('\n')
-        
-    attribute_dict = {}
-    for line in lines:
-        linesplit = line.split()
-        first_column = linesplit[0]
-        second_column = linesplit[1]
-        try:
-            attribute_dict[first_column] = float(second_column)
-        except:
-            attribute_dict[first_column] = second_column
-            
-    # startstep
-    startstep = attribute_dict['startstep']
-    startstep = int(startstep)
-    # timestep
-    ts = attribute_dict['timestep']
-    # atom radius
-    dp0 = attribute_dict['diameter']
-    density = attribute_dict['density']
-    # intersection pointmu
-    r_in = attribute_dict['ri']
-    r_out = attribute_dict['ro']
-    try:
-        omega_in = attribute_dict['omega_in']
-    except:
-        omega_in = 0
-    try:
-        N_bin_r = int(attribute_dict['N_bin_r'])
-    except:
-        pass
-    try:
-        N_bin_z = int(attribute_dict['N_bin_z'])
-    except:
-        pass
-    # gravity
-    gravitational_acceleration = attribute_dict['gravitational_acceleration']
-    gravitation_direction_x = 0
-    gravitation_direction_y = 0
-    gravitation_direction_z = -1
-    g = gravitational_acceleration*np.array([gravitation_direction_x, gravitation_direction_y, gravitation_direction_z])
-    # parameter
-    mu = attribute_dict['friction_coefficient']
-    kn = attribute_dict['kn'] 
-    kt = attribute_dict['kt'] 
-    gamma_n = attribute_dict['gamma_n']
-    gamma_t = attribute_dict['gamma_t']
-    n_type = int(attribute_dict['n_type'])
-    if n_type == 1:
-        type_radius_list = [
-            [1, 1.0*dp0/2]
-        ]
-    elif n_type == 3:
-        dp_big = attribute_dict['dp_big']
-        dp_small = attribute_dict['dp_small']
-        type_radius_list = [
-            [1, dp_small/2],
-            [2, dp0/2],
-            [3, dp_big/2],
-        ]
-    else:
-        sys.exit("n_type not 3 or 1")
-    type_radius_array = np.transpose(np.asarray(type_radius_list))
-    z_bottom = attribute_dict['z_bottom']
-    walls_p = [
-        [
-            'p',
-            [0,0,z_bottom],
-            [0,0,1],
-            None,
-            [0,0,0],
-            [0,0,0],
-            [0,0,0],
-            [0,0,0],
-            [0,0,0],
-        ],
+
+# startstep
+startstep = int(rr.logfile['rst_from'])
+# timestep
+ts = eval(rr.logfile['ts'])
+# atom radius
+dp0 = eval(rr.logfile['dp'])
+density = eval(rr.logfile['den'])
+# intersection pointmu
+r_in = eval(rr.logfile['ri'])
+r_out = eval(rr.logfile['ro'])
+try:
+    omega_in = eval(rr.logfile['omega_in'])
+except:
+    omega_in = 0
+try:
+    N_bin_r = int(rr.logfile['N_bin_r'])
+except:
+    pass
+try:
+    N_bin_z = int(rr.logfile['N_bin_z'])
+except:
+    pass
+# gravity
+gravitational_acceleration = eval(rr.logfile['g'])
+gravitation_direction_x = 0
+gravitation_direction_y = 0
+gravitation_direction_z = -1
+g = gravitational_acceleration*np.array([gravitation_direction_x, gravitation_direction_y, gravitation_direction_z])
+# parameter
+mu = eval(rr.logfile['xmu'])
+kn = eval(rr.logfile['kn']) 
+kt = eval(rr.logfile['kt'])
+gamma_n = eval(rr.logfile['gamma_n'])
+gamma_t = eval(rr.logfile['gamma_t'])
+n_type = int(rr.logfile['n_type'])
+if n_type == 1:
+    type_radius_list = [
+        [1, 1.0*dp0/2]
     ]
-    walls_cy = [
-        [
-            'cy',
-            [0,0,0],
-            [0,0,1],
-            r_in,
-            None,
-            [0,0,0],
-            [0,0,0],
-            [0,0,0],
-            [0,0,omega_in],
-            [0,0,0],
-        ],
-        [
-            'cy',
-            [0,0,0],
-            [0,0,1],
-            r_out,
-            None,
-            [0,0,0],
-            [0,0,0],
-            [0,0,0],
-            [0,0,0],
-            [0,0,0],
-        ]
+elif n_type == 3:
+    dp_big = eval(rr.logfile['dp_big'])
+    dp_small = eval(rr.logfile['dp_small'])
+    type_radius_list = [
+        [1, dp_small/2],
+        [2, dp0/2],
+        [3, dp_big/2],
     ]
-    walls = walls_p + walls_cy
-
-    walls_name = [None]*len(walls)
-    for i, wall in enumerate(walls):
-        
-        if wall[2] == [0, 0, 1] and wall[0]=='p':
-            walls_name[i] = 'z_plane'
-        
-        if wall[2] == [0, 0, 1] and wall[0]=='cy' and wall[3] == r_in:
-            walls_name[i] = 'z_cylinder_in'
-
-        if wall[2] == [0, 0, 1] and wall[0]=='cy' and wall[3] == r_out:
-            walls_name[i] = 'z_cylinder_out'
-
-    walls_id_name = [(-1-id, name) for id, name in enumerate(walls_name)]
-
-
-elif os.path.isfile(attribute_py_path):
-    import imp
-    attributes = imp.load_source('attributes', attribute_py_path)
-    print ('imported attribute by .py')
-    # startstep
-    startstep = attributes.startstep
-    # timestep
-    ts = attributes.ts
-    # atom radius
-    dp0 = attributes.dp0
-    density = attributes.density
-    # intersection pointmu
-    r_in = attributes.r_in
-    r_out = attributes.r_out
-    # gravity
-    g = attributes.g
-    g = np.asarray(g)
-    # parameter
-    mu = attributes.mu
-    kn = attributes.kn 
-    kt = attributes.kt 
-    gamma_n = attributes.gamma_n
-    gamma_t = attributes.gamma_t
-    z_bottom = attributes.z_bottom
-    type_radius_array = np.transpose(np.asarray(attributes.type_radius_list))
-    walls_p = attributes.walls_p
-    walls_cy = attributes.walls_cy
-
 else:
-    sys.exit("no attribute .lammps or .py to get attribute")
+    sys.exit("n_type not 3 or 1")
+type_radius_array = np.transpose(np.asarray(type_radius_list))
+z_bottom = eval(rr.logfile['z_bottom'])
+walls_p = [
+    [
+        'p',
+        [0,0,z_bottom],
+        [0,0,1],
+        None,
+        [0,0,0],
+        [0,0,0],
+        [0,0,0],
+        [0,0,0],
+        [0,0,0],
+    ],
+]
+walls_cy = [
+    [
+        'cy',
+        [0,0,0],
+        [0,0,1],
+        r_in,
+        None,
+        [0,0,0],
+        [0,0,0],
+        [0,0,0],
+        [0,0,omega_in],
+        [0,0,0],
+    ],
+    [
+        'cy',
+        [0,0,0],
+        [0,0,1],
+        r_out,
+        None,
+        [0,0,0],
+        [0,0,0],
+        [0,0,0],
+        [0,0,0],
+        [0,0,0],
+    ]
+]
+walls = walls_p + walls_cy
+
+walls_name = [None]*len(walls)
+for i, wall in enumerate(walls):
+    
+    if wall[2] == [0, 0, 1] and wall[0]=='p':
+        walls_name[i] = 'z_plane'
+    
+    if wall[2] == [0, 0, 1] and wall[0]=='cy' and wall[3] == r_in:
+        walls_name[i] = 'z_cylinder_in'
+
+    if wall[2] == [0, 0, 1] and wall[0]=='cy' and wall[3] == r_out:
+        walls_name[i] = 'z_cylinder_out'
+
+walls_id_name = [(-1-id, name) for id, name in enumerate(walls_name)]
 
 print ("finish creating attribute")
 
