@@ -17,14 +17,17 @@ id_i = 1
 error_tolerence = 1e-15
 method_list = [2, 0, 1] # method 2 has smaller error than method 0, 1
 
-cd.dumptofile(traceorall).dump_custom_max("c_KEt_atom")
-cd.dumptofile(traceorall).dump_custom_max("z")
+#cd.dumptofile(traceorall).dump_custom_max("c_KEt_atom")
+#cd.dumptofile(traceorall).dump_custom_max("z")
 
 
 cco.checkoverlap(id_i, step1, step2).checkprint()
 
 
 cco.checkforce(id_i, step1, step2, error_tolerence, method_list).checkprint()
+cco.checkforce(2, step1, step2, error_tolerence, method_list).checkprint()
+cco.checkforce(3, step1, step2, error_tolerence, method_list).checkprint()
+cco.checkforce(4, step1, step2, error_tolerence, method_list).checkprint()
 
 """
 cd.dumptofile(traceorall).dump_custom_max("c_KEt_atom")

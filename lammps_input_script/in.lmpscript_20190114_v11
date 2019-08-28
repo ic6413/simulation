@@ -175,8 +175,8 @@ variable	dp_small_dp_unit 	equal 0.9
 variable	skin_dp_unit		equal 0.5
 
 # container size simulation box size
-variable	ri_dp_unit		equal 36	#inner radius
-variable	width_dp_unit		equal 17	#width
+variable	ri_dp_unit		index 36	#inner radius
+variable	width_dp_unit		index 17	#width
 variable  z_bottom_dp_unit equal 0
 # calculate ro
 variable	ro_dp_unit		equal $(v_ri_dp_unit+v_width_dp_unit)
@@ -400,7 +400,7 @@ if "${create_atom_method} != test_collide_1wall1atom" then &
   "jump SELF end_test_collide_1wall1atom"
 #create_atoms	1 region region_ins units lattice 
 # test create 1 single atoms let inner wall collision
-create_atoms 1 single $(0*v_dp) $(36.6*v_dp) $(0.50001*v_dp) units box
+create_atoms 1 single $(0*v_dp) $((v_ri_dp_unit+0.6)*v_dp) $(0.50001*v_dp) units box
 # set diameter before density, otherwise mass won't fit, no restart
 set		atom * diameter ${dp}
 set		atom * density 	${den}
@@ -418,9 +418,9 @@ if "${create_atom_method} != test_collide_twoatoms" then &
 
 #create_atoms	1 region region_ins units lattice 
 # test create 3 single atoms let 1 2 collision
-create_atoms 1 single $(39.5*v_dp) $(0.434*v_dp) $(1*v_dp) units box
-create_atoms 1 single $(39*v_dp) $(-0.434*v_dp) $(1*v_dp) units box
-create_atoms 1 single $(-39*v_dp) $(0.5*v_dp) $(1*v_dp) units box
+create_atoms 1 single $((v_ri_dp_unit+3.5)*v_dp) $(0.434*v_dp) $(1*v_dp) units box
+create_atoms 1 single $((v_ri_dp_unit+3)*v_dp) $(-0.434*v_dp) $(1*v_dp) units box
+create_atoms 1 single $(-(v_ri_dp_unit+3)*v_dp) $(0.5*v_dp) $(1*v_dp) units box
 # set diameter before density, otherwise mass won't fit, no restart
 set		atom * diameter ${dp}
 set		atom * density 	${den}
