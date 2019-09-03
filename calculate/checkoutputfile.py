@@ -74,25 +74,45 @@ class checkforce(checkfile_look_idi):
         else:
             print ("create file and print to file")
 
-
-        check_f_function = cs.fjwi_plus_check_multistep_multicontact_fromcustom  # or cs.fjwi_plus_check_multistep_multicontact_fromcustom_v1
-
         self.print_string_list([
             datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), self.string_errortolerence(), self.stringstep(),
         ])
 
         for method_i in self.method_list:
 
-            [f_step_error_array, fi_cal_in_error_step, fi_plus_in_error_step] = check_f_function(f_custom_near_trace_path, self.id_i, self.step1, self.step2, self.error_tolerence, method=method_i)
-            self.print_string_list([
-                "method {method_i}".format(method_i=method_i),
-                "f_step_error_array",
-            ])
-            pprint.pprint(f_step_error_array, open(file, 'a'))
+            check_f_tq_fnocontact = cs.fjwi_plus_check_multistep_multicontact_fromcustom_inputvariablefunc(
+                f_custom_near_trace_path, self.id_i, self.step1, self.step2, self.error_tolerence, method=method_i,
+                )
+
+            [fi_step_error_array, fi_cal_in_error_step, fi_plus_in_error_step] = check_f_tq_fnocontact[0:3]
+            [tqi_step_error_array, tqi_cal_in_error_step, tqi_plus_in_error_step] = check_f_tq_fnocontact[3:6]
+            [fi_only_contact_step_error_array, fi_only_contact_cal_in_error_step, fi_only_contact_plus_in_error_step] = check_f_tq_fnocontact[6:9]
+
+            pprint.pprint("method {method_i}".format(method_i=method_i), open(file, 'a'))
+            pprint.pprint("fi_step_error_array", open(file, 'a'))
+            pprint.pprint(fi_step_error_array, open(file, 'a'))
             pprint.pprint("fi_plus_in_error_step", open(file, 'a'))
             pprint.pprint(fi_plus_in_error_step, open(file, 'a'))
             pprint.pprint("fi_cal_in_error_step", open(file, 'a'))
             pprint.pprint(fi_cal_in_error_step, open(file, 'a'))
+            pprint.pprint('===========', open(file, 'a'))
+
+            pprint.pprint("method {method_i}".format(method_i=method_i), open(file, 'a'))
+            pprint.pprint("tqi_step_error_array", open(file, 'a'))
+            pprint.pprint(tqi_step_error_array, open(file, 'a'))
+            pprint.pprint("tqi_plus_in_error_step", open(file, 'a'))
+            pprint.pprint(tqi_plus_in_error_step, open(file, 'a'))
+            pprint.pprint("tqi_cal_in_error_step", open(file, 'a'))
+            pprint.pprint(tqi_cal_in_error_step, open(file, 'a'))
+            pprint.pprint('===========', open(file, 'a'))
+
+            pprint.pprint("method {method_i}".format(method_i=method_i), open(file, 'a'))
+            pprint.pprint("fi_only_contact_step_error_array", open(file, 'a'))
+            pprint.pprint(fi_only_contact_step_error_array, open(file, 'a'))
+            pprint.pprint("fi_only_contact_plus_in_error_step", open(file, 'a'))
+            pprint.pprint(fi_only_contact_plus_in_error_step, open(file, 'a'))
+            pprint.pprint("fi_only_contact_cal_in_error_step", open(file, 'a'))
+            pprint.pprint(fi_only_contact_cal_in_error_step, open(file, 'a'))
             pprint.pprint('===========', open(file, 'a'))
         
         print("finish printing to file")

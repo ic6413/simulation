@@ -16,6 +16,7 @@ from mpl_toolkits.mplot3d import Axes3D
 # import module in simulation folder
 import osmanage as om
 import datapath as dp
+import read_setting.read_setting as rr
 
 
 # ==== inputvariable varables ====
@@ -675,10 +676,19 @@ def contact_ids_inonestep(df_onestep, id_i):
 
     return contact_idj_wall
 
+def airviscous(v):
+    viscous = rr.logfile["gamma_air"]*rr.logfile["mp"]
+    return -viscous*v
 
 def gravity(mi):
     return mi*g
 
+def force_sum_except_contact(mi, v):
+    force_sum_except_contact = 0
+    force_sum_except_contact += gravity(mi)
+    if rr.logfile["ifairviscous"]=="yes":
+        force_sum_except_contact += airviscous(v)
+    return force_sum_except_contact
 
 def history_force(method, xij_cal, xij_plus_cal, vijt_half, previous_ktforce, total_displacement, total_length):
     
@@ -971,352 +981,332 @@ def fwi_plus_cal(typei, wall, xi, vi, fi, previous_ktforce, total_length, total_
     return [ftk_include_his_out, total_displacement, fjit_plus_cal, fjin_plus_cal, tqji_plus_cal, total_length]
 
 
-def fjwi_plus_cal_multistep_multicontact_fromcustom(f_read, id_i, step1, step2, method):
+def fjwi_plus_cal_multistep_multicontact_fromcustom(f_read, id_i, step1, step2, method, version=0):
 
-    df = pd.read_hdf(f_read, 'df')
-    
-    df_step = extract_dataframe(df, step1, step2)
+    if version==0:
+        df = pd.read_hdf(f_read, 'df')
+        
+        df_step = extract_dataframe(df, step1, step2)
 
-    df_step_id_i = df_step.loc[df_step['id']==id_i]
-    n_step1tostep2_id_i = len(df_step_id_i.index)
-    n_step = step2 - step1
-    if n_step1tostep2_id_i != n_step:
-        steps_expected = np.arange(step1, step2)
-        # only compare for same length part before array end
-        min_len = min(n_step1tostep2_id_i, n_step)
-        checksteps = df_step_id_i['step'].values[0:min_len] == steps_expected[0:min_len]
-        if checksteps.all():
-            id_first_wrong_step = min_len
+        df_step_id_i = df_step.loc[df_step['id']==id_i]
+        n_step1tostep2_id_i = len(df_step_id_i.index)
+        n_step = step2 - step1
+        if n_step1tostep2_id_i != n_step:
+            steps_expected = np.arange(step1, step2)
+            # only compare for same length part before array end
+            min_len = min(n_step1tostep2_id_i, n_step)
+            checksteps = df_step_id_i['step'].values[0:min_len] == steps_expected[0:min_len]
+            if checksteps.all():
+                id_first_wrong_step = min_len
+            else:
+                id_first_wrong_step = np.nonzero(~checksteps)[0][0]
+
+            first_step_wrong = steps_expected[id_first_wrong_step]
+            sys.exit('id_i is not in df read on step = {first_step_wrong}'.format(first_step_wrong=first_step_wrong))
         else:
-            id_first_wrong_step = np.nonzero(~checksteps)[0][0]
+            pass
 
-        first_step_wrong = steps_expected[id_first_wrong_step]
-        sys.exit('id_i is not in df read on step = {first_step_wrong}'.format(first_step_wrong=first_step_wrong))
-    else:
-        pass
+        df_firststep = extract_dataframe(df, step1, step1+1)
+            
+        fisststep_contact_ids = contact_ids_inonestep(df_firststep, id_i)
 
-    df_firststep = extract_dataframe(df, step1, step1+1)
+        if len(fisststep_contact_ids) != 0:
+            sys.exit('there exist contact in the begin step. can not get history. contact id list = {fisststep_contact_ids}'.format(fisststep_contact_ids=fisststep_contact_ids))
+        else:
+            pass
+
+        groups_byid = df_step.groupby(['id'])
+
+        dfi = reindex_by_step(groups_byid.get_group(id_i), step1, step2)
         
-    fisststep_contact_ids = contact_ids_inonestep(df_firststep, id_i)
+        typei = dfi[['type']].values[:-1]
+        xi = dfi[['x','y','z']].values[:-1]
+        vi = dfi[['vx','vy','vz']].values[:-1]
+        fi = dfi[['fx','fy','fz']].values[:-1]
+        omi = dfi[['omegax','omegay','omegaz']].values[:-1]
+        tqi = dfi[['tqx','tqy','tqz']].values[:-1]
+        xi_plus = dfi[['x','y','z']].values[1:]
+        fi_plus = dfi[['fx','fy','fz']].values[1:]
+        tqi_plus = dfi[['tqx','tqy','tqz']].values[1:]
 
-    if len(fisststep_contact_ids) != 0:
-        sys.exit('there exist contact in the begin step. can not get history. contact id list = {fisststep_contact_ids}'.format(fisststep_contact_ids=fisststep_contact_ids))
-    else:
-        pass
+        sum_fjit_plus_cal_steps = 0
+        sum_fjin_plus_cal_steps = 0
+        sum_tqji_plus_cal_steps = 0
 
-    groups_byid = df_step.groupby(['id'])
+        id_list = groups_byid.groups.keys()
 
-    dfi = reindex_by_step(groups_byid.get_group(id_i), step1, step2)
-    
-    typei = dfi[['type']].values[:-1]
-    xi = dfi[['x','y','z']].values[:-1]
-    vi = dfi[['vx','vy','vz']].values[:-1]
-    fi = dfi[['fx','fy','fz']].values[:-1]
-    omi = dfi[['omegax','omegay','omegaz']].values[:-1]
-    tqi = dfi[['tqx','tqy','tqz']].values[:-1]
-    xi_plus = dfi[['x','y','z']].values[1:]
-    fi_plus = dfi[['fx','fy','fz']].values[1:]
-    tqi_plus = dfi[['tqx','tqy','tqz']].values[1:]
+        id_j_list = [i for i in id_list if i !=id_i]
 
-    sum_fjit_plus_cal_steps = 0
-    sum_fjin_plus_cal_steps = 0
-    sum_tqji_plus_cal_steps = 0
+        for id_j in id_j_list:
 
-    id_list = groups_byid.groups.keys()
+            dfj = reindex_by_step(groups_byid.get_group(id_j), step1, step2)
 
-    id_j_list = [i for i in id_list if i !=id_i]
-
-    for id_j in id_j_list:
-
-        dfj = reindex_by_step(groups_byid.get_group(id_j), step1, step2)
-
-        typej = dfj[['type']].values[:-1]  
-        xj = dfj[['x','y','z']].values[:-1]
-        vj = dfj[['vx','vy','vz']].values[:-1]
-        fj = dfj[['fx','fy','fz']].values[:-1]
-        omj = dfj[['omegax','omegay','omegaz']].values[:-1]
-        tqj = dfj[['tqx','tqy','tqz']].values[:-1]
-        
-
-        fjit_plus_cal_steps = np.empty([step2-step1-1, 3])
-        fjin_plus_cal_steps = np.empty([step2-step1-1, 3])
-        tqji_plus_cal_steps = np.empty([step2-step1-1, 3])
-
-        fjit_plus_cal = np.zeros((1,3))
-        fjin_plus_cal = np.zeros((1,3))
-        tqji_plus_cal = np.zeros((1,3))
-        ftk_include_his = np.zeros((1,3))
-        total_displacement = np.zeros((1,3))
-        total_length = np.zeros((1,1))
-        
-
-        for step in range(step1+1, step2):
-
-            k = step - (step1+1)
-
-            [ftk_include_his, total_displacement, fjit_plus_cal, fjin_plus_cal, tqji_plus_cal, total_length] = (
-                fji_plus_cal(typei[k:k+1], typej[k:k+1], xi[k:k+1], xj[k:k+1], vi[k:k+1], vj[k:k+1], fi[k:k+1], fj[k:k+1], ftk_include_his, total_length, total_displacement, omi[k:k+1], omj[k:k+1], tqi[k:k+1], tqj[k:k+1], method=method)
-            )
-            fjit_plus_cal_steps[k:k+1] = fjit_plus_cal
-            fjin_plus_cal_steps[k:k+1] = fjin_plus_cal
-            tqji_plus_cal_steps[k:k+1] = tqji_plus_cal
+            typej = dfj[['type']].values[:-1]  
+            xj = dfj[['x','y','z']].values[:-1]
+            vj = dfj[['vx','vy','vz']].values[:-1]
+            fj = dfj[['fx','fy','fz']].values[:-1]
+            omj = dfj[['omegax','omegay','omegaz']].values[:-1]
+            tqj = dfj[['tqx','tqy','tqz']].values[:-1]
             
 
-        sum_fjit_plus_cal_steps = sum_fjit_plus_cal_steps + reset_nan_to_zero(fjit_plus_cal_steps)
-        sum_fjin_plus_cal_steps = sum_fjin_plus_cal_steps + reset_nan_to_zero(fjin_plus_cal_steps)
-        sum_tqji_plus_cal_steps = sum_tqji_plus_cal_steps + reset_nan_to_zero(tqji_plus_cal_steps)
+            fjit_plus_cal_steps = np.empty([step2-step1-1, 3])
+            fjin_plus_cal_steps = np.empty([step2-step1-1, 3])
+            tqji_plus_cal_steps = np.empty([step2-step1-1, 3])
 
-    for walllist in walls:
+            fjit_plus_cal = np.zeros((1,3))
+            fjin_plus_cal = np.zeros((1,3))
+            tqji_plus_cal = np.zeros((1,3))
+            ftk_include_his = np.zeros((1,3))
+            total_displacement = np.zeros((1,3))
+            total_length = np.zeros((1,1))
+            
 
-        fjit_plus_cal_steps = np.empty([step2-step1-1, 3])
-        fjin_plus_cal_steps = np.empty([step2-step1-1, 3])
-        tqji_plus_cal_steps = np.empty([step2-step1-1, 3])
+            for step in range(step1+1, step2):
 
-        fjit_plus_cal = np.zeros((1,3))
-        fjin_plus_cal = np.zeros((1,3))
-        tqji_plus_cal = np.zeros((1,3))
-        ftk_include_his = np.zeros((1,3))
-        total_displacement = np.zeros((1,3))
-        total_length = np.zeros((1,1))
-        total_project_length = np.zeros((1,1))
+                k = step - (step1+1)
 
-        xj = 0*xi
-        vj = 0*xi
-        omj = 0*xi
-        xj_plus = 0*xi_plus
-        
-        for step in range(step1+1, step2):
-
-            k = step - (step1+1)
-
-            wall = create_wall_class_from_walllist(
-                        walllist,
-                        typei[k:k+1],xi[k:k+1],vi[k:k+1],fi[k:k+1],omi[k:k+1],tqi[k:k+1],
-                        ftk_include_his, total_length, total_displacement, method,
-                        )
-
-
-            [ftk_include_his, total_displacement, fjit_plus_cal, fjin_plus_cal, tqji_plus_cal, total_length] = (
-                fwi_plus_cal(typei[k:k+1], wall, xi[k:k+1], vi[k:k+1], fi[k:k+1], ftk_include_his, total_length, total_displacement, omi[k:k+1], tqi[k:k+1], method=method)
-            )
-            fjit_plus_cal_steps[k:k+1] = fjit_plus_cal
-            fjin_plus_cal_steps[k:k+1] = fjin_plus_cal
-            tqji_plus_cal_steps[k:k+1] = tqji_plus_cal
-
-        sum_fjit_plus_cal_steps = sum_fjit_plus_cal_steps + reset_nan_to_zero(fjit_plus_cal_steps)
-        sum_fjin_plus_cal_steps = sum_fjin_plus_cal_steps + reset_nan_to_zero(fjin_plus_cal_steps)
-        sum_tqji_plus_cal_steps = sum_tqji_plus_cal_steps + reset_nan_to_zero(tqji_plus_cal_steps)
-    
-    # gravity
-    typei = dfi[['type']].values[:-1]
-    mi = mass_by_type(typei, density)
-    gravityforce = gravity(mi)
-    if gravityforce.shape != sum_fjit_plus_cal_steps.shape:
-        print(gravityforce)
-        sys.exit('gravity force shape not match')
-
-    fi_cal = sum_fjit_plus_cal_steps + sum_fjin_plus_cal_steps + gravityforce
-    sum_tqji_plus_cal_steps = sum_tqji_plus_cal_steps
-
-    return [fi_cal, fi_plus, sum_tqji_plus_cal_steps, tqi_plus]
-
-
-def fjwi_plus_cal_multistep_multicontact_fromcustom_v1(f_read, id_i, step1, step2, method):
-
-    df = pd.read_hdf(f_read, 'df')
-    
-    df_step = extract_dataframe(df, step1, step2)
-
-    df_step_id_i = df_step.loc[df_step['id']==id_i]
-    n_step1tostep2_id_i = len(df_step_id_i.index)
-    n_step = step2 - step1
-    if n_step1tostep2_id_i != n_step:
-        steps_expected = np.arange(step1, step2)
-        # only compare for same length part before array end
-        min_len = min(n_step1tostep2_id_i, n_step)
-        checksteps = df_step_id_i['step'].values[0:min_len] == steps_expected[0:min_len]
-        if checksteps.all():
-            id_first_wrong_step = min_len
-        else:
-            id_first_wrong_step = np.nonzero(~checksteps)[0][0]
-
-        first_step_wrong = steps_expected[id_first_wrong_step]
-        sys.exit('id_i is not in df read on step = {first_step_wrong}'.format(first_step_wrong=first_step_wrong))
-    else:
-        pass
-        
-    df_firststep = extract_dataframe(df, step1, step1+1)
-
-    fisststep_contact_ids = contact_ids_inonestep(df_firststep, id_i)
-
-    if len(fisststep_contact_ids) != 0:
-        sys.exit('there exist contact in the begin step. can not get history. contact id list = {fisststep_contact_ids}'.format(fisststep_contact_ids=fisststep_contact_ids))
-    else:
-        pass
-
-    groups_byid = df_step.groupby(['id'])
-    
-    dfi = (groups_byid.get_group(id_i))
-    
-    typei = dfi[['type']].values[:-1]
-    xi = dfi[['x','y','z']].values[:-1]
-    vi = dfi[['vx','vy','vz']].values[:-1]
-    fi = dfi[['fx','fy','fz']].values[:-1]
-    omi = dfi[['omegax','omegay','omegaz']].values[:-1]
-    tqi = dfi[['tqx','tqy','tqz']].values[:-1]
-    fi_plus = dfi[['fx','fy','fz']].values[1:]
-    tqi_plus = dfi[['tqx','tqy','tqz']].values[1:]
-
-    sum_fjit_plus_cal_steps = 0
-    sum_fjin_plus_cal_steps = 0
-    sum_tqji_plus_cal_steps = 0
-
-    id_list = groups_byid.groups.keys()
-
-    id_j_list = [i for i in id_list if i !=id_i]
-
-    for id_j in id_j_list:
-
-        dfj = (groups_byid.get_group(id_j))
-
-        index_j_exist = (dfj[['step']].values).astype(int)[:,0].T - step1
-        fjit_plus_cal_steps = np.empty([step2-step1+1, 3])
-        fjin_plus_cal_steps = np.empty([step2-step1+1, 3])
-        tqji_plus_cal_steps = np.empty([step2-step1+1, 3])
-
-        history_t_k_many_steps = np.zeros((step2-step1+1,3))
-        total_displacement_many_steps = np.zeros((step2-step1+1,3))
-        total_length_many_steps = np.zeros((step2-step1+1,1))
-
-        for k, n in enumerate(index_j_exist):
-
-            typei = dfi[['type']].values[n:n+1]
-            xi = dfi[['x','y','z']].values[n:n+1]
-            vi = dfi[['vx','vy','vz']].values[n:n+1]
-            fi = dfi[['fx','fy','fz']].values[n:n+1]
-            omi = dfi[['omegax','omegay','omegaz']].values[n:n+1]
-            tqi = dfi[['tqx','tqy','tqz']].values[n:n+1]
-            #xi_plus = dfi[['x','y','z']].values[1:]
-            #fi_plus = dfi[['fx','fy','fz']].values[1:]
-            #tqi_plus = dfi[['tqx','tqy','tqz']].values[1:]
-
-
-            typej = dfj[['type']].values[k:k+1]
-            xj = dfj[['x','y','z']].values[k:k+1]
-            vj = dfj[['vx','vy','vz']].values[k:k+1]
-            fj = dfj[['fx','fy','fz']].values[k:k+1]
-            omj = dfj[['omegax','omegay','omegaz']].values[k:k+1]
-            tqj = dfj[['tqx','tqy','tqz']].values[k:k+1]
-            #xj_plus = dfj[['x','y','z']].values[n+1:n+2]
-            #fj_plus = dfj[['fx','fy','fz']].values[n+1:n+2]
-            #tqj_plus = dfj[['tqx','tqy','tqz']].values[n+1:n+2]
-
-
-
-            jtoi = j_class(
-                typei, xi, vi, fi, omi, tqi,
-                typej, xj, vj, fj, omj, tqj,
-                history_t_k_many_steps[n], total_length_many_steps[n], total_displacement_many_steps[n],method
+                [ftk_include_his, total_displacement, fjit_plus_cal, fjin_plus_cal, tqji_plus_cal, total_length] = (
+                    fji_plus_cal(typei[k:k+1], typej[k:k+1], xi[k:k+1], xj[k:k+1], vi[k:k+1], vj[k:k+1], fi[k:k+1], fj[k:k+1], ftk_include_his, total_length, total_displacement, omi[k:k+1], omj[k:k+1], tqi[k:k+1], tqj[k:k+1], method=method)
                 )
+                fjit_plus_cal_steps[k:k+1] = fjit_plus_cal
+                fjin_plus_cal_steps[k:k+1] = fjin_plus_cal
+                tqji_plus_cal_steps[k:k+1] = tqji_plus_cal
+                
+
+            sum_fjit_plus_cal_steps = sum_fjit_plus_cal_steps + reset_nan_to_zero(fjit_plus_cal_steps)
+            sum_fjin_plus_cal_steps = sum_fjin_plus_cal_steps + reset_nan_to_zero(fjin_plus_cal_steps)
+            sum_tqji_plus_cal_steps = sum_tqji_plus_cal_steps + reset_nan_to_zero(tqji_plus_cal_steps)
+
+        for walllist in walls:
+
+            fjit_plus_cal_steps = np.empty([step2-step1-1, 3])
+            fjin_plus_cal_steps = np.empty([step2-step1-1, 3])
+            tqji_plus_cal_steps = np.empty([step2-step1-1, 3])
+
+            fjit_plus_cal = np.zeros((1,3))
+            fjin_plus_cal = np.zeros((1,3))
+            tqji_plus_cal = np.zeros((1,3))
+            ftk_include_his = np.zeros((1,3))
+            total_displacement = np.zeros((1,3))
+            total_length = np.zeros((1,1))
+            total_project_length = np.zeros((1,1))
+
+            xj = 0*xi
+            vj = 0*xi
+            omj = 0*xi
+            xj_plus = 0*xi_plus
             
-            fjit_plus_cal_steps[n:n+1] = jtoi.fji_t_plus()
-            fjin_plus_cal_steps[n:n+1] = jtoi.fji_n_plus()
-            tqji_plus_cal_steps[n:n+1] = jtoi.tqji_plus()
-            history_t_k_many_steps[n:n+1] = jtoi.history_t_k_plus()
-            total_displacement_many_steps[n:n+1] = jtoi.total_displacement_plus()
-            total_length_many_steps[n:n+1] = jtoi.total_length_plus()
+            for step in range(step1+1, step2):
 
-        sum_fjit_plus_cal_steps = sum_fjit_plus_cal_steps + fjit_plus_cal_steps
-        sum_fjin_plus_cal_steps = sum_fjin_plus_cal_steps + fjin_plus_cal_steps
-        sum_tqji_plus_cal_steps = sum_tqji_plus_cal_steps + tqji_plus_cal_steps
+                k = step - (step1+1)
 
+                wall = create_wall_class_from_walllist(
+                            walllist,
+                            typei[k:k+1],xi[k:k+1],vi[k:k+1],fi[k:k+1],omi[k:k+1],tqi[k:k+1],
+                            ftk_include_his, total_length, total_displacement, method,
+                            )
 
 
-    for walllist in walls:
+                [ftk_include_his, total_displacement, fjit_plus_cal, fjin_plus_cal, tqji_plus_cal, total_length] = (
+                    fwi_plus_cal(typei[k:k+1], wall, xi[k:k+1], vi[k:k+1], fi[k:k+1], ftk_include_his, total_length, total_displacement, omi[k:k+1], tqi[k:k+1], method=method)
+                )
+                fjit_plus_cal_steps[k:k+1] = fjit_plus_cal
+                fjin_plus_cal_steps[k:k+1] = fjin_plus_cal
+                tqji_plus_cal_steps[k:k+1] = tqji_plus_cal
 
-        fjit_plus_cal_steps = np.empty([step2-step1+1, 3])
-        fjin_plus_cal_steps = np.empty([step2-step1+1, 3])
-        tqji_plus_cal_steps = np.empty([step2-step1+1, 3])
+            sum_fjit_plus_cal_steps = sum_fjit_plus_cal_steps + reset_nan_to_zero(fjit_plus_cal_steps)
+            sum_fjin_plus_cal_steps = sum_fjin_plus_cal_steps + reset_nan_to_zero(fjin_plus_cal_steps)
+            sum_tqji_plus_cal_steps = sum_tqji_plus_cal_steps + reset_nan_to_zero(tqji_plus_cal_steps)
+        
+        
 
-        history_t_k_many_steps = np.zeros((step2-step1+1,3))
-        total_displacement_many_steps = np.zeros((step2-step1+1,3))
-        total_length_many_steps = np.zeros((step2-step1+1,1))
+    elif version==1:
+        df = pd.read_hdf(f_read, 'df')
+        df_step = extract_dataframe(df, step1, step2)
 
-        for n in range(0, step2-step1):
+        df_step_id_i = df_step.loc[df_step['id']==id_i]
+        n_step1tostep2_id_i = len(df_step_id_i.index)
+        n_step = step2 - step1
+        if n_step1tostep2_id_i != n_step:
+            steps_expected = np.arange(step1, step2)
+            # only compare for same length part before array end
+            min_len = min(n_step1tostep2_id_i, n_step)
+            checksteps = df_step_id_i['step'].values[0:min_len] == steps_expected[0:min_len]
+            if checksteps.all():
+                id_first_wrong_step = min_len
+            else:
+                id_first_wrong_step = np.nonzero(~checksteps)[0][0]
 
-            typei = dfi[['type']].values[n:n+1]
-            xi = dfi[['x','y','z']].values[n:n+1]
-            vi = dfi[['vx','vy','vz']].values[n:n+1]
-            fi = dfi[['fx','fy','fz']].values[n:n+1]
-            omi = dfi[['omegax','omegay','omegaz']].values[n:n+1]
-            tqi = dfi[['tqx','tqy','tqz']].values[n:n+1]
-            #xi_plus = dfi[['x','y','z']].values[1:]
-            #fi_plus = dfi[['fx','fy','fz']].values[1:]
-            #tqi_plus = dfi[['tqx','tqy','tqz']].values[1:]
+            first_step_wrong = steps_expected[id_first_wrong_step]
+            sys.exit('id_i is not in df read on step = {first_step_wrong}'.format(first_step_wrong=first_step_wrong))
+        else:
+            pass
+            
+        df_firststep = extract_dataframe(df, step1, step1+1)
 
-            wtoi = create_wall_class_from_walllist(
-                walllist,typei, xi, vi, fi, omi, tqi,
-                history_t_k_many_steps[n], total_length_many_steps[n], total_displacement_many_steps[n],method,)
+        fisststep_contact_ids = contact_ids_inonestep(df_firststep, id_i)
+
+        if len(fisststep_contact_ids) != 0:
+            sys.exit('there exist contact in the begin step. can not get history. contact id list = {fisststep_contact_ids}'.format(fisststep_contact_ids=fisststep_contact_ids))
+        else:
+            pass
+
+        groups_byid = df_step.groupby(['id'])
+        
+        dfi = (groups_byid.get_group(id_i))
+        
+        typei = dfi[['type']].values[:-1]
+        xi = dfi[['x','y','z']].values[:-1]
+        vi = dfi[['vx','vy','vz']].values[:-1]
+        fi = dfi[['fx','fy','fz']].values[:-1]
+        omi = dfi[['omegax','omegay','omegaz']].values[:-1]
+        tqi = dfi[['tqx','tqy','tqz']].values[:-1]
+        fi_plus = dfi[['fx','fy','fz']].values[1:]
+        tqi_plus = dfi[['tqx','tqy','tqz']].values[1:]
+
+        sum_fjit_plus_cal_steps = 0
+        sum_fjin_plus_cal_steps = 0
+        sum_tqji_plus_cal_steps = 0
+
+        id_list = groups_byid.groups.keys()
+
+        id_j_list = [i for i in id_list if i !=id_i]
+
+        for id_j in id_j_list:
+
+            dfj = (groups_byid.get_group(id_j))
+
+            index_j_exist = (dfj[['step']].values).astype(int)[:,0].T - step1
+            fjit_plus_cal_steps = np.empty([step2-step1+1, 3])
+            fjin_plus_cal_steps = np.empty([step2-step1+1, 3])
+            tqji_plus_cal_steps = np.empty([step2-step1+1, 3])
+
+            history_t_k_many_steps = np.zeros((step2-step1+1,3))
+            total_displacement_many_steps = np.zeros((step2-step1+1,3))
+            total_length_many_steps = np.zeros((step2-step1+1,1))
+
+            for k, n in enumerate(index_j_exist):
+
+                typei = dfi[['type']].values[n:n+1]
+                xi = dfi[['x','y','z']].values[n:n+1]
+                vi = dfi[['vx','vy','vz']].values[n:n+1]
+                fi = dfi[['fx','fy','fz']].values[n:n+1]
+                omi = dfi[['omegax','omegay','omegaz']].values[n:n+1]
+                tqi = dfi[['tqx','tqy','tqz']].values[n:n+1]
+                #xi_plus = dfi[['x','y','z']].values[1:]
+                #fi_plus = dfi[['fx','fy','fz']].values[1:]
+                #tqi_plus = dfi[['tqx','tqy','tqz']].values[1:]
+
+
+                typej = dfj[['type']].values[k:k+1]
+                xj = dfj[['x','y','z']].values[k:k+1]
+                vj = dfj[['vx','vy','vz']].values[k:k+1]
+                fj = dfj[['fx','fy','fz']].values[k:k+1]
+                omj = dfj[['omegax','omegay','omegaz']].values[k:k+1]
+                tqj = dfj[['tqx','tqy','tqz']].values[k:k+1]
+                #xj_plus = dfj[['x','y','z']].values[n+1:n+2]
+                #fj_plus = dfj[['fx','fy','fz']].values[n+1:n+2]
+                #tqj_plus = dfj[['tqx','tqy','tqz']].values[n+1:n+2]
 
 
 
-            fjit_plus_cal_steps[n:n+1] = wtoi.fji_t_plus()
-            fjin_plus_cal_steps[n:n+1] = wtoi.fji_n_plus()
-            tqji_plus_cal_steps[n:n+1] = wtoi.tqji_plus()
-            history_t_k_many_steps[n:n+1] = wtoi.history_t_k_plus()
-            total_displacement_many_steps[n:n+1] = wtoi.total_displacement_plus()
-            total_length_many_steps[n:n+1] = wtoi.total_length_plus()
+                jtoi = j_class(
+                    typei, xi, vi, fi, omi, tqi,
+                    typej, xj, vj, fj, omj, tqj,
+                    history_t_k_many_steps[n], total_length_many_steps[n], total_displacement_many_steps[n],method
+                    )
+                
+                fjit_plus_cal_steps[n:n+1] = jtoi.fji_t_plus()
+                fjin_plus_cal_steps[n:n+1] = jtoi.fji_n_plus()
+                tqji_plus_cal_steps[n:n+1] = jtoi.tqji_plus()
+                history_t_k_many_steps[n:n+1] = jtoi.history_t_k_plus()
+                total_displacement_many_steps[n:n+1] = jtoi.total_displacement_plus()
+                total_length_many_steps[n:n+1] = jtoi.total_length_plus()
 
-        sum_fjit_plus_cal_steps = sum_fjit_plus_cal_steps + (fjit_plus_cal_steps)
-        sum_fjin_plus_cal_steps = sum_fjin_plus_cal_steps + (fjin_plus_cal_steps)
-        sum_tqji_plus_cal_steps = sum_tqji_plus_cal_steps + (tqji_plus_cal_steps)
-    
-    # gravity
+            sum_fjit_plus_cal_steps = sum_fjit_plus_cal_steps + fjit_plus_cal_steps
+            sum_fjin_plus_cal_steps = sum_fjin_plus_cal_steps + fjin_plus_cal_steps
+            sum_tqji_plus_cal_steps = sum_tqji_plus_cal_steps + tqji_plus_cal_steps
+
+
+
+        for walllist in walls:
+
+            fjit_plus_cal_steps = np.empty([step2-step1+1, 3])
+            fjin_plus_cal_steps = np.empty([step2-step1+1, 3])
+            tqji_plus_cal_steps = np.empty([step2-step1+1, 3])
+
+            history_t_k_many_steps = np.zeros((step2-step1+1,3))
+            total_displacement_many_steps = np.zeros((step2-step1+1,3))
+            total_length_many_steps = np.zeros((step2-step1+1,1))
+
+            for n in range(0, step2-step1):
+
+                typei = dfi[['type']].values[n:n+1]
+                xi = dfi[['x','y','z']].values[n:n+1]
+                vi = dfi[['vx','vy','vz']].values[n:n+1]
+                fi = dfi[['fx','fy','fz']].values[n:n+1]
+                omi = dfi[['omegax','omegay','omegaz']].values[n:n+1]
+                tqi = dfi[['tqx','tqy','tqz']].values[n:n+1]
+                #xi_plus = dfi[['x','y','z']].values[1:]
+                #fi_plus = dfi[['fx','fy','fz']].values[1:]
+                #tqi_plus = dfi[['tqx','tqy','tqz']].values[1:]
+
+                wtoi = create_wall_class_from_walllist(
+                    walllist,typei, xi, vi, fi, omi, tqi,
+                    history_t_k_many_steps[n], total_length_many_steps[n], total_displacement_many_steps[n],method,)
+
+
+
+                fjit_plus_cal_steps[n:n+1] = wtoi.fji_t_plus()
+                fjin_plus_cal_steps[n:n+1] = wtoi.fji_n_plus()
+                tqji_plus_cal_steps[n:n+1] = wtoi.tqji_plus()
+                history_t_k_many_steps[n:n+1] = wtoi.history_t_k_plus()
+                total_displacement_many_steps[n:n+1] = wtoi.total_displacement_plus()
+                total_length_many_steps[n:n+1] = wtoi.total_length_plus()
+
+            sum_fjit_plus_cal_steps = sum_fjit_plus_cal_steps + (fjit_plus_cal_steps)
+            sum_fjin_plus_cal_steps = sum_fjin_plus_cal_steps + (fjin_plus_cal_steps)
+            sum_tqji_plus_cal_steps = sum_tqji_plus_cal_steps + (tqji_plus_cal_steps)
+        
+    # other force, gravity, airviscous
     typei = dfi[['type']].values[:-1]
     mi = mass_by_type(typei, density)
-    gravityforce = gravity(mi)
-    if gravityforce.shape != sum_fjit_plus_cal_steps.shape:
-        print(gravityforce)
-        sys.exit('gravity force shape not match') 
+    fi_only_contact_cal_plus = sum_fjit_plus_cal_steps + sum_fjin_plus_cal_steps
+    if rr.logfile['ifstoreforce'] == "yes":
+        fi_only_contact_plus = dfi[['sum_pairforce_x','sum_pairforce_y','sum_pairforce_z']].values[1:] 
+    else:
+        fi_only_contact_plus = fi_plus - force_sum_except_contact(mi, vi+0.5*fi/mi*ts)
+    fi_cal_plus = fi_only_contact_cal_plus + force_sum_except_contact(mi, vi+0.5*fi/mi*ts)
+    tqi_cal_plus = sum_tqji_plus_cal_steps
 
-    fi_cal = sum_fjit_plus_cal_steps + sum_fjin_plus_cal_steps + gravityforce
-    sum_tqji_plus_cal_steps = sum_tqji_plus_cal_steps
-
-    return [fi_cal, fi_plus, sum_tqji_plus_cal_steps, tqi_plus]
+    return [fi_cal_plus, fi_plus, tqi_cal_plus, tqi_plus, fi_only_contact_cal_plus,fi_only_contact_plus]
 
 
-def fjwi_plus_check_multistep_multicontact_fromcustom_inputvariablefunc(f_read, id_i, step1, step2, error_tolerence, method, func_fjwi_plus_cal):
+def fjwi_plus_check_multistep_multicontact_fromcustom_inputvariablefunc(f_read, id_i, step1, step2, error_tolerence, method, version=0):
 
-    [fi_cal, fi_plus, sum_tqji_plus_cal_steps, tqi_plus] = func_fjwi_plus_cal(f_read, id_i, step1, step2, method)
-    [f_step_error_array, f_errorindex] = step_error_array_with_index(step1, step2, fi_cal, fi_plus, error_tolerence)
-    [tq_step_error_array, tq_errorindex] = step_error_array_with_index(step1, step2, sum_tqji_plus_cal_steps, tqi_plus, error_tolerence)
+    [fi_cal_plus, fi_plus, tqi_cal_plus, tqi_plus, fi_only_contact_cal_plus, fi_only_contact_plus] = fjwi_plus_cal_multistep_multicontact_fromcustom(f_read, id_i, step1, step2, method, version)
+    
+    [fi_step_error_array, fi_errorindex] = step_error_array_with_index(step1, step2, fi_cal_plus, fi_plus, error_tolerence)
+    [tqi_step_error_array, tqi_errorindex] = step_error_array_with_index(step1, step2, tqi_cal_plus, tqi_plus, error_tolerence)
+    [fi_only_contact_step_error_array, fi_only_contact_errorindex] = step_error_array_with_index(step1, step2, fi_only_contact_cal_plus, fi_only_contact_plus, error_tolerence)
     
     steps_array = np.arange(step1+1, step2)
     steps_array = steps_array.reshape((-1,1))
 
-    step_fi_cal = add_step_to_array(steps_array, fi_cal)
-    step_fi_plus = add_step_to_array(steps_array, fi_plus)
-    fi_cal_in_error_step = step_fi_cal[f_errorindex]
-    fi_plus_in_error_step = step_fi_plus[f_errorindex]
+    fi_cal_plus_in_error_step = (add_step_to_array(steps_array, fi_cal_plus))[fi_errorindex]
+    fi_plus_in_error_step = (add_step_to_array(steps_array, fi_plus))[fi_errorindex]
 
-    return [f_step_error_array, fi_cal_in_error_step, fi_plus_in_error_step] 
+    tqi_cal_plus_in_error_step = (add_step_to_array(steps_array, tqi_cal_plus))[tqi_errorindex]
+    tqi_plus_in_error_step = (add_step_to_array(steps_array, tqi_plus))[tqi_errorindex]
 
+    fi_only_contact_cal_plus_in_error_step = (add_step_to_array(steps_array, fi_only_contact_cal_plus))[fi_only_contact_errorindex]
+    fi_only_contact_plus_in_error_step = (add_step_to_array(steps_array, fi_only_contact_plus))[fi_only_contact_errorindex]
 
-def fjwi_plus_check_multistep_multicontact_fromcustom(f_read, id_i, step1, step2, error_tolerence, method):
-
-    [f_step_error_array, fi_cal_in_error_step, fi_plus_in_error_step] = (
-        fjwi_plus_check_multistep_multicontact_fromcustom_inputvariablefunc(f_read, id_i, step1, step2, error_tolerence, method, fjwi_plus_cal_multistep_multicontact_fromcustom)
-    )
+    anwser = [fi_step_error_array,              fi_cal_plus_in_error_step,              fi_plus_in_error_step,
+              tqi_step_error_array,             tqi_cal_plus_in_error_step,             tqi_plus_in_error_step,
+              fi_only_contact_step_error_array, fi_only_contact_cal_plus_in_error_step, fi_only_contact_plus_in_error_step,]
     
-    return [f_step_error_array, fi_cal_in_error_step, fi_plus_in_error_step] 
-
-
-def fjwi_plus_check_multistep_multicontact_fromcustom_v1(f_read, id_i, step1, step2, error_tolerence, method):
-
-    [f_step_error_array, fi_cal_in_error_step, fi_plus_in_error_step] = (
-        fjwi_plus_check_multistep_multicontact_fromcustom_inputvariablefunc(f_read, id_i, step1, step2, error_tolerence, method, fjwi_plus_cal_multistep_multicontact_fromcustom_v1)
-    )
-    return [f_step_error_array, fi_cal_in_error_step, fi_plus_in_error_step] 
+    return anwser
 
 
 def contact_check_multistep(f_read, id_i, step1, step2):
@@ -1628,19 +1618,19 @@ def fjwi_plus_cal_multistep_1contact_fromcustom(f_read, id_i, idj_or_idw, step1,
     xi = dfi[['x','y','z']].values[:-1]
     vi = dfi[['vx','vy','vz']].values[:-1]
     fi = dfi[['fx','fy','fz']].values[:-1]
-    fpair = dfi[['f_force_pair[1]','f_force_pair[2]','f_force_pair[3]']].values[:-1]
+    fpair = dfi[['sum_pairforce_x','sum_pairforce_y','sum_pairforce_z']].values[:-1]
     omi = dfi[['omegax','omegay','omegaz']].values[:-1]
     tqi = dfi[['tqx','tqy','tqz']].values[:-1]
     
     fi_plus = dfi[['fx','fy','fz']].values[1:]
-    fpair_plus = dfi[['f_force_pair[1]','f_force_pair[2]','f_force_pair[3]']].values[1:]
+    fpair_plus = dfi[['sum_pairforce_x','sum_pairforce_y','sum_pairforce_z']].values[1:]
     
     tqi_plus = dfi[['tqx','tqy','tqz']].values[1:]
 
     [mi, ri, I_i, vi_half_pre, xi_minus_cal, omi_half_pre] = calculate_m_r_I_vh_xp_omh_pre(typei, density, fi, tqi, xi, vi, omi)
 
-    force_not_contact = gravity(mi)
-    force_not_contact_plus = gravity(mi)
+    force_not_contact = force_sum_except_contact(mi, vi_half_pre)
+    force_not_contact_plus = force_sum_except_contact(mi, vi+0.5*fi/mi*ts)
 
     fjtoi = fpair
     fwtoi = fi - (fpair + force_not_contact)
@@ -1808,9 +1798,15 @@ class manysteps(object):
         self.groups_byid = df_step.groupby(['id'])
         self.dfi = reindex_by_step(self.groups_byid.get_group(self.id_i), self.step1, self.step2)
         [self.typei, self.xi, self.vi, self.fi, self.omi, self.tqi] = get_type_x_v_f_om_tq_from_df(self.dfi, self.step1, self.step2)
+    
     def gravity(self):
         mi = mass_by_type(self.typei, density)
         return gravity(mi)
+
+    def force_sum_except_contact(self):
+        mi = mass_by_type(self.typei, density)
+        return force_sum_except_contact(mi, self.vi+0.5*self.fi/mi*ts)
+
 
     def vh_omh_pre(self, type, density, f, tq, x, v, om):
     
@@ -1905,7 +1901,7 @@ class manysteps_idj(manysteps):
 
     def f_jorw_to_i_total(self):
         # only 1 contact can use this function
-        fpair = self.dfi[['f_force_pair[1]','f_force_pair[2]','f_force_pair[3]']].values
+        fpair = self.dfi[['sum_pairforce_x','sum_pairforce_y','sum_pairforce_z']].values
         fjtoi = fpair
         return fjtoi
 
@@ -1982,9 +1978,9 @@ class manysteps_wall(manysteps):
 
     def f_jorw_to_i_total(self):
         # only 1 contact can use this function
-        fpair = self.dfi[['f_force_pair[1]','f_force_pair[2]','f_force_pair[3]']].values
+        fpair = self.dfi[['sum_pairforce_x','sum_pairforce_y','sum_pairforce_z']].values
         mi = mass_by_type(self.typei, density)
-        force_not_contact = gravity(mi)
+        force_not_contact = force_sum_except_contact(mi, self.vi+0.5*self.fi/mi*ts)
         fwtoi = self.fi - (fpair + force_not_contact)
         return fwtoi
 
