@@ -44,8 +44,9 @@ LMP_INSCRIPT_kkbench_kokkos_print1="/home/hllin/simulation/lammps_input_script/k
 LMP_INSCRIPT_ch="in.chute_print1atom"
 LMP_INSCRIPT_lj="in.lj_print1atom"
 LMP_INSCRIPT_mycy="/home/hllin/simulation/lammps_input_script/in.lmpscript_20190114_v11"
+LMP_INSCRIPT_infolder="in.override"
 
-LMP_INSCRIPT=${LMP_INSCRIPT_mycy}
+LMP_INSCRIPT=${LMP_INSCRIPT_infolder}
 
 ##===========normal do not bind socket============
 #LOAD MODULES, INSERT CODE, AND RUN YOUR PROGRAMS HERE
