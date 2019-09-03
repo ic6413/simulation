@@ -56,12 +56,12 @@ variable  ifztop   index yes
 # history
 variable  eliminate_history   index no 
 variable	ifrotate		index no
-variable	trace_id1		equal 0  # 0 means no trace
-variable	trace_id2		equal 0  # 0 means no trace
-variable	trace_id3		equal 0  # 0 means no trace
-variable	iftrace_maxKEt		string no
-variable	iftrace_maxKEr		string no
-variable	iftrace_maxKEtr		string no
+variable	trace_id1		index 0  # 0 means no trace
+variable	trace_id2		index 0  # 0 means no trace
+variable	trace_id3		index 0  # 0 means no trace
+variable	iftrace_maxKEt		index no
+variable	iftrace_maxKEr		index no
+variable	iftrace_maxKEtr		index no
 shell	mkdir output/trace/
 if "${trace_id1} != 0" then &
 "shell	mkdir output/trace/${trace_id1}"

@@ -26,6 +26,13 @@ variable	gamma_air		index 0
 # inner wall
 variable	ifrotate		index yes
 variable	Sa 			index 0.000002
+# trace
+variable	trace_id1		index 0  # 0 means no trace
+variable	trace_id2		index 0  # 0 means no trace
+variable	trace_id3		index 0  # 0 means no trace
+variable	iftrace_maxKEt		index no
+variable	iftrace_maxKEr		index no
+variable	iftrace_maxKEtr		index no
 
 # frequency output
 # freq restart
