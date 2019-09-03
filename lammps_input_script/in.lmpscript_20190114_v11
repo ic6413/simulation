@@ -1098,7 +1098,7 @@ else &
 "dump		dump_all all custom ${freq_dump_single_all} output/single_all/dump.all.single.* &
 id type radius c_KEt_atom c_KEr_atom x y z vx vy vz fx fy fz omegax omegay omegaz tqx tqy tqz v_EKP_atom c_n_contact v_check_nb_all v_KEtr_atom &
 f_sum_pairforce[*]"
-dump_modify	dump_all format float %.16g
+dump_modify	dump_all format float %.16g maxfiles ${n_maxfile_single_all}
 label skip_dump_all_custom
 
 # compute and output pair trace atoms
