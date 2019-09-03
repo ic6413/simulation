@@ -143,7 +143,16 @@ def put_maxlabel_on_file(maxlabel, f_name_without_id):
 # Lammps output path of inputvariable files
 pair_all_path = lammps_directory + 'output/pair_all/dump.all.pair.allstep'
 custom_all_path = lammps_directory + 'output/single_all/dump.all.single.allstep'
-custom_all_firststep_path = lammps_directory + 'output/single_all/dump.all.single.' + str(startstep)
+
+filelist = os.listdir(lammps_directory + 'output/single_all/')
+
+for i in range(2):
+    file = filelist[i]
+    if not file.endswith("allstep"):
+        custom_all_firststep_path = lammps_directory + 'output/single_all/' + file
+    else:
+        pass
+
 custom_near_trace_path = lammps_directory + 'output/single_trace/dump.trace.single.allstep'
 custom_near_trace_firststep_path = lammps_directory + 'output/single_trace/dump.trace.single.' + str(startstep)
 thermo_path = lammps_directory + "log.lammps"

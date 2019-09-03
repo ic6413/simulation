@@ -2035,6 +2035,7 @@ def sum_results_all_contacts(
 
 
 def max_id_step(f_read, step1, step2):
+
     df = pd.read_hdf(f_read, 'df')
     df_step = extract_dataframe(df, step1, step2)
     
@@ -2049,3 +2050,13 @@ def max_id_step(f_read, step1, step2):
     step_id = np.concatenate((step_id_initial, step_id_difflast), axis=0)
 
     return step_id
+
+def find_lost_id(f_read, step1, step2):
+
+    df = pd.read_hdf(f_read, 'df')
+    df = df[['step', 'id']].astype('int64')
+    df_step = extract_dataframe(df, step1, step2)
+    df_id_lastexiststep = df_step.groupby(['id']).max()
+    df_id_lastexiststep = df_id_lastexiststep.loc[df_id_lastexiststep['step'] != int(step2-1)]
+
+    return df_id_lastexiststep

@@ -110,6 +110,7 @@ variable	freq_dump_all_image	index 0
 # freq dump
 variable	freq_dump_single_trace	index 0
 variable	freq_dump_single_all	index 0
+variable  n_maxfile_single_all  index -1
 variable	freq_dump_pair_trace	index 0
 variable	freq_dump_pair_all	index 0
 variable	freq_dump_all_vtk		index 0

@@ -3,7 +3,7 @@
 cd output/single_all
 
 START=0
-END=10000
+END=20000
 STEPDIFF=1
 
 # delete headers
