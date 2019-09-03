@@ -2,10 +2,10 @@
 #Submit this script with: sbatch thefilename
 
 # test job
-##SBATCH --qos=debug
+#SBATCH --qos=debug
 
 # asking for resources
-#SBATCH --time=03:00:00   # walltime
+#SBATCH --time=00:30:00   # walltime
 #SBATCH --mem=20000M               # memory (per node)
 #SBATCH --ntasks=32
 #SBATCH --hint=nomultithread
