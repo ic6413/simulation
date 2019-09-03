@@ -1,4 +1,6 @@
 # override variables
+# ztop
+variable  ifztop   index yes
 # processor cut in x dimension
 variable	n_processor_x		index 2
 # run step

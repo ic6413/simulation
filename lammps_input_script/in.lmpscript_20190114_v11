@@ -51,6 +51,9 @@ variable  n_processor_x index 2
 variable	ts_scale		index 1
 variable  ts          equal $(v_ts_scale*4e-7)
 print "timestep ${ts}" screen no append output/setting/attribute.lammps
+# ztop
+variable  ifztop   index yes 
+# history
 variable  eliminate_history   index no 
 variable	ifrotate		index no
 variable	trace_id1		equal 0  # 0 means no trace
@@ -445,7 +448,6 @@ write_restart	output/rst/restart.mpiio.*
 if "${ifpour} == no || ${rst_from} != 0" then "jump SELF end_pour5"
 # gravity
 fix	gravi 		all gravity $g vector 0.0 0.0 -1.0
-if "${ifstoreforce} == yes" then "fix	storeforce_1	all store/force"
 # gravitational potential
 fix_modify		gravi energy yes
 label	end_pour5
@@ -537,15 +539,15 @@ if		"${rst_from} != 0 && ${ifstoreforce} == yes" then &
 
 # particle force (apply force from the one need to be output and small to large)
 # store force fx fy fz
-if "${ifstoreforce} == yes" then "fix	storeforce_2	all store/force"
 
 # wall force to particles
 # inner wall
 # define inner wall, if pour then define inner wall after pouring
 if "${ifpour} == yes && ${rst_from} == 0" then "jump SELF end_pour6_innerwall"
-
+if "${ifstoreforce} == yes" then "fix	storeforce_inwall_before	all store/force"
 if "${contact_model} != hooke_his" &
  then "jump SELF hooke_his_end1"
+
 if "${ifrotate} == yes" then &
   "fix	inwall		all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri} shear x ${in_velocity}" &
 else &
@@ -559,28 +561,37 @@ if "${ifrotate} == yes" then &
 else &
   "fix	inwall		all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri}"
 label hooke_end1
-
+if "${ifstoreforce} == yes" then "fix	storeforce_inwall_after	all store/force"
 label	end_pour6_innerwall
-
-# other wall
-if "${ifstoreforce} == yes" then "fix	storeforce_3	all store/force"
 
 if "${contact_model} != hooke_his" &
  then "jump SELF hooke_his_end2"
+if "${ifstoreforce} == yes" then "fix	storeforce_outwall_before	all store/force"
 fix	outwall 	all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ro}
-if "${ifstoreforce} == yes" then "fix	storeforce_4	all store/force"
+if "${ifstoreforce} == yes" then "fix	storeforce_outwall_after	all store/force"
+if "${ifstoreforce} == yes" then "fix	storeforce_zbottom_before	all store/force"
 fix	zplane_bottom 	all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane ${z_bottom} NULL
+if "${ifstoreforce} == yes" then "fix	storeforce_zbottom_after	all store/force"
+if "${ifztop} != yes" then "jump SELF ztop_end1"
+if "${ifstoreforce} == yes" then "fix	storeforce_ztop_before	all store/force"
 fix	zplane_top 	all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane NULL ${z_top}
-if "${ifstoreforce} == yes" then "fix	storeforce_5	all store/force"
+if "${ifstoreforce} == yes" then "fix	storeforce_ztop_after	all store/force"
+label ztop_end1
 label hooke_his_end2
 
 if "${contact_model} != hooke" &
  then "jump SELF hooke_end2"
+if "${ifstoreforce} == yes" then "fix	storeforce_outwall_before	all store/force"
 fix	outwall 	all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ro}
-if "${ifstoreforce} == yes" then "fix	storeforce_4	all store/force"
+if "${ifstoreforce} == yes" then "fix	storeforce_outwall_after	all store/force"
+if "${ifstoreforce} == yes" then "fix	storeforce_zbottom_before	all store/force"
 fix	zplane_bottom 	all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane ${z_bottom} NULL
+if "${ifstoreforce} == yes" then "fix	storeforce_zbottom_after	all store/force"
+if "${ifztop} != yes" then "jump SELF ztop_end2"
+if "${ifstoreforce} == yes" then "fix	storeforce_ztop_before	all store/force"
 fix	zplane_top 	all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane NULL ${z_top}
-if "${ifstoreforce} == yes" then "fix	storeforce_5	all store/force"
+if "${ifstoreforce} == yes" then "fix	storeforce_ztop_after	all store/force"
+label ztop_end2
 label hooke_end2
 
 
@@ -588,7 +599,6 @@ label hooke_end2
 if "${ifpour} == yes && ${rst_from} == 0" then "jump SELF end_pour4"
 # gravity
 fix	gravi 		all gravity $g vector 0.0 0.0 -1.0
-if "${ifstoreforce} == yes" then "fix	storeforce_1	all store/force"
 # gravitational potential
 fix_modify		gravi energy yes
 label	end_pour4
@@ -608,7 +618,9 @@ print "ifairviscous ${ifairviscous}" screen no append output/setting/attribute.l
 print "gamma_air ${gamma_air}" screen no append output/setting/attribute.lammps
 if "${ifairviscous} == no" then &
   "jump SELF end_airviscous"
+if "${ifstoreforce} == yes" then "fix	storeforce_airviscous_before	all store/force"
 fix airviscous all viscous $(v_gamma_air*v_mp)
+if "${ifstoreforce} == yes" then "fix	storeforce_airviscous_after	all store/force"
 label   end_airviscous
 
 # ensure temperture normalize correctly as particle number change. use when pour and temperature compute ke
@@ -1161,6 +1173,7 @@ run 10
 region       	delete_in_small cylinder z 0. 0. ${ri_delete} 0 ${zhi_box} units box
 delete_atoms 	region delete_in_small
 
+if "${ifstoreforce} == yes" then "fix	storeforce_inwall_before	all store/force"
 if "${contact_model} != hooke_his" &
  then "jump SELF hooke_his_end3"
 if "${ifrotate} == yes" then &
@@ -1176,7 +1189,7 @@ if "${ifrotate} == yes" then &
 else &
   "fix	inwall		all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri}"
 label hooke_end3
-
+if "${ifstoreforce} == yes" then "fix	storeforce_inwall_after	all store/force"
 label	end_pour2_innerwall
 
 # balance every freq_balance step
