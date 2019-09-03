@@ -1273,7 +1273,7 @@ def fjwi_plus_cal_multistep_multicontact_fromcustom(f_read, id_i, step1, step2, 
     mi = mass_by_type(typei, density)
     fi_only_contact_cal_plus = sum_fjit_plus_cal_steps + sum_fjin_plus_cal_steps
     if rr.logfile['ifstoreforce'] == "yes":
-        fi_only_contact_plus = dfi[['sum_pairforce_x','sum_pairforce_y','sum_pairforce_z']].values[1:] 
+        fi_only_contact_plus = dfi[['f_sum_pairforce[1]','f_sum_pairforce[2]','f_sum_pairforce[3]']].values[1:] 
     else:
         fi_only_contact_plus = fi_plus - force_sum_except_contact(mi, vi+0.5*fi/mi*ts)
     fi_cal_plus = fi_only_contact_cal_plus + force_sum_except_contact(mi, vi+0.5*fi/mi*ts)
@@ -1618,12 +1618,12 @@ def fjwi_plus_cal_multistep_1contact_fromcustom(f_read, id_i, idj_or_idw, step1,
     xi = dfi[['x','y','z']].values[:-1]
     vi = dfi[['vx','vy','vz']].values[:-1]
     fi = dfi[['fx','fy','fz']].values[:-1]
-    fpair = dfi[['sum_pairforce_x','sum_pairforce_y','sum_pairforce_z']].values[:-1]
+    fpair = dfi[['f_sum_pairforce[1]','f_sum_pairforce[2]','f_sum_pairforce[3]']].values[:-1]
     omi = dfi[['omegax','omegay','omegaz']].values[:-1]
     tqi = dfi[['tqx','tqy','tqz']].values[:-1]
     
     fi_plus = dfi[['fx','fy','fz']].values[1:]
-    fpair_plus = dfi[['sum_pairforce_x','sum_pairforce_y','sum_pairforce_z']].values[1:]
+    fpair_plus = dfi[['f_sum_pairforce[1]','f_sum_pairforce[2]','f_sum_pairforce[3]']].values[1:]
     
     tqi_plus = dfi[['tqx','tqy','tqz']].values[1:]
 
@@ -1901,7 +1901,7 @@ class manysteps_idj(manysteps):
 
     def f_jorw_to_i_total(self):
         # only 1 contact can use this function
-        fpair = self.dfi[['sum_pairforce_x','sum_pairforce_y','sum_pairforce_z']].values
+        fpair = self.dfi[['f_sum_pairforce[1]','f_sum_pairforce[2]','f_sum_pairforce[3]']].values
         fjtoi = fpair
         return fjtoi
 
@@ -1978,7 +1978,7 @@ class manysteps_wall(manysteps):
 
     def f_jorw_to_i_total(self):
         # only 1 contact can use this function
-        fpair = self.dfi[['sum_pairforce_x','sum_pairforce_y','sum_pairforce_z']].values
+        fpair = self.dfi[['f_sum_pairforce[1]','f_sum_pairforce[2]','f_sum_pairforce[3]']].values
         mi = mass_by_type(self.typei, density)
         force_not_contact = force_sum_except_contact(mi, self.vi+0.5*self.fi/mi*ts)
         fwtoi = self.fi - (fpair + force_not_contact)

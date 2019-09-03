@@ -11,11 +11,11 @@ cd.thermo_hdf5_csv()
 traceorall = 'all'
 cd.dumptofile(fromtraceorall=traceorall).dump_custom()
 step1 = 0 #23730
-step2 = 100
+step2 = 3000
 error_tolerence = 1e-15
 method_list = [2,0] # method 2 has smaller error than method 0, 1
 
-for id_i in range(1,2):
+for id_i in range(1,4):
     cco.checkoverlap(id_i, step1, step2).checkprint()
     cco.checkforce(id_i, step1, step2, error_tolerence, method_list).checkprint()
 
