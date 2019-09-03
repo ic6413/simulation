@@ -13,13 +13,13 @@ cd.dumptofile(fromtraceorall=traceorall).dump_custom()
 
 
 step1 = 0 #23730
-step2 = 20000
+step2 = 19943
 error_tolerence = 1e-15
 method_list = [2] # method 2 has smaller error than method 0, 1
 
 for id_i in range(131689, 131690):
     cco.checkoverlap(id_i, step1, step2).checkprint()
-    cco.checkforce(id_i, step1, step2, error_tolerence, method_list).checkprint()
+    cco.checkforce(id_i, 19200, step2, error_tolerence, method_list).checkprint()
 
 """
 cd.dumptofile(traceorall).dump_custom_max("c_KEt_atom")
