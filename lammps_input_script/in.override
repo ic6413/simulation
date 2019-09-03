@@ -44,6 +44,7 @@ variable	freq_dump_stl		index 0
 variable	freq_dump_movie		index 0
 # freq thermo
 variable	freq_thermo		index 10000 #stagger(1e3,2e2)       #
+variable  thermo_lost_error_or_warn index error
 # freq print trace
 variable	freq_print_trace	index 0
 # freq fix vector

@@ -117,6 +117,7 @@ variable	freq_dump_all_stl		index 0
 variable	freq_dump_all_movie		index 0
 # freq thermo
 variable	freq_thermo		index 0 #stagger(1e3,2e2)       #
+variable  thermo_lost_error_or_warn index error
 # freq print trace
 variable	freq_print_trace	index 0
 # freq fix vector
@@ -1149,7 +1150,7 @@ if "${iftrace_maxKEt} == yes" then &
 "thermo_style	custom step time atoms ke c_KEr pe v_KEtr v_EKP c_id_maxKEt[1] c_id_maxKEt[2]" &
 else &
 "thermo_style	custom step time atoms ke c_KEr pe v_KEtr v_EKP"
-thermo_modify   lost error norm no
+thermo_modify   lost ${thermo_lost_error_or_warn} norm no
 if "${freq_thermo} == 0" then "jump SELF skip_thermo"
 thermo		${freq_thermo} #${freq_thermo} v_freq_thermo #
 label skip_thermo
