@@ -631,7 +631,7 @@ if "${recount_dof} == yes" then &
 
 # nve integration update position velocity
 if "${ifresetdt} == yes" then &
-  "fix	reset		all dt/reset 1 NULL NULL 0.001 emax $(v_mp*v_g*v_zhi_box/25) units box"
+  "fix	reset		all dt/reset 1 NULL NULL $(sqrt(2*v_mp*v_g*v_zhi_box/v_kn)*sin(PI/50)) emax $(v_mp*v_g*v_zhi_box/25) units box"
 fix	integr		all nve/sphere
 
 
