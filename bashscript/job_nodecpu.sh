@@ -55,8 +55,8 @@ module load openmpi/4.0.1
 module load lmp/190809unstable_openmpi401_mpiio
 #check setting after load module
 module list
-#${OMPIRUN_basic} lmp -in ${LMP_INSCRIPT}
-${OMPIRUN_basic} ${OMPIRUNBIND_c} lmp -in ${LMP_INSCRIPT}
+${OMPIRUN_basic} lmp -in ${LMP_INSCRIPT}
+#${OMPIRUN_basic} ${OMPIRUNBIND_c} lmp -in ${LMP_INSCRIPT}
 
 :'
 ##===========normal do not bind socket============

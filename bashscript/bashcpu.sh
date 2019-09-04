@@ -2,12 +2,12 @@
 #Submit this script with: sbatch thefilename
 
 # test job
-##SBATCH --qos=debug
+#SBATCH --qos=debug
 
 # asking for resources
-#SBATCH --time=00:40:00   # walltime
+#SBATCH --time=00:06:00   # walltime
 #SBATCH --mem=20000M               # memory (per node)
-#SBATCH --ntasks=32
+#SBATCH --ntasks=8
 #SBATCH --hint=nomultithread
 ##SBATCH --nodes=1
 ##SBATCH -B 2:16  # this also bound task to socket/core/thread since the slurm conf with affinity
