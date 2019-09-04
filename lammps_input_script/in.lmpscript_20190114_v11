@@ -137,8 +137,7 @@ variable	repeat_ave_wall		index 0
 variable	every_ave_wall		index 0
 # freq rebalance
 variable  	freq_balance      	index 0
-# define nbd radius
-variable 	cutoff_dumpnb equal (1.01*v_dp_big)
+
 
 
 
@@ -162,6 +161,8 @@ print "gravitational_acceleration ${g}" screen no append output/setting/attribut
 # particle diameter
 variable	dp 			equal 8.3e-4		#particle diameter
 print "diameter ${dp}" screen no append output/setting/attribute.lammps
+# define nbd radius
+variable 	cutoff_dumpnb equal (1.11*v_dp)
 # calculate radius
 variable	rp		equal $(v_dp/2)		#particle radius
 # particle density
@@ -647,7 +648,7 @@ if "${freq_ave_chunk_velocity_field} == 0" then "jump SELF skip_ave_chunk"
 fix		avspatial all ave/chunk ${every_ave_chunk_velocity_field} ${repeat_ave_chunk_velocity_field} ${freq_ave_chunk_velocity_field} chunk_r_z v_vr v_vt vz file output/velocity_field/fix.velocity_field.all
 label skip_ave_chunk
 # compute total force on particles excerted by wall 
-#variable	orce_no_r atom (f_storeforce_2[1]*x+f_storeforce_2[2]*y)/sqrt(x*x+y*y)
+#variable	storeforce_2_r atom (f_storeforce_2[1]*x+f_storeforce_2[2]*y)/sqrt(x*x+y*y)
 #variable	storeforce_2_theta atom (f_storeforce_2[1]*(-y)+f_storeforce_2[2]*x)/sqrt(x*x+y*y)
 #compute		sumupfr_no all reduce sum v_storeforce_2_r
 #compute		sumupftheta_no all reduce sum v_storeforce_2_theta
