@@ -88,9 +88,9 @@ variable	freq_dump_other		equal 0
 variable	freq_thermo		equal 10000
 variable	freq_fixvector		equal 0
 variable	every_fixvector		equal 1
-variable	freq_ave_chunk_velocity_field		equal 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100
-variable	repeat_ave_chunk_velocity_field	equal 1
-variable	every_ave_chunk_velocity_field		equal 1
+variable	freq_ave_chunk_momentum_mass_field		equal 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100
+variable	repeat_ave_chunk_momentum_mass_field	equal 1
+variable	every_ave_chunk_momentum_mass_field		equal 1
 variable	freq_ave_wall		equal 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100
 variable	repeat_ave_wall		equal 1
 variable	every_ave_wall		equal 1
@@ -490,11 +490,11 @@ fix	integr		all nve/sphere
 # output
 
 # compute chunk
-if "${freq_ave_chunk_velocity_field} == 0" then "jump SELF skip_ave_chunk"
+if "${freq_ave_chunk_momentum_mass_field} == 0" then "jump SELF skip_ave_chunk"
 compute		chunk_r_z all chunk/atom v_chunk_id_r_z limit ${N_total_rz} exact
 # file, output by fix ave/chunk
-if "${freq_ave_chunk_velocity_field} == 0" then "jump SELF skip_ave_chunk"
-fix		avspatial all ave/chunk ${every_ave_chunk_velocity_field} ${repeat_ave_chunk_velocity_field} ${freq_ave_chunk_velocity_field} chunk_r_z v_vr v_vt vz file output/fix/file_avspatial_${rst_from}
+if "${freq_ave_chunk_momentum_mass_field} == 0" then "jump SELF skip_ave_chunk"
+fix		avspatial all ave/chunk ${every_ave_chunk_momentum_mass_field} ${repeat_ave_chunk_momentum_mass_field} ${freq_ave_chunk_momentum_mass_field} chunk_r_z v_vr v_vt vz file output/fix/file_avspatial_${rst_from}
 label skip_ave_chunk
 
 # file, dump custom all atoms

@@ -182,9 +182,9 @@ interactive_path = post_process_path + 'interactive/'
 # diagram
 diagram_path = post_process_path + 'diagram/'
 om.create_directory(diagram_path)
-f_velocity_field_path = diagram_path + "velocity_field/"
-om.create_directory(f_velocity_field_path)
-f_velocity_field_rz_path = f_velocity_field_path + "rz/"
-om.create_directory(f_velocity_field_rz_path)
-f_velocity_field_rtheta_path = f_velocity_field_path + "rtheta/"
-om.create_directory(f_velocity_field_rtheta_path)
+f_momentum_mass_field_path = diagram_path + "momentum_mass_field/"
+om.create_directory(f_momentum_mass_field_path)
+f_momentum_mass_field_rz_path = f_momentum_mass_field_path + "rz/"
+om.create_directory(f_momentum_mass_field_rz_path)
+f_momentum_mass_field_rtheta_path = f_momentum_mass_field_path + "rtheta/"
+om.create_directory(f_momentum_mass_field_rtheta_path)

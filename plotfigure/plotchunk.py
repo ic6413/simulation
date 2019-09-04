@@ -61,7 +61,7 @@ def plotchunk(step, file):
     ax1.quiverkey(Q, 0.2, 0.9, label_scale, label = str(label_scale)+'*arrow length of wall velocity in 45 degree, velocity field r-z direction', labelpos='E',
                    coordinates='figure', angle=45)
 
-    fig1.savefig(dp.f_velocity_field_rz_path + str(step))
+    fig1.savefig(dp.f_momentum_mass_field_rz_path + str(step))
     plt.close('all')
 
     quiver_scale = 100
@@ -80,7 +80,7 @@ def plotchunk(step, file):
     ax1.quiverkey(Q, 0.2, 0.9, label_scale, label = str(label_scale)+'*arrow length of wall velocity in 45 degree, velocity field r-theta direction', labelpos='E',
                    coordinates='figure', angle=45)
 
-    fig1.savefig(dp.f_velocity_field_rtheta_path + str(step))
+    fig1.savefig(dp.f_momentum_mass_field_rtheta_path + str(step))
     plt.close('all')
 
 

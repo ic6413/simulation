@@ -39,7 +39,7 @@ variable KEtr_to_jumpout equal 1e-25
 shell	mkdir	output
 # create output folders
 shell	mkdir output/rst output/trace output/image/ output/image/all output/image/trace 
-shell	mkdir output/velocity_field output/vtk output/stl output/movie output/setting 
+shell	mkdir output/momentum_mass_field output/vtk output/stl output/movie output/setting 
 shell	mkdir output/pair_trace output/single_trace output/pair_all output/single_all
 # print start step
 print "startstep ${rst_from}" screen no append output/setting/attribute.lammps
@@ -125,10 +125,10 @@ variable	freq_print_trace	index 0
 variable	freq_fixvector		index 0
 variable	every_fixvector		index 0
 # freq print velocity field
-variable	freq_ave_chunk_velocity_field		index 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
-variable	repeat_ave_chunk_velocity_field	index 0
-variable	every_ave_chunk_velocity_field		index 0
-print "freq_ave_chunk_velocity_field ${freq_ave_chunk_velocity_field}" screen no append output/setting/attribute.lammps
+variable	freq_ave_chunk_momentum_mass_field		index 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
+variable	repeat_ave_chunk_momentum_mass_field	index 0
+variable	every_ave_chunk_momentum_mass_field		index 0
+print "freq_ave_chunk_momentum_mass_field ${freq_ave_chunk_momentum_mass_field}" screen no append output/setting/attribute.lammps
 # store force
 variable	ifstoreforce		index no
 # freq print wall
@@ -291,6 +291,9 @@ variable	d_z_axis	atom sqrt(x*x+y*y)
 variable	theta 		atom atan2(y,x)
 variable	vr 		atom (vx*x+vy*y)/sqrt(x*x+y*y)
 variable	vt 		atom (vx*(-y)+vy*x)/sqrt(x*x+y*y)
+variable  mvz     atom mass*vz
+variable	mvr 		atom mass*v_vr
+variable	mvt 		atom mass*v_vt
 variable	check_vrvtvxvy 	atom v_vt*v_vt+v_vr*v_vr-vx*vx-vy*vy
 
 # calculate chunk id
@@ -641,11 +644,12 @@ fix	integr		all nve/sphere
 variable	t equal time
 
 # compute chunk
-if "${freq_ave_chunk_velocity_field} == 0" then "jump SELF skip_ave_chunk"
+if "${freq_ave_chunk_momentum_mass_field} == 0" then "jump SELF skip_ave_chunk"
 compute		chunk_r_z all chunk/atom v_chunk_id_r_z limit ${N_total_rz} exact
 # file, output by fix ave/chunk
-if "${freq_ave_chunk_velocity_field} == 0" then "jump SELF skip_ave_chunk"
-fix		avspatial all ave/chunk ${every_ave_chunk_velocity_field} ${repeat_ave_chunk_velocity_field} ${freq_ave_chunk_velocity_field} chunk_r_z v_vr v_vt vz file output/velocity_field/fix.velocity_field.all
+if "${freq_ave_chunk_momentum_mass_field} == 0" then "jump SELF skip_ave_chunk"
+compute		m1 all property/atom mass
+fix		avspatial all ave/chunk ${every_ave_chunk_momentum_mass_field} ${repeat_ave_chunk_momentum_mass_field} ${freq_ave_chunk_momentum_mass_field} chunk_r_z v_mvr v_mvt v_mvz c_m1 norm none file output/momentum_mass_field/fix.momentum_mass_field.all
 label skip_ave_chunk
 # compute total force on particles excerted by wall 
 #variable	storeforce_2_r atom (f_storeforce_2[1]*x+f_storeforce_2[2]*y)/sqrt(x*x+y*y)
@@ -694,7 +698,6 @@ variable	KEtr equal "ke + c_KEr"
 variable	EKP equal "ke + c_KEr + pe"
 # compute
 compute		n_contact all contact/atom
-compute		m_d all property/atom mass diameter
 compute		KEt_atom all ke/atom
 compute		KEr_atom all erotate/sphere/atom
 variable	KEtr_atom atom "c_KEt_atom + c_KEr_atom"
@@ -1149,9 +1152,9 @@ label skip_dump_all_stl
 
 # file, thermo
 if "${iftrace_maxKEt} == yes" then &
-"thermo_style	custom step time atoms ke c_KEr pe v_KEtr v_EKP c_id_maxKEt[1] c_id_maxKEt[2]" &
+"thermo_style	custom step time vol atoms ke c_KEr pe v_KEtr v_EKP c_id_maxKEt[1] c_id_maxKEt[2]" &
 else &
-"thermo_style	custom step time atoms ke c_KEr pe v_KEtr v_EKP"
+"thermo_style	custom step time vol atoms ke c_KEr pe v_KEtr v_EKP"
 thermo_modify   lost ${thermo_lost_error_or_warn} norm no
 if "${freq_thermo} == 0" then "jump SELF skip_thermo"
 thermo		${freq_thermo} #${freq_thermo} v_freq_thermo #
