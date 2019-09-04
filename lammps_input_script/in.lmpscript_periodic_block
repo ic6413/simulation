@@ -284,7 +284,6 @@ variable	mvy 		atom mass*vy
 # calculate chunk id
 variable	ybin		atom "floor( (y)/ (v_width)* v_N_bin_y )"
 variable	zbin		atom "floor(z/ v_zhi_chunk* v_N_bin_z)"
-variable        chunk_id_y_z	atom 1+v_N_bin_y*v_zbin+v_ybin
 
 # bin size and memory
 neighbor	${skin} bin
@@ -624,7 +623,7 @@ variable	t equal time
 
 # compute chunk
 if "${freq_ave_chunk_momentum_mass_field} == 0" then "jump SELF skip_ave_chunk"
-compute		chunk_y_z all chunk/atom v_chunk_id_y_z limit ${N_total_yz} exact
+compute		chunk_y_z all chunk/atom bin/2d y $(v_width/v_N_bin_y) lower z lower $(v_zhi_chunk/v_N_bin_z) limit ${N_total_yz} exact
 # file, output by fix ave/chunk
 if "${freq_ave_chunk_momentum_mass_field} == 0" then "jump SELF skip_ave_chunk"
 compute		m1 all property/atom mass
