@@ -31,8 +31,7 @@ n_z = dp.N_bin_z
 
 
 def plotchunk(step, file):
-    quiver_scale = 10
-    label_scale = 10
+    
     n_line_0 = (step - step_0)/d_step*(n_r*n_z+1) + 4
     n_line_1 = n_line_0 + n_r*n_z
     x_array, y_array = np.meshgrid(np.arange(n_r)/n_r*width_dpunit, np.arange(n_z)/n_z*height_dpunit)
@@ -46,10 +45,11 @@ def plotchunk(step, file):
         ## attach data
         df = pd.DataFrame(data = data, columns = header, dtype = 'float64')
         ## repeat timestep
-    label_x = 'v_vr'
-    label_y = 'vz'
-    vx_array = df[label_x].values
-    vy_array = df[label_y].values
+
+    quiver_scale = 10
+    label_scale = 10
+    vx_array = np.divide(df['v_mvr'].values, df['c_m1'].values)
+    vy_array = np.divide(df['v_mvz'].values, df['c_m1'].values)
     fig1, ax1 = plt.subplots()
     plt.xlabel('r')
     plt.ylabel('z')
@@ -66,10 +66,9 @@ def plotchunk(step, file):
 
     quiver_scale = 100
     label_scale = 100
-    label_x = 'v_vt'
-    label_y = 'vz'
-    vx_array = df[label_x].values
-    vy_array = df[label_y].values
+
+    vx_array = np.divide(df['v_mvt'].values, df['c_m1'].values)
+    vy_array = np.divide(df['v_mvz'].values, df['c_m1'].values)
     fig1, ax1 = plt.subplots()
     plt.xlabel('r(position), theta(velocity)')
     plt.ylabel('z')
@@ -83,6 +82,24 @@ def plotchunk(step, file):
     fig1.savefig(dp.f_momentum_mass_field_rtheta_path + str(step))
     plt.close('all')
 
+
+    quiver_scale = 0.1
+    label_scale = 0.2
+    vx_array = 0*df['c_m1'].values
+    vy_array = df['c_m1'].values
+    fig1, ax1 = plt.subplots()
+    plt.xlabel('r')
+    plt.ylabel('z')
+    #ax1.set_title('velocity field r-z direction (average over theta)')
+    Q = ax1.quiver(x_array, y_array, vx_array/velocity_scale, vy_array/velocity_scale,
+                   units='width',angles='xy', scale_units='xy', scale=quiver_scale,
+                   )
+
+    ax1.quiverkey(Q, 0.2, 0.9, label_scale, label = 'density', labelpos='E',
+                   coordinates='figure', angle=90)
+
+    fig1.savefig(dp.f_momentum_mass_field_density_path + str(step))
+    plt.close('all')
 
 
 def chunkfile_to_dataframe(file):

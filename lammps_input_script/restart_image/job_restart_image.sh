@@ -14,7 +14,7 @@ then
  else
     for step in $(eval echo "{$START..$END..$STEPDIFF}")
     do
-        lmp -in ${HOME}/simulation/lammps_input_script/restart_image/in.lmpscript_image_restart -var restartfile ./output/rst/restart.mpiio.${step} log.restartimage
+        lmp -in ${HOME}/simulation/lammps_input_script/restart_image/in.lmpscript_image_restart -var restartfile ./output/rst/restart.mpiio.${step} -log log.restartimage
     done   
 fi
 

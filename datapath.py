@@ -145,13 +145,15 @@ pair_all_path = lammps_directory + 'output/pair_all/dump.all.pair.allstep'
 custom_all_path = lammps_directory + 'output/single_all/dump.all.single.allstep'
 
 filelist = os.listdir(lammps_directory + 'output/single_all/')
-
-for i in range(2):
-    file = filelist[i]
-    if not file.endswith("allstep"):
-        custom_all_firststep_path = lammps_directory + 'output/single_all/' + file
-    else:
-        pass
+try:
+    for i in range(2):
+        file = filelist[i]
+        if not file.endswith("allstep"):
+            custom_all_firststep_path = lammps_directory + 'output/single_all/' + file
+        else:
+            pass
+except:
+    pass
 
 custom_near_trace_path = lammps_directory + 'output/single_trace/dump.trace.single.allstep'
 custom_near_trace_firststep_path = lammps_directory + 'output/single_trace/dump.trace.single.' + str(startstep)
@@ -188,3 +190,5 @@ f_momentum_mass_field_rz_path = f_momentum_mass_field_path + "rz/"
 om.create_directory(f_momentum_mass_field_rz_path)
 f_momentum_mass_field_rtheta_path = f_momentum_mass_field_path + "rtheta/"
 om.create_directory(f_momentum_mass_field_rtheta_path)
+f_momentum_mass_field_density_path = f_momentum_mass_field_path + "density/"
+om.create_directory(f_momentum_mass_field_density_path)
