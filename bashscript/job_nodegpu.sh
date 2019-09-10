@@ -68,7 +68,7 @@ LMP_INSCRIPT_ch="in.chute_print1atom"
 LMP_INSCRIPT_lj="in.lj_print1atom"
 LMP_INSCRIPT_mycylinder="/home/hllin/simulation/lammps_input_script/in.lmpscript_20190114_v11"
 LMP_INSCRIPT_infolder="in.override"
-LMP_INSCRIPT=${LMP_INSCRIPT_kkbench_kokkos}
+LMP_INSCRIPT=${LMP_INSCRIPT_infolder}
 
 :'
 ##===========ompi self usually slow============

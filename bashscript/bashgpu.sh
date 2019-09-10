@@ -1,8 +1,11 @@
 #!/bin/bash
 #Submit this script with: sbatch thefilename
 
+# test job
+#SBATCH --qos=debug
+
 # asking for resources
-#SBATCH --time=00:03:00   # walltime
+#SBATCH --time=00:10:00   # walltime
 #SBATCH --mem=20000M               # memory (per node)
 #SBATCH --nodes=1
 ##SBATCH 1:1:1  # this also bound task to socket/core/thread since the slurm conf with affinity
@@ -10,8 +13,6 @@
 
 # ncpus per MPI task, choose ncpus processors per allocated GPU or CPU. (only use one)
 #SBATCH --cpus-per-task=1  #for shared memory openmp
-# test job
-#SBATCH --qos=debug
 
 # job info
 #SBATCH -J "speedtest"   # job name
