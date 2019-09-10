@@ -60,7 +60,6 @@ if chunk_method == "rz":
                                 (np.arange(n_2)+0.5)/n_2*height_dpunit,
                                 )
 elif chunk_method == "yz":
-    breakpoint()
     if rr.logfile["chunk/atom"][1] == "y":
         y_array, x_array = np.meshgrid(
                                        (np.arange(n_2)+0.5)/n_2*height_dpunit,

@@ -25,7 +25,7 @@ ts = eval(rr.logfile['ts'])
 dp0 = eval(rr.logfile['dp'])
 density = eval(rr.logfile['den'])
 # intersection pointmu
-if rr.logfile["simulation_box"] == "cylinder":
+if rr.logfile["shearwall"] == "zcylinder":
     r_in = eval(rr.logfile['ri'])
     r_out = eval(rr.logfile['ro'])
 
@@ -82,7 +82,7 @@ walls_p = [
         [0,0,0],
     ],
 ]
-if rr.logfile["simulation_box"] == "cylinder":
+if rr.logfile["shearwall"] == "zcylinder":
     walls_cy = [
         [
             'cy',

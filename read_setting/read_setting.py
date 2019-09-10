@@ -147,7 +147,6 @@ if os.path.isfile(log_path):
 
 else:
     sys.exit("file not exist")
-#breakpoint()
 lines_start_variable = [line for line in lines if line.startswith("variable")]
 variable_names_must_be_contained = [line.split()[1] for line in lines if line.startswith("variable")]
 lines_start_compute = [line for line in lines if line.startswith("compute")]
@@ -198,8 +197,13 @@ else:
 
 
 for line in lines:
+    if line.startswith("fix") and line.split()[3] == "wall/gran":
+        if line.split()[1] == "inwall": 
+            logfile["shearwall"] = line.split()[11]
+            break
+        elif line.split()[1] == "y_bottom":
+            logfile["shearwall"] = line.split()[11]
+            break
+        else:
+            sys.exit("shearwall missed")
 
-    if line.startswith("region"):
-        if line.split()[1] == "simulation_box":
-            
-            logfile["simulation_box"] = line.split()[2]
