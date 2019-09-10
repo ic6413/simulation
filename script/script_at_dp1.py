@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 import sys
-import datapath as dp
-import createdata.datatofile as cd
-import calculate.checkoutputfile as cco
 import plotfigure.plotchunk as pc
 
 if_plot_to_last = bool(int(sys.argv[1]))

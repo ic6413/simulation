@@ -25,8 +25,10 @@ ts = eval(rr.logfile['ts'])
 dp0 = eval(rr.logfile['dp'])
 density = eval(rr.logfile['den'])
 # intersection pointmu
-r_in = eval(rr.logfile['ri'])
-r_out = eval(rr.logfile['ro'])
+if rr.logfile["simulation_box"] == "cylinder":
+    r_in = eval(rr.logfile['ri'])
+    r_out = eval(rr.logfile['ro'])
+
 try:
     omega_in = eval(rr.logfile['omega_in'])
 except:
@@ -80,47 +82,48 @@ walls_p = [
         [0,0,0],
     ],
 ]
-walls_cy = [
-    [
-        'cy',
-        [0,0,0],
-        [0,0,1],
-        r_in,
-        None,
-        [0,0,0],
-        [0,0,0],
-        [0,0,0],
-        [0,0,omega_in],
-        [0,0,0],
-    ],
-    [
-        'cy',
-        [0,0,0],
-        [0,0,1],
-        r_out,
-        None,
-        [0,0,0],
-        [0,0,0],
-        [0,0,0],
-        [0,0,0],
-        [0,0,0],
+if rr.logfile["simulation_box"] == "cylinder":
+    walls_cy = [
+        [
+            'cy',
+            [0,0,0],
+            [0,0,1],
+            r_in,
+            None,
+            [0,0,0],
+            [0,0,0],
+            [0,0,0],
+            [0,0,omega_in],
+            [0,0,0],
+        ],
+        [
+            'cy',
+            [0,0,0],
+            [0,0,1],
+            r_out,
+            None,
+            [0,0,0],
+            [0,0,0],
+            [0,0,0],
+            [0,0,0],
+            [0,0,0],
+        ]
     ]
-]
-walls = walls_p + walls_cy
+    walls = walls_p + walls_cy
 
-walls_name = [None]*len(walls)
-for i, wall in enumerate(walls):
-    
-    if wall[2] == [0, 0, 1] and wall[0]=='p':
-        walls_name[i] = 'z_plane'
-    
-    if wall[2] == [0, 0, 1] and wall[0]=='cy' and wall[3] == r_in:
-        walls_name[i] = 'z_cylinder_in'
+    walls_name = [None]*len(walls)
+    for i, wall in enumerate(walls):
+        
+        if wall[2] == [0, 0, 1] and wall[0]=='p':
+            walls_name[i] = 'z_plane'
+        
+        if wall[2] == [0, 0, 1] and wall[0]=='cy' and wall[3] == r_in:
+            walls_name[i] = 'z_cylinder_in'
 
-    if wall[2] == [0, 0, 1] and wall[0]=='cy' and wall[3] == r_out:
-        walls_name[i] = 'z_cylinder_out'
+        if wall[2] == [0, 0, 1] and wall[0]=='cy' and wall[3] == r_out:
+            walls_name[i] = 'z_cylinder_out'
 
-walls_id_name = [(-1-id, name) for id, name in enumerate(walls_name)]
+    walls_id_name = [(-1-id, name) for id, name in enumerate(walls_name)]
 
 print ("finish creating attribute")
 

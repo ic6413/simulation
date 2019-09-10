@@ -18,31 +18,75 @@ import datapath as dp
 import read_setting.read_setting as rr
 # define function for extract data from fix txt to dataframe
 
+if rr.logfile["chunk/atom"][0] == "chunk_r_z":
+    chunk_method = 'rz'
+if rr.logfile["chunk/atom"][0] == "chunk_y_z":
+    chunk_method = 'yz'
+    
 diameter = float(rr.logfile['dp'])
-width_dpunit = int(rr.logfile['ro_dp_unit'])-int(rr.logfile['ri_dp_unit'])
-ri = diameter*int(rr.logfile['ri_dp_unit'])
+width_dp_unit = int(rr.logfile['width_dp_unit'])
+if chunk_method == "rz":
+    ri = diameter*int(rr.logfile['ri_dp_unit']) 
+elif chunk_method == "yz":
+    x_period = diameter*int(rr.logfile['x_period_dp_unit'])
+else:
+    sys.exit("chunk_method wrong")
 g = float(rr.logfile['g'])
 d_step = int(rr.logfile['freq_ave_chunk_momentum_mass_field'])
-velocity_scale = dp.omega_in*dp.r_in
+velocity_scale = float(rr.logfile['in_velocity'])
+
 if velocity_scale == 0:
     Sa_fake = 0.000002
-    velocity_scale = ri*(Sa_fake*g*(width_dpunit)**3*diameter/ri**2)**0.5
+    if chunk_method == "rz":
+        velocity_scale = ri*(Sa_fake*g*width_dp_unit**3*diameter/ri**2)**0.5
+    elif chunk_method == "yz":
+        velocity_scale = (Sa_fake*g*width_dp_unit**3*diameter)**0.5
 
 height_dpunit = float(rr.logfile['zhi_chunk_dp_unit'])
 
-n_r = dp.N_bin_r
-n_z = dp.N_bin_z
-n_rz = n_r*n_z
-x_array, y_array = np.meshgrid(
-                               int(rr.logfile['ri_dp_unit']) + (np.arange(n_r)+0.5)/n_r*width_dpunit,
-                               (np.arange(n_z)+0.5)/n_z*height_dpunit,
-                               )
-dx = 1/n_r*width_dpunit
-dy = 1/n_z*height_dpunit
+if chunk_method == "rz":
+    n_1 = int(rr.logfile['N_bin_r'])
+    n_2 = int(rr.logfile['N_bin_z'])
+elif chunk_method == "yz":
+    n_1 = int(rr.logfile['N_bin_y'])
+    n_2 = int(rr.logfile['N_bin_z'])
+else:
+    sys.exit("chunk_method wrong")
+
+n_12 = n_1*n_2
+if chunk_method == "rz":
+    x_array, y_array = np.meshgrid(
+                                int(rr.logfile['ri_dp_unit']) + (np.arange(n_1)+0.5)/n_1*width_dp_unit,
+                                (np.arange(n_2)+0.5)/n_2*height_dpunit,
+                                )
+elif chunk_method == "yz":
+    breakpoint()
+    if rr.logfile["chunk/atom"][1] == "y":
+        y_array, x_array = np.meshgrid(
+                                       (np.arange(n_2)+0.5)/n_2*height_dpunit,
+                                       (np.arange(n_1)+0.5)/n_1*width_dp_unit,
+                                    )
+    elif rr.logfile["chunk/atom"][1] == "z":
+        x_array, y_array = np.meshgrid(
+                                       (np.arange(n_1)+0.5)/n_1*width_dp_unit,
+                                       (np.arange(n_2)+0.5)/n_2*height_dpunit,
+                                    )
+    else:
+        sys.exit("wrong")
+    
+else:
+    sys.exit("chunk_method wrong")
+
+dx = 1/n_1*width_dp_unit
+dy = 1/n_2*height_dpunit
 x_array = x_array.reshape((-1))
 y_array = y_array.reshape((-1))
-
-vol_in_chunks = np.pi*((x_array+0.5*dx)**2-(x_array-0.5*dx)**2)*(y_array+0.5*dy-(y_array-0.5*dy))*diameter**3
+if chunk_method == "rz":
+    vol_in_chunks = np.pi*((x_array+0.5*dx)**2-(x_array-0.5*dx)**2)*(y_array+0.5*dy-(y_array-0.5*dy))*diameter**3
+elif chunk_method == "yz":
+    vol_in_chunks = x_period*dx*dy*diameter**2
+else:
+    sys.exit("chunk_method wrong")
 
 
 def plotchunk(if_plot_to_last, step1, step2):
@@ -52,12 +96,12 @@ def plotchunk(if_plot_to_last, step1, step2):
         lines = f.read().strip().split('\n')
         header = lines[2].split()[1:]
         step1_default = int(lines[3].split()[0])
-        step2_default = int(lines[-1 - n_rz].split()[0])
+        step2_default = int(lines[-1 - n_12].split()[0])
         
     def plotchunk_1(step1_1, step2_1):
         for step in range(step1_1, step2_1, d_step):
-            n_line_0 = (step - step1_1)/d_step*(n_rz+1) + 4
-            n_line_1 = n_line_0 + n_rz
+            n_line_0 = (step - step1_1)/d_step*(n_12+1) + 4
+            n_line_1 = n_line_0 + n_12
             ## select data
             data = [lines[t].split() for t in range(int(n_line_0), int(n_line_1))]
             ## attach data
@@ -67,15 +111,27 @@ def plotchunk(if_plot_to_last, step1, step2):
             def divide_zero(a,b):
                 c = np.divide(a, b, out=np.zeros_like(a), where=b!=0)
                 return c
-            vx_array = divide_zero(df['v_mvr'].values,df['c_m1'].values)/velocity_scale
-            vy_array = divide_zero(df['v_mvz'].values,df['c_m1'].values)/velocity_scale
+
+            if chunk_method == "rz":
+                vx_array = divide_zero(df['v_mvr'].values,df['c_m1'].values)/velocity_scale
+                vy_array = divide_zero(df['v_mvz'].values,df['c_m1'].values)/velocity_scale
+            elif chunk_method == "yz":
+                vx_array = divide_zero(df['v_mvy'].values,df['c_m1'].values)/velocity_scale
+                vy_array = divide_zero(df['v_mvz'].values,df['c_m1'].values)/velocity_scale
+            else:
+                sys.exit("chunk_method wrong")
+            
             v_length_array = (vx_array**2+vy_array**2)**0.5
             max_v_length = np.amax(v_length_array)
             quiver_scale = max_v_length/2
             label_scale = max_v_length/2
             fig1, ax1 = plt.subplots()
-            plt.xlabel('r')
-            plt.ylabel('z')
+            if chunk_method == "rz":
+                plt.xlabel('r')
+                plt.ylabel('z')
+            elif chunk_method == "yz":
+                plt.xlabel('y')
+                plt.ylabel('z')
             #ax1.set_title('velocity field r-z direction (average over theta)')
             Q = ax1.quiver(x_array, y_array, vx_array, vy_array,
                         units='width',angles='xy', scale_units='xy', scale=quiver_scale,
@@ -88,15 +144,28 @@ def plotchunk(if_plot_to_last, step1, step2):
             fig1.savefig(dp.f_momentum_mass_field_rz_path + str(step))
             plt.close('all')
 
-            vx_array = divide_zero(df['v_mvt'].values,df['c_m1'].values)/velocity_scale
-            vy_array = divide_zero(df['v_mvz'].values,df['c_m1'].values)/velocity_scale
+            if chunk_method == "rz":
+                vx_array = divide_zero(df['v_mvt'].values,df['c_m1'].values)/velocity_scale
+                vy_array = divide_zero(df['v_mvz'].values,df['c_m1'].values)/velocity_scale
+            elif chunk_method == "yz":
+                vx_array = divide_zero(df['v_mvx'].values,df['c_m1'].values)/velocity_scale
+                vy_array = divide_zero(df['v_mvz'].values,df['c_m1'].values)/velocity_scale
+            else:
+                sys.exit("chunk_method wrong")
             v_length_array = (vx_array**2+vy_array**2)**0.5
             max_v_length = np.amax(v_length_array)
             quiver_scale = max_v_length/2
             label_scale = max_v_length/2
             fig1, ax1 = plt.subplots()
-            plt.xlabel('r(position), theta(velocity)')
-            plt.ylabel('z')
+            if chunk_method == "rz":
+                plt.xlabel('r(position), theta(velocity)')
+                plt.ylabel('z')
+            elif chunk_method == "yz":
+                plt.xlabel('y(position), x(velocity)')
+                plt.ylabel('z')
+            else:
+                sys.exit("chunk_method wrong")
+            
             #ax1.set_title('velocity field r-z direction (average over theta)')
             Q = ax1.quiver(x_array, y_array, vx_array, vy_array,
                         units='width',angles='xy', scale_units='xy', scale=quiver_scale,
@@ -116,8 +185,12 @@ def plotchunk(if_plot_to_last, step1, step2):
             fig1, ax1 = plt.subplots()
             fig1.set_size_inches(12.8, 9.6)
             #fig1.figsize = [12.8, 9.6]
-            plt.xlabel('r')
-            plt.ylabel('z')
+            if chunk_method == "rz":
+                plt.xlabel('r')
+                plt.ylabel('z')
+            elif chunk_method == "yz":
+                plt.xlabel('y')
+                plt.ylabel('z')
             #ax1.set_title('velocity field r-z direction (average over theta)')
             Q = ax1.quiver(x_array, y_array, vx_array, vy_array,
                         units='width',angles='xy', scale_units='xy', scale=quiver_scale,

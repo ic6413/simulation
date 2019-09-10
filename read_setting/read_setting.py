@@ -8,7 +8,7 @@ lammps_directory = os.getcwd() + '/'
 
 log_path = lammps_directory + 'log.lammps'
 
-
+"""
 variable_names_must_be_contained = [
     "rst_from",
     "runstep",
@@ -136,6 +136,10 @@ variable_names_must_be_contained_no_need_temporarily = [
     "ratio_type3",
 ]
 
+variable_names_must_be_contained_add_periodic_block = [
+    "x_period_dp_unit",
+]
+"""
 if os.path.isfile(log_path):
         
     with open(log_path, mode='r') as f:
@@ -145,40 +149,57 @@ else:
     sys.exit("file not exist")
 #breakpoint()
 lines_start_variable = [line for line in lines if line.startswith("variable")]
+variable_names_must_be_contained = [line.split()[1] for line in lines if line.startswith("variable")]
+lines_start_compute = [line for line in lines if line.startswith("compute")]
 
 # read variable from log file
-def read_variable(variable_name):
+def read_variable():
+    logfile = {}
+    variable_names = [line.split()[1] for line in lines_start_variable]
     
-    satisfy_lines = [line for line in lines_start_variable if line.split()[1] == variable_name]
-    
-    if len(satisfy_lines) != 0:
-    
-        first_satisfy_line = satisfy_lines[0]
-        first_line_words = first_satisfy_line.split()
+    for variable_name in variable_names:
 
-        if first_line_words[2] == "index":
-            variable_value = first_line_words[3]
+        satisfy_lines = [line for line in lines_start_variable if line.split()[1] == variable_name]
+        
+        if len(satisfy_lines) != 0:
+            first_line_words = satisfy_lines[0].split()
+        
+            if first_line_words[2] == "index":
+                variable_value = first_line_words[3]
 
-        elif first_line_words[2] == "equal":
-            last_satisfy_line = satisfy_lines[-1]
-            last_line_words = last_satisfy_line.split()
-            variable_value = last_line_words[3]
+            elif first_line_words[2] == "equal" or first_line_words[2] == "string":
+                last_satisfy_line = satisfy_lines[-1]
+                last_line_words = last_satisfy_line.split()
+                variable_value = last_line_words[3]
 
-        elif first_line_words[2] == "string":
-            last_satisfy_line = satisfy_lines[-1]
-            last_line_words = last_satisfy_line.split()
-            variable_value = last_line_words[3]
+            else:
+                pass
+
+            logfile[variable_name] = variable_value
 
         else:
-            sys.exit("variable not string, index, equal")
+            sys.exit("can not find variable {} in log file".format(variable_name))
 
-    else:
-        sys.exit("can not find variable {} in log file".format(variable_name))
-    
-    return variable_value
+    return logfile
 
 
-logfile = {}
+logfile = read_variable()
 
-for variable_name in variable_names_must_be_contained:
-    logfile[variable_name] = read_variable(variable_name)
+
+satisfy_lines = [line for line in lines_start_compute if line.split()[3] == 'chunk/atom']
+if len(satisfy_lines) != 0:
+    logfile["chunk/atom"] = [
+                             satisfy_lines[0].split()[1],
+                             satisfy_lines[0].split()[5],
+                             satisfy_lines[0].split()[8],
+                            ]
+else:
+    pass
+
+
+for line in lines:
+
+    if line.startswith("region"):
+        if line.split()[1] == "simulation_box":
+            
+            logfile["simulation_box"] = line.split()[2]
