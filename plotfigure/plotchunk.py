@@ -35,7 +35,7 @@ g = float(rr.logfile['g'])
 d_step = int(rr.logfile['freq_ave_chunk_momentum_mass_field'])
 velocity_scale = float(rr.logfile['in_velocity'])
 if velocity_scale < 0:
-    sys.exit("velocity scale smaller than zero")
+    velocity_scale = -velocity_scale
 
 if velocity_scale == 0:
     Sa_fake = 0.000002

@@ -190,7 +190,6 @@ if len(satisfy_lines) != 0:
     logfile["chunk/atom"] = [
                              satisfy_lines[0].split()[1],
                              satisfy_lines[0].split()[5],
-                             satisfy_lines[0].split()[8],
                             ]
 else:
     pass
