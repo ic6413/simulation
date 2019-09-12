@@ -5,7 +5,7 @@
 ##SBATCH --qos=debug
 
 # asking for resources
-#SBATCH --time=00:30:00   # walltime
+#SBATCH --time=00:40:00   # walltime
 #SBATCH --mem=20000M               # memory (per node)
 #SBATCH --ntasks=64
 #SBATCH --hint=nomultithread
