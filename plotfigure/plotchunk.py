@@ -13,7 +13,6 @@ import matplotlib.pyplot as plt
 # This import registers the 3D projection, but is otherwise unused.
 from mpl_toolkits.mplot3d import Axes3D
 # import module
-import rename_variable as rv
 import datapath as dp
 import read_setting.read_setting as rr
 # define function for extract data from fix txt to dataframe
