@@ -17,10 +17,9 @@ import rename_variable as rv
 import datapath as dp
 import read_setting.read_setting as rr
 # define function for extract data from fix txt to dataframe
-
-if rr.logfile["chunk/atom"][0] == "chunk_r_z":
+if rr.logfile["shearwall"] == "zcylinder":
     chunk_method = 'rz'
-if rr.logfile["chunk/atom"][0] == "chunk_y_z":
+if rr.logfile["shearwall"] == "yplane":
     chunk_method = 'yz'
     
 diameter = float(rr.logfile['dp'])

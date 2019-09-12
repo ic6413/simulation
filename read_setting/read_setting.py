@@ -184,17 +184,6 @@ def read_variable():
 
 logfile = read_variable()
 
-
-satisfy_lines = [line for line in lines_start_compute if line.split()[3] == 'chunk/atom']
-if len(satisfy_lines) != 0:
-    logfile["chunk/atom"] = [
-                             satisfy_lines[0].split()[1],
-                             satisfy_lines[0].split()[5],
-                            ]
-else:
-    pass
-
-
 for line in lines:
     if line.startswith("fix") and line.split()[3] == "wall/gran":
         if line.split()[1] == "inwall": 
@@ -205,4 +194,57 @@ for line in lines:
             break
         else:
             sys.exit("shearwall missed")
+
+# start to read logfile for starting from 0
+def read_log_0():
+    logfile_0 = {}
+    def parent_dir(mypath):
+        return os.path.abspath(os.path.join(mypath, os.pardir))
+
+    def step_from_current_dir(dir):
+        if os.path.isfile(dir):
+            with open(dir, mode='r') as f:
+                lines = f.read().strip().split('\n')
+        else:
+            sys.exit("file not exist")
+        lines_start_variable = [line for line in lines if line.startswith("variable")]
+        satisfy_lines = [line for line in lines_start_variable if line.split()[1] == 'rst_from']
+        step = int(satisfy_lines[0].split()[3])
+        return step
+
+    def rst_from_in_parent_log(mypath):
+        parent_log_path = parent_dir(mypath) + '/log.lammps'
+        return step_from_current_dir(parent_log_path)
+
+
+    dir = lammps_directory
+    step = int(logfile["rst_from"])
+    while step != 0:
+        step = rst_from_in_parent_log(dir)
+        dir = parent_dir(dir)
+    
+    log_0_path = dir + '/log.lammps'
+
+    if os.path.isfile(log_0_path):
+            
+        with open(log_0_path, mode='r') as f:
+            lines_0 = f.read().strip().split('\n')
+
+    else:
+        sys.exit("file not exist")
+    lines_0_start_compute = [line for line in lines_0 if line.startswith("compute")]
+    satisfy_lines = [line for line in lines_0_start_compute if line.split()[3] == 'chunk/atom']
+    if len(satisfy_lines) != 0:
+        logfile_0["chunk/atom"] = [
+                                satisfy_lines[0].split()[1],
+                                satisfy_lines[0].split()[5],
+                                ]
+    else:
+        pass
+    
+    return logfile_0
+
+for key in read_log_0().keys():
+    if key not in logfile.keys():
+        logfile[key] = read_log_0()[key]
 
