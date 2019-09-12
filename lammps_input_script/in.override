@@ -5,6 +5,8 @@ variable  ifztop   index yes
 variable	n_processor_x		index 2
 # run step
 variable	rst_from		index 0
+variable ifset_velocity_after_rst index no
+variable ifset_angular_velocity_after_rst index no
 variable	runstep			index 3000000
 variable	runstep_loop		index 0
 # timestep

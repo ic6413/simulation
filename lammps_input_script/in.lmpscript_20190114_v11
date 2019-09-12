@@ -24,6 +24,8 @@
 #timer loop # loop off full sync
 # set step
 variable rst_from index 0
+variable ifset_velocity_after_rst index no
+variable ifset_angular_velocity_after_rst index no
 variable runstep index 1e7
 
 variable runstep_loop index 1000000
@@ -510,7 +512,13 @@ label		end_restart_skip1
 # this command specify in jobscribe "variable	rst_from equal N" be used as suffix in output file name
 if		"${rst_from} != 0" then &
   "read_restart restart.mpiio.${rst_from}"
-  
+
+if		"${rst_from} != 0 && ${ifset_velocity_after_rst} == yes" then &
+  "set group all vx 0.0 vy 0.0 vz 0.0"
+
+if		"${rst_from} != 0 && ${ifset_angular_velocity_after_rst} == yes" then &
+  "set group all omega 0.0 0.0 0.0"
+
 if "${contact_change} == no || ${rst_from} == 0" &
  then "jump SELF contact_change_end1"
 
