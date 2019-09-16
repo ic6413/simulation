@@ -43,6 +43,7 @@ shell	mkdir	output
 shell	mkdir output/rst output/trace output/image/ output/image/all output/image/trace 
 shell	mkdir output/momentum_mass_field output/vtk output/stl output/movie output/setting 
 shell	mkdir output/pair_trace output/single_trace output/pair_all output/single_all
+shell	mkdir output/test
 # print start step
 print "startstep ${rst_from}" screen no append output/setting/attribute.lammps
 # step start from. weather rotate start.
@@ -145,9 +146,9 @@ variable	repeat_ave_wall		index 0
 variable	every_ave_wall		index 0
 # freq rebalance
 variable  	freq_balance      	index 0
-
-
-
+# freq test
+variable  	freq_test1      	index 0
+variable  	freq_test2      	index 0
 
 # number of type
 variable	n_type			index 3 #1 or 3 or  0 means no create
@@ -1163,6 +1164,23 @@ dump            dmpstl1 all mesh/stl ${freq_dump_stl} stl/in*.stl cad1
 dump            dmpstl2 all mesh/stl ${freq_dump_stl} stl/out*.stl cad2
 label skip_dump_all_stl
 
+# test
+if "${freq_test1} == 0" then "jump SELF skip_test1"
+compute r_z_max all reduce max v_d_z_axis z
+variable escape_simubox_rmax equal "c_r_z_max[1] > v_r_box"
+variable escape_simubox_zmax equal "c_r_z_max[2] > v_zhi_box"
+variable escape_simubox_rmin equal "c_r_z_min[1] < 0"
+variable escape_simubox_zmin equal "c_r_z_min[2] < 0"
+fix test1 all print ${freq_test1} "$(v_escape_simubox_rmax) $(v_escape_simubox_zmax) $(v_escape_simubox_rmin) $(v_escape_simubox_zmin)" screen no append output/test/test1
+label skip_test1
+if "${freq_test2} == 0" then "jump SELF skip_test2"
+compute r_z_min all reduce min v_d_z_axis z
+variable escape_wall_rmax equal "c_r_z_max[1] > v_ro"
+variable escape_wall_zmax equal "c_r_z_max[2] > v_z_top"
+variable escape_wall_rmin equal "c_r_z_min[1] < v_ri"
+variable escape_wall_zmin equal "c_r_z_min[2] < v_z_bottom"
+fix test2 all print ${freq_test2} "$(v_escape_wall_rmax) $(v_escape_wall_zmax) $(v_escape_wall_rmin) $(v_escape_wall_zmin)" screen no append output/test/test2
+label skip_test2
 # file, thermo
 if "${iftrace_maxKEt} == yes" then &
 "thermo_style	custom step time vol atoms ke c_KEr pe v_KEtr v_EKP c_id_maxKEt[1] c_id_maxKEt[2]" &
