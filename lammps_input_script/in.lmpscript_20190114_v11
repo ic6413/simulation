@@ -524,7 +524,6 @@ if "${contact_change} == no || ${rst_from} == 0" &
 
 if "${contact_model} != hooke" &
  then "jump SELF hooke_end4"
-pair_style none
 pair_style	gran/hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent}
 pair_coeff	* *
 
@@ -534,7 +533,9 @@ if "${contact_model} != hooke_his" &
  then "jump SELF hooke_his_end4"
 if "${eliminate_history} == no || ${rst_from} == 0" then &
   "jump SELF reset_pair_history_end"
-pair_style none
+pair_style zero ${dp}
+pair_coeff	* *
+run 1
 pair_style	gran/hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent}
 pair_coeff	* *
 label   reset_pair_history_end

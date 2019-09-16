@@ -1,5 +1,5 @@
 #!/bin/bash
-
+##### check number of input
 
 if [ "$1" != "" ]; then
     echo "Positional parameter 1 contains something"
@@ -13,48 +13,7 @@ else
     echo "Your command line contains no arguments"
 fi
 
-interactive=
-filename=~/sysinfo_page.html
-START=0
-STEPDIFF=0
-END=0
-allrstimage=1
-
-while [ "$1" != "" ]; do
-    case $1 in
-        -f | --file )           shift
-                                filename=$1
-                                ;;
-        -i | --interactive )    interactive=1
-                                ;;
-        -r | --reimage )        shift
-                                START=$1
-                                shift
-                                STEPDIFF=$1
-                                shift
-                                END=$1
-                                shift
-                                allrstimage=$1
-                                ;;
-        -h | --help )           usage
-                                exit
-                                ;;
-        * )                     usage
-                                exit 1
-    esac
-    shift
-done
-
-# Test code to verify command line processing
-
-if [ "$interactive" == "1" ]; then
-	echo "interactive is on"
-else
-	echo "interactive is off"
-fi
-echo "output file = $filename"
-
-
+##### Functions
 restart_image () {
     
     local START=$1
@@ -78,6 +37,54 @@ restart_image () {
         done   
     fi
 }
+
+##### variable
+interactive=
+filename=~/sysinfo_page.html
+START=
+STEPDIFF=
+END=
+allrstimage=
+
+###### command line option
+while [ "$1" != "" ]; do
+    case $1 in
+        -f | --file )           shift
+                                filename=$1
+                                ;;
+        -i | --interactive )    interactive=1
+                                ;;
+        --r2image )             if_r2image=1
+                                shift
+                                START=$1
+                                shift
+                                STEPDIFF=$1
+                                shift
+                                END=$1
+                                shift
+                                allrstimage=$1
+                                ;;
+        -h | --help )           usage
+                                exit
+                                ;;
+        * )                     usage
+                                exit 1
+    esac
+    shift
+done
+
+###### Main
+
+# check interactive on or off
+if [ "$interactive" == "1" ]; then
+	echo "interactive is on"
+else
+	echo "interactive is off"
+fi
+# check file name
+echo "output file = $filename"
+
+# if interactive then input variable
 if [ "$interactive" == "1" ]; then
     echo "Type the allrstimage that you want (1 or 0), followed by [ENTER]:"
     read allrstimage
@@ -91,4 +98,10 @@ else
     echo "interactive off"
 fi
 
-restart_image ${START} ${STEPDIFF} ${END} ${allrstimage}
+# r2image start
+if [ "$if_r2image" == "1" ]; then
+	echo "if_r2image is on"
+    restart_image ${START} ${STEPDIFF} ${END} ${allrstimage}
+else
+	echo "if_r2image is off"
+fi
