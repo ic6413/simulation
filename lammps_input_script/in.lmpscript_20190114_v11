@@ -48,7 +48,11 @@ print "startstep ${rst_from}" screen no append output/setting/attribute.lammps
 # step start from. weather rotate start.
 variable  contact_change index no
 variable  contact_model index hooke_his #hooke hooke_his hertz hertz_his
-variable  n_processor_x index 2
+# processor cut in x dimension
+if "$(v_n_mpi_tasks%2)==0" then &
+"variable	n_processor_x		index 2" &
+else &
+"variable	n_processor_x		index 1"
 # timestep
 variable	ts_scale		index 1
 variable  ts          equal $(v_ts_scale*4e-7)

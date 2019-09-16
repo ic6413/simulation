@@ -5,7 +5,10 @@ variable	create_atom_method	index test_collide_1wall1atom
 variable	n_type			index 1 #1 or 3 or  0 means no create
 
 # processor cut in x dimension
-variable	n_processor_x		index 1
+if "$(v_n_mpi_tasks%2)==0" then &
+"variable	n_processor_x		index 2" &
+else &
+"variable	n_processor_x		index 1"
 # run step
 variable	rst_from		index 0
 variable	runstep			index 10000
