@@ -30,13 +30,30 @@ restart_image () {
             lmp -in ${HOME}/simulation/lammps_input_script/dump_restart/in.lmp_dump_image_at_restart -var restartfile ${f} -log log.restartimage
         done
     else
-        echo "create image for restart file at step " $1 "to " $3 "d_step is " $2
+        echo "create image for restart file at step " $START "to " $END "d_step is " $STEPDIFF
         for step in $(eval echo "{$START..$END..$STEPDIFF}")
         do
             lmp -in ${HOME}/simulation/lammps_input_script/dump_restart/in.lmp_dump_image_at_restart -var restartfile ./output/rst/restart.mpiio.${step} -log log.restartimage
         done   
     fi
 }
+
+velocity_field () {
+    
+    local if_plot_to_last=$1
+    local step1=$2
+    local step2=$3
+    local n_ave=$4
+
+    if [ "$if_plot_to_last" == "1" ]; then
+        echo "create velocity field at all step, n_ave is " $n_ave
+    else
+        echo "create velocity field at step " $step1 "to " $step2 "n_ave is " $n_ave
+    fi
+    python script_velocity_field.py $if_plot_to_last $step1 $ step2 $n_ave
+}
+
+
 
 ##### variable
 interactive=
@@ -45,6 +62,10 @@ START=
 STEPDIFF=
 END=
 allrstimage=
+if_plot_to_last=
+step1=
+step2=
+n_ave=
 
 ###### command line option
 while [ "$1" != "" ]; do
@@ -63,6 +84,16 @@ while [ "$1" != "" ]; do
                                 END=$1
                                 shift
                                 allrstimage=$1
+                                ;;
+        --vfield )              if_vfield=1
+                                shift
+                                if_plot_to_last=$1
+                                shift
+                                step1=$1
+                                shift
+                                step2=$1
+                                shift
+                                n_ave=$1
                                 ;;
         -h | --help )           usage
                                 exit
@@ -86,14 +117,24 @@ echo "output file = $filename"
 
 # if interactive then input variable
 if [ "$interactive" == "1" ]; then
-    echo "Type the allrstimage that you want (1 or 0), followed by [ENTER]:"
-    read allrstimage
-    echo "Type the START that you want, followed by [ENTER]:"
-    read START
-    echo "Type the STEPDIFF that you want, followed by [ENTER]:"
-    read STEPDIFF
-    echo "Type the END that you want, followed by [ENTER]:"
-    read END
+    if [ "$if_r2image" == "1" ]; then
+        echo "Type the allrstimage that you want (1 or 0), followed by [ENTER]:"
+        read allrstimage
+        echo "Type the START that you want, followed by [ENTER]:"
+        read START
+        echo "Type the STEPDIFF that you want, followed by [ENTER]:"
+        read STEPDIFF
+        echo "Type the END that you want, followed by [ENTER]:"
+        read END
+    if [ "$if_vfield" == "1" ]; then
+        echo "Type the if_plot_to_last that you want (1 or 0), followed by [ENTER]:"
+        read allrstimage
+        echo "Type the step1 that you want, followed by [ENTER]:"
+        read START
+        echo "Type the step2 that you want, followed by [ENTER]:"
+        read STEPDIFF
+        echo "Type the n_ave that you want, followed by [ENTER]:"
+        read END
 else
     echo "interactive off"
 fi
@@ -104,4 +145,12 @@ if [ "$if_r2image" == "1" ]; then
     restart_image ${START} ${STEPDIFF} ${END} ${allrstimage}
 else
 	echo "if_r2image is off"
+fi
+
+# r2image start
+if [ "$if_vfield" == "1" ]; then
+	echo "if_vfield is on"
+    velocity_field ${if_plot_to_last} ${step1} ${step2} ${n_ave}
+else
+	echo "if_vfield is off"
 fi
