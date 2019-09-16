@@ -1,8 +1,13 @@
 # override variables
+# task number from slurm
+variable    n_mpi_tasks     getenv OMPI_COMM_WORLD_SIZE
 # ztop
 variable  ifztop   index yes
 # processor cut in x dimension
-variable	n_processor_x		index 2
+if "${n_mpi_tasks}>=2" then &
+"variable	n_processor_x		index 2" &
+else &
+"variable	n_processor_x		index 1"
 # run step
 variable	rst_from		index 0
 variable ifset_velocity_after_rst index no
