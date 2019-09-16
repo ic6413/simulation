@@ -50,7 +50,7 @@ velocity_field () {
     else
         echo "create velocity field at step " $step1 "to " $step2 "n_ave is " $n_ave
     fi
-    python script_velocity_field.py $if_plot_to_last $step1 $ step2 $n_ave
+    ~/simulation/script/script_velocity_field.py ${if_plot_to_last} ${step1} ${step2} ${n_ave}
 }
 
 
@@ -105,7 +105,7 @@ while [ "$1" != "" ]; do
 done
 
 ###### Main
-
+echo "$if_vfield"
 # check interactive on or off
 if [ "$interactive" == "1" ]; then
 	echo "interactive is on"
@@ -126,15 +126,17 @@ if [ "$interactive" == "1" ]; then
         read STEPDIFF
         echo "Type the END that you want, followed by [ENTER]:"
         read END
+    fi
     if [ "$if_vfield" == "1" ]; then
         echo "Type the if_plot_to_last that you want (1 or 0), followed by [ENTER]:"
-        read allrstimage
+        read if_plot_to_last
         echo "Type the step1 that you want, followed by [ENTER]:"
-        read START
+        read step1
         echo "Type the step2 that you want, followed by [ENTER]:"
-        read STEPDIFF
+        read step2
         echo "Type the n_ave that you want, followed by [ENTER]:"
-        read END
+        read n_ave
+    fi
 else
     echo "interactive off"
 fi
