@@ -213,11 +213,14 @@ print "gamma_t ${gamma_t}" screen no append output/setting/attribute.lammps
 print "friction_coefficient ${xmu}" screen no append output/setting/attribute.lammps
 variable	ifdamp_tangent	equal 1
 # number of chunk
-variable	N_bin_x 	equal 10 
-variable	N_bin_y 	equal ${width_dp_unit} 
-variable	N_bin_z 	equal 10
-variable	N_bin_r 	equal ${width_dp_unit} 
-variable	N_bin_theta	equal 10
+variable	bin_z_dp_unit_approximate 	equal 3
+variable	bin_y_dp_unit_approximate 	equal 1
+variable	bin_x_dp_unit_approximate 	equal 1
+
+variable	N_bin_z 	equal $(round(v_zhi_chunk_dp_unit/v_bin_z_dp_unit_approximate))
+variable	N_bin_y 	equal $(round(v_width_dp_unit/v_bin_y_dp_unit_approximate)) 
+variable	N_bin_x	  equal $(round(x_period_dp_unit/v_bin_x_dp_unit_approximate))
+
 print "N_bin_x ${N_bin_x}" screen no append output/setting/attribute.lammps
 print "N_bin_y ${N_bin_y}" screen no append output/setting/attribute.lammps
 print "N_bin_z ${N_bin_z}" screen no append output/setting/attribute.lammps
@@ -262,8 +265,6 @@ variable	zlo_pour	equal $(v_zlo_pour_dp_unit*v_dp)
 variable	zhi_pour	equal $(v_zhi_pour_dp_unit*v_dp)
 
 # calculate number of bin
-variable	N_total_bin 	equal v_N_bin_r*v_N_bin_theta*v_N_bin_z
-variable	N_total_rz 	equal v_N_bin_r*v_N_bin_z
 variable	N_total_yz 	equal v_N_bin_y*v_N_bin_z
 
 # calculate inner wall speed

@@ -224,13 +224,13 @@ print "gamma_t ${gamma_t}" screen no append output/setting/attribute.lammps
 print "friction_coefficient ${xmu}" screen no append output/setting/attribute.lammps
 variable	ifdamp_tangent	equal 1
 # number of chunk
-variable	N_bin_x 	equal 10 
-variable	N_bin_y 	equal 10
-variable	N_bin_z 	equal 10
-variable	N_bin_r 	equal ${width_dp_unit} 
-variable	N_bin_theta	equal 10
-print "N_bin_x ${N_bin_x}" screen no append output/setting/attribute.lammps
-print "N_bin_y ${N_bin_y}" screen no append output/setting/attribute.lammps
+variable	bin_z_dp_unit_approximate 	equal 3
+variable	bin_r_dp_unit_approximate 	equal 1
+
+variable	N_bin_z 	equal $(round(v_zhi_chunk_dp_unit/v_bin_z_dp_unit_approximate))
+variable	N_bin_r 	equal $(round(v_width_dp_unit/v_bin_r_dp_unit_approximate)) 
+variable	N_bin_theta	equal $(round(1/v_ri_dp_unit))
+
 print "N_bin_z ${N_bin_z}" screen no append output/setting/attribute.lammps
 print "N_bin_r ${N_bin_r}" screen no append output/setting/attribute.lammps
 print "N_bin_theta ${N_bin_theta}" screen no append output/setting/attribute.lammps
