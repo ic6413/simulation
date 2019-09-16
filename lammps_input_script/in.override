@@ -1,9 +1,8 @@
 # override variables
-# task number from slurm
-variable    n_mpi_tasks     getenv OMPI_COMM_WORLD_SIZE
+# geometry
+variable    boundary_geomrtry   index cylinder  # cylinder block
 # ztop
 variable  ifztop   index yes
-
 # run step
 variable	rst_from		index 0
 variable ifset_velocity_after_rst index no
@@ -77,4 +76,9 @@ variable  	freq_balance      	index 50000
 # get simulation path
 variable    home_path     getenv HOME
 variable    simulation_path     string "${home_path}/simulation"
-include ${simulation_path}/lammps_input_script/in.lmpscript_20190114_v11
+if "${boundary_geomrtry}==cylinder" then &
+"include ${simulation_path}/lammps_input_script/in.lmpscript_cylinder" &
+elif "${boundary_geomrtry}==block" &
+"include ${simulation_path}/lammps_input_script/in.lmpscript_periodic_block" &
+else &
+"quit 1"

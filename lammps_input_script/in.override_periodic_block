@@ -1,6 +1,6 @@
 # override variables
-# task number from slurm
-variable    n_mpi_tasks     getenv OMPI_COMM_WORLD_SIZE
+# geometry
+variable    boundary_geomrtry   index block
 # ztop
 variable  ifztop   index yes
 # run step
