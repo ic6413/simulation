@@ -75,6 +75,7 @@ variable  	freq_balance      	index 50000
 # freq test
 variable  	freq_test1      	index 0
 variable  	freq_test2      	index 0
+variable  	freq_test3      	index 0
 # get simulation path
 variable    home_path     getenv HOME
 variable    simulation_path     string "${home_path}/simulation"
