@@ -1181,6 +1181,9 @@ variable escape_wall_rmin equal "c_r_z_min[1] < v_ri"
 variable escape_wall_zmin equal "c_r_z_min[2] < v_z_bottom"
 fix test2 all print ${freq_test2} "$(v_escape_wall_rmax) $(v_escape_wall_zmax) $(v_escape_wall_rmin) $(v_escape_wall_zmin)" screen no append output/test/test2
 label skip_test2
+if "${freq_test3} == 0" then "jump SELF skip_test3"
+fix test3 all print ${freq_test3} "$(c_r_z_max[1]) $(c_r_z_max[2]) $(c_r_z_min[1]) $(c_r_z_min[2])" screen no append output/test/test3
+label skip_test3
 # file, thermo
 if "${iftrace_maxKEt} == yes" then &
 "thermo_style	custom step time vol atoms ke c_KEr pe v_KEtr v_EKP c_id_maxKEt[1] c_id_maxKEt[2]" &
