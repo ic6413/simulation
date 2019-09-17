@@ -105,7 +105,6 @@ while [ "$1" != "" ]; do
 done
 
 ###### Main
-echo "$if_vfield"
 # check interactive on or off
 if [ "$interactive" == "1" ]; then
 	echo "interactive is on"
@@ -117,6 +116,10 @@ echo "output file = $filename"
 
 # if interactive then input variable
 if [ "$interactive" == "1" ]; then
+
+    echo "Type the if_r2image that you want (1 or 0), followed by [ENTER]:"
+    read if_r2image
+
     if [ "$if_r2image" == "1" ]; then
         echo "Type the allrstimage that you want (1 or 0), followed by [ENTER]:"
         read allrstimage
@@ -127,6 +130,9 @@ if [ "$interactive" == "1" ]; then
         echo "Type the END that you want, followed by [ENTER]:"
         read END
     fi
+
+    echo "Type the if_vfield that you want (1 or 0), followed by [ENTER]:"
+    read if_vfield
     if [ "$if_vfield" == "1" ]; then
         echo "Type the if_plot_to_last that you want (1 or 0), followed by [ENTER]:"
         read if_plot_to_last
