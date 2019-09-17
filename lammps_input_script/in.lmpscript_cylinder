@@ -149,7 +149,7 @@ variable  	freq_balance      	index 0
 # freq test
 variable  	freq_test1      	index 0
 variable  	freq_test2      	index 0
-
+variable  	freq_test3      	index 0
 # number of type
 variable	n_type			index 3 #1 or 3 or  0 means no create
 print "n_type ${n_type}" screen no append output/setting/attribute.lammps
