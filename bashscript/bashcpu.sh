@@ -2,7 +2,7 @@
 #Submit this script with: sbatch thefilename
 
 # test job
-#SBATCH --qos=debug
+##SBATCH --qos=debug
 
 # asking for resources
 #SBATCH --time=00:20:00   # walltime
