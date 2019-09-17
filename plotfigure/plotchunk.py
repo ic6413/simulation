@@ -93,7 +93,6 @@ def plotchunk(if_plot_to_last, step1, step2):
     with open(dp.lammps_directory + "output/momentum_mass_field/fix.momentum_mass_field.all") as f:
         
         lines = f.read().strip().split('\n')
-        breakpoint()
         header = lines[2].split()[1:]
         step1_default = int(lines[3].split()[0])
         step2_default = int(lines[-1 - n_12].split()[0])

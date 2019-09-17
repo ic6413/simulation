@@ -105,18 +105,13 @@ while [ "$1" != "" ]; do
 done
 
 ###### Main
-# check interactive on or off
-if [ "$interactive" == "1" ]; then
-	echo "interactive is on"
-else
-	echo "interactive is off"
-fi
+
 # check file name
 echo "output file = $filename"
 
 # if interactive then input variable
 if [ "$interactive" == "1" ]; then
-
+    echo "interactive is on"
     echo "Type the if_r2image that you want (1 or 0), followed by [ENTER]:"
     read if_r2image
 
@@ -155,7 +150,7 @@ else
 	echo "if_r2image is off"
 fi
 
-# r2image start
+# vfield start
 if [ "$if_vfield" == "1" ]; then
 	echo "if_vfield is on"
     velocity_field ${if_plot_to_last} ${step1} ${step2} ${n_ave}
