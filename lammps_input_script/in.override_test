@@ -1,6 +1,6 @@
 # override variables
 # geometry
-variable    boundary_geomrtry   index block
+variable    boundary_geomrtry   index cylinder  # cylinder block
 # ztop
 variable  ifztop   index yes
 # run step
@@ -13,8 +13,9 @@ variable	runstep_loop		index 0
 variable	ts_scale		index 1
 # reset dt
 variable	ifresetdt		index no
-# region height
-variable	zhi_create_dp_unit	index 31
+# region height width
+variable	z_length_create_dp_unit	index 31
+variable	width_wall_dp_unit		index 17
 # contact model
 variable	contact_change 		index no
 variable  	eliminate_history   	index no 
@@ -72,8 +73,16 @@ variable	repeat_ave_wall		index 0
 variable	every_ave_wall		index 0
 # freq rebalance
 variable  	freq_balance      	index 50000
-
+# freq test
+variable  	freq_test1      	index 0
+variable  	freq_test2      	index 0
+variable  	freq_test3      	index 0
 # get simulation path
 variable    home_path     getenv HOME
 variable    simulation_path     string "${home_path}/simulation"
-include ${simulation_path}/lammps_input_script/in.lmpscript_periodic_block
+if "${boundary_geomrtry}==cylinder" then &
+"include ${simulation_path}/lammps_input_script/in.lmpscript_cylinder" &
+elif "${boundary_geomrtry}==block" &
+"include ${simulation_path}/lammps_input_script/in.lmpscript_periodic_block" &
+else &
+"quit 1"
