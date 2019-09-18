@@ -26,8 +26,8 @@ dp0 = eval(rr.logfile['dp'])
 density = eval(rr.logfile['den'])
 # intersection pointmu
 if rr.logfile["shearwall"] == "zcylinder":
-    r_in = eval(rr.logfile['ri'])
-    r_out = eval(rr.logfile['ro'])
+    r_in = eval(rr.logfile['ri_wall'])
+    r_out = eval(rr.logfile['ro_wall'])
 
 try:
     omega_in = eval(rr.logfile['omega_in'])
@@ -68,11 +68,11 @@ elif n_type == 3:
 else:
     sys.exit("n_type not 3 or 1")
 type_radius_array = np.transpose(np.asarray(type_radius_list))
-z_bottom = eval(rr.logfile['z_bottom'])
+zlo_wall = eval(rr.logfile['zlo_wall'])
 walls_p = [
     [
         'p',
-        [0,0,z_bottom],
+        [0,0,zlo_wall],
         [0,0,1],
         None,
         [0,0,0],

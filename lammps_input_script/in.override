@@ -14,8 +14,8 @@ variable	ts_scale		index 1
 # reset dt
 variable	ifresetdt		index no
 # region height width
-variable	zhi_create_dp_unit	index 31
-variable	width_dp_unit		index 17
+variable	z_length_create_dp_unit	index 31
+variable	width_wall_dp_unit		index 17
 # contact model
 variable	contact_change 		index no
 variable  	eliminate_history   	index no 

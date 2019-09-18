@@ -70,19 +70,19 @@ variable	dp_small_dp_unit 	equal 0.9
 variable	skin_dp_unit		equal 0.5
 
 # container size
-variable	ri_dp_unit		equal 37	#inner radius
-variable	width_dp_unit		equal 16	#width
+variable	ri_wall_dp_unit		equal 37	#inner radius
+variable	width_wall_dp_unit		equal 16	#width
 variable	zhi_chunk_dp_unit	equal 30	#height
 
 # calculate ro
-variable	ro_dp_unit		equal v_ri_dp_unit+v_width_dp_unit
+variable	ro_wall_dp_unit		equal v_ri_wall_dp_unit+v_width_wall_dp_unit
 
 # simulation box size
 variable	zhi_box_dp_unit		equal 36
 
 # size of region to insert atoms
-variable	ri_delete_dp_unit	equal "0.5*v_dp_big_dp_unit + v_ri_dp_unit"
-variable	ro_insert_dp_unit	equal "-0.5*v_dp_big_dp_unit + v_ro_dp_unit"
+variable	ri_create_dp_unit	equal "0.5*v_dp_big_dp_unit + v_ri_wall_dp_unit"
+variable	ro_create_dp_unit	equal "-0.5*v_dp_big_dp_unit + v_ro_wall_dp_unit"
 variable	zlo_create_dp_unit	equal 0.55
 variable        zhi_create_dp_unit	equal 28.9
 # pour zlo zhi
@@ -100,7 +100,7 @@ variable	ifdamp_tangent	equal 1
 variable	N_bin_x 	equal 50 
 variable	N_bin_y 	equal 50
 variable	N_bin_z 	equal 50
-variable	N_bin_r 	equal v_width_dp_unit 
+variable	N_bin_r 	equal v_width_wall_dp_unit 
 variable	N_bin_theta	equal 50
 variable	N_bin_z		equal v_zhi_box_dp_unit/3
 
@@ -111,8 +111,8 @@ variable	Sa 		equal 2e-6
 variable	rp		equal v_dp/2		#particle radius
 
 # calculate container size
-variable	ro		equal v_ro_dp_unit*v_dp
-variable	ri 		equal v_ri_dp_unit*v_dp
+variable	ro		equal v_ro_wall_dp_unit*v_dp
+variable	ri 		equal v_ri_wall_dp_unit*v_dp
 variable	zhi_chunk	equal v_zhi_chunk_dp_unit*v_dp
 variable        zhi_box 	equal v_zhi_box_dp_unit*v_dp
 
@@ -127,8 +127,8 @@ variable	mp 		equal 4/3*PI*v_rp^3*v_den
 variable	skin		equal v_skin_dp_unit*v_dp
 
 # calculate size of region to create atoms
-variable	ri_delete	equal v_ri_delete_dp_unit*v_dp
-variable	ro_insert	equal v_ro_insert_dp_unit*v_dp
+variable	ri_create	equal v_ri_create_dp_unit*v_dp
+variable	ro_create	equal v_ro_create_dp_unit*v_dp
 variable	zlo_create	equal v_zlo_create_dp_unit*v_dp
 variable	zhi_create	equal v_zhi_create_dp_unit*v_dp
 
@@ -160,8 +160,8 @@ variable        chunk_id_r_z	atom 1+v_N_bin_r*v_zbin+v_rbin
 
 # freeze region size
 variable	zhi_freeze_dp_unit	equal 29
-variable	ri_freeze_dp_unit	equal v_ri_dp_unit-v_dp_big_dp_unit/2
-variable	ro_freeze_dp_unit	equal v_ro_dp_unit+v_dp_big_dp_unit/2
+variable	ri_freeze_dp_unit	equal v_ri_wall_dp_unit-v_rp_big_dp_unit
+variable	ro_freeze_dp_unit	equal v_ro_wall_dp_unit+v_rp_big_dp_unit
 
 # calculate freeze region size
 variable	zhi_freeze		equal v_zhi_freeze_dp_unit*v_dp
@@ -199,8 +199,8 @@ pair_style	gran/hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_
 pair_coeff	* *
 
 # insert region
-region	out_inbdy_insert 	cylinder z 0. 0. ${ri_delete} 0 ${zhi_box} units box side out
-region	in_outbdy_insert 	cylinder z 0. 0. ${ro_insert} ${zlo_create} ${zhi_create} units box
+region	out_inbdy_insert 	cylinder z 0. 0. ${ri_create} 0 ${zhi_box} units box side out
+region	in_outbdy_insert 	cylinder z 0. 0. ${ro_create} ${zlo_create} ${zhi_create} units box
 region	region_ins_0		intersect 2 out_inbdy_insert in_outbdy_insert units box
 
 # insert more region
@@ -251,7 +251,7 @@ set		atom * density 	${den}
 label		end_create
 
 # delete atoms, no restart
-region       	delete_in_small cylinder z 0. 0. ${ri_delete} 0 ${zhi_box} units box
+region       	delete_in_small cylinder z 0. 0. ${ri_create} 0 ${zhi_box} units box
 delete_atoms 	region delete_in_small
 
 # balance
@@ -302,11 +302,11 @@ label	label_end_freeze
 # pour region, block, z-axis cylinder, side = in, no restart
 if "${ifpour} == no" then "jump SELF end_pour"
 label	begin_pour
-region	pour_region	cylinder z 0. 0. ${ro_insert} ${zlo_pour} ${zhi_pour} units box" &
+region	pour_region	cylinder z 0. 0. ${ro_create} ${zlo_pour} ${zhi_pour} units box" &
 fix	pour_fix	all pour 36267 1 300719 region pour_region diam one ${dp} dens 2500 2500 vol 0.55 50" &
 	# run 1 step and delete
 run	1	
-region       	delete_in_small cylinder z 0. 0. ${ri_delete} 0 ${zhi_box} units box
+region       	delete_in_small cylinder z 0. 0. ${ri_create} 0 ${zhi_box} units box
 delete_atoms 	region delete_in_small
 label	end_pour
 

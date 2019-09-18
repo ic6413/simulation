@@ -22,9 +22,9 @@ if rr.logfile["shearwall"] == "yplane":
     chunk_method = 'yz'
     
 diameter = float(rr.logfile['dp'])
-width_dp_unit = int(rr.logfile['width_dp_unit'])
+width_wall_dp_unit = int(rr.logfile['width_wall_dp_unit'])
 if chunk_method == "rz":
-    ri = diameter*int(rr.logfile['ri_dp_unit']) 
+    ri = diameter*int(rr.logfile['ri_wall_dp_unit']) 
 elif chunk_method == "yz":
     x_period = diameter*int(rr.logfile['x_period_dp_unit'])
 else:
@@ -38,9 +38,9 @@ if velocity_scale < 0:
 if velocity_scale == 0:
     Sa_fake = 0.000002
     if chunk_method == "rz":
-        velocity_scale = ri*(Sa_fake*g*width_dp_unit**3*diameter/ri**2)**0.5
+        velocity_scale = ri*(Sa_fake*g*width_wall_dp_unit**3*diameter/ri**2)**0.5
     elif chunk_method == "yz":
-        velocity_scale = (Sa_fake*g*width_dp_unit**3*diameter)**0.5
+        velocity_scale = (Sa_fake*g*width_wall_dp_unit**3*diameter)**0.5
 
 height_dpunit = float(rr.logfile['zhi_chunk_dp_unit'])
 
@@ -56,18 +56,18 @@ else:
 n_12 = n_1*n_2
 if chunk_method == "rz":
     x_array, y_array = np.meshgrid(
-                                int(rr.logfile['ri_dp_unit']) + (np.arange(n_1)+0.5)/n_1*width_dp_unit,
+                                int(rr.logfile['ri_wall_dp_unit']) + (np.arange(n_1)+0.5)/n_1*width_wall_dp_unit,
                                 (np.arange(n_2)+0.5)/n_2*height_dpunit,
                                 )
 elif chunk_method == "yz":
     if rr.logfile["chunk/atom"][1] == "y":
         y_array, x_array = np.meshgrid(
                                        (np.arange(n_2)+0.5)/n_2*height_dpunit,
-                                       (np.arange(n_1)+0.5)/n_1*width_dp_unit,
+                                       (np.arange(n_1)+0.5)/n_1*width_wall_dp_unit,
                                     )
     elif rr.logfile["chunk/atom"][1] == "z":
         x_array, y_array = np.meshgrid(
-                                       (np.arange(n_1)+0.5)/n_1*width_dp_unit,
+                                       (np.arange(n_1)+0.5)/n_1*width_wall_dp_unit,
                                        (np.arange(n_2)+0.5)/n_2*height_dpunit,
                                     )
     else:
@@ -76,7 +76,7 @@ elif chunk_method == "yz":
 else:
     sys.exit("chunk_method wrong")
 
-dx = 1/n_1*width_dp_unit
+dx = 1/n_1*width_wall_dp_unit
 dy = 1/n_2*height_dpunit
 x_array = x_array.reshape((-1))
 y_array = y_array.reshape((-1))

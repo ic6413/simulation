@@ -42,7 +42,7 @@ kt = dp.kt
 gamma_n = dp.gamma_n
 gamma_t = dp.gamma_t
 type_radius_array = dp.type_radius_array
-z_bottom = dp.z_bottom
+zlo_wall = dp.zlo_wall
 walls = dp.walls
 # ====================================== end import attribute
 
