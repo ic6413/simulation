@@ -200,16 +200,16 @@ variable	z_length_create_dp_unit		index 31
 # calculate ro wall
 variable	ro_wall_dp_unit		equal $(v_ri_wall_dp_unit+v_width_wall_dp_unit)
 # calculate zhi_wall
-variable  zhi_wall_dp_unit index $(v_zlo_wall_dp_unit+v_z_length_create_dp_unit+5)
+variable  zhi_wall_dp_unit equal $(v_zlo_wall_dp_unit+v_z_length_create_dp_unit+5)
 # simulation box
 variable	zhi_box_dp_unit		equal $(v_zhi_wall_dp_unit+0.1)
-variable	ro_box_dp_unit		index $(v_ro_wall_dp_unit+0.1)
-variable  zlo_box_dp_unit   index $(v_zlo_wall_dp_unit-0.1)
+variable	ro_box_dp_unit		equal $(v_ro_wall_dp_unit+0.1)
+variable  zlo_box_dp_unit   equal $(v_zlo_wall_dp_unit-0.1)
 # zlo zhi ri ro create particles
 variable	zlo_create_dp_unit	equal $(v_rp_big_dp_unit)
-variable  zhi_create_dp_unit index $(v_z_length_create_dp_unit+v_zlo_create_dp_unit)
-variable	ro_create_dp_unit		index $(v_ro_wall_dp_unit-v_rp_big_dp_unit)
-variable	ri_create_dp_unit		index $(v_ri_wall_dp_unit+v_rp_big_dp_unit)
+variable  zhi_create_dp_unit equal $(v_z_length_create_dp_unit+v_zlo_create_dp_unit)
+variable	ro_create_dp_unit		equal $(v_ro_wall_dp_unit-v_rp_big_dp_unit)
+variable	ri_create_dp_unit		equal $(v_ri_wall_dp_unit+v_rp_big_dp_unit)
 
 # chunk height
 variable	zhi_chunk_dp_unit	equal $(v_zhi_box_dp_unit)	#height

@@ -191,22 +191,22 @@ variable	ylo_wall_dp_unit		equal 0
 # calculate yhi wall
 variable	yhi_wall_dp_unit		equal $(v_width_wall_dp_unit+v_ylo_wall_dp_unit)
 # calculate zhi_wall
-variable  zhi_wall_dp_unit index $(v_zlo_wall_dp_unit+v_z_length_create_dp_unit+5)
+variable  zhi_wall_dp_unit equal $(v_zlo_wall_dp_unit+v_z_length_create_dp_unit+5)
 # simulation box
-variable  zlo_box_dp_unit   index $(v_zlo_wall_dp_unit-0.1)
-variable	zhi_box_dp_unit		index $(v_zhi_wall_dp_unit+0.1)
-variable	ylo_box_dp_unit		index $(v_ylo_wall_dp_unit-0.1)
-variable	yhi_box_dp_unit		index $(v_yhi_wall_dp_unit-0.1)
-variable	xlo_box_dp_unit		index 0
-variable	xhi_box_dp_unit		index $(v_x_period_dp_unit+v_xlo_box_dp_unit)
+variable  zlo_box_dp_unit   equal $(v_zlo_wall_dp_unit-0.1)
+variable	zhi_box_dp_unit		equal $(v_zhi_wall_dp_unit+0.1)
+variable	ylo_box_dp_unit		equal $(v_ylo_wall_dp_unit-0.1)
+variable	yhi_box_dp_unit		equal $(v_yhi_wall_dp_unit-0.1)
+variable	xlo_box_dp_unit		equal 0
+variable	xhi_box_dp_unit		equal $(v_x_period_dp_unit+v_xlo_box_dp_unit)
 
 # zlo zhi ylo yhi xlo xhi create particles
 variable	zlo_create_dp_unit	equal $(v_rp_big_dp_unit)
-variable  zhi_create_dp_unit index $(v_z_length_create_dp_unit+v_zlo_create_dp_unit)
-variable	yhi_create_dp_unit		index $(v_yhi_wall_dp_unit-v_rp_big_dp_unit)
-variable	ylo_create_dp_unit		index $(v_ylo_wall_dp_unit+v_rp_big_dp_unit)
-variable	xhi_create_dp_unit		index $(v_xhi_box_dp_unit-v_rp_big_dp_unit)
-variable	xlo_create_dp_unit		index $(v_xlo_box_dp_unit+v_rp_big_dp_unit)
+variable  zhi_create_dp_unit equal $(v_z_length_create_dp_unit+v_zlo_create_dp_unit)
+variable	yhi_create_dp_unit		equal $(v_yhi_wall_dp_unit-v_rp_big_dp_unit)
+variable	ylo_create_dp_unit		equal $(v_ylo_wall_dp_unit+v_rp_big_dp_unit)
+variable	xhi_create_dp_unit		equal $(v_xhi_box_dp_unit-v_rp_big_dp_unit)
+variable	xlo_create_dp_unit		equal $(v_xlo_box_dp_unit+v_rp_big_dp_unit)
 
 
 # chunk height
