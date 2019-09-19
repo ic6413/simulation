@@ -319,9 +319,6 @@ variable        chunk_id_r_z	atom 1+v_N_bin_r*v_zbin+v_rbin
 
 # processor
 processors  ${n_processor_x} * *
-# bin size and memory
-neighbor	${skin} bin
-neigh_modify	delay 0 #page 20
 
 # jump to restart section
 if	"${rst_from} > 0" 	then "jump SELF end_restart_skip1"
@@ -522,6 +519,10 @@ jump SELF end_deposit
 
 label	end_deposit
 label		end_restart_skip1
+
+# bin size and memory
+neighbor	${skin} bin
+neigh_modify	delay 0 #page 20
 
 # jump if restart from nonzero step
 # this command specify in jobscribe "variable	rst_from equal N" be used as suffix in output file name

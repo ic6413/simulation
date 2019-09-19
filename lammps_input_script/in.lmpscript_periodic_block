@@ -314,9 +314,8 @@ variable	mvy 		atom mass*vy
 variable	ybin		atom "floor( (y)/ (v_width)* v_N_bin_y )"
 variable	zbin		atom "floor(z/ v_zhi_chunk* v_N_bin_z)"
 
-# bin size and memory
-neighbor	${skin} bin
-neigh_modify	delay 0 #page 20
+# processors
+processors  * * *
 
 # jump to restart section
 if	"${rst_from} > 0" 	then "jump SELF end_restart_skip1"
@@ -333,7 +332,6 @@ timestep     ${ts}
 # communication, no restart
 comm_style	brick
 comm_modify	vel yes
-processors  * * *
 
 # reg to define box, no restart
 region		simulation_box block ${xlo_box} ${xhi_box} ${ylo_box} ${yhi_box} ${zlo_box} ${zhi_box} units box
@@ -512,6 +510,10 @@ jump SELF end_deposit
 
 label	end_deposit
 label		end_restart_skip1
+
+# bin size and memory
+neighbor	${skin} bin
+neigh_modify	delay 0 #page 20
 
 # jump if restart from nonzero step
 # this command specify in jobscribe "variable	rst_from equal N" be used as suffix in output file name
