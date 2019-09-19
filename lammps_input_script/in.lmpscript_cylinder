@@ -260,7 +260,7 @@ print "ri_wall ${ri_wall}" screen no append output/setting/attribute.lammps
 print "zlo_wall ${zlo_wall}" screen no append output/setting/attribute.lammps
 print "zhi_wall ${zhi_wall}" screen no append output/setting/attribute.lammps
 # calculate chunk height
-variable	zhi_chunk	equal v_zhi_chunk_dp_unit*v_dp
+variable	zhi_chunk	equal $(v_zhi_chunk_dp_unit*v_dp)
 # calculate simulation box size
 variable ro_box equal $(v_ro_box_dp_unit*v_dp)
 variable zhi_box 	equal $(v_zhi_box_dp_unit*v_dp)
