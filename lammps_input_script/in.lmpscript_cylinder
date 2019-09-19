@@ -317,6 +317,8 @@ variable	rbin		atom "floor( (v_d_z_axis-v_ri_wall)/ (v_ro_wall-v_ri_wall)* v_N_b
 variable	zbin		atom "floor(z/ v_zhi_chunk* v_N_bin_z)"
 variable        chunk_id_r_z	atom 1+v_N_bin_r*v_zbin+v_rbin
 
+# processor
+processors  ${n_processor_x} * *
 # bin size and memory
 neighbor	${skin} bin
 neigh_modify	delay 0 #page 20
@@ -336,7 +338,6 @@ timestep     ${ts}
 # communication, no restart
 comm_style	brick
 comm_modify	vel yes
-processors  ${n_processor_x} * *
 
 # reg to define box, no restart
 region		simulation_box cylinder z 0. 0. ${ro_box} ${zlo_box} ${zhi_box} units box
