@@ -23,4 +23,4 @@
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
 
-. ~/simulation/bashscript/job_nodecpu.sh --multi
+. ~/simulation/bashscript/job_nodecpu.sh #--multi
