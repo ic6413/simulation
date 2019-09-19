@@ -48,26 +48,62 @@ LMP_INSCRIPT_infolder="./in.override"
 
 LMP_INSCRIPT=${LMP_INSCRIPT_infolder}
 
-##===========normal do not bind socket============
-#LOAD MODULES, INSERT CODE, AND RUN YOUR PROGRAMS HERE
-module purge
-module load openmpi/4.0.1
-module load lmp/190809unstable_openmpi401_mpiio #190916master_openmpi401_omp_mpiio  #190809unstable_openmpi401_mpiio
-#check setting after load module
-module list
-${OMPIRUN_basic} lmp -in ${LMP_INSCRIPT}
-#${OMPIRUN_basic} ${OMPIRUNBIND_c} lmp -in ${LMP_INSCRIPT}
 
-:'
-##===========normal do not bind socket============
-#LOAD MODULES, INSERT CODE, AND RUN YOUR PROGRAMS HERE
-module purge
-module load ompi/4.0.1_yesucx_computenode
-module load lmp/190729_master_selfompi401ucx_normal_mpiio 
-#check setting after load module
-module list
-${OMPIRUN_basic} lmp -in ${LMP_INSCRIPT}
-${OMPIRUN_basic} ${OMPIRUNBIND_c} lmp -in ${LMP_INSCRIPT}
-'
 
-echo "All Done!"
+##### Functions
+single_script () {
+    
+    ##===========normal do not bind socket============
+    #LOAD MODULES, INSERT CODE, AND RUN YOUR PROGRAMS HERE
+    module purge
+    module load openmpi/4.0.1
+    module load lmp/190809unstable_openmpi401_mpiio #190916master_openmpi401_omp_mpiio  #190809unstable_openmpi401_mpiio
+    #check setting after load module
+    module list
+    ${OMPIRUN_basic} lmp -in ${LMP_INSCRIPT}
+    #${OMPIRUN_basic} ${OMPIRUNBIND_c} lmp -in ${LMP_INSCRIPT}
+
+    :'
+    ##===========normal do not bind socket============
+    #LOAD MODULES, INSERT CODE, AND RUN YOUR PROGRAMS HERE
+    module purge
+    module load ompi/4.0.1_yesucx_computenode
+    module load lmp/190729_master_selfompi401ucx_normal_mpiio 
+    #check setting after load module
+    module list
+    ${OMPIRUN_basic} lmp -in ${LMP_INSCRIPT}
+    ${OMPIRUN_basic} ${OMPIRUNBIND_c} lmp -in ${LMP_INSCRIPT}
+    '
+
+    echo "All Done!"
+}
+
+###### command line option
+if_multi=0
+while [ "$1" != "" ]; do
+    case $1 in
+        --multi )               if_multi=1
+                                ;;
+        * )                     usage
+                                exit 1
+    esac
+    shift
+done
+
+# if multi
+if [ "$if_multi" == "0" ]; then
+    echo "multi is off"
+    single_script
+
+else
+    echo "multi on"
+    FILES=./*/
+    for f in ${FILES}
+    do
+        cd ${f}
+        single_script
+        cd ..
+    done
+fi
+
+
