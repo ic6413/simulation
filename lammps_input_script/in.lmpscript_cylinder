@@ -520,14 +520,14 @@ jump SELF end_deposit
 label	end_deposit
 label		end_restart_skip1
 
-# bin size and memory
-neighbor	${skin} bin
-neigh_modify	delay 0 #page 20
-
 # jump if restart from nonzero step
 # this command specify in jobscribe "variable	rst_from equal N" be used as suffix in output file name
 if		"${rst_from} != 0" then &
   "read_restart restart.mpiio.${rst_from}"
+
+# bin size and memory
+neighbor	${skin} bin
+neigh_modify	delay 0 #page 20
 
 if		"${rst_from} != 0 && ${ifset_velocity_after_rst} == yes" then &
   "set group all vx 0.0 vy 0.0 vz 0.0"
