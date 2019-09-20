@@ -182,8 +182,8 @@ variable	mp 		equal $(4/3*PI*v_rp^3*v_den)
 # radius of big and small atom
 variable  dp_big_dp_unit		equal 1.1
 variable	dp_small_dp_unit 	equal 0.9
-variable  rp_big_dp_unit		equal $(v_dp_big_dp_unit)
-variable	rp_small_dp_unit 	equal $(v_dp_small_dp_unit)
+variable  rp_big_dp_unit		equal $(v_dp_big_dp_unit/2)
+variable	rp_small_dp_unit 	equal $(v_dp_small_dp_unit/2)
 
 # skin
 variable	skin_dp_unit		equal 0.5
