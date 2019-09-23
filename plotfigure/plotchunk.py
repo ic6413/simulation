@@ -16,7 +16,6 @@ from mpl_toolkits.mplot3d import Axes3D
 import datapath as dp
 import read_setting.read_setting as rr
 # define function for extract data from fix txt to dataframe
-breakpoint()
 if rr.logfile["shearwall"] == "zcylinder":
     chunk_method = 'rz'
 if rr.logfile["shearwall"] == "yplane":

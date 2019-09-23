@@ -25,7 +25,6 @@ ts = eval(rr.logfile['ts'])
 dp0 = eval(rr.logfile['dp'])
 density = eval(rr.logfile['den'])
 # intersection pointmu
-breakpoint()
 if rr.logfile["shearwall"] == "zcylinder":
     r_in = eval(rr.logfile['ri_wall'])
     r_out = eval(rr.logfile['ro_wall'])
