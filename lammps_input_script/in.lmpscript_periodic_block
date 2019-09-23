@@ -210,7 +210,8 @@ variable	xlo_create_dp_unit		equal $(v_xlo_box_dp_unit+v_rp_big_dp_unit)
 
 
 # chunk height
-variable	zhi_chunk_dp_unit	equal $(v_zhi_box_dp_unit)	#height
+variable	zhi_chunk_dp_unit	equal $(v_zhi_box_dp_unit)
+variable	zlo_chunk_dp_unit	equal $(v_zlo_box_dp_unit)
 # pour zlo zhi
 variable	zlo_pour_dp_unit	equal $(v_zhi_box_dp_unit-2+0.999999999)
 variable	zhi_pour_dp_unit	equal $(v_zhi_box_dp_unit-1)
@@ -239,7 +240,7 @@ variable	bin_z_dp_unit_approximate 	equal 3
 variable	bin_y_dp_unit_approximate 	equal 1
 variable	bin_x_dp_unit_approximate 	equal 1
 
-variable	N_bin_z 	equal $(round(v_zhi_chunk_dp_unit/v_bin_z_dp_unit_approximate))
+variable	N_bin_z 	equal $(round((v_zhi_chunk_dp_unit-v_zlo_chunk_dp_unit)/v_bin_z_dp_unit_approximate))
 variable	N_bin_y 	equal $(round(v_width_wall_dp_unit/v_bin_y_dp_unit_approximate)) 
 variable	N_bin_x	  equal $(round(v_x_period_dp_unit/v_bin_x_dp_unit_approximate))
 
@@ -268,6 +269,7 @@ print "ylo_wall ${ylo_wall}" screen no append output/setting/attribute.lammps
 print "yhi_wall ${yhi_wall}" screen no append output/setting/attribute.lammps
 # calculate chunk height
 variable	zhi_chunk	equal $(v_zhi_chunk_dp_unit*v_dp)
+variable	zlo_chunk	equal $(v_zlo_chunk_dp_unit*v_dp)
 # calculate simulation box size
 variable width equal $(v_width_wall_dp_unit*v_dp)
 variable zhi_box 	equal $(v_zhi_box_dp_unit*v_dp)
@@ -314,7 +316,7 @@ variable	mvy 		atom mass*vy
 
 # calculate chunk id
 variable	ybin		atom "floor( (y)/ (v_width)* v_N_bin_y )"
-variable	zbin		atom "floor(z/ v_zhi_chunk* v_N_bin_z)"
+variable	zbin		atom "floor((z-v_zlo_chunk)/ (v_zhi_chunk-v_zlo_chunk)* v_N_bin_z)"
 
 # processors
 processors  * * *

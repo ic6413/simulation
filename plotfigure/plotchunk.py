@@ -20,7 +20,7 @@ if rr.logfile["shearwall"] == "zcylinder":
     chunk_method = 'rz'
 if rr.logfile["shearwall"] == "yplane":
     chunk_method = 'yz'
-    
+
 diameter = float(rr.logfile['dp'])
 width_wall_dp_unit = int(rr.logfile['width_wall_dp_unit'])
 if chunk_method == "rz":
@@ -89,20 +89,23 @@ else:
 
 
 def plotchunk(if_plot_to_last, step1, step2):
-
+    
     with open(dp.lammps_directory + "output/momentum_mass_field/fix.momentum_mass_field.all") as f:
         
         lines = f.read().strip().split('\n')
+        
         header = lines[2].split()[1:]
         step1_default = int(lines[3].split()[0])
         step2_default = int(lines[-1 - n_12].split()[0])
         
     def plotchunk_1(step1_1, step2_1):
+        
         for step in range(step1_1, step2_1, d_step):
             n_line_0 = (step - step1_1)/d_step*(n_12+1) + 4
             n_line_1 = n_line_0 + n_12
             ## select data
             data = [lines[t].split() for t in range(int(n_line_0), int(n_line_1))]
+            
             ## attach data
             df = pd.DataFrame(data = data, columns = header, dtype = 'float64')
             ## repeat timestep
