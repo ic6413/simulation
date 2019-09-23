@@ -664,7 +664,7 @@ variable	t equal time
 
 # compute chunk
 if "${freq_ave_chunk_momentum_mass_field} == 0" then "jump SELF skip_ave_chunk"
-compute		chunk_y_z all chunk/atom bin/2d y lower $(v_width/v_N_bin_y) z lower $(v_zhi_chunk/v_N_bin_z) limit ${N_total_yz} exact units box
+compute		chunk_y_z all chunk/atom bin/2d y lower $(v_width/v_N_bin_y) z lower $((v_zhi_chunk-v_zlo_chunk)/v_N_bin_z) limit ${N_total_yz} exact units box
 # file, output by fix ave/chunk
 if "${freq_ave_chunk_momentum_mass_field} == 0" then "jump SELF skip_ave_chunk"
 compute		m1 all property/atom mass
