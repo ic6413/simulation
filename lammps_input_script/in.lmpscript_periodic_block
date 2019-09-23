@@ -246,8 +246,6 @@ variable	N_bin_x	  equal $(round(v_x_period_dp_unit/v_bin_x_dp_unit_approximate)
 print "N_bin_x ${N_bin_x}" screen no append output/setting/attribute.lammps
 print "N_bin_y ${N_bin_y}" screen no append output/setting/attribute.lammps
 print "N_bin_z ${N_bin_z}" screen no append output/setting/attribute.lammps
-print "N_bin_r ${N_bin_r}" screen no append output/setting/attribute.lammps
-print "N_bin_theta ${N_bin_theta}" screen no append output/setting/attribute.lammps
 # salvage number
 variable	Sa 		index 0.00000002
 
