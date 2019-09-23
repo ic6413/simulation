@@ -281,6 +281,8 @@ print "dp_small ${dp_small}" screen no append output/setting/attribute.lammps
 variable	skin		equal $(v_skin_dp_unit*v_dp)
 
 # calculate size of region to create atoms
+variable	xlo_create	equal $(v_xlo_create_dp_unit*v_dp)
+variable	xhi_create	equal $(v_xhi_create_dp_unit*v_dp)
 variable	ylo_create	equal $(v_ylo_create_dp_unit*v_dp)
 variable	yhi_create	equal $(v_yhi_create_dp_unit*v_dp)
 variable	zlo_create	equal $(v_zlo_create_dp_unit*v_dp)
