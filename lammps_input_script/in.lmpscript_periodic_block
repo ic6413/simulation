@@ -241,7 +241,7 @@ variable	bin_x_dp_unit_approximate 	equal 1
 
 variable	N_bin_z 	equal $(round(v_zhi_chunk_dp_unit/v_bin_z_dp_unit_approximate))
 variable	N_bin_y 	equal $(round(v_width_wall_dp_unit/v_bin_y_dp_unit_approximate)) 
-variable	N_bin_x	  equal $(round(x_period_dp_unit/v_bin_x_dp_unit_approximate))
+variable	N_bin_x	  equal $(round(v_x_period_dp_unit/v_bin_x_dp_unit_approximate))
 
 print "N_bin_x ${N_bin_x}" screen no append output/setting/attribute.lammps
 print "N_bin_y ${N_bin_y}" screen no append output/setting/attribute.lammps
