@@ -310,6 +310,10 @@ variable        y_hi_freeze		equal $(v_y_hi_freeze_dp_unit*v_dp)
 # lattice primitive vectors length
 variable	edge_lattice		equal $(2/(sqrt(3))*v_dp_big)
 variable	z_fraction_of_lattice	equal $(sqrt(3)/4)
+variable  create_center_y equal $((v_yhi_create+v_yli_create)/2)
+variable  create_center_x equal $((v_xhi_create+v_xli_create)/2)
+variable	y_fraction_of_lattice	equal $(v_create_center_y/v_edge_lattice-floor(v_create_center_y/v_edge_lattice))
+variable	x_fraction_of_lattice	equal $(v_create_center_x/v_edge_lattice-floor(v_create_center_x/v_edge_lattice))
 
 # lattice primitive vectors length
 variable  mvz     atom mass*vz
@@ -375,7 +379,7 @@ if "${create_atom_method} == no" then &
 # create particle at lattice, no restart
 # with scale = 1, a1 = 1 0 0, a2 = 0 1 0, and a3 = 0 0 1, no restart
 
-lattice       bcc ${edge_lattice} origin 0 0 ${z_fraction_of_lattice}
+lattice       bcc ${edge_lattice} origin ${x_fraction_of_lattice} ${y_fraction_of_lattice} ${z_fraction_of_lattice}
 
 if "${n_type} == 3" then &
   "jump SELF begin3type" &
