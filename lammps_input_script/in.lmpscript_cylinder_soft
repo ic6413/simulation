@@ -685,7 +685,7 @@ variable	t equal time
 
 # compute chunk
 if "${freq_ave_chunk_momentum_mass_field} == 0" then "jump SELF skip_ave_chunk"
-compute		chunk_r_z all chunk/atom v_chunk_id_r_z limit ${N_total_rz} exact
+compute		chunk_r_z all chunk/atom v_chunk_id_r_z limit ${N_total_rz} exact discard yes
 # file, output by fix ave/chunk
 if "${freq_ave_chunk_momentum_mass_field} == 0" then "jump SELF skip_ave_chunk"
 compute		m1 all property/atom mass
