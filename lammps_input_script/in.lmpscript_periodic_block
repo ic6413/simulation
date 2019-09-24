@@ -196,7 +196,7 @@ variable  zhi_wall_dp_unit equal $(v_zlo_wall_dp_unit+v_z_length_create_dp_unit+
 variable  zlo_box_dp_unit   equal $(v_zlo_wall_dp_unit-0.1)
 variable	zhi_box_dp_unit		equal $(v_zhi_wall_dp_unit+0.1)
 variable	ylo_box_dp_unit		equal $(v_ylo_wall_dp_unit-0.1)
-variable	yhi_box_dp_unit		equal $(v_yhi_wall_dp_unit-0.1)
+variable	yhi_box_dp_unit		equal $(v_yhi_wall_dp_unit+0.1)
 variable	xlo_box_dp_unit		equal 0
 variable	xhi_box_dp_unit		equal $(v_x_period_dp_unit+v_xlo_box_dp_unit)
 
