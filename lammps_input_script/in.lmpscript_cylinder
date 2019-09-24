@@ -212,8 +212,10 @@ variable	ro_create_dp_unit		equal $(v_ro_wall_dp_unit-v_rp_big_dp_unit)
 variable	ri_create_dp_unit		equal $(v_ri_wall_dp_unit+v_rp_big_dp_unit)
 
 # chunk height
-variable	zhi_chunk_dp_unit	equal $(v_zhi_box_dp_unit)
-variable	zlo_chunk_dp_unit	equal $(v_zlo_box_dp_unit)
+variable	zhi_chunk_dp_unit	equal $(v_zhi_wall_dp_unit)
+variable	zlo_chunk_dp_unit	equal $(v_zlo_wall_dp_unit)
+variable	rhi_chunk_dp_unit	equal $(v_ro_wall_dp_unit)
+variable	rlo_chunk_dp_unit	equal $(v_ri_wall_dp_unit)
 # pour zlo zhi
 variable	zlo_pour_dp_unit	equal $(v_zhi_box_dp_unit-2+0.999999999)
 variable	zhi_pour_dp_unit	equal $(v_zhi_box_dp_unit-1)
@@ -242,7 +244,7 @@ variable	bin_z_dp_unit_approximate 	equal 3
 variable	bin_r_dp_unit_approximate 	equal 1
 
 variable	N_bin_z 	equal $(round((v_zhi_chunk_dp_unit-v_zlo_chunk_dp_unit)/v_bin_z_dp_unit_approximate))
-variable	N_bin_r 	equal $(round(v_width_wall_dp_unit/v_bin_r_dp_unit_approximate)) 
+variable	N_bin_r 	equal $(round((v_rhi_chunk_dp_unit-v_rlo_chunk_dp_unit)/v_bin_r_dp_unit_approximate)) 
 variable	N_bin_theta	equal $(round(1/v_ri_wall_dp_unit))
 
 print "N_bin_z ${N_bin_z}" screen no append output/setting/attribute.lammps
@@ -263,6 +265,8 @@ print "zhi_wall ${zhi_wall}" screen no append output/setting/attribute.lammps
 # calculate chunk height
 variable	zhi_chunk	equal $(v_zhi_chunk_dp_unit*v_dp)
 variable	zlo_chunk	equal $(v_zlo_chunk_dp_unit*v_dp)
+variable	rhi_chunk	equal $(v_rhi_chunk_dp_unit*v_dp)
+variable	rlo_chunk	equal $(v_rlo_chunk_dp_unit*v_dp)
 # calculate simulation box size
 variable ro_box equal $(v_ro_box_dp_unit*v_dp)
 variable zhi_box 	equal $(v_zhi_box_dp_unit*v_dp)
@@ -315,7 +319,7 @@ variable	mvt 		atom mass*v_vt
 variable	check_vrvtvxvy 	atom v_vt*v_vt+v_vr*v_vr-vx*vx-vy*vy
 
 # calculate chunk id
-variable	rbin		atom "floor( (v_d_z_axis-v_ri_wall)/ (v_ro_wall-v_ri_wall)* v_N_bin_r )"
+variable	rbin		atom "floor( (v_d_z_axis-v_rlo_chunk)/ (v_rhi_chunk-v_rlo_chunk)* v_N_bin_r )"
 variable	zbin		atom "floor((z-v_zlo_chunk)/ (v_zhi_chunk-v_zlo_chunk)* v_N_bin_z)"
 variable        chunk_id_r_z	atom 1+v_N_bin_r*v_zbin+v_rbin
 

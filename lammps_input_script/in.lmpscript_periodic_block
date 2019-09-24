@@ -209,9 +209,11 @@ variable	xhi_create_dp_unit		equal $(v_xhi_box_dp_unit-v_rp_big_dp_unit)
 variable	xlo_create_dp_unit		equal $(v_xlo_box_dp_unit+v_rp_big_dp_unit)
 
 
-# chunk height
-variable	zhi_chunk_dp_unit	equal $(v_zhi_box_dp_unit)
-variable	zlo_chunk_dp_unit	equal $(v_zlo_box_dp_unit)
+# chunk
+variable	zhi_chunk_dp_unit	equal $(v_zhi_wall_dp_unit)
+variable	zlo_chunk_dp_unit	equal $(v_zlo_wall_dp_unit)
+variable	yhi_chunk_dp_unit	equal $(v_yhi_wall_dp_unit)
+variable	ylo_chunk_dp_unit	equal $(v_ylo_wall_dp_unit)
 # pour zlo zhi
 variable	zlo_pour_dp_unit	equal $(v_zhi_box_dp_unit-2+0.999999999)
 variable	zhi_pour_dp_unit	equal $(v_zhi_box_dp_unit-1)
@@ -241,7 +243,7 @@ variable	bin_y_dp_unit_approximate 	equal 1
 variable	bin_x_dp_unit_approximate 	equal 1
 
 variable	N_bin_z 	equal $(round((v_zhi_chunk_dp_unit-v_zlo_chunk_dp_unit)/v_bin_z_dp_unit_approximate))
-variable	N_bin_y 	equal $(round(v_width_wall_dp_unit/v_bin_y_dp_unit_approximate)) 
+variable	N_bin_y 	equal $(round((v_yhi_chunk_dp_unit-v_ylo_chunk_dp_unit)/v_bin_y_dp_unit_approximate)) 
 variable	N_bin_x	  equal $(round(v_x_period_dp_unit/v_bin_x_dp_unit_approximate))
 
 print "N_bin_x ${N_bin_x}" screen no append output/setting/attribute.lammps
@@ -267,9 +269,11 @@ print "zlo_wall ${zlo_wall}" screen no append output/setting/attribute.lammps
 print "zhi_wall ${zhi_wall}" screen no append output/setting/attribute.lammps
 print "ylo_wall ${ylo_wall}" screen no append output/setting/attribute.lammps
 print "yhi_wall ${yhi_wall}" screen no append output/setting/attribute.lammps
-# calculate chunk height
+# calculate chunk
 variable	zhi_chunk	equal $(v_zhi_chunk_dp_unit*v_dp)
 variable	zlo_chunk	equal $(v_zlo_chunk_dp_unit*v_dp)
+variable	yhi_chunk	equal $(v_yhi_chunk_dp_unit*v_dp)
+variable	ylo_chunk	equal $(v_ylo_chunk_dp_unit*v_dp)
 # calculate simulation box size
 variable width equal $(v_width_wall_dp_unit*v_dp)
 variable zhi_box 	equal $(v_zhi_box_dp_unit*v_dp)
@@ -315,7 +319,7 @@ variable	mvx 		atom mass*vx
 variable	mvy 		atom mass*vy
 
 # calculate chunk id
-variable	ybin		atom "floor( (y)/ (v_width)* v_N_bin_y )"
+variable	ybin		atom "floor((y-v_ylo_chunk)/ (v_yhi_chunk-v_ylo_chunk)* v_N_bin_y )"
 variable	zbin		atom "floor((z-v_zlo_chunk)/ (v_zhi_chunk-v_zlo_chunk)* v_N_bin_z)"
 
 # processors
@@ -664,11 +668,13 @@ variable	t equal time
 
 # compute chunk
 if "${freq_ave_chunk_momentum_mass_field} == 0" then "jump SELF skip_ave_chunk"
-compute		chunk_y_z all chunk/atom bin/2d y lower $(1.0001*v_width/v_N_bin_y) z lower $((1.0001*v_zhi_chunk-v_zlo_chunk)/v_N_bin_z) limit ${N_total_yz} exact units box
+compute		chunk_y_z all chunk/atom bin/2d y $(v_ylo_chunk) $((v_yhi_chunk-v_ylo_chunk)/v_N_bin_y) z $(v_zlo_chunk) $((v_zhi_chunk-v_zlo_chunk)/v_N_bin_z) &
+limit ${N_total_yz} exact units box bound y $(v_ylo_chunk) $(v_yhi_chunk) z $(v_zlo_chunk) $(v_zhi_chunk) discard yes
 # file, output by fix ave/chunk
 if "${freq_ave_chunk_momentum_mass_field} == 0" then "jump SELF skip_ave_chunk"
 compute		m1 all property/atom mass
-fix		avspatial all ave/chunk ${every_ave_chunk_momentum_mass_field} ${repeat_ave_chunk_momentum_mass_field} ${freq_ave_chunk_momentum_mass_field} chunk_y_z v_mvy v_mvx v_mvz c_m1 norm none file output/momentum_mass_field/fix.momentum_mass_field.all
+fix		avspatial all ave/chunk ${every_ave_chunk_momentum_mass_field} ${repeat_ave_chunk_momentum_mass_field} ${freq_ave_chunk_momentum_mass_field} chunk_y_z &
+v_mvy v_mvx v_mvz c_m1 norm none file output/momentum_mass_field/fix.momentum_mass_field.all
 label skip_ave_chunk
 # compute total force on particles excerted by wall 
 
