@@ -143,7 +143,7 @@ def plotchunk(if_plot_to_last, step1, step2):
                         label = "labescale" + str(label_scale) + "quiver_scale" + str(quiver_scale) + '*arrow length of wall velocity in 45 degree, velocity field r-z direction',
                         labelpos='E', coordinates='figure', angle=45)
 
-            fig1.savefig(dp.f_momentum_mass_field_rz_path + str(step))
+            fig1.savefig(dp.f_momentum_mass_field_v23x23_path + str(step))
             plt.close('all')
 
             if chunk_method == "rz":
@@ -176,7 +176,7 @@ def plotchunk(if_plot_to_last, step1, step2):
                         label = "labescale" + str(label_scale) + "quiver_scale" + str(quiver_scale) + '*arrow length of wall velocity in 45 degree, velocity field r-z direction',
                         labelpos='E', coordinates='figure', angle=45)
 
-            fig1.savefig(dp.f_momentum_mass_field_rtheta_path + str(step))
+            fig1.savefig(dp.f_momentum_mass_field_v13x23_path + str(step))
             plt.close('all')
 
 
@@ -203,7 +203,7 @@ def plotchunk(if_plot_to_last, step1, step2):
                         labelpos='E',
                         coordinates='figure', angle=90)
 
-            fig1.savefig(dp.f_momentum_mass_field_density_path + str(step))
+            fig1.savefig(dp.f_momentum_mass_field_density_x23_path + str(step))
             plt.close('all')
     
     if if_plot_to_last:
@@ -213,13 +213,13 @@ def plotchunk(if_plot_to_last, step1, step2):
 
 
 def plotchunk_ave(if_plot_to_last, step1, step2, n_ave):
-    f_momentum_mass_field_rtheta_path_nve = dp.f_momentum_mass_field_rtheta_path + "nve_" + str(n_ave) + "/"
-    f_momentum_mass_field_rz_path_nve = dp.f_momentum_mass_field_rz_path + "nve_" + str(n_ave) + "/"
-    f_momentum_mass_field_density_path_nve = dp.f_momentum_mass_field_density_path + "nve_" + str(n_ave) + "/"
+    f_momentum_mass_field_v13x23_path_nve = dp.f_momentum_mass_field_v13x23_path + "nve_" + str(n_ave) + "/"
+    f_momentum_mass_field_v23x23_path_nve = dp.f_momentum_mass_field_v23x23_path + "nve_" + str(n_ave) + "/"
+    f_momentum_mass_field_density_x23_path_nve = dp.f_momentum_mass_field_density_x23_path + "nve_" + str(n_ave) + "/"
     post_process_folder_paths = [
-        f_momentum_mass_field_rtheta_path_nve,
-        f_momentum_mass_field_rz_path_nve,
-        f_momentum_mass_field_density_path_nve,
+        f_momentum_mass_field_v13x23_path_nve,
+        f_momentum_mass_field_v23x23_path_nve,
+        f_momentum_mass_field_density_x23_path_nve,
     ]
     for post_process_folder_path in post_process_folder_paths:
         if not os.path.isdir(post_process_folder_path): 
@@ -285,7 +285,7 @@ def plotchunk_ave(if_plot_to_last, step1, step2, n_ave):
             ax1.quiverkey(Q, 0.2, 0.9, label_scale,
                         label = "labescale" + str(label_scale) + "quiver_scale" + str(quiver_scale) + '*arrow length of wall velocity in 45 degree, velocity field r-z direction',
                         labelpos='E', coordinates='figure', angle=45)
-            fig1.savefig(f_momentum_mass_field_rz_path_nve + str(int(step)))
+            fig1.savefig(f_momentum_mass_field_v23x23_path_nve + str(int(step)))
             plt.close('all')
 
             if chunk_method == "rz":
@@ -318,7 +318,7 @@ def plotchunk_ave(if_plot_to_last, step1, step2, n_ave):
                         label = "labescale" + str(label_scale) + "quiver_scale" + str(quiver_scale) + '*arrow length of wall velocity in 45 degree, velocity field r-z direction',
                         labelpos='E', coordinates='figure', angle=45)
 
-            fig1.savefig(f_momentum_mass_field_rtheta_path_nve + str(int(step)))
+            fig1.savefig(f_momentum_mass_field_v13x23_path_nve + str(int(step)))
             plt.close('all')
 
 
@@ -345,7 +345,7 @@ def plotchunk_ave(if_plot_to_last, step1, step2, n_ave):
                         labelpos='E',
                         coordinates='figure', angle=90)
 
-            fig1.savefig(f_momentum_mass_field_density_path_nve + str(int(step)))
+            fig1.savefig(f_momentum_mass_field_density_x23_path_nve + str(int(step)))
             plt.close('all')
     
     if if_plot_to_last:
