@@ -1,6 +1,6 @@
 # override variables
 # geometry
-variable    boundary_geomrtry   index cylinder  # cylinder block
+variable    boundary_geometry   index cylinder  # cylinder block
 # ztop
 variable  ifztop   index yes
 # run step
@@ -80,9 +80,9 @@ variable  	freq_test3      	index 0
 # get simulation path
 variable    home_path     getenv HOME
 variable    simulation_path     string "${home_path}/simulation"
-if "${boundary_geomrtry}==cylinder" then &
+if "${boundary_geometry}==cylinder" then &
 "include ${simulation_path}/lammps_input_script/in.lmpscript_cylinder" &
-elif "${boundary_geomrtry}==block" &
+elif "${boundary_geometry}==block" &
 "include ${simulation_path}/lammps_input_script/in.lmpscript_periodic_block" &
 else &
 "quit 1"
