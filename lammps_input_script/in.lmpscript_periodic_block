@@ -312,8 +312,8 @@ variable        y_hi_freeze		equal $(v_y_hi_freeze_dp_unit*v_dp)
 # lattice primitive vectors length
 variable	edge_lattice		equal $(2/(sqrt(3))*v_dp_big)
 variable	z_fraction_of_lattice	equal $(sqrt(3)/4)
-variable  create_center_y equal $((v_yhi_create+v_yli_create)/2)
-variable  create_center_x equal $((v_xhi_create+v_xli_create)/2)
+variable  create_center_y equal $((v_yhi_create+v_ylo_create)/2)
+variable  create_center_x equal $((v_xhi_create+v_xlo_create)/2)
 variable	y_fraction_of_lattice	equal $(v_create_center_y/v_edge_lattice-floor(v_create_center_y/v_edge_lattice))
 variable	x_fraction_of_lattice	equal $(v_create_center_x/v_edge_lattice-floor(v_create_center_x/v_edge_lattice))
 
