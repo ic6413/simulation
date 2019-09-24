@@ -38,7 +38,7 @@ if velocity_scale < 0:
 if velocity_scale == 0:
     Sa_fake = 0.000002
     if chunk_method == "rz":
-        velocity_scale = ri*(Sa_fake*g*width_wall_dp_unit**3*diameter/ri**2)**0.5
+        velocity_scale = (Sa_fake*g*width_wall_dp_unit**3*diameter)**0.5
     elif chunk_method == "yz":
         velocity_scale = (Sa_fake*g*width_wall_dp_unit**3*diameter)**0.5
 
