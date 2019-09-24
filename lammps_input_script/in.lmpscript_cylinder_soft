@@ -1237,7 +1237,7 @@ label skip_ave_wall
 # run pour and delete and add inner wall
 if "${ifpour} == no || ${rst_from} != 0" then "jump SELF end_pour2_innerwall"
 run 10
-region       	delete_in_small cylinder z 0. 0. ${ri_create} 0 ${zhi_box} units box
+region       	delete_in_small cylinder z 0. 0. ${ri_create} ${zlo_box} ${zhi_box} units box
 delete_atoms 	region delete_in_small
 
 if "${ifstoreforce} == yes" then "fix	storeforce_inwall_before	all store/force"
