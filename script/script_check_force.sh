@@ -44,7 +44,6 @@ step1=$2
 step2=$3
 
 use_trace_or_all=`python ~/simulation/script/script_check_dump_single_trace.py "$id_i" "$step1" "$step2"`
-
 if [ "$use_trace_or_all" == "trace" ]; then
     # combine all data file from step1 to step2+1
     combine_trace ${step1} ${step2} "1"

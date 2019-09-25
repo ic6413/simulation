@@ -2,7 +2,7 @@
 import sys
 import read_setting.read_setting as rr
 
-id_i = sys.argv[1]
+id_i = int(sys.argv[1])
 step1 = sys.argv[2]
 step2 = sys.argv[3]
 
