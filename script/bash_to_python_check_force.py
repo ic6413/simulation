@@ -13,10 +13,6 @@ fromtraceorall_input = sys.argv[4]
 error_tolerence = 1e-7
 method_list = list(range(0, 3))
 
-fromtraceorall_input = 'all'
-fromtraceorall_input = 'trace'
-
-
 cd.dumptofile(fromtraceorall=fromtraceorall_input).dump_custom()
 # cehck overlap
 cco.checkoverlap(id_i, step1, step2).checkprint()

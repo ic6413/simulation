@@ -39,17 +39,17 @@ combine_trace () {
 # check force calculation for atom i from step1 to step2
 
 # check if the info of neighborhood of atom i from step1 to step2 have been output from LAMMPS
-id_i = $1
-step1 = $2
-step2 = $3
+id_i=$1
+step1=$2
+step2=$3
 
 use_trace_or_all=`python ~/simulation/script/script_check_dump_single_trace.py "$id_i" "$step1" "$step2"`
 
 if [ "$use_trace_or_all" == "trace" ]; then
     # combine all data file from step1 to step2+1
-    combine_trace ${step1} ${step2} 1
+    combine_trace ${step1} ${step2} "1"
 elif [ "$use_trace_or_all" == "all" ]; then
-    combine_all ${step1} ${step2} 1
+    combine_all ${step1} ${step2} "1"
 else
     echo "not trace not all"
 fi
