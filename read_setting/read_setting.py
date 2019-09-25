@@ -54,7 +54,6 @@ variable_names_must_be_contained = [
     "freq_ave_chunk_momentum_mass_field",
     "repeat_ave_chunk_momentum_mass_field",
     "every_ave_chunk_momentum_mass_field",
-    "ifstoreforce",
     "freq_ave_wall",
     "repeat_ave_wall",
     "every_ave_wall",

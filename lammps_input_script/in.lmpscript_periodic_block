@@ -132,8 +132,6 @@ variable	freq_ave_chunk_momentum_mass_field		index 0  #Nevery=2, Nrepeat=6, and 
 variable	repeat_ave_chunk_momentum_mass_field	index 0
 variable	every_ave_chunk_momentum_mass_field		index 0
 print "freq_ave_chunk_momentum_mass_field ${freq_ave_chunk_momentum_mass_field}" screen no append output/setting/attribute.lammps
-# store force
-variable	ifstoreforce		index no
 # freq print wall
 variable	freq_ave_wall		index 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
 variable	repeat_ave_wall		index 0
@@ -361,7 +359,7 @@ elif "${contact_model} == hooke" &
 else &
  "quit 1"
 pair_coeff	* *
-if		"${ifstoreforce} == yes" then &
+if		"${freq_ave_wall} != 0" then &
   "fix	sum_pairforce	all store/force" &
 
 # insert region
@@ -565,7 +563,7 @@ label hooke_his_end4
 
 label contact_change_end1
 
-if		"${rst_from} != 0 && ${ifstoreforce} == yes" then &
+if		"${rst_from} != 0 && ${freq_ave_wall} != 0" then &
   "fix	sum_pairforce	all store/force" &
 
 
@@ -579,7 +577,7 @@ if		"${rst_from} != 0 && ${ifstoreforce} == yes" then &
 # inner wall
 # define inner wall, if pour then define inner wall after pouring
 if "${ifpour} == yes && ${rst_from} == 0" then "jump SELF end_pour6_innerwall"
-if "${ifstoreforce} == yes" then "fix	storeforce_y_bottom_before	all store/force"
+if "${freq_ave_wall} != 0" then "fix	storeforce_y_bottom_before	all store/force"
 if "${contact_model} != hooke_his" &
  then "jump SELF hooke_his_end1"
 
@@ -596,36 +594,36 @@ if "${ifrotate} == yes" then &
 else &
   "fix	y_bottom		all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane ${ylo_wall} NULL"
 label hooke_end1
-if "${ifstoreforce} == yes" then "fix	storeforce_y_bottom_after	all store/force"
+if "${freq_ave_wall} != 0" then "fix	storeforce_y_bottom_after	all store/force"
 label	end_pour6_innerwall
 
 if "${contact_model} != hooke_his" &
  then "jump SELF hooke_his_end2"
-if "${ifstoreforce} == yes" then "fix	storeforce_y_top_before	all store/force"
+if "${freq_ave_wall} != 0" then "fix	storeforce_y_top_before	all store/force"
 fix	y_top 	all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane NULL ${yhi_wall}
-if "${ifstoreforce} == yes" then "fix	storeforce_y_top_after	all store/force"
-if "${ifstoreforce} == yes" then "fix	storeforce_zbottom_before	all store/force"
+if "${freq_ave_wall} != 0" then "fix	storeforce_y_top_after	all store/force"
+if "${freq_ave_wall} != 0" then "fix	storeforce_zbottom_before	all store/force"
 fix	zplane_bottom 	all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane ${zlo_wall} NULL
-if "${ifstoreforce} == yes" then "fix	storeforce_zbottom_after	all store/force"
+if "${freq_ave_wall} != 0" then "fix	storeforce_zbottom_after	all store/force"
 if "${ifztop} != yes" then "jump SELF ztop_end1"
-if "${ifstoreforce} == yes" then "fix	storeforce_ztop_before	all store/force"
+if "${freq_ave_wall} != 0" then "fix	storeforce_ztop_before	all store/force"
 fix	zplane_top 	all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane NULL ${zhi_wall}
-if "${ifstoreforce} == yes" then "fix	storeforce_ztop_after	all store/force"
+if "${freq_ave_wall} != 0" then "fix	storeforce_ztop_after	all store/force"
 label ztop_end1
 label hooke_his_end2
 
 if "${contact_model} != hooke" &
  then "jump SELF hooke_end2"
-if "${ifstoreforce} == yes" then "fix	storeforce_y_top_before	all store/force"
+if "${freq_ave_wall} != 0" then "fix	storeforce_y_top_before	all store/force"
 fix	y_top 	all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane NULL ${yhi_wall}
-if "${ifstoreforce} == yes" then "fix	storeforce_y_top_after	all store/force"
-if "${ifstoreforce} == yes" then "fix	storeforce_zbottom_before	all store/force"
+if "${freq_ave_wall} != 0" then "fix	storeforce_y_top_after	all store/force"
+if "${freq_ave_wall} != 0" then "fix	storeforce_zbottom_before	all store/force"
 fix	zplane_bottom 	all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane ${zlo_wall} NULL
-if "${ifstoreforce} == yes" then "fix	storeforce_zbottom_after	all store/force"
+if "${freq_ave_wall} != 0" then "fix	storeforce_zbottom_after	all store/force"
 if "${ifztop} != yes" then "jump SELF ztop_end2"
-if "${ifstoreforce} == yes" then "fix	storeforce_ztop_before	all store/force"
+if "${freq_ave_wall} != 0" then "fix	storeforce_ztop_before	all store/force"
 fix	zplane_top 	all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane NULL ${zhi_wall}
-if "${ifstoreforce} == yes" then "fix	storeforce_ztop_after	all store/force"
+if "${freq_ave_wall} != 0" then "fix	storeforce_ztop_after	all store/force"
 label ztop_end2
 label hooke_end2
 
@@ -653,9 +651,9 @@ print "ifairviscous ${ifairviscous}" screen no append output/setting/attribute.l
 print "gamma_air ${gamma_air}" screen no append output/setting/attribute.lammps
 if "${ifairviscous} == no" then &
   "jump SELF end_airviscous"
-if "${ifstoreforce} == yes" then "fix	storeforce_airviscous_before	all store/force"
+if "${freq_ave_wall} != 0" then "fix	storeforce_airviscous_before	all store/force"
 fix airviscous all viscous $(v_gamma_air*v_mp)
-if "${ifstoreforce} == yes" then "fix	storeforce_airviscous_after	all store/force"
+if "${freq_ave_wall} != 0" then "fix	storeforce_airviscous_after	all store/force"
 label   end_airviscous
 
 # ensure temperture normalize correctly as particle number change. use when pour and temperature compute ke
@@ -1120,7 +1118,7 @@ group 		group_nb_all dynamic all var check_nb_all every 1
 
 # file dump custom trace atoms
 if "${freq_dump_single_trace} == 0" then "jump SELF skip_dump_single_trace"
-if "${ifstoreforce} == no" then &
+if "${freq_ave_wall} == 0" then &
 "dump		dump_trace group_nb_all custom ${freq_dump_single_trace} output/single_trace/dump.trace.single.* &
 id type radius c_KEt_atom c_KEr_atom x y z vx vy vz fx fy fz omegax omegay omegaz tqx tqy tqz v_EKP_atom c_n_contact v_check_nb_all v_KEtr_atom" &
 else &
@@ -1131,7 +1129,7 @@ dump_modify     dump_trace format float %.16g
 label skip_dump_single_trace
 # file, dump custom all atoms
 if "${freq_dump_single_all} == 0" then "jump SELF skip_dump_all_custom"
-if "${ifstoreforce} == no" then &
+if "${freq_ave_wall} == 0" then &
 "dump		dump_all all custom ${freq_dump_single_all} output/single_all/dump.all.single.* &
 id type radius c_KEt_atom c_KEr_atom x y z vx vy vz fx fy fz omegax omegay omegaz tqx tqy tqz v_EKP_atom c_n_contact v_check_nb_all v_KEtr_atom" &
 else &
@@ -1209,7 +1207,7 @@ run 10
 region       	delete_in_small block 0 ${xhi_box} ${ylo_create} ${yhi_create} 0 ${zhi_box} units box
 delete_atoms 	region delete_in_small
 
-if "${ifstoreforce} == yes" then "fix	storeforce_y_bottom_before	all store/force"
+if "${freq_ave_wall} != 0" then "fix	storeforce_y_bottom_before	all store/force"
 if "${contact_model} != hooke_his" &
  then "jump SELF hooke_his_end3"
 if "${ifrotate} == yes" then &
@@ -1225,7 +1223,7 @@ if "${ifrotate} == yes" then &
 else &
   "fix	y_bottom		all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane ${ylo_wall} NULL"
 label hooke_end3
-if "${ifstoreforce} == yes" then "fix	storeforce_y_bottom_after	all store/force"
+if "${freq_ave_wall} != 0" then "fix	storeforce_y_bottom_after	all store/force"
 label	end_pour2_innerwall
 
 if "${freq_ave_wall} == 0" then "jump SELF skip_ave_wall2"

@@ -1272,7 +1272,7 @@ def fjwi_plus_cal_multistep_multicontact_fromcustom(f_read, id_i, step1, step2, 
     typei = dfi[['type']].values[:-1]
     mi = mass_by_type(typei, density)
     fi_only_contact_cal_plus = sum_fjit_plus_cal_steps + sum_fjin_plus_cal_steps
-    if rr.logfile['ifstoreforce'] == "yes":
+    if int(rr.logfile['freq_ave_wall']) != 0:
         fi_only_contact_plus = dfi[['f_sum_pairforce[1]','f_sum_pairforce[2]','f_sum_pairforce[3]']].values[1:] 
     else:
         fi_only_contact_plus = fi_plus - force_sum_except_contact(mi, vi+0.5*fi/mi*ts)

@@ -66,8 +66,6 @@ variable	every_fixvector		index 0
 variable	freq_ave_chunk_momentum_mass_field		index 10000  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
 variable	repeat_ave_chunk_momentum_mass_field	index 100
 variable	every_ave_chunk_momentum_mass_field		index 100
-# store force
-variable	ifstoreforce		string no
 # freq print wall
 variable	freq_ave_wall		index 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
 variable	repeat_ave_wall		index 0
