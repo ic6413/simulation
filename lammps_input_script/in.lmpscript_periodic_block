@@ -1232,7 +1232,23 @@ v_t &
 v_force_y_bottom_x v_force_y_bottom_y v_force_y_bottom_z &
 v_force_y_top_x v_force_y_top_y v_force_y_top_z &
 v_force_zbottom_x v_force_zbottom_y v_force_zbottom_z &
-mode scalar ave one file output/wall/fix.force_wall_to_particle.allstep
+mode scalar ave one file output/wall/force_wall_to_particle.allstep
+label skip_ave_wall2
+
+# file, time average of total force of wall to particles
+if "${freq_ave_wall} == 0" then "jump SELF skip_ave_wall2"
+fix		timeav_y_bottom_force all ave/time ${every_ave_wall} ${repeat_ave_wall} ${freq_ave_wall} &
+v_t &
+v_force_y_bottom_x v_force_y_bottom_y v_force_y_bottom_z &
+mode scalar ave one file output/wall/force_y_bottom_to_particle.allstep
+fix		timeav_y_top_force all ave/time ${every_ave_wall} ${repeat_ave_wall} ${freq_ave_wall} &
+v_t &
+v_force_y_top_x v_force_y_top_y v_force_y_top_z &
+mode scalar ave one file output/wall/force_y_top_to_particle.allstep
+fix		timeav_zbottom_force all ave/time ${every_ave_wall} ${repeat_ave_wall} ${freq_ave_wall} &
+v_t &
+v_force_zbottom_x v_force_zbottom_y v_force_zbottom_z &
+mode scalar ave one file output/wall/force_zbottom_to_particle.allstep
 label skip_ave_wall2
 
 # balance every freq_balance step

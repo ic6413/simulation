@@ -1272,12 +1272,18 @@ label	end_pour2_innerwall
 
 # file, time average of total force of wall to particles
 if "${freq_ave_wall} == 0" then "jump SELF skip_ave_wall2"
-fix		timeav_wall_force all ave/time ${every_ave_wall} ${repeat_ave_wall} ${freq_ave_wall} &
+fix		timeav_inwall_force all ave/time ${every_ave_wall} ${repeat_ave_wall} ${freq_ave_wall} &
 v_t &
 v_force_inwall_r v_force_inwall_theta v_force_inwall_z &
+mode scalar ave one file output/wall/force_inwall_to_particle.allstep
+fix		timeav_outwall_force all ave/time ${every_ave_wall} ${repeat_ave_wall} ${freq_ave_wall} &
+v_t &
 v_force_outwall_r v_force_outwall_theta v_force_outwall_z &
+mode scalar ave one file output/wall/force_outwall_to_particle.allstep
+fix		timeav_zbottom_force all ave/time ${every_ave_wall} ${repeat_ave_wall} ${freq_ave_wall} &
+v_t &
 v_force_zbottom_r v_force_zbottom_theta v_force_zbottom_z &
-mode scalar ave one file output/wall/fix.force_wall_to_particle.allstep
+mode scalar ave one file output/wall/force_zbottom_to_particle.allstep
 label skip_ave_wall2
 
 # balance every freq_balance step
