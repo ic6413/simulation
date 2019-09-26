@@ -182,7 +182,7 @@ variable	skin_dp_unit		equal 0.5
 variable	x_period_dp_unit		index 36	#inner radius
 variable	width_wall_dp_unit		index 17	#width
 variable  zlo_wall_dp_unit index 0
-# height create particles
+# height create particlesvariable	x_period_dp_unit		index 36	#inner radius
 variable	z_length_create_dp_unit		index 31
 
 ## calculate wall box create
@@ -1227,13 +1227,6 @@ if "${freq_ave_wall} != 0" then "fix	storeforce_y_bottom_after	all store/force"
 label	end_pour2_innerwall
 
 if "${freq_ave_wall} == 0" then "jump SELF skip_ave_wall2"
-fix		timeav_wall_force all ave/time ${every_ave_wall} ${repeat_ave_wall} ${freq_ave_wall} &
-v_t &
-v_force_y_bottom_x v_force_y_bottom_y v_force_y_bottom_z &
-v_force_y_top_x v_force_y_top_y v_force_y_top_z &
-v_force_zbottom_x v_force_zbottom_y v_force_zbottom_z &
-mode scalar ave one file output/wall/force_wall_to_particle.allstep
-label skip_ave_wall2
 
 # file, time average of total force of wall to particles
 if "${freq_ave_wall} == 0" then "jump SELF skip_ave_wall2"
