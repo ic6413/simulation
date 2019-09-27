@@ -202,3 +202,5 @@ if rr.logfile["shearwall"] == "yplane":
 
 f_momentum_mass_field_density_x23_path = f_momentum_mass_field_path + "density_Xx_Xz/"
 om.create_directory(f_momentum_mass_field_density_x23_path)
+f_wall_force_plot_path = diagram_path + "wall_force/"
+om.create_directory(f_wall_force_plot_path)

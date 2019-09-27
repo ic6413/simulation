@@ -20,9 +20,8 @@ restart_image () {
     local STEPDIFF=$2
     local END=$3
     local allrstimage=$4
-
-
     if [ "$allrstimage" == "1" ]; then
+   
         echo "create image for all restart file"
         FILES=./output/rst/*
         for f in ${FILES}
@@ -36,6 +35,31 @@ restart_image () {
             lmp -in ${HOME}/simulation/lammps_input_script/dump_restart/in.lmp_dump_image_at_restart -var restartfile ./output/rst/restart.mpiio.${step} -log log.restartimage
         done   
     fi
+}
+
+restart_movie () {
+    
+    local START_MOVIE=$1
+    local STEPDIFF_MOVIE=$2
+    local END_MOVIE=$3
+    local n_framerate=$4
+
+    rm -f /tmp/img*
+    
+    n_digit=$(bc -l <<< "l((($END_MOVIE - $START_MOVIE) / $STEPDIFF_MOVIE)+1)/l(10) + 1")
+    n_digit=${n_digit%.*}
+
+    x=1
+    for i in $(eval echo "{$START_MOVIE..$END_MOVIE..$STEPDIFF_MOVIE}")
+    do counter=$(printf %0"$n_digit"d $x)
+        ln output/image/rst_all/all_image_"$i".jpg /tmp/img"$counter".jpg
+        x=$(($x+1))
+    done
+
+    ffmpeg -f image2 -framerate ${n_framerate} -i /tmp/img%0${n_digit}d.jpg output/movie/movie_${START_MOVIE}_${END_MOVIE}.mov
+
+    rm -f /tmp/img*
+
 }
 
 velocity_field () {
@@ -62,6 +86,10 @@ START=
 STEPDIFF=
 END=
 allrstimage=
+START_MOVIE=
+STEPDIFF_MOVIE=
+END_MOVIE=
+n_framerate=
 if_plot_to_last=
 step1=
 step2=
@@ -84,6 +112,16 @@ while [ "$1" != "" ]; do
                                 END=$1
                                 shift
                                 allrstimage=$1
+                                ;;
+        --r2movie )             if_r2movie=1
+                                shift
+                                START_MOVIE=$1
+                                shift
+                                STEPDIFF_MOVIE=$1
+                                shift
+                                END_MOVIE=$1
+                                shift
+                                n_framerate=$1
                                 ;;
         --vfield )              if_vfield=1
                                 shift
@@ -112,9 +150,9 @@ echo "output file = $filename"
 # if interactive then input variable
 if [ "$interactive" == "1" ]; then
     echo "interactive is on"
+    
     echo "Type the if_r2image that you want (1 or 0), followed by [ENTER]:"
     read if_r2image
-
     if [ "$if_r2image" == "1" ]; then
         echo "Type the allrstimage that you want (1 or 0), followed by [ENTER]:"
         read allrstimage
@@ -124,6 +162,19 @@ if [ "$interactive" == "1" ]; then
         read STEPDIFF
         echo "Type the END that you want, followed by [ENTER]:"
         read END
+    fi
+
+    echo "Type the if_r2movie that you want (1 or 0), followed by [ENTER]:"
+    read if_r2movie
+    if [ "$if_r2movie" == "1" ]; then
+        echo "Type the n_framerate that you want, followed by [ENTER]:"
+        read n_framerate
+        echo "Type the START_MOVIE that you want, followed by [ENTER]:"
+        read START_MOVIE
+        echo "Type the STEPDIFF_MOVIE that you want, followed by [ENTER]:"
+        read STEPDIFF_MOVIE
+        echo "Type the END_MOVIE that you want, followed by [ENTER]:"
+        read END_MOVIE
     fi
 
     echo "Type the if_vfield that you want (1 or 0), followed by [ENTER]:"
@@ -148,6 +199,14 @@ if [ "$if_r2image" == "1" ]; then
     restart_image ${START} ${STEPDIFF} ${END} ${allrstimage}
 else
 	echo "if_r2image is off"
+fi
+
+# r2movie start
+if [ "$if_r2movie" == "1" ]; then
+	echo "if_r2movie is on"
+    restart_movie ${START_MOVIE} ${STEPDIFF_MOVIE} ${END_MOVIE} ${n_framerate}
+else
+	echo "if_r2movie is off"
 fi
 
 # vfield start

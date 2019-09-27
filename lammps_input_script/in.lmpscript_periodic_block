@@ -1164,7 +1164,7 @@ label skip_dump_trace_image
 
 #file, image jpg all atoms
 if "${freq_dump_all_image} == 0" then "jump SELF skip_dump_all_image"
-dump		dump_image_all all image ${freq_dump_all_image} output/image/all/dump.all_image.*.jpg type diameter size 512 512 zoom 1
+dump		dump_image_all all image ${freq_dump_all_image} output/image/all/all_image_*.jpg type diameter size 512 512 zoom 1
 label skip_dump_all_image
 
 #file, movie, have not work

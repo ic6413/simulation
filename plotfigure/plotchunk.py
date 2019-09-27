@@ -353,31 +353,3 @@ def plotchunk_ave(if_plot_to_last, step1, step2, n_ave):
     else:
         plotchunk_1(step1, step2)
 
-
-def chunkfile_to_dataframe(file):
-
-    with open(file) as f:
-        lines = f.read().strip().split('\n')
-        id_line_timestep = [n for n, line in enumerate(lines) if line.startswith('# Timestep')]
-        n_chunks = int(lines[id_line_timestep[0]+2].split()[2])
-        header = lines[id_line_timestep[0]+1].split()[1:]
-        id_line_timestep.append(len(lines))
-        iter = chain.from_iterable(range(id + 3, id_line_timestep[i + 1] - 1) for i, id in enumerate(id_line_timestep[0: -1]))
-        ## select data
-        data = [lines[t].split() for t in iter]
-        ## attach data
-        df = pd.DataFrame(data = data, columns = header, dtype = 'float64')
-        ## repeat timestep
-        steps = list(
-            chain.from_iterable(
-                repeat(
-                    lines[id + 2].split()[0], id_line_timestep[i + 1] - -id - 4) for i, id in enumerate(id_line_timestep[0: -1]
-                    )
-                )
-            )
-        steps = np.asarray(steps,dtype=np.float64)
-        ## insert timesteps
-        df.insert(1, 'step', steps)
-        
-    return df
-
