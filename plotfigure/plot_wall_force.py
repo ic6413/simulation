@@ -120,14 +120,12 @@ def plot_wall_force(if_plot_to_last, step1, step2):
                 x_array = df[variable1].values
                 y_array = df[variable2].values
 
-                fig1, ax1 = plt.subplots()
-
                 plt.xlabel(variable1)
                 plt.ylabel(variable2)
                 
                 plt.plot(x_array, y_array)
-                
-                fig1.savefig(dp.f_wall_force_plot_path + variable2 + "_" + str(step1_1) + "_" + str(step2_1))
+                plt.tight_layout()
+                plt.savefig(dp.f_wall_force_plot_path + variable2 + "_" + str(step1_1) + "_" + str(step2_1))
                 plt.close('all')
     
         if if_plot_to_last:
@@ -174,20 +172,19 @@ def plot_wall_force_ave(if_plot_to_last, step1, step2, n_ave):
                     length = len(array)
                     anwser_array = 0
                     for i in range(n):
-                        anwser_array = anwser_array + array[i:length-i]
+                        anwser_array = anwser_array + array[i: i+length-n_ave+1]
+                    anwser_array = anwser_array/n
                     return anwser_array
 
                 x_array = ave_over(x_array, n_ave)
                 y_array = ave_over(y_array, n_ave)
 
-                fig1, ax1 = plt.subplots()
-
                 plt.xlabel(variable1)
                 plt.ylabel(variable2)
                 
                 plt.plot(x_array, y_array)
-                
-                fig1.savefig(dp.f_wall_force_plot_path + variable2 + "_" + str(step1_1) + "_" + str(step2_1))
+                plt.tight_layout()
+                plt.savefig(f_wall_force_plot_path_nve + variable2 + "_" + str(step1_1) + "_" + str(step2_1))
                 plt.close('all')
     
         
