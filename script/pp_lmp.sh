@@ -74,10 +74,23 @@ velocity_field () {
     else
         echo "create velocity field at step " $step1 "to " $step2 "n_ave is " $n_ave
     fi
-    ~/simulation/script/script_velocity_field.py ${if_plot_to_last} ${step1} ${step2} ${n_ave}
+    ~/simulation/script/python_to_bash/script_velocity_field.py ${if_plot_to_last} ${step1} ${step2} ${n_ave}
 }
 
+wall_force () {
+    
+    local if_plot_to_last_wall=$1
+    local step1_wall=$2
+    local step2_wall=$3
+    local n_ave_wall=$4
 
+    if [ "$if_plot_to_last_wall" == "1" ]; then
+        echo "create wall force at all step, n_ave_wall is " $n_ave_wall
+    else
+        echo "create wall force at step " $step1_wall "to " $step2 "n_ave_wall is " $n_ave_wall
+    fi
+    ~/simulation/script/python_to_bash/script_plot_wall_force.py ${if_plot_to_last_wall} ${step1_wall} ${step2_wall} ${n_ave_wall}
+}
 
 ##### variable
 interactive=
@@ -132,6 +145,16 @@ while [ "$1" != "" ]; do
                                 step2=$1
                                 shift
                                 n_ave=$1
+                                ;;
+        --wall )                if_wall=1
+                                shift
+                                if_plot_to_last_wall=$1
+                                shift
+                                step1_wall=$1
+                                shift
+                                step2_wall=$1
+                                shift
+                                n_ave_wall=$1
                                 ;;
         -h | --help )           usage
                                 exit
@@ -189,6 +212,20 @@ if [ "$interactive" == "1" ]; then
         echo "Type the n_ave that you want, followed by [ENTER]:"
         read n_ave
     fi
+
+    echo "Type the if_wall that you want (1 or 0), followed by [ENTER]:"
+    read if_wall
+    if [ "$if_wall" == "1" ]; then
+        echo "Type the if_plot_to_last_wall that you want (1 or 0), followed by [ENTER]:"
+        read if_plot_to_last_wall
+        echo "Type the step1_wall that you want, followed by [ENTER]:"
+        read step1_wall
+        echo "Type the step2_wall that you want, followed by [ENTER]:"
+        read step2_wall
+        echo "Type the n_ave_wall that you want, followed by [ENTER]:"
+        read n_ave_wall
+    fi
+
 else
     echo "interactive off"
 fi
@@ -215,4 +252,12 @@ if [ "$if_vfield" == "1" ]; then
     velocity_field ${if_plot_to_last} ${step1} ${step2} ${n_ave}
 else
 	echo "if_vfield is off"
+fi
+
+# wall start
+if [ "$if_wall" == "1" ]; then
+	echo "if_wall is on"
+    wall_force ${if_plot_to_last_wall} ${step1_wall} ${step2_wall} ${n_ave_wall}
+else
+	echo "if_wall is off"
 fi

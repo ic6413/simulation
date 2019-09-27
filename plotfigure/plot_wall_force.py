@@ -172,9 +172,13 @@ def plot_wall_force_ave(if_plot_to_last, step1, step2, n_ave):
 
                 def ave_over(array, n):
                     length = len(array)
-                    for i in range(n)
-                    array[0:length-i]
-                x_array = x_array[0:-1]+x_array[0:-1]
+                    anwser_array = 0
+                    for i in range(n):
+                        anwser_array = anwser_array + array[i:length-i]
+                    return anwser_array
+
+                x_array = ave_over(x_array, n_ave)
+                y_array = ave_over(y_array, n_ave)
 
                 fig1, ax1 = plt.subplots()
 
