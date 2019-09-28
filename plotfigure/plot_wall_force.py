@@ -18,12 +18,15 @@ import read_setting.read_setting as rr
 # define function for extract data from fix txt to dataframe
 if rr.logfile["shearwall"] == "zcylinder":
     chunk_method = 'rz'
-    
+    wallfile1 = "force_zbottom_to_particle.allstep"
+    wallfile2 = "force_outwall_to_particle.allstep"
+    wallfile3 = "force_inwall_to_particle.allstep"
 if rr.logfile["shearwall"] == "yplane":
     chunk_method = 'yz'
     wallfile1 = "force_zbottom_to_particle.allstep"
     wallfile2 = "force_y_top_to_particle.allstep"
     wallfile3 = "force_y_bottom_to_particle.allstep"
+    
 
 diameter = float(rr.logfile['dp'])
 width_wall_dp_unit = int(rr.logfile['width_wall_dp_unit'])
