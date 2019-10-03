@@ -15,6 +15,9 @@ from mpl_toolkits.mplot3d import Axes3D
 # import module
 import datapath as dp
 import read_setting.read_setting as rr
+# plot style
+plt.style.use('classic')
+
 # define function for extract data from fix txt to dataframe
 if rr.logfile["shearwall"] == "zcylinder":
     chunk_method = 'rz'

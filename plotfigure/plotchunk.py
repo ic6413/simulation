@@ -15,6 +15,8 @@ from mpl_toolkits.mplot3d import Axes3D
 # import module
 import datapath as dp
 import read_setting.read_setting as rr
+# plot style
+plt.style.use('classic')
 # define function for extract data from fix txt to dataframe
 if rr.logfile["shearwall"] == "zcylinder":
     chunk_method = 'rz'
@@ -139,8 +141,8 @@ def plotchunk(if_plot_to_last, step1, step2):
                         units='width',angles='xy', scale_units='xy', scale=quiver_scale,
                         )
 
-            ax1.quiverkey(Q, 0.2, 0.9, label_scale,
-                        label = "labescale" + str(label_scale) + "quiver_scale" + str(quiver_scale) + '*arrow length of wall velocity in 45 degree, velocity field r-z direction',
+            ax1.quiverkey(Q, 0.8, 0.95, label_scale,
+                        label = "{:.2E}".format(label_scale) + "quiver_scale" + str(quiver_scale) + '*arrow length of wall velocity in 45 degree, velocity field r-z direction',
                         labelpos='E', coordinates='figure', angle=45)
 
             fig1.savefig(dp.f_momentum_mass_field_v23x23_path + str(step))
@@ -172,8 +174,8 @@ def plotchunk(if_plot_to_last, step1, step2):
             Q = ax1.quiver(x_array, y_array, vx_array, vy_array,
                         units='width',angles='xy', scale_units='xy', scale=quiver_scale,
                         )
-            ax1.quiverkey(Q, 0.2, 0.9, label_scale,
-                        label = "labescale" + str(label_scale) + "quiver_scale" + str(quiver_scale) + '*arrow length of wall velocity in 45 degree, velocity field r-z direction',
+            ax1.quiverkey(Q, 0.8, 0.95, label_scale,
+                        label = "{:.2E}".format(label_scale) + "quiver_scale" + str(quiver_scale) + '*arrow length of wall velocity in 45 degree, velocity field r-z direction',
                         labelpos='E', coordinates='figure', angle=45)
 
             fig1.savefig(dp.f_momentum_mass_field_v13x23_path + str(step))
@@ -198,8 +200,8 @@ def plotchunk(if_plot_to_last, step1, step2):
                         units='width',angles='xy', scale_units='xy', scale=quiver_scale,
                         )
 
-            ax1.quiverkey(Q, 0.2, 0.9,
-                        label_scale, label = "labescale" + str(label_scale) + "quiver_scale" + str(quiver_scale) + 'solid fraction',
+            ax1.quiverkey(Q, 0.8, 0.95,
+                        label_scale, label = "{:.2E}".format(label_scale) + "quiver_scale" + str(quiver_scale) + 'solid fraction',
                         labelpos='E',
                         coordinates='figure', angle=90)
 
@@ -282,8 +284,8 @@ def plotchunk_ave(if_plot_to_last, step1, step2, n_ave):
                         units='width',angles='xy', scale_units='xy', scale=quiver_scale,
                         )
 
-            ax1.quiverkey(Q, 0.2, 0.9, label_scale,
-                        label = "labescale" + str(label_scale) + "quiver_scale" + str(quiver_scale) + '*arrow length of wall velocity in 45 degree, velocity field r-z direction',
+            ax1.quiverkey(Q, 0.8, 0.95, label_scale,
+                        label = "{:.2E}".format(label_scale) + "quiver_scale" + str(quiver_scale) + '*arrow length of wall velocity in 45 degree, velocity field r-z direction',
                         labelpos='E', coordinates='figure', angle=45)
             fig1.savefig(f_momentum_mass_field_v23x23_path_nve + str(int(step)))
             plt.close('all')
@@ -314,8 +316,8 @@ def plotchunk_ave(if_plot_to_last, step1, step2, n_ave):
             Q = ax1.quiver(x_array, y_array, vx_array, vy_array,
                         units='width',angles='xy', scale_units='xy', scale=quiver_scale,
                         )
-            ax1.quiverkey(Q, 0.2, 0.9, label_scale,
-                        label = "labescale" + str(label_scale) + "quiver_scale" + str(quiver_scale) + '*arrow length of wall velocity in 45 degree, velocity field r-z direction',
+            ax1.quiverkey(Q, 0.8, 0.95, label_scale,
+                        label = "{:.2E}".format(label_scale) + "quiver_scale" + str(quiver_scale) + '*arrow length of wall velocity in 45 degree, velocity field r-z direction',
                         labelpos='E', coordinates='figure', angle=45)
 
             fig1.savefig(f_momentum_mass_field_v13x23_path_nve + str(int(step)))
@@ -340,8 +342,8 @@ def plotchunk_ave(if_plot_to_last, step1, step2, n_ave):
                         units='width',angles='xy', scale_units='xy', scale=quiver_scale,
                         )
 
-            ax1.quiverkey(Q, 0.2, 0.9,
-                        label_scale, label = "labescale" + str(label_scale) + "quiver_scale" + str(quiver_scale) + 'solid fraction',
+            ax1.quiverkey(Q, 0.8, 0.95,
+                        label_scale, label = "{:.2E}".format(label_scale) + "quiver_scale" + str(quiver_scale) + 'solid fraction',
                         labelpos='E',
                         coordinates='figure', angle=90)
 
