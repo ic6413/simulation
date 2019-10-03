@@ -275,7 +275,7 @@ variable	zlo_chunk	equal $(v_zlo_chunk_dp_unit*v_dp)
 variable	yhi_chunk	equal $(v_yhi_chunk_dp_unit*v_dp)
 variable	ylo_chunk	equal $(v_ylo_chunk_dp_unit*v_dp)
 # calculate simulation box size
-variable width equal $(v_width_wall_dp_unit*v_dp)
+variable width_wall equal $(v_width_wall_dp_unit*v_dp)
 variable zhi_box 	equal $(v_zhi_box_dp_unit*v_dp)
 # calculate diameter of big and small
 variable	dp_big		equal $(v_dp_big_dp_unit*v_dp)
@@ -302,7 +302,7 @@ variable	zhi_pour	equal $(v_zhi_pour_dp_unit*v_dp)
 variable	N_total_yz 	equal v_N_bin_y*v_N_bin_z
 
 # calculate inner wall speed
-variable	in_velocity 	equal $(sqrt(v_Sa*v_g*(v_width)^3/(v_dp)^2))
+variable	in_velocity 	equal $(sqrt(v_Sa*v_g*(v_width_wall)^3/(v_dp)^2))
 
 # calculate freeze region size
 variable	zhi_freeze		equal $(v_zhi_freeze_dp_unit*v_dp)
