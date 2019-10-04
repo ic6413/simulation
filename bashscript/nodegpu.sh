@@ -61,12 +61,12 @@ NEIGHnoDIRECT="-pk kokkos neigh half gpu/direct off"
 LMP_OMP="-pk omp ${SLURM_CPUS_PER_TASK} -sf omp"
 
 #=======Script========================
-LMP_INSCRIPT_sm="/home/hllin/simulation/lammps_input_script/in.lmpscript_simple_20190114_v11"
-LMP_INSCRIPT_kkbench_kokkos="/home/hllin/simulation/lammps_input_script/kokkos_bench/in.chute_kokkos"
-LMP_INSCRIPT_kkbench_kokkos_print1="/home/hllin/simulation/lammps_input_script/kokkos_bench/in.chute_kokkos_print1atom"
+LMP_INSCRIPT_sm="/home/hllin/simulation/lmp_input/in.lmpscript_simple_20190114_v11"
+LMP_INSCRIPT_kkbench_kokkos="/home/hllin/simulation/lmp_input/kokkos_bench/in.chute_kokkos"
+LMP_INSCRIPT_kkbench_kokkos_print1="/home/hllin/simulation/lmp_input/kokkos_bench/in.chute_kokkos_print1atom"
 LMP_INSCRIPT_ch="in.chute_print1atom"
 LMP_INSCRIPT_lj="in.lj_print1atom"
-LMP_INSCRIPT_mycylinder="/home/hllin/simulation/lammps_input_script/in.lmpscript_cylinder"
+LMP_INSCRIPT_mycylinder="/home/hllin/simulation/lmp_input/in.lmpscript_cylinder"
 LMP_INSCRIPT_infolder="in.override"
 LMP_INSCRIPT=${LMP_INSCRIPT_infolder}
 
@@ -200,10 +200,10 @@ ${MPIRUN_SCRIPT} ${LMP_EXE_ucx16_cuda100_nonuma} ${LMP_CMD_kyes_directon} ${LMP_
 #${SRUN_SCRIPT} ${LMP_EXE_ucx16_cuda100_nonuma} ${LMP_CMD_kyes} ${LMP_INSCRIPT_kkbench_kokkos}
 
 
-#mpirun ~/lmp_exe/20190712_mymodule_unstable_openmpi314_granular_kkcuda/lmp -pk kokkos neigh half gpu/direct off -k on g 1 -sf kk -in ~/simulation/lammps_input_script/in.lmpscript_simple_20190114_v11 #${SLURM_CPUS_PER_TASK}
-#mpirun ~/lmp_exe/20190712_mymodule_unstable_openmpi314_granular_kkcuda/lmp -pk kokkos neigh half -k on g 1 -sf kk -in ~/simulation/lammps_input_script/in.lmpscript_simple_20190114_v11 #${SLURM_CPUS_PER_TASK}
-#srun --mpi=pmi2 ~/lmp_exe/20190712_mymodule_unstable_openmpi314_granular_kkcuda/lmp -pk kokkos neigh half gpu/direct off -k on g 1 -sf kk -in ~/simulation/lammps_input_script/in.lmpscript_simple_20190114_v11 #${SLURM_CPUS_PER_TASK}
-#srun --mpi=pmi2 ~/lmp_exe/20190712_mymodule_unstable_openmpi314_granular_kkcuda/lmp -pk kokkos neigh half -k on g 1 -sf kk -in ~/simulation/lammps_input_script/in.lmpscript_simple_20190114_v11 #${SLURM_CPUS_PER_TASK}
+#mpirun ~/lmp_exe/20190712_mymodule_unstable_openmpi314_granular_kkcuda/lmp -pk kokkos neigh half gpu/direct off -k on g 1 -sf kk -in ~/simulation/lmp_input/in.lmpscript_simple_20190114_v11 #${SLURM_CPUS_PER_TASK}
+#mpirun ~/lmp_exe/20190712_mymodule_unstable_openmpi314_granular_kkcuda/lmp -pk kokkos neigh half -k on g 1 -sf kk -in ~/simulation/lmp_input/in.lmpscript_simple_20190114_v11 #${SLURM_CPUS_PER_TASK}
+#srun --mpi=pmi2 ~/lmp_exe/20190712_mymodule_unstable_openmpi314_granular_kkcuda/lmp -pk kokkos neigh half gpu/direct off -k on g 1 -sf kk -in ~/simulation/lmp_input/in.lmpscript_simple_20190114_v11 #${SLURM_CPUS_PER_TASK}
+#srun --mpi=pmi2 ~/lmp_exe/20190712_mymodule_unstable_openmpi314_granular_kkcuda/lmp -pk kokkos neigh half -k on g 1 -sf kk -in ~/simulation/lmp_input/in.lmpscript_simple_20190114_v11 #${SLURM_CPUS_PER_TASK}
 
 #srun --mpi=pmi2 ~/lmp_exe/20190712_mymodule_unstable_openmpi314_granular_kkcuda/lmp -pk kokkos neigh half -k on g 1 -sf kk -in in.chute #${SLURM_CPUS_PER_TASK}
 #srun --mpi=pmi2 ~/lmp_exe/20190712_mymodule_unstable_openmpi314_granular_kkcuda_debug/lmp -k on g 2 -pk kokkos neigh half -sf kk -in in.lj #${SLURM_CPUS_PER_TASK}

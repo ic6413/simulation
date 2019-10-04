@@ -1,4 +1,5 @@
 # override variables
+variable    ifsoft   index no
 # geometry
 variable    boundary_geometry   index cylinder  # cylinder block
 # ztop
@@ -16,6 +17,8 @@ variable	ifresetdt		index no
 # region height width
 variable	z_length_create_dp_unit	index 31
 variable	width_wall_dp_unit		index 17
+variable	x_period_dp_unit		index 36	#only for block geometry
+variable	ri_wall_dp_unit		index 36	#inner radius only for cylinder geometry
 # contact model
 variable	contact_change 		index no
 variable  	eliminate_history   	index no 
@@ -78,9 +81,20 @@ variable  	freq_test3      	index 0
 # get simulation path
 variable    home_path     getenv HOME
 variable    simulation_path     string "${home_path}/simulation"
-if "${boundary_geometry}==cylinder" then &
-"include ${simulation_path}/lammps_input_script/in.lmpscript_cylinder" &
-elif "${boundary_geometry}==block" &
-"include ${simulation_path}/lammps_input_script/in.lmpscript_periodic_block" &
+if "${ifsoft} == yes" then "jump SELF end_not_soft"
+if "${boundary_geometry} == cylinder" then &
+"include ${simulation_path}/lmp_input/in.lmpscript_cylinder" &
+elif "${boundary_geometry} == block" &
+"include ${simulation_path}/lmp_input/in.lmpscript_periodic_block" &
 else &
 "quit 1"
+label end_not_soft
+
+if "${ifsoft} == no" then "jump SELF end_soft"
+if "${boundary_geometry} == cylinder" then &
+"include ${simulation_path}/lmp_input/in.lmpscript_cylinder_soft" &
+elif "${boundary_geometry} == block" &
+"include ${simulation_path}/lmp_input/in.lmpscript_periodic_block_soft" &
+else &
+"quit 1"
+label end_soft
