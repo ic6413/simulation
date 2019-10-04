@@ -187,7 +187,7 @@ def plotchunk(if_plot_to_last, step1, step2):
             vx_array = 0*df['c_m1'].values
             vy_array = df['c_m1'].values/float(rr.logfile['den'])/vol_in_chunks
             fig1, ax1 = plt.subplots()
-            fig1.set_size_inches(12.8, 9.6)
+            
             #fig1.figsize = [12.8, 9.6]
             if chunk_method == "rz":
                 plt.xlabel('r')
@@ -329,7 +329,7 @@ def plotchunk_ave(if_plot_to_last, step1, step2, n_ave):
             vx_array = 0*df['c_m1'].values
             vy_array = df['c_m1'].values/float(rr.logfile['den'])/vol_in_chunks
             fig1, ax1 = plt.subplots()
-            fig1.set_size_inches(12.8, 9.6)
+            
             #fig1.figsize = [12.8, 9.6]
             if chunk_method == "rz":
                 plt.xlabel('r')
