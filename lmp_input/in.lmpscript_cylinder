@@ -297,7 +297,8 @@ variable	N_total_rz 	equal v_N_bin_r*v_N_bin_z
 # calculate inner wall speed
 variable	omega_in 	equal $(sqrt(v_Sa*v_g*(v_ro_wall-v_ri_wall)^3/(v_dp)^2/v_ri_wall^2))
 print "omega_in ${omega_in}" screen no append output/setting/attribute.lammps
-variable	in_velocity 	equal $(-v_omega_in*v_ri_wall)
+variable	in_velocity 	equal $(v_omega_in*v_ri_wall)
+variable	in_velocity_negative 	equal $(-v_in_velocity)
 
 # calculate freeze region size
 variable	zhi_freeze		equal $(v_zhi_freeze_dp_unit*v_dp)
@@ -584,7 +585,7 @@ if "${contact_model} != hooke_his" &
  then "jump SELF hooke_his_end1"
 
 if "${ifrotate} == yes" then &
-  "fix	inwall		all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri_wall} shear x ${in_velocity}" &
+  "fix	inwall		all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri_wall} shear x ${in_velocity_negative}" &
 else &
   "fix	inwall		all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri_wall}"
 label hooke_his_end1
@@ -592,7 +593,7 @@ label hooke_his_end1
 if "${contact_model} != hooke" &
  then "jump SELF hooke_end1"
 if "${ifrotate} == yes" then &
-  "fix	inwall		all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri_wall} shear x ${in_velocity}" &
+  "fix	inwall		all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri_wall} shear x ${in_velocity_negative}" &
 else &
   "fix	inwall		all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri_wall}"
 label hooke_end1
@@ -1245,7 +1246,7 @@ if "${freq_ave_wall} != 0" then "fix	storeforce_inwall_before	all store/force"
 if "${contact_model} != hooke_his" &
  then "jump SELF hooke_his_end3"
 if "${ifrotate} == yes" then &
-  "fix	inwall		all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri_wall} shear x ${in_velocity}" &
+  "fix	inwall		all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri_wall} shear x ${in_velocity_negative}" &
 else &
   "fix	inwall		all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri_wall}"
 label hooke_his_end3
@@ -1253,7 +1254,7 @@ label hooke_his_end3
 if "${contact_model} != hooke" &
  then "jump SELF hooke_end3"
 if "${ifrotate} == yes" then &
-  "fix	inwall		all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri_wall} shear x ${in_velocity}" &
+  "fix	inwall		all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri_wall} shear x ${in_velocity_negative}" &
 else &
   "fix	inwall		all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri_wall}"
 label hooke_end3

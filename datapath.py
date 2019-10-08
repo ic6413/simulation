@@ -5,6 +5,8 @@ import numpy as np
 import osmanage as om
 # import read_setting
 import read_setting.read_setting as rr
+# setting
+abs_error_tolerence = 1e-13
 
 # === current module inputvariable ===
 # set lammps directory (current workspace directory or path)

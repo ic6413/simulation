@@ -10,7 +10,7 @@ id_i = int(sys.argv[1])
 step1 = int(sys.argv[2])
 step2 = int(sys.argv[3])
 fromtraceorall_input = sys.argv[4]
-error_tolerence = 1e-7
+error_tolerence = 1e-25
 method_list = list(range(0, 3))
 
 cd.dumptofile(fromtraceorall=fromtraceorall_input).dump_custom()

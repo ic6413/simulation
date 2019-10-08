@@ -23,7 +23,7 @@ import read_setting.read_setting as rr
 # current module variable
 overlap_tolerence = 0
 # see reading value as zero
-abs_error_tolerence = 1e-13
+abs_error_tolerence = dp.abs_error_tolerence
 # ==== inputvariable varables end ====
 # timestep
 ts = dp.ts 
