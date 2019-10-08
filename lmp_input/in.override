@@ -2,6 +2,11 @@
 variable    ifsoft   index no
 # geometry
 variable    boundary_geometry   index cylinder  # cylinder block
+# only for block
+variable    ifzbottomshear      index yes
+# only for create_atom_method latt
+variable    ifsetinitialvelocity      index yes
+variable    ifinitialvelocity_same_as_in_velocity      index yes
 # ztop
 variable  ifztop   index yes
 # run step

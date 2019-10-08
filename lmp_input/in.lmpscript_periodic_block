@@ -407,6 +407,26 @@ set		type 2 diameter ${dp}
 set		type 3 diameter ${dp_big}
 set		atom * density 	${den}
 
+if "${ifsetinitialvelocity} == yes" then &
+  "jump SELF ifsetinitialvelocity_begin1" &
+else &
+  "jump SELF ifsetinitialvelocity_end1"
+
+label ifsetinitialvelocity_begin1
+
+if "${ifinitialvelocity_same_as_in_velocity} == yes" then &
+  "jump SELF ifinitialvelocity_same_as_in_velocity_begin1" &
+else &
+  "jump SELF ifinitialvelocity_same_as_in_velocity_end1"
+
+label ifinitialvelocity_same_as_in_velocity_begin1
+ifinitialvelocity_same_as_in_velocity
+set atom * vx ${in_velocity}
+jump SELF ifsetinitialvelocity_end1
+label ifinitialvelocity_same_as_in_velocity_end1
+
+label ifsetinitialvelocity_end1
+
 #displace
 #displace_atoms all random 1e-11 1e-11 0 987 units box
 
@@ -582,7 +602,7 @@ if "${contact_model} != hooke_his" &
  then "jump SELF hooke_his_end1"
 
 if "${ifrotate} == yes" then &
-  "fix	y_bottom		all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane ${ylo_wall} NULL shear x ${in_velocity_negative}" &
+  "fix	y_bottom		all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane ${ylo_wall} NULL shear x ${in_velocity}" &
 else &
   "fix	y_bottom		all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane ${ylo_wall} NULL"
 label hooke_his_end1
@@ -590,7 +610,7 @@ label hooke_his_end1
 if "${contact_model} != hooke" &
  then "jump SELF hooke_end1"
 if "${ifrotate} == yes" then &
-  "fix	y_bottom		all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane ${ylo_wall} NULL shear x ${in_velocity_negative}" &
+  "fix	y_bottom		all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane ${ylo_wall} NULL shear x ${in_velocity}" &
 else &
   "fix	y_bottom		all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane ${ylo_wall} NULL"
 label hooke_end1
@@ -603,7 +623,19 @@ if "${freq_ave_wall} != 0" then "fix	storeforce_y_top_before	all store/force"
 fix	y_top 	all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane NULL ${yhi_wall}
 if "${freq_ave_wall} != 0" then "fix	storeforce_y_top_after	all store/force"
 if "${freq_ave_wall} != 0" then "fix	storeforce_zbottom_before	all store/force"
+
+if "${ifzbottomshear} == yes" &
+then "jump SELF z_bottom_shear_begin1" &
+else &
+"jump SELF z_bottom_not_shear_begin1"
+label z_bottom_shear_begin1
+fix	zplane_bottom 	all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane ${zlo_wall} NULL shear x ${in_velocity}
+jump SELF z_bottom_end1
+label z_bottom_not_shear_begin1
 fix	zplane_bottom 	all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane ${zlo_wall} NULL
+jump SELF z_bottom_end1
+label z_bottom_end1
+
 if "${freq_ave_wall} != 0" then "fix	storeforce_zbottom_after	all store/force"
 if "${ifztop} != yes" then "jump SELF ztop_end1"
 if "${freq_ave_wall} != 0" then "fix	storeforce_ztop_before	all store/force"
@@ -618,6 +650,19 @@ if "${freq_ave_wall} != 0" then "fix	storeforce_y_top_before	all store/force"
 fix	y_top 	all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane NULL ${yhi_wall}
 if "${freq_ave_wall} != 0" then "fix	storeforce_y_top_after	all store/force"
 if "${freq_ave_wall} != 0" then "fix	storeforce_zbottom_before	all store/force"
+
+if "${ifzbottomshear} == yes" &
+then "jump SELF z_bottom_shear_begin2" &
+else &
+"jump SELF z_bottom_not_shear_begin2"
+label z_bottom_shear_begin2
+fix	zplane_bottom 	all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane ${zlo_wall} NULL shear x ${in_velocity}
+jump SELF z_bottom_end2
+label z_bottom_not_shear_begin2
+fix	zplane_bottom 	all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane ${zlo_wall} NULL
+jump SELF z_bottom_end2
+label z_bottom_end2
+
 fix	zplane_bottom 	all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane ${zlo_wall} NULL
 if "${freq_ave_wall} != 0" then "fix	storeforce_zbottom_after	all store/force"
 if "${ifztop} != yes" then "jump SELF ztop_end2"
@@ -1211,7 +1256,7 @@ if "${freq_ave_wall} != 0" then "fix	storeforce_y_bottom_before	all store/force"
 if "${contact_model} != hooke_his" &
  then "jump SELF hooke_his_end3"
 if "${ifrotate} == yes" then &
-  "fix	y_bottom		all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane ${ylo_wall} NULL shear x ${in_velocity_negative}" &
+  "fix	y_bottom		all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane ${ylo_wall} NULL shear x ${in_velocity}" &
 else &
   "fix	y_bottom		all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane ${ylo_wall} NULL"
 label hooke_his_end3
@@ -1219,7 +1264,7 @@ label hooke_his_end3
 if "${contact_model} != hooke" &
  then "jump SELF hooke_end3"
 if "${ifrotate} == yes" then &
-  "fix	y_bottom		all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane ${ylo_wall} NULL shear x ${in_velocity_negative}" &
+  "fix	y_bottom		all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane ${ylo_wall} NULL shear x ${in_velocity}" &
 else &
   "fix	y_bottom		all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane ${ylo_wall} NULL"
 label hooke_end3
