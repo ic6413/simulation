@@ -127,7 +127,10 @@ def plotchunk(if_plot_to_last, step1, step2):
             
             v_length_array = (vx_array**2+vy_array**2)**0.5
             max_v_length = np.amax(v_length_array)
-            quiver_scale = max_v_length/2
+            if dp.if_plot_velocity_field_scale_same == "yes":
+                quiver_scale = 0.1
+            else:
+                quiver_scale = max_v_length/2
             label_scale = quiver_scale
             fig1, ax1 = plt.subplots()
             if chunk_method == "rz":
@@ -158,7 +161,10 @@ def plotchunk(if_plot_to_last, step1, step2):
                 sys.exit("chunk_method wrong")
             v_length_array = (vx_array**2+vy_array**2)**0.5
             max_v_length = np.amax(v_length_array)
-            quiver_scale = max_v_length/2
+            if dp.if_plot_velocity_field_scale_same == "yes":
+                quiver_scale = 0.1
+            else:
+                quiver_scale = max_v_length/2
             label_scale = quiver_scale
             fig1, ax1 = plt.subplots()
             if chunk_method == "rz":
@@ -270,8 +276,11 @@ def plotchunk_ave(if_plot_to_last, step1, step2, n_ave):
             
             v_length_array = (vx_array**2+vy_array**2)**0.5
             max_v_length = np.amax(v_length_array)
-            quiver_scale = max_v_length/2
-            label_scale = max_v_length/2
+            if dp.if_plot_velocity_field_scale_same == "yes":
+                quiver_scale = 0.1
+            else:
+                quiver_scale = max_v_length/2
+            label_scale = quiver_scale
             fig1, ax1 = plt.subplots()
             if chunk_method == "rz":
                 plt.xlabel('r')
@@ -300,8 +309,11 @@ def plotchunk_ave(if_plot_to_last, step1, step2, n_ave):
                 sys.exit("chunk_method wrong")
             v_length_array = (vx_array**2+vy_array**2)**0.5
             max_v_length = np.amax(v_length_array)
-            quiver_scale = max_v_length/2
-            label_scale = max_v_length/2
+            if dp.if_plot_velocity_field_scale_same == "yes":
+                quiver_scale = 0.1
+            else:
+                quiver_scale = max_v_length/2
+            label_scale = quiver_scale
             fig1, ax1 = plt.subplots()
             if chunk_method == "rz":
                 plt.xlabel('r(position), theta(velocity)')

@@ -7,6 +7,7 @@ import osmanage as om
 import read_setting.read_setting as rr
 # setting
 abs_error_tolerence = 1e-13
+if_plot_velocity_field_scale_same = "yes"
 
 # === current module inputvariable ===
 # set lammps directory (current workspace directory or path)
@@ -191,18 +192,38 @@ diagram_path = post_process_path + 'diagram/'
 om.create_directory(diagram_path)
 f_momentum_mass_field_path = diagram_path + "momentum_mass_field/"
 om.create_directory(f_momentum_mass_field_path)
-if rr.logfile["shearwall"] == "zcylinder":
-    f_momentum_mass_field_v23x23_path = f_momentum_mass_field_path + "Vr_Vz_Xr_Xz/"
-    f_momentum_mass_field_v13x23_path = f_momentum_mass_field_path + "Vr_Vtheta_Xr_Xz/"
-    om.create_directory(f_momentum_mass_field_v23x23_path)
-    om.create_directory(f_momentum_mass_field_v13x23_path)
-if rr.logfile["shearwall"] == "yplane":
-    f_momentum_mass_field_v23x23_path = f_momentum_mass_field_path + "Vx_Vz_Xx_Xz/"
-    f_momentum_mass_field_v13x23_path = f_momentum_mass_field_path + "Vx_Vtheta_Xx_Xz/"
-    om.create_directory(f_momentum_mass_field_v23x23_path)
-    om.create_directory(f_momentum_mass_field_v13x23_path)
+f_momentum_mass_field_samescale_path = f_momentum_mass_field_path + "same_scale/"
+om.create_directory(f_momentum_mass_field_samescale_path)
 
-f_momentum_mass_field_density_x23_path = f_momentum_mass_field_path + "density_Xx_Xz/"
-om.create_directory(f_momentum_mass_field_density_x23_path)
+if if_plot_velocity_field_scale_same == "yes":
+    if rr.logfile["shearwall"] == "zcylinder":
+        f_momentum_mass_field_v23x23_path = f_momentum_mass_field_samescale_path + "Vr_Vz_Xr_Xz/"
+        f_momentum_mass_field_v13x23_path = f_momentum_mass_field_samescale_path + "Vr_Vtheta_Xr_Xz/"
+        om.create_directory(f_momentum_mass_field_v23x23_path)
+        om.create_directory(f_momentum_mass_field_v13x23_path)
+    if rr.logfile["shearwall"] == "yplane":
+        f_momentum_mass_field_v23x23_path = f_momentum_mass_field_samescale_path + "Vx_Vz_Xx_Xz/"
+        f_momentum_mass_field_v13x23_path = f_momentum_mass_field_samescale_path + "Vx_Vtheta_Xx_Xz/"
+        om.create_directory(f_momentum_mass_field_v23x23_path)
+        om.create_directory(f_momentum_mass_field_v13x23_path)
+
+    f_momentum_mass_field_density_x23_path = f_momentum_mass_field_samescale_path + "density_Xx_Xz/"
+    om.create_directory(f_momentum_mass_field_density_x23_path)
+else:
+    if rr.logfile["shearwall"] == "zcylinder":
+        f_momentum_mass_field_v23x23_path = f_momentum_mass_field_path + "Vr_Vz_Xr_Xz/"
+        f_momentum_mass_field_v13x23_path = f_momentum_mass_field_path + "Vr_Vtheta_Xr_Xz/"
+        om.create_directory(f_momentum_mass_field_v23x23_path)
+        om.create_directory(f_momentum_mass_field_v13x23_path)
+    if rr.logfile["shearwall"] == "yplane":
+        f_momentum_mass_field_v23x23_path = f_momentum_mass_field_path + "Vx_Vz_Xx_Xz/"
+        f_momentum_mass_field_v13x23_path = f_momentum_mass_field_path + "Vx_Vtheta_Xx_Xz/"
+        om.create_directory(f_momentum_mass_field_v23x23_path)
+        om.create_directory(f_momentum_mass_field_v13x23_path)
+
+    f_momentum_mass_field_density_x23_path = f_momentum_mass_field_path + "density_Xx_Xz/"
+    om.create_directory(f_momentum_mass_field_density_x23_path)    
+
+
 f_wall_force_plot_path = diagram_path + "wall_force/"
 om.create_directory(f_wall_force_plot_path)
