@@ -420,7 +420,6 @@ else &
   "jump SELF ifinitialvelocity_same_as_in_velocity_end1"
 
 label ifinitialvelocity_same_as_in_velocity_begin1
-ifinitialvelocity_same_as_in_velocity
 set atom * vx ${in_velocity}
 jump SELF ifsetinitialvelocity_end1
 label ifinitialvelocity_same_as_in_velocity_end1
