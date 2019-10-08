@@ -32,7 +32,7 @@ dp0 = dp.dp0
 density = dp.density
 # intersection pointmu
 r_in = dp.r_in
-r_out = dp.r_out 
+r_out = dp.r_out
 # gravity
 g = dp.g 
 # parameter
@@ -62,7 +62,6 @@ def extract_dataframe(df, step1, step2):
 
     def test1(df, step1, step2):
 
-        
         if 'Step' in df.columns.values.tolist():
             steps = df['Step'].values
         elif 'step' in df.columns.values.tolist():
@@ -231,6 +230,7 @@ class wall_overlap_class(overlap_to_i):
         pass
 
     def ifoverlap(self):
+        breakpoint()
         return (self.overlap_length() >= overlap_tolerence)
 
     def overlapij_vector(self):
