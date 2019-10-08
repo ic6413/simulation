@@ -18,7 +18,11 @@
 #      correct unit of freeze region to box. set no output if freq_* =0
 # v5:  rounding number
 # v4:  store force before fix (after pair). so get pair force
-
+# only for block
+variable    ifzbottomshear      index no
+# only for create_atom_method latt
+variable    ifsetinitialvelocity      index no
+variable    ifinitialvelocity_same_as_in_velocity      index no
 # initialization:
 # timer
 #timer loop # loop off full sync
