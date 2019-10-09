@@ -7,7 +7,7 @@ import osmanage as om
 import read_setting.read_setting as rr
 # setting
 abs_error_tolerence = 1e-13
-if_plot_velocity_field_scale_same = "no"
+if_plot_velocity_field_scale_same = "yes"
 
 # === current module inputvariable ===
 # set lammps directory (current workspace directory or path)
