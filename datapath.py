@@ -8,6 +8,8 @@ import read_setting.read_setting as rr
 # setting
 abs_error_tolerence = 1e-13
 if_plot_velocity_field_scale_same = "yes"
+quiver_scale_velocity_xaxis_shearplanenormal_yaxis_z = 0.1
+quiver_scale_velocity_xaxis_shearplaneshear_yaxis_z = 1
 
 # === current module inputvariable ===
 # set lammps directory (current workspace directory or path)

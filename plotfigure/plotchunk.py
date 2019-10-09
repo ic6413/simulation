@@ -133,7 +133,7 @@ def plotchunk(if_plot_to_last, step1, step2):
             v_length_array = (vx_array**2+vy_array**2)**0.5
             max_v_length = np.amax(v_length_array)
             if dp.if_plot_velocity_field_scale_same == "yes":
-                quiver_scale = 0.1
+                quiver_scale = dp.quiver_scale_velocity_xaxis_shearplanenormal_yaxis_z
             else:
                 quiver_scale = max_v_length/2
             label_scale = quiver_scale
@@ -186,7 +186,7 @@ def plotchunk(if_plot_to_last, step1, step2):
             v_length_array = (vx_array**2+vy_array**2)**0.5
             max_v_length = np.amax(v_length_array)
             if dp.if_plot_velocity_field_scale_same == "yes":
-                quiver_scale = 0.1
+                quiver_scale = dp.quiver_scale_velocity_xaxis_shearplaneshear_yaxis_z
             else:
                 quiver_scale = max_v_length/2
             label_scale = quiver_scale
@@ -321,7 +321,7 @@ def plotchunk_ave(if_plot_to_last, step1, step2, n_ave):
             v_length_array = (vx_array**2+vy_array**2)**0.5
             max_v_length = np.amax(v_length_array)
             if dp.if_plot_velocity_field_scale_same == "yes":
-                quiver_scale = 0.1
+                quiver_scale = dp.quiver_scale_velocity_xaxis_shearplanenormal_yaxis_z
             else:
                 quiver_scale = max_v_length/2
             label_scale = quiver_scale
@@ -373,7 +373,7 @@ def plotchunk_ave(if_plot_to_last, step1, step2, n_ave):
             v_length_array = (vx_array**2+vy_array**2)**0.5
             max_v_length = np.amax(v_length_array)
             if dp.if_plot_velocity_field_scale_same == "yes":
-                quiver_scale = 0.1
+                quiver_scale = dp.quiver_scale_velocity_xaxis_shearplaneshear_yaxis_z
             else:
                 quiver_scale = max_v_length/2
             label_scale = quiver_scale
