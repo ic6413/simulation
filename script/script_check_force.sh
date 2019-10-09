@@ -14,8 +14,12 @@ combine_all () {
     done
 
     cat $(eval echo "output/single_all/tmp{$START..$END..$STEPDIFF}") > output/single_all/dump.all.single.allstep
+    
+    for i in $(eval echo "{$START..$END..$STEPDIFF}")
+    do
+    rm -r output/single_all/tmp$i
+    done
 
-    rm -r output/single_all/tmp*
 
 }
 
@@ -33,7 +37,12 @@ combine_trace () {
 
     cat $(eval echo "output/single_trace/tmp{$START..$END..$STEPDIFF}") > output/single_trace/dump.trace.single.allstep
 
-    rm -r output/single_trace/tmp*
+
+    for i in $(eval echo "{$START..$END..$STEPDIFF}")
+    do
+    rm -r output/single_trace/tmp$i
+    done
+
 
 }
 # check force calculation for atom i from step1 to step2

@@ -17,8 +17,8 @@ cd.dumptofile(fromtraceorall=fromtraceorall_input).dump_custom()
 # cehck overlap
 cco.checkoverlap(id_i, step1, step2).checkprint()
 # check j force, must have store pairforce when running lammps
-cco.check_ft_1j_contact(id_i, step1, step2, error_tolerence, method_list).checkprint()
+#cco.check_ft_1j_contact(id_i, step1, step2, error_tolerence, method_list).checkprint()
 # check wall force, must have store wallforce when running lammps
-cco.check_ft_1w_contact(id_i, step1, step2, error_tolerence, method_list).checkprint()
+#cco.check_ft_1w_contact(id_i, step1, step2, error_tolerence, method_list).checkprint()
 # check force for all contact
-cco.checkforce(id_i, step1, step2, error_tolerence, method_list).checkprint()
+#cco.checkforce(id_i, step1, step2, error_tolerence, method_list).checkprint()

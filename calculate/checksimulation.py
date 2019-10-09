@@ -230,7 +230,6 @@ class wall_overlap_class(overlap_to_i):
         pass
 
     def ifoverlap(self):
-        breakpoint()
         return (self.overlap_length() >= overlap_tolerence)
 
     def overlapij_vector(self):
@@ -669,7 +668,6 @@ def contact_ids_inonestep(df_onestep, id_i):
             print('walltype not p not cy')
 
         ifoverlap_iwall_onestep[n] = wall.ifoverlap()
-
     contact_idwall = idwalls[ifoverlap_iwall_onestep]
 
     contact_idj_wall = np.append(contact_idj,contact_idwall)
