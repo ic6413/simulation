@@ -89,47 +89,47 @@ variable    home_path     getenv HOME
 variable    simulation_path     string "${home_path}/simulation"
 variable    lmp_input_dir     string "${simulation_path}/lmp_input"
 
-if "${iftestinthisfolder} == yes" then "jump SELF end_testinthisfolder1"
+if "${iftestinthisfolder} == yes" then "jump SELF end_not_testinthisfolder1"
 
 if "${ifsoft} == yes" then "jump SELF end_not_soft1"
-if "${boundary_geometry} == cylinder" then &
-"include ./in.lmpscript_cylinder" &
-elif "${boundary_geometry} == block" &
-"include ./in.lmpscript_periodic_block" &
-else &
-"quit 1"
-label end_not_soft1
-
-if "${ifsoft} == no" then "jump SELF end_soft1"
-if "${boundary_geometry} == cylinder" then &
-"include ./in.lmpscript_cylinder_soft" &
-elif "${boundary_geometry} == block" &
-"include ./in.lmpscript_periodic_block_soft" &
-else &
-"quit 1"
-label end_soft1
-
-label end_testinthisfolder1
-
-
-if "${iftestinthisfolder} == no" then "jump SELF end_not_testinthisfolder1"
-
-if "${ifsoft} == yes" then "jump SELF end_not_soft2"
 if "${boundary_geometry} == cylinder" then &
 "include ${lmp_input_dir}/in.lmpscript_cylinder" &
 elif "${boundary_geometry} == block" &
 "include ${lmp_input_dir}/in.lmpscript_periodic_block" &
 else &
 "quit 1"
-label end_not_soft2
+label end_not_soft1
 
-if "${ifsoft} == no" then "jump SELF end_soft2"
+if "${ifsoft} == no" then "jump SELF end_soft1"
 if "${boundary_geometry} == cylinder" then &
 "include ${lmp_input_dir}/in.lmpscript_cylinder_soft" &
 elif "${boundary_geometry} == block" &
 "include ${lmp_input_dir}/in.lmpscript_periodic_block_soft" &
 else &
 "quit 1"
-label end_soft2
+label end_soft1
 
 label end_not_testinthisfolder1
+
+
+if "${iftestinthisfolder} == no" then "jump SELF end_testinthisfolder1"
+
+if "${ifsoft} == yes" then "jump SELF end_not_soft2"
+if "${boundary_geometry} == cylinder" then &
+"include ./in.lmpscript_cylinder" &
+elif "${boundary_geometry} == block" &
+"include ./in.lmpscript_periodic_block" &
+else &
+"quit 1"
+label end_not_soft2
+
+if "${ifsoft} == no" then "jump SELF end_soft2"
+if "${boundary_geometry} == cylinder" then &
+"include ./in.lmpscript_cylinder_soft" &
+elif "${boundary_geometry} == block" &
+"include ./in.lmpscript_periodic_block_soft" &
+else &
+"quit 1"
+label end_soft2
+
+label end_testinthisfolder1
