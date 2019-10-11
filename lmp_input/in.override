@@ -1,5 +1,6 @@
 # override variables
 variable    ifsoft   index no
+variable    iftestinthisfolder  index no
 # geometry
 variable    boundary_geometry   index cylinder  # cylinder block
 # only for block
@@ -71,12 +72,12 @@ variable	freq_fixvector		index 0
 variable	every_fixvector		index 0
 # freq print velocity field
 variable	freq_ave_chunk_momentum_mass_field		index 10000  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
-variable	repeat_ave_chunk_momentum_mass_field	index 100
-variable	every_ave_chunk_momentum_mass_field		index 100
+variable	repeat_ave_chunk_momentum_mass_field	index 1000
+variable	every_ave_chunk_momentum_mass_field		index 10
 # freq print wall
 variable	freq_ave_wall		index 10000  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
-variable	repeat_ave_wall		index 100
-variable	every_ave_wall		index 100
+variable	repeat_ave_wall		index 1000
+variable	every_ave_wall		index 10
 # freq rebalance
 variable  	freq_balance      	index 50000
 # freq test
@@ -87,20 +88,48 @@ variable  	freq_test3      	index 0
 variable    home_path     getenv HOME
 variable    simulation_path     string "${home_path}/simulation"
 variable    lmp_input_dir     string "${simulation_path}/lmp_input"
-if "${ifsoft} == yes" then "jump SELF end_not_soft"
+
+if "${iftestinthisfolder} == yes" then "jump SELF end_not_testinthisfolder1"
+
+if "${ifsoft} == yes" then "jump SELF end_not_soft1"
 if "${boundary_geometry} == cylinder" then &
 "include ${lmp_input_dir}/in.lmpscript_cylinder" &
 elif "${boundary_geometry} == block" &
 "include ${lmp_input_dir}/in.lmpscript_periodic_block" &
 else &
 "quit 1"
-label end_not_soft
+label end_not_soft1
 
-if "${ifsoft} == no" then "jump SELF end_soft"
+if "${ifsoft} == no" then "jump SELF end_soft1"
 if "${boundary_geometry} == cylinder" then &
 "include ${lmp_input_dir}/in.lmpscript_cylinder_soft" &
 elif "${boundary_geometry} == block" &
 "include ${lmp_input_dir}/in.lmpscript_periodic_block_soft" &
 else &
 "quit 1"
-label end_soft
+label end_soft1
+
+label end_not_testinthisfolder1
+
+
+if "${iftestinthisfolder} == no" then "jump SELF end_testinthisfolder1"
+
+if "${ifsoft} == yes" then "jump SELF end_not_soft2"
+if "${boundary_geometry} == cylinder" then &
+"include ./in.lmpscript_cylinder" &
+elif "${boundary_geometry} == block" &
+"include ./in.lmpscript_periodic_block" &
+else &
+"quit 1"
+label end_not_soft2
+
+if "${ifsoft} == no" then "jump SELF end_soft2"
+if "${boundary_geometry} == cylinder" then &
+"include ./in.lmpscript_cylinder_soft" &
+elif "${boundary_geometry} == block" &
+"include ./in.lmpscript_periodic_block_soft" &
+else &
+"quit 1"
+label end_soft2
+
+label end_testinthisfolder1
