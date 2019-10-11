@@ -5,7 +5,7 @@
 ##SBATCH --qos=debug
 
 # asking for resources
-#SBATCH --time=05:30:00   # walltime
+#SBATCH --time=00:10:00   # walltime
 #SBATCH --mem-per-cpu=2G               # memory (per cpu)
 #SBATCH --ntasks=32
 #SBATCH --hint=nomultithread
