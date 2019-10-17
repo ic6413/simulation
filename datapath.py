@@ -229,3 +229,9 @@ else:
 
 f_wall_force_plot_path = diagram_path + "wall_force/"
 om.create_directory(f_wall_force_plot_path)
+
+# Latex report
+latex_path = post_process_path + 'latex/'
+om.create_directory(latex_path)
+latex_pics_path = latex_path + 'pics/'
+om.create_directory(latex_pics_path)
