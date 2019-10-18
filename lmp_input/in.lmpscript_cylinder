@@ -59,7 +59,7 @@ else &
 "variable	n_processor_x		index 1"
 # timestep
 variable	ts_scale		index 1
-variable  ts          equal v_ts_scale*4*e-7
+variable  ts          equal $(v_ts_scale*4e-7)
 print "timestep ${ts}" screen no append output/setting/attribute.lammps
 # ztop
 variable  ifztop   index yes 
