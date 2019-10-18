@@ -60,6 +60,9 @@ variable	repeat_ave_wall		index 0
 variable	every_ave_wall		index 0
 # freq rebalance
 variable  	freq_balance      	index 0
+# freq check_condition_exit
+variable  	freq_check_condition_exit      	index -1
+variable    ke_per_atom_check index 1.0e-17
 
 # get simulation path
 variable    home_path     getenv HOME

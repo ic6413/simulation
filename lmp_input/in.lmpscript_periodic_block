@@ -142,7 +142,9 @@ variable	repeat_ave_wall		index 0
 variable	every_ave_wall		index 0
 # freq rebalance
 variable  	freq_balance      	index 0
-
+# freq check_condition_exit
+variable  	freq_check_condition_exit      	index -1
+variable    ke_per_atom_check index 1.0e-17
 # number of type
 variable	n_type			index 3 #1 or 3 or  0 means no create
 print "n_type ${n_type}" screen no append output/setting/attribute.lammps
@@ -1231,15 +1233,23 @@ dump            dmpstl1 all mesh/stl ${freq_dump_stl} stl/in*.stl cad1
 dump            dmpstl2 all mesh/stl ${freq_dump_stl} stl/out*.stl cad2
 label skip_dump_all_stl
 
+variable  ke_per_atom   equal   ke/atoms
 # file, thermo
 if "${iftrace_maxKEt} == yes" then &
-"thermo_style	custom step time vol atoms ke c_KEr pe v_KEtr v_EKP c_id_maxKEt[1] c_id_maxKEt[2]" &
+"thermo_style	custom step time vol atoms ke v_ke_per_atom c_KEr pe v_KEtr v_EKP c_id_maxKEt[1] c_id_maxKEt[2]" &
 else &
-"thermo_style	custom step time vol atoms ke c_KEr pe v_KEtr v_EKP"
+"thermo_style	custom step time vol atoms ke v_ke_per_atom c_KEr pe v_KEtr v_EKP"
 thermo_modify   lost ${thermo_lost_error_or_warn} norm no
 if "${freq_thermo} == 0" then "jump SELF skip_thermo"
 thermo		${freq_thermo} #${freq_thermo} v_freq_thermo #
 label skip_thermo
+
+# ifcondition meet than stop
+if "${freq_check_condition_exit} == -1" then &
+"jump SELF skip_check_condition_exit"
+variable set_condition equal "(v_ke_per_atom < v_ke_per_atom_check) && (step > 1000)"   
+fix checkhalt all halt ${freq_check_condition_exit} v_set_condition == 1.0
+label skip_check_condition_exit
 
 # file, restart file
 if "${freq_restart_big} == 0" then "jump SELF skip_restart_big"

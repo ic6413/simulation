@@ -75,6 +75,9 @@ variable  	freq_balance      	index 50000
 variable  	freq_test1      	index 0
 variable  	freq_test2      	index 0
 variable  	freq_test3      	index 0
+# freq check_condition_exit
+variable  	freq_check_condition_exit      	index -1
+variable    ke_per_atom_check index 1.0e-17
 # get simulation path
 variable    home_path     getenv HOME
 variable    simulation_path     string "${home_path}/simulation"

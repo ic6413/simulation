@@ -64,8 +64,8 @@ doc.packages.append(Package('placeins',"section"))
 
 with doc.create(Section('Simulation Plot')):
     
-    pic_path_wall = [pic for pic in pics_list if ("wall_force" in pic)]
-    pic_path_vfield = [pic for pic in pics_list if ("momentum_mass_field" in pic)]
+    pic_path_wall = natural_sort([pic for pic in pics_list if ("wall_force" in pic)])
+    pic_path_vfield = natural_sort([pic for pic in pics_list if ("momentum_mass_field" in pic)])
     
     with doc.create(Subsection('Wall')):
         for pic_path in pic_path_wall:
