@@ -10,6 +10,7 @@ import pandas as pd
 import numpy as np
 import sys
 import matplotlib.pyplot as plt
+import pickle
 # This import registers the 3D projection, but is otherwise unused.
 from mpl_toolkits.mplot3d import Axes3D
 # import module
@@ -122,7 +123,7 @@ def plot_wall_force(if_plot_to_last, step1, step2):
             variable1 = 'v_t'
             
             for variable2 in header:
-
+                fig_handle = plt.figure()
                 x_array = df[variable1].values
                 y_array = df[variable2].values
 
@@ -131,7 +132,12 @@ def plot_wall_force(if_plot_to_last, step1, step2):
                 
                 plt.plot(x_array, y_array)
                 plt.tight_layout()
-                plt.savefig(dp.f_wall_force_plot_path + variable2 + "_" + str(step1_1) + "_" + str(step2_1))
+                fig_handle.savefig(dp.f_wall_force_plot_path + variable2 + "_" + str(step1_1) + "_" + str(step2_1) + ".png")
+                fig_handle.savefig(dp.f_wall_force_plot_path + variable2 + "_" + str(step1_1) + "_" + str(step2_1) + ".eps")
+                # Save figure handle to disk
+                with open(dp.f_wall_force_plot_path + variable2 + "_" + str(step1_1) + "_" + str(step2_1) + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
+                    pickle.dump(fig_handle, f)
+
                 plt.close('all')
     
         if if_plot_to_last:
@@ -170,7 +176,7 @@ def plot_wall_force_ave(if_plot_to_last, step1, step2, n_ave):
             variable1 = 'v_t'
             
             for variable2 in header:
-
+                fig_handle = plt.figure()
                 x_array = df[variable1].values
                 y_array = df[variable2].values
 
@@ -187,12 +193,21 @@ def plot_wall_force_ave(if_plot_to_last, step1, step2, n_ave):
 
                 plt.xlabel(variable1)
                 plt.ylabel(variable2)
-                
+
                 plt.plot(x_array, y_array)
                 plt.tight_layout()
-                plt.savefig(f_wall_force_plot_path_nve + variable2 + "_" + str(step1_1) + "_" + str(step2_1))
+
+
+                fig_handle.savefig(f_wall_force_plot_path_nve + variable2 + "_" + str(step1_1) + "_" + str(step2_1) + ".png")
+                fig_handle.savefig(f_wall_force_plot_path_nve + variable2 + "_" + str(step1_1) + "_" + str(step2_1) + ".eps")
+                # Save figure handle to disk
+                with open(f_wall_force_plot_path_nve + variable2 + "_" + str(step1_1) + "_" + str(step2_1) + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
+                    pickle.dump(fig_handle, f)
+
+                
+                
                 plt.close('all')
-    
+
         
         if if_plot_to_last:
             plot_wall_force_1(step1_default, step2_default)
