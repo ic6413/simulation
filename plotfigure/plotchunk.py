@@ -10,6 +10,7 @@ import pandas as pd
 import numpy as np
 import sys
 import matplotlib.pyplot as plt
+import pickle
 # This import registers the 3D projection, but is otherwise unused.
 from mpl_toolkits.mplot3d import Axes3D
 # import module
@@ -86,7 +87,7 @@ def plotchunk(if_plot_to_last, step1, step2):
         step1_default = int(lines[3].split()[0])
         step2_default = int(lines[-1 - n_line_in_a_step].split()[0])
 
-    def plotchunk_1(step1_1, step2_1):
+    def plotchunk_1(step1_1, step2_1, figformat="png", ifpickle=False):
         
         for step in range(step1_1, step2_1, d_step):
             n_line_0 = (step - step1_1)/d_step*(n_line_in_a_step+1) + 4
@@ -153,7 +154,11 @@ def plotchunk(if_plot_to_last, step1, step2):
                         "This arrow present {:.2E} wall velocity in 45 degree".format(label_scale),
                         labelpos='E', coordinates='figure', angle=45)
 
-            fig1.savefig(dp.f_momentum_mass_field_v23x23_path + str(step))
+            fig1.savefig(dp.f_momentum_mass_field_v23x23_path + str(step), format=figformat)
+            if ifpickle:
+                # Save figure handle to disk
+                with open(dp.f_momentum_mass_field_v23x23_path + str(step) + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
+                    pickle.dump(fig1, f)
             plt.close('all')
 
             if chunk_method == "rz":
@@ -208,7 +213,11 @@ def plotchunk(if_plot_to_last, step1, step2):
                         "This arrow present {:.2E} wall velocity in 45 degree".format(label_scale),
                         labelpos='E', coordinates='figure', angle=45)
 
-            fig1.savefig(dp.f_momentum_mass_field_v13x23_path + str(step))
+            fig1.savefig(dp.f_momentum_mass_field_v13x23_path + str(step), format=figformat)
+            if ifpickle:
+                # Save figure handle to disk
+                with open(dp.f_momentum_mass_field_v13x23_path + str(step) + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
+                    pickle.dump(fig1, f)
             plt.close('all')
 
 
@@ -235,7 +244,11 @@ def plotchunk(if_plot_to_last, step1, step2):
                         labelpos='E',
                         coordinates='figure', angle=90)
 
-            fig1.savefig(dp.f_momentum_mass_field_density_x23_path + str(step))
+            fig1.savefig(dp.f_momentum_mass_field_density_x23_path + str(step), format=figformat)
+            if ifpickle:
+                # Save figure handle to disk
+                with open(dp.f_momentum_mass_field_density_x23_path + str(step) + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
+                    pickle.dump(fig1, f)
             plt.close('all')
     
     if if_plot_to_last:
@@ -244,7 +257,7 @@ def plotchunk(if_plot_to_last, step1, step2):
         plotchunk_1(step1, step2)
 
 
-def plotchunk_ave(if_plot_to_last, step1, step2, n_ave):
+def plotchunk_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", ifpickle=False):
     f_momentum_mass_field_v13x23_path_nve = dp.f_momentum_mass_field_v13x23_path + "nve_" + str(n_ave) + "/"
     f_momentum_mass_field_v23x23_path_nve = dp.f_momentum_mass_field_v23x23_path + "nve_" + str(n_ave) + "/"
     f_momentum_mass_field_density_x23_path_nve = dp.f_momentum_mass_field_density_x23_path + "nve_" + str(n_ave) + "/"
@@ -340,7 +353,11 @@ def plotchunk_ave(if_plot_to_last, step1, step2, n_ave):
             ax1.quiverkey(Q, 0.2, 0.95, label_scale,
                         "This arrow present {:.2E} wall velocity in 45 degree".format(label_scale),
                         labelpos='E', coordinates='figure', angle=45)
-            fig1.savefig(f_momentum_mass_field_v23x23_path_nve + str(int(step)))
+            fig1.savefig(f_momentum_mass_field_v23x23_path_nve + str(int(step)), format=figformat)
+            if ifpickle:
+                # Save figure handle to disk
+                with open(f_momentum_mass_field_v23x23_path_nve + str(int(step)) + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
+                    pickle.dump(fig1, f)
             plt.close('all')
 
             if chunk_method == "rz":
@@ -394,8 +411,11 @@ def plotchunk_ave(if_plot_to_last, step1, step2, n_ave):
             ax1.quiverkey(Q, 0.2, 0.95, label_scale,
                         "This arrow present {:.2E} wall velocity in 45 degree".format(label_scale),
                         labelpos='E', coordinates='figure', angle=45)
-
-            fig1.savefig(f_momentum_mass_field_v13x23_path_nve + str(int(step)))
+            fig1.savefig(f_momentum_mass_field_v13x23_path_nve + str(int(step)), format=figformat)
+            if ifpickle:
+                # Save figure handle to disk
+                with open(f_momentum_mass_field_v13x23_path_nve + str(int(step)) + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
+                    pickle.dump(fig1, f)
             plt.close('all')
 
 
@@ -422,7 +442,11 @@ def plotchunk_ave(if_plot_to_last, step1, step2, n_ave):
                         labelpos='E',
                         coordinates='figure', angle=90)
 
-            fig1.savefig(f_momentum_mass_field_density_x23_path_nve + str(int(step)))
+            fig1.savefig(f_momentum_mass_field_density_x23_path_nve + str(int(step)), format=figformat)
+            if ifpickle:
+                # Save figure handle to disk
+                with open(f_momentum_mass_field_density_x23_path_nve + str(int(step)) + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
+                    pickle.dump(fig1, f)
             plt.close('all')
     
     if if_plot_to_last:

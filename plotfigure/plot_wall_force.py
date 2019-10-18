@@ -99,7 +99,7 @@ else:
     sys.exit("chunk_method wrong")
 
 
-def plot_wall_force(if_plot_to_last, step1, step2):
+def plot_wall_force(if_plot_to_last, step1, step2, figformat="png", ifpickle=False):
     for wallfile in [wallfile1, wallfile2, wallfile3]:    
         with open(dp.lammps_directory + "output/wall/" + wallfile) as f:
             
@@ -132,11 +132,11 @@ def plot_wall_force(if_plot_to_last, step1, step2):
                 
                 plt.plot(x_array, y_array)
                 plt.tight_layout()
-                fig_handle.savefig(dp.f_wall_force_plot_path + variable2 + "_" + str(step1_1) + "_" + str(step2_1) + ".png")
-                fig_handle.savefig(dp.f_wall_force_plot_path + variable2 + "_" + str(step1_1) + "_" + str(step2_1) + ".eps")
-                # Save figure handle to disk
-                with open(dp.f_wall_force_plot_path + variable2 + "_" + str(step1_1) + "_" + str(step2_1) + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
-                    pickle.dump(fig_handle, f)
+                fig_handle.savefig(dp.f_wall_force_plot_path + variable2 + "_" + str(step1_1) + "_" + str(step2_1), format=figformat)
+                if ifpickle:
+                    # Save figure handle to disk
+                    with open(dp.f_wall_force_plot_path + variable2 + "_" + str(step1_1) + "_" + str(step2_1) + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
+                        pickle.dump(fig_handle, f)
 
                 plt.close('all')
     
@@ -146,7 +146,7 @@ def plot_wall_force(if_plot_to_last, step1, step2):
             plot_wall_force_1(step1, step2)
 
 
-def plot_wall_force_ave(if_plot_to_last, step1, step2, n_ave):
+def plot_wall_force_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", ifpickle=False):
     f_wall_force_plot_path_nve = dp.f_wall_force_plot_path + "nve_" + str(n_ave) + "/"
 
     if not os.path.isdir(f_wall_force_plot_path_nve): 
@@ -198,11 +198,11 @@ def plot_wall_force_ave(if_plot_to_last, step1, step2, n_ave):
                 plt.tight_layout()
 
 
-                fig_handle.savefig(f_wall_force_plot_path_nve + variable2 + "_" + str(step1_1) + "_" + str(step2_1) + ".png")
-                fig_handle.savefig(f_wall_force_plot_path_nve + variable2 + "_" + str(step1_1) + "_" + str(step2_1) + ".eps")
-                # Save figure handle to disk
-                with open(f_wall_force_plot_path_nve + variable2 + "_" + str(step1_1) + "_" + str(step2_1) + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
-                    pickle.dump(fig_handle, f)
+                fig_handle.savefig(f_wall_force_plot_path_nve + variable2 + "_" + str(step1_1) + "_" + str(step2_1), format=figformat)
+                if ifpickle:
+                    # Save figure handle to disk
+                    with open(f_wall_force_plot_path_nve + variable2 + "_" + str(step1_1) + "_" + str(step2_1) + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
+                        pickle.dump(fig_handle, f)
 
                 
                 
