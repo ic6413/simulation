@@ -56,7 +56,7 @@ variable  contact_change index no
 variable  contact_model index hooke_his #hooke hooke_his hertz hertz_his
 # timestep
 variable	ts_scale		index 1
-variable  ts          equal $(v_ts_scale*4e-7)
+variable  ts          equal time
 print "timestep ${ts}" screen no append output/setting/attribute.lammps
 # ztop
 variable  ifztop   index yes 
