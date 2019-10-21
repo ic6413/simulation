@@ -76,7 +76,7 @@ else:
     sys.exit("chunk_method wrong")
 
 
-def plotchunk(if_plot_to_last, step1, step2):
+def plotchunk(if_plot_to_last, step1, step2, figformat="png", ifpickle=False):
     
     with open(dp.lammps_directory + "output/momentum_mass_field/fix.momentum_mass_field.all") as f:
         
@@ -252,9 +252,9 @@ def plotchunk(if_plot_to_last, step1, step2):
             plt.close('all')
     
     if if_plot_to_last:
-        plotchunk_1(step1_default, step2_default)
+        plotchunk_1(step1_default, step2_default, figformat="png", ifpickle=False)
     else:
-        plotchunk_1(step1, step2)
+        plotchunk_1(step1, step2, figformat="png", ifpickle=False)
 
 
 def plotchunk_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", ifpickle=False):
@@ -278,7 +278,7 @@ def plotchunk_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", ifpickl
         step1_default = int(lines[3].split()[0])
         step2_default = int(lines[-1 - n_line_in_a_step].split()[0])-n_ave*d_step
         
-    def plotchunk_1(step1_1, step2_1):
+    def plotchunk_1(step1_1, step2_1, figformat="png", ifpickle=False):
         def data_inloop(step_smallloop):
             n_line_0 = (step_smallloop - step1_1)/d_step*(n_line_in_a_step+1) + 4
             n_line_1 = n_line_0 + n_line_in_a_step
@@ -450,7 +450,7 @@ def plotchunk_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", ifpickl
             plt.close('all')
     
     if if_plot_to_last:
-        plotchunk_1(step1_default, step2_default)
+        plotchunk_1(step1_default, step2_default, figformat="png", ifpickle=False)
     else:
-        plotchunk_1(step1, step2)
+        plotchunk_1(step1, step2, figformat="png", ifpickle=False)
 
