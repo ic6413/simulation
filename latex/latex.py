@@ -18,6 +18,8 @@ def natural_sort(l):
     return sorted(l, key = alphanum_key)
 
 n_nve = str(int(sys.argv[1]))
+
+
 # create folders
 for root, dirnames, filenames in os.walk(dp.diagram_path):
     for dirname in dirnames:
@@ -26,8 +28,6 @@ for root, dirnames, filenames in os.walk(dp.diagram_path):
         osmanage.create_directory(createfolderpath)
 # copy diagram wall    
 subprocess.run(["cp", "-r", dp.f_wall_force_plot_path, dp.latex_pics_path])
-
-
 
 # copy diagram velocity only for begin and last
 for root, dirnames, filenames in os.walk(dp.f_momentum_mass_field_path):
@@ -42,18 +42,19 @@ for root, dirnames, filenames in os.walk(dp.f_momentum_mass_field_path):
             f_copy_path = filepath.replace(dp.diagram_path, dp.latex_pics_path)
             subprocess.run(["cp", filepath, f_copy_path])
 
+
 pics_list = []
 for root, dirnames, filenames in os.walk(dp.latex_path):
     if n_nve != 1:
         re_key = re.compile("/nve_" + str(n_nve) + "/")
         if re_key.search(root+"/"):
-            for filename in [f for f in filenames if f.endswith(".png")]:
+            for filename in filenames:
                 relapath_root = root.replace(dp.latex_path, '')
                 pics_list.append(os.path.join(relapath_root, filename))
     elif n_nve == 1:
         re_key = re.compile("/nve_[0-9]+/")
         if not re_key.search(root+"/"):
-            for filename in [f for f in filenames if f.endswith(".png")]:
+            for filename in filenames:
                 relapath_root = root.replace(dp.latex_path, '')
                 pics_list.append(os.path.join(relapath_root, filename))
 
@@ -66,7 +67,6 @@ with doc.create(Section('Simulation Plot')):
     
     pic_path_wall = natural_sort([pic for pic in pics_list if ("wall_force" in pic)])
     pic_path_vfield = natural_sort([pic for pic in pics_list if ("momentum_mass_field" in pic)])
-    
     with doc.create(Subsection('Wall')):
         for pic_path in pic_path_wall:
             with doc.create(Figure(position='h!')) as pic:

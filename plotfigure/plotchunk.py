@@ -154,7 +154,7 @@ def plotchunk(if_plot_to_last, step1, step2, figformat="png", ifpickle=False):
                         "This arrow present {:.2E} wall velocity in 45 degree".format(label_scale),
                         labelpos='E', coordinates='figure', angle=45)
 
-            fig1.savefig(dp.f_momentum_mass_field_v23x23_path + str(step), format=figformat)
+            fig1.savefig(dp.f_momentum_mass_field_v23x23_path + str(step) + "." + figformat, format=figformat)
             if ifpickle:
                 # Save figure handle to disk
                 with open(dp.f_momentum_mass_field_v23x23_path + str(step) + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
@@ -213,7 +213,7 @@ def plotchunk(if_plot_to_last, step1, step2, figformat="png", ifpickle=False):
                         "This arrow present {:.2E} wall velocity in 45 degree".format(label_scale),
                         labelpos='E', coordinates='figure', angle=45)
 
-            fig1.savefig(dp.f_momentum_mass_field_v13x23_path + str(step), format=figformat)
+            fig1.savefig(dp.f_momentum_mass_field_v13x23_path + str(step) + "." + figformat, format=figformat)
             if ifpickle:
                 # Save figure handle to disk
                 with open(dp.f_momentum_mass_field_v13x23_path + str(step) + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
@@ -244,7 +244,7 @@ def plotchunk(if_plot_to_last, step1, step2, figformat="png", ifpickle=False):
                         labelpos='E',
                         coordinates='figure', angle=90)
 
-            fig1.savefig(dp.f_momentum_mass_field_density_x23_path + str(step), format=figformat)
+            fig1.savefig(dp.f_momentum_mass_field_density_x23_path + str(step) + "." + figformat, format=figformat)
             if ifpickle:
                 # Save figure handle to disk
                 with open(dp.f_momentum_mass_field_density_x23_path + str(step) + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
@@ -353,7 +353,7 @@ def plotchunk_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", ifpickl
             ax1.quiverkey(Q, 0.2, 0.95, label_scale,
                         "This arrow present {:.2E} wall velocity in 45 degree".format(label_scale),
                         labelpos='E', coordinates='figure', angle=45)
-            fig1.savefig(f_momentum_mass_field_v23x23_path_nve + str(int(step)), format=figformat)
+            fig1.savefig(f_momentum_mass_field_v23x23_path_nve + str(int(step)) + "." + figformat, format=figformat)
             if ifpickle:
                 # Save figure handle to disk
                 with open(f_momentum_mass_field_v23x23_path_nve + str(int(step)) + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
@@ -411,7 +411,7 @@ def plotchunk_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", ifpickl
             ax1.quiverkey(Q, 0.2, 0.95, label_scale,
                         "This arrow present {:.2E} wall velocity in 45 degree".format(label_scale),
                         labelpos='E', coordinates='figure', angle=45)
-            fig1.savefig(f_momentum_mass_field_v13x23_path_nve + str(int(step)), format=figformat)
+            fig1.savefig(f_momentum_mass_field_v13x23_path_nve + str(int(step)) + "." + figformat, format=figformat)
             if ifpickle:
                 # Save figure handle to disk
                 with open(f_momentum_mass_field_v13x23_path_nve + str(int(step)) + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
@@ -442,7 +442,7 @@ def plotchunk_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", ifpickl
                         labelpos='E',
                         coordinates='figure', angle=90)
 
-            fig1.savefig(f_momentum_mass_field_density_x23_path_nve + str(int(step)), format=figformat)
+            fig1.savefig(f_momentum_mass_field_density_x23_path_nve + str(int(step)) + "." + figformat, format=figformat)
             if ifpickle:
                 # Save figure handle to disk
                 with open(f_momentum_mass_field_density_x23_path_nve + str(int(step)) + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'

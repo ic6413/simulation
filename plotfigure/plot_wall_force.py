@@ -132,7 +132,7 @@ def plot_wall_force(if_plot_to_last, step1, step2, figformat="png", ifpickle=Fal
                 
                 plt.plot(x_array, y_array)
                 plt.tight_layout()
-                fig_handle.savefig(dp.f_wall_force_plot_path + variable2 + "_" + str(step1_1) + "_" + str(step2_1), format=figformat)
+                fig_handle.savefig(dp.f_wall_force_plot_path + variable2 + "_" + str(step1_1) + "_" + str(step2_1) + "." + figformat, format=figformat)
                 if ifpickle:
                     # Save figure handle to disk
                     with open(dp.f_wall_force_plot_path + variable2 + "_" + str(step1_1) + "_" + str(step2_1) + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
@@ -198,7 +198,7 @@ def plot_wall_force_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", i
                 plt.tight_layout()
 
 
-                fig_handle.savefig(f_wall_force_plot_path_nve + variable2 + "_" + str(step1_1) + "_" + str(step2_1), format=figformat)
+                fig_handle.savefig(f_wall_force_plot_path_nve + variable2 + "_" + str(step1_1) + "_" + str(step2_1) + "." + figformat, format=figformat)
                 if ifpickle:
                     # Save figure handle to disk
                     with open(f_wall_force_plot_path_nve + variable2 + "_" + str(step1_1) + "_" + str(step2_1) + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
