@@ -63,7 +63,12 @@ doc = Document(default_filepath=dp.latex_path+"plots_" + "nve_" + str(n_nve))
 doc.packages.append(Package('placeins',"section"))
 
 
-with doc.create(Section('Simulation Plot')):
+with doc.create(Section("Simulation Plot")):
+    doc.append("Width= " + str(rr.logfile["width_wall_dp_unit"]) + " diameter")
+    doc.append("\nHeight= " + str(rr.logfile["z_length_create_dp_unit"]) + " diameter")
+    doc.append("\nPeriodic length in shear direction = " + str(rr.logfile["x_period_dp_unit"]) + " diameter")
+    doc.append("\nSavage_number = " + str(rr.logfile["Sa"]))
+    doc.append("\nV_wall = " + str(float(rr.logfile["in_velocity"])/float(rr.logfile["dp"])) + " diameter/second")
     pic_path_wall_from_initial = natural_sort([pic for pic in pics_list if ("wall_force_from_initial" in pic)])
     pic_path_wall = natural_sort([pic for pic in pics_list if ("wall_force" in pic) and ("wall_force_from_initial" not in pic)])
     pic_path_vfield = natural_sort([pic for pic in pics_list if ("momentum_mass_field" in pic)])
