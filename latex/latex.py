@@ -19,7 +19,6 @@ def natural_sort(l):
 
 n_nve = str(int(sys.argv[1]))
 
-
 # create folders
 for root, dirnames, filenames in os.walk(dp.diagram_path):
     for dirname in dirnames:
@@ -28,6 +27,7 @@ for root, dirnames, filenames in os.walk(dp.diagram_path):
         osmanage.create_directory(createfolderpath)
 # copy diagram wall    
 subprocess.run(["cp", "-r", dp.f_wall_force_plot_path, dp.latex_pics_path])
+subprocess.run(["cp", "-r", dp.f_wall_force_plot_from_initial_path, dp.latex_pics_path])
 
 # copy diagram velocity only for begin and last
 for root, dirnames, filenames in os.walk(dp.f_momentum_mass_field_path):
@@ -64,8 +64,8 @@ doc.packages.append(Package('placeins',"section"))
 
 
 with doc.create(Section('Simulation Plot')):
-    
-    pic_path_wall = natural_sort([pic for pic in pics_list if ("wall_force" in pic)])
+    pic_path_wall_from_initial = natural_sort([pic for pic in pics_list if ("wall_force_from_initial" in pic)])
+    pic_path_wall = natural_sort([pic for pic in pics_list if ("wall_force" in pic) and ("wall_force_from_initial" not in pic)])
     pic_path_vfield = natural_sort([pic for pic in pics_list if ("momentum_mass_field" in pic)])
     with doc.create(Subsection('Wall')):
         for pic_path in pic_path_wall:
@@ -75,6 +75,12 @@ with doc.create(Section('Simulation Plot')):
     doc.append(NoEscape("\\FloatBarrier"))
     with doc.create(Subsection('Velocity Field and Density')):
         for pic_path in pic_path_vfield:
+            with doc.create(Figure(position='h!')) as pic:
+                pic.add_image(pic_path)
+                pic.add_caption(NoEscape("\label{fig:epsart}"))
+    doc.append(NoEscape("\\FloatBarrier"))
+    with doc.create(Subsection('Wall from Initial')):
+        for pic_path in pic_path_wall_from_initial:
             with doc.create(Figure(position='h!')) as pic:
                 pic.add_image(pic_path)
                 pic.add_caption(NoEscape("\label{fig:epsart}"))

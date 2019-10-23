@@ -5,6 +5,8 @@ import numpy as np
 import osmanage as om
 # import read_setting
 import read_setting.read_setting as rr
+# import calculate setting
+import read_setting.calculate_setting as rc
 # setting
 abs_error_tolerence = 1e-13
 if_plot_velocity_field_scale_same = "yes"
@@ -13,7 +15,7 @@ quiver_scale_velocity_xaxis_shearplaneshear_yaxis_z = 1
 
 # === current module inputvariable ===
 # set lammps directory (current workspace directory or path)
-lammps_directory = os.getcwd() + '/'  #os.path.expanduser('~/lammps_simulation/run/0103_mu05_nofreeze_traceid15556/')
+lammps_directory = rc.lammps_directory
 print('current working directory:' + lammps_directory)
 
 # attribute
@@ -169,9 +171,15 @@ thermo_path = lammps_directory + "log.lammps"
 def trace_print_path(label, id):
     path = lammps_directory + 'output/trace/' + str(id) + "/" + label
     return path
+
+
+
 ## folder path of output
+
+# postprocess
 post_process_path = lammps_directory + 'postprocess/'
 om.create_directory(post_process_path)
+
 # hdf5
 hdf5_csv_path = post_process_path + 'hdf5_csv/'
 f_thermo = hdf5_csv_path + "thermo.h5"
@@ -229,6 +237,9 @@ else:
 
 f_wall_force_plot_path = diagram_path + "wall_force/"
 om.create_directory(f_wall_force_plot_path)
+
+f_wall_force_plot_from_initial_path = diagram_path + "wall_force_from_initial/"
+om.create_directory(f_wall_force_plot_from_initial_path)
 
 # Latex report
 latex_path = post_process_path + 'latex/'
