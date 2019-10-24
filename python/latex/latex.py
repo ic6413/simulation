@@ -17,7 +17,7 @@ def natural_sort(l):
     alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ] 
     return sorted(l, key = alphanum_key)
 
-n_nve = str(int(sys.argv[1]))
+n_nve = int(sys.argv[1])
 
 # create folders
 for root, dirnames, filenames in os.walk(dp.diagram_path):
@@ -52,7 +52,7 @@ for root, dirnames, filenames in os.walk(dp.latex_path):
                 relapath_root = root.replace(dp.latex_path, '')
                 pics_list.append(os.path.join(relapath_root, filename))
     elif n_nve == 1:
-        re_key = re.compile("/nve_[0-9]+/")
+        re_key = re.compile("/nve_[0-9]*/")
         if not re_key.search(root+"/"):
             for filename in filenames:
                 relapath_root = root.replace(dp.latex_path, '')
