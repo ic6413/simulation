@@ -52,7 +52,7 @@ id_i=$1
 step1=$2
 step2=$3
 
-use_trace_or_all=`python ~/simulation/python/script/script_check_dump_single_trace.py "$id_i" "$step1" "$step2"`
+use_trace_or_all=`python ~/simulation/lammps_process/python/script/script_check_dump_single_trace.py "$id_i" "$step1" "$step2"`
 if [ "$use_trace_or_all" == "trace" ]; then
     # combine all data file from step1 to step2+1
     combine_trace ${step1} ${step2} "1"
@@ -62,4 +62,4 @@ else
     echo "not trace not all"
 fi
 
-python ~/simulation/python/script/bash_to_python_check_force.py "$id_i" "$step1" "$step2" "$use_trace_or_all"
+python ~/simulation/lammps_process/python/script/bash_to_python_check_force.py "$id_i" "$step1" "$step2" "$use_trace_or_all"

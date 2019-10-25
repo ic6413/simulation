@@ -50,7 +50,7 @@ velocity_field () {
     else
         echo "create velocity field at step " $step1 "to " $step2 "n_ave is " $n_ave
     fi
-    ~/simulation/python/script/python_to_bash/script_velocity_field.py ${if_plot_to_last} ${step1} ${step2} ${n_ave}
+    ~/simulation/lammps_process/python/script/python_to_bash/script_velocity_field.py ${if_plot_to_last} ${step1} ${step2} ${n_ave}
 }
 
 
