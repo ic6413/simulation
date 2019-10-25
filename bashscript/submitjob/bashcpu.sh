@@ -5,9 +5,9 @@
 ##SBATCH --qos=debug
 
 # asking for resources
-#SBATCH --time=24:00:00   # walltime
+#SBATCH --time=11:00:00   # walltime
 #SBATCH --mem-per-cpu=2G               # memory (per cpu)
-#SBATCH --ntasks=32
+#SBATCH --ntasks=64
 #SBATCH --hint=nomultithread
 ##SBATCH --nodes=1
 ##SBATCH -B 2:16  # this also bound task to socket/core/thread since the slurm conf with affinity
