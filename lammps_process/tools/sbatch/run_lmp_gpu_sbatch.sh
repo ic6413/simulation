@@ -25,4 +25,4 @@
 #SBATCH --gres=gpu:4
 SBATCH_GPUS_PER_NODE_local=4
 
-. ~/simulation/bashscript/nodegpu.sh
+. ~/simulation/lammps_process/tools/set_environment/set_en_run_lmp_gpu.sh

@@ -1,8 +1,7 @@
 #!/bin/bash
 
-#delete all output file except log
+#delete all output file
 rm -r output
-rm -r input
 rm -r postprocess
 rm log*
 rm slurm*
