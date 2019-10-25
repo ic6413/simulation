@@ -66,5 +66,4 @@ variable    ke_per_atom_check index 1.0e-17
 
 # get simulation path
 variable    home_path     getenv HOME
-variable    simulation_path     string "${home_path}/simulation"
 include ${home_path}/simulation/lammps_process/tools/lmp_input/in.lmpscript_cylinder
