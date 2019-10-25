@@ -23,4 +23,4 @@
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
 
-. ~/simulation/bashscript/nodecpu.sh #--multi
+. ~/simulation/lammps_process/tools/set_environment/set_en_run_lmp_cpu.sh #--multi

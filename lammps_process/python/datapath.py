@@ -18,10 +18,6 @@ quiver_scale_velocity_xaxis_shearplaneshear_yaxis_z = 1
 lammps_directory = rc.lammps_directory
 print('current working directory:' + lammps_directory)
 
-# attribute
-attribute_lammps_path = lammps_directory + 'output/setting/attribute.lammps'
-attribute_py_path = lammps_directory + 'attributes.py'
-
 # ====================================== import attribute
 
 # startstep
