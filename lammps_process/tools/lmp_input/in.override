@@ -90,7 +90,7 @@ variable    ke_per_atom_check index 1.0e-17
 # get simulation path
 variable    home_path     getenv HOME
 variable    simulation_path     string "${home_path}/simulation"
-variable    lmp_input_dir     string "${simulation_path}/lmp_input"
+variable    lmp_input_dir     string "${simulation_path}/tools/lmp_input"
 
 if "${iftestinthisfolder} == yes" then "jump SELF end_not_testinthisfolder1"
 
