@@ -25,6 +25,6 @@ module list
 #ulimit -s 10240
 env
 
-srun ~/simulation/script/pp_lmp.sh
+srun ~/simulation/tools/postprocess/pp_lmp.sh
 
 echo "All Done!"
