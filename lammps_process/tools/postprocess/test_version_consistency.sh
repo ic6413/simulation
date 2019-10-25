@@ -27,13 +27,13 @@ restart_image () {
         FILES=./output/rst/*
         for f in ${FILES}
         do
-            lmp -in ${HOME}/simulation/tools/lmp_input/dump_restart/in.lmp_dump_image_at_restart -var restartfile ${f} -log log.restartimage
+            lmp -in ${HOME}/simulation/lammps_process/tools/lmp_input/dump_restart/in.lmp_dump_image_at_restart -var restartfile ${f} -log log.restartimage
         done
     else
         echo "create image for restart file at step " $START "to " $END "d_step is " $STEPDIFF
         for step in $(eval echo "{$START..$END..$STEPDIFF}")
         do
-            lmp -in ${HOME}/simulation/tools/lmp_input/dump_restart/in.lmp_dump_image_at_restart -var restartfile ./output/rst/restart.mpiio.${step} -log log.restartimage
+            lmp -in ${HOME}/simulation/lammps_process/tools/lmp_input/dump_restart/in.lmp_dump_image_at_restart -var restartfile ./output/rst/restart.mpiio.${step} -log log.restartimage
         done   
     fi
 }
