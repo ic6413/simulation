@@ -249,9 +249,6 @@ def read_log(folderpath):
 
 logfile = read_log(lammps_directory)
 
-
-
-
 def log_current_plus_previous(currentfolderpath):
     logfilelist_from_lastest_to_initial = []
     logfilelist_from_lastest_to_initial.append(

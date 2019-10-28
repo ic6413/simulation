@@ -6,6 +6,6 @@ shell	mkdir output/image/ output/image/rst_all
 read_restart ${restartfile}
 
 #file, image jpg all atoms
-dump		dump_image_all all image 1 output/image/rst_all/all_image_*.jpg type diameter size 512 512 zoom 1
+dump		dump_image_all all image 1 output/image/rst_all/all_image_*.jpg type diameter size ${pixel_width} ${pixel_height} zoom 1
 
 run 0

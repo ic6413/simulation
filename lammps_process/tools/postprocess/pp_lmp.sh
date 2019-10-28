@@ -20,19 +20,22 @@ restart_image () {
     local STEPDIFF=$2
     local END=$3
     local allrstimage=$4
+    local particles_height="$(python $HOME/simulation/lammps_process/python/script/get_variable_from_python_to_bash.py z_length_create_dp_unit)"
+    local pixel_height=$((20*$particles_height))
+    local pixel_width=512
     if [ "$allrstimage" == "1" ]; then
    
         echo "create image for all restart file"
         FILES=./output/rst/*
         for f in ${FILES}
         do
-            lmp -in ${HOME}/simulation/lammps_process/tools/lmp_input/dump_restart/in.lmp_dump_image_at_restart -var restartfile ${f} -log log.restartimage
+            lmp -in ${HOME}/simulation/lammps_process/tools/lmp_input/dump_restart/in.lmp_dump_image_at_restart -var restartfile ${f} -var pixel_width ${pixel_width} -var pixel_height ${pixel_height} -log log.restartimage
         done
     else
         echo "create image for restart file at step " $START "to " $END "d_step is " $STEPDIFF
         for step in $(eval echo "{$START..$END..$STEPDIFF}")
         do
-            lmp -in ${HOME}/simulation/lammps_process/tools/lmp_input/dump_restart/in.lmp_dump_image_at_restart -var restartfile ./output/rst/restart.mpiio.${step} -log log.restartimage
+            lmp -in ${HOME}/simulation/lammps_process/tools/lmp_input/dump_restart/in.lmp_dump_image_at_restart -var restartfile ./output/rst/restart.mpiio.${step} -var pixel_width ${pixel_width} -var pixel_height ${pixel_height} -log log.restartimage
         done   
     fi
 }
