@@ -20,6 +20,7 @@ print('current working directory:' + lammps_directory)
 
 # ====================================== import attribute
 
+
 # startstep
 startstep = int(rr.logfile['rst_from'])
 # timestep
@@ -176,6 +177,22 @@ def trace_print_path(label, id):
 post_process_path = lammps_directory + 'postprocess/'
 om.create_directory(post_process_path)
 
+# processed data
+post_data_path = post_process_path + "post_data/"
+om.create_directory(post_data_path)
+# combine previous
+combine_previous_path = post_data_path + "combine_previous/"
+om.create_directory(combine_previous_path)
+# combine previous output
+combine_previous_from_output = combine_previous_path + "output/"
+om.create_directory(combine_previous_from_output)
+# copy folder in output to folder for previous data 
+for root, dirnames, filenames in os.walk(lammps_directory + 'output/'):
+    for dirname in dirnames:
+        folderpath = os.path.join(root, dirname)
+        createfolderpath = folderpath.replace(lammps_directory + 'output/', combine_previous_from_output)
+        om.create_directory(createfolderpath)
+
 # hdf5
 hdf5_csv_path = post_process_path + 'hdf5_csv/'
 f_thermo = hdf5_csv_path + "thermo.h5"
@@ -230,13 +247,17 @@ else:
     f_momentum_mass_field_density_x23_path = f_momentum_mass_field_path + "density_Xx_Xz/"
     om.create_directory(f_momentum_mass_field_density_x23_path)    
 
+f_max_velocity_near_wall = diagram_path + "max_velocity_near_wall/"
+om.create_directory(f_max_velocity_near_wall)
 
 f_wall_force_plot_path = diagram_path + "wall_force/"
 om.create_directory(f_wall_force_plot_path)
 
-f_wall_force_plot_from_initial_path = diagram_path + "wall_force_from_initial/"
-om.create_directory(f_wall_force_plot_from_initial_path)
+f_shearratexyaveoverz_y_ave_path = diagram_path + "shearratexyaveoverz_y_ave/"
+om.create_directory(f_shearratexyaveoverz_y_ave_path)
 
+f_vxaveoverz_y_ave_path = diagram_path + "vxaveoverz_y_ave/"
+om.create_directory(f_vxaveoverz_y_ave_path)
 # Latex report
 latex_path = post_process_path + 'latex/'
 om.create_directory(latex_path)

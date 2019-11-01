@@ -12,8 +12,15 @@ log_path_list_last_to_initial = [lammps_directory+"../"*n+'log.lammps' for n in 
 log_path_list_initial_to_last = [log_path_list_last_to_initial[n_log_list-1-n] for n in range(n_log_list)]
 calculate_setting_diclist_from_initial_to_last = []
 
-folder_path_list_initial_to_last = [lammps_directory+"../"*(n_log_list-1-n) for n in range(n_log_list)]
-folder_path_list_last_to_initial = [folder_path_list_initial_to_last[n_log_list-1-n] for n in range(n_log_list)]
+def get_folder_path_list_initial_to_last(lammps_directory):
+    return [lammps_directory+"../"*(n_log_list-1-n) for n in range(n_log_list)]
+
+def get_folder_path_list_last_to_initial(lammps_directory):
+    return [get_folder_path_list_initial_to_last(lammps_directory)[n_log_list-1-n] for n in range(n_log_list)]
+
+folder_path_list_initial_to_last = get_folder_path_list_initial_to_last(lammps_directory)
+
+folder_path_list_last_to_initial = get_folder_path_list_last_to_initial(lammps_directory)
 
 def count_restart_time(index):
     restart_time = 0

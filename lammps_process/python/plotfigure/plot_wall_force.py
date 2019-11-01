@@ -18,6 +18,8 @@ import datapath as dp
 import read_setting.read_setting as rr
 # import calculate setting
 import read_setting.calculate_setting as rc
+# import combine
+import combine_other_run.combine_previous_run as cc
 # plot style
 
 plt.style.use('classic')
@@ -53,28 +55,10 @@ def plot_wall_force(if_plot_to_last, step1, step2, figformat="png", ifpickle=Fal
         f_wall_force_plot_path = dp.f_wall_force_plot_path
     for wallfile in wallfiles:
         if ifplotfrominitial:
-            for index in range(rc.n_log_list):
-                with open(rc.folder_path_list_last_to_initial[index] + "output/wall/" + wallfile) as f:
-                    lines = f.read().strip().split('\n')
-                header = lines[1].split()[1:]
-                step1_default = int(lines[2].split()[0])
-                ## select data
-                data = [lines[t].split() for t in range(2, len(lines))]
-                ## attach data
-                df = pd.DataFrame(data = data, columns = header, dtype = 'float64')
-                if index >= 1:
-                    df = df.loc[df['TimeStep']<next_step1]
-                array = df['v_t'].values
-                array += rc.calculate_setting_diclist_from_initial_to_last[rc.n_log_list-1-index]["previous_time"]
-                df['v_t'] = array
-                next_step1 = step1_default
-                
-                if index == 0:
-                    df_out = df
-                else:
-                    df_out = pd.concat([df,df_out])
-
-            df_full = df_out
+            with open(dp.lammps_directory + "output/wall/" + wallfile) as f:
+                lines = f.read().strip().split('\n')
+            header = lines[1].split()[1:]
+            df_full = cc.combine_previous_wall_data(wallfile)
         else:
             with open(dp.lammps_directory + "output/wall/" + wallfile) as f:
                 lines = f.read().strip().split('\n')
@@ -128,26 +112,10 @@ def plot_wall_force_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", i
     
     for wallfile in wallfiles:
         if ifplotfrominitial:
-            for index in range(rc.n_log_list):
-                with open(rc.folder_path_list_last_to_initial[index] + "output/wall/" + wallfile) as f:
-                    lines = f.read().strip().split('\n')
-                header = lines[1].split()[1:]
-                step1_default = int(lines[2].split()[0])
-                ## select data
-                data = [lines[t].split() for t in range(2, len(lines))]
-                ## attach data
-                df = pd.DataFrame(data = data, columns = header, dtype = 'float64')
-                if index >= 1:
-                    df = df.loc[df['TimeStep']<next_step1]
-                array = df['v_t'].values
-                array += rc.calculate_setting_diclist_from_initial_to_last[rc.n_log_list-1-index]["previous_time"]
-                df['v_t'] = array
-                next_step1 = step1_default
-                if index == 0:
-                    df_out = df
-                else:
-                    df_out = pd.concat([df,df_out])
-            df_full = df_out
+            with open(dp.lammps_directory + "output/wall/" + wallfile) as f:
+                lines = f.read().strip().split('\n')
+            header = lines[1].split()[1:]
+            df_full = cc.combine_previous_wall_data(wallfile)
         else:
             with open(dp.lammps_directory + "output/wall/" + wallfile) as f:
                 lines = f.read().strip().split('\n')
@@ -194,6 +162,8 @@ def plot_wall_force_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", i
                 
                 
                 plt.close('all')
+
+
         step1_default = int(df_full['TimeStep'].min())
         step2_default = int(df_full['TimeStep'].max())
         

@@ -80,6 +80,21 @@ velocity_field () {
     ~/simulation/lammps_process/python/script/python_to_bash/script_velocity_field.py ${if_plot_to_last} ${step1} ${step2} ${n_ave}
 }
 
+maxvy () {
+    
+    local if_plot_to_last_maxvy=$1
+    local step1_maxvy=$2
+    local step2_maxvy=$3
+    local n_ave_maxvy=$4
+
+    if [ "$if_plot_to_last" == "1" ]; then
+        echo "create velocity field at all step, n_ave is " $n_ave_maxvy
+    else
+        echo "create velocity field at step " $step1_maxvy "to " $step2_maxvy "n_ave is " $n_ave_maxvy
+    fi
+    ~/simulation/lammps_process/python/script/python_to_bash/script_maxVy.py ${if_plot_to_last_maxvy} ${step1_maxvy} ${step2_maxvy} ${n_ave_maxvy}
+}
+
 wall_force () {
     
     local if_plot_to_last_wall=$1
@@ -149,6 +164,16 @@ while [ "$1" != "" ]; do
                                 shift
                                 n_ave=$1
                                 ;;
+        --maxvy )               if_maxvy=1
+                                shift
+                                if_plot_to_last_maxvy=$1
+                                shift
+                                step1_maxvy=$1
+                                shift
+                                step2_maxvy=$1
+                                shift
+                                n_ave_maxvy=$1
+                                ;;
         --wall )                if_wall=1
                                 shift
                                 if_plot_to_last_wall=$1
@@ -216,6 +241,19 @@ if [ "$interactive" == "1" ]; then
         read n_ave
     fi
 
+    echo "Type the if_maxvy that you want (1 or 0), followed by [ENTER]:"
+    read if_maxvy
+    if [ "$if_maxvy" == "1" ]; then
+        echo "Type the if_plot_to_last_maxvy that you want (1 or 0), followed by [ENTER]:"
+        read if_plot_to_last_maxvy
+        echo "Type the step1_maxvy that you want, followed by [ENTER]:"
+        read step1_maxvy
+        echo "Type the step2_maxvy that you want, followed by [ENTER]:"
+        read step2_maxvy
+        echo "Type the n_ave_maxvy that you want, followed by [ENTER]:"
+        read n_ave_maxvy
+    fi
+
     echo "Type the if_wall that you want (1 or 0), followed by [ENTER]:"
     read if_wall
     if [ "$if_wall" == "1" ]; then
@@ -255,6 +293,14 @@ if [ "$if_vfield" == "1" ]; then
     velocity_field ${if_plot_to_last} ${step1} ${step2} ${n_ave}
 else
 	echo "if_vfield is off"
+fi
+
+# maxvy start
+if [ "$if_maxvy" == "1" ]; then
+	echo "if_maxvy is on"
+    maxvy ${if_plot_to_last_maxvy} ${step1_maxvy} ${step2_maxvy} ${n_ave_maxvy}
+else
+	echo "if_maxvy is off"
 fi
 
 # wall start

@@ -29,6 +29,9 @@ for root, dirnames, filenames in os.walk(dp.diagram_path):
 subprocess.run(["cp", "-r", dp.f_wall_force_plot_path, dp.latex_pics_path])
 subprocess.run(["cp", "-r", dp.f_wall_force_plot_from_initial_path, dp.latex_pics_path])
 
+# copy max velocity near wall   
+subprocess.run(["cp", "-r", dp.f_max_velocity_near_wall, dp.latex_pics_path])
+
 # copy diagram velocity only for begin and last
 for root, dirnames, filenames in os.walk(dp.f_momentum_mass_field_path):
     # if not empty
@@ -57,7 +60,11 @@ for root, dirnames, filenames in os.walk(dp.latex_path):
             for filename in filenames:
                 relapath_root = root.replace(dp.latex_path, '')
                 pics_list.append(os.path.join(relapath_root, filename))
-
+        re_key = re.compile("/nve_" + "1" + "/")
+        if re_key.search(root+"/"):
+            for filename in filenames:
+                relapath_root = root.replace(dp.latex_path, '')
+                pics_list.append(os.path.join(relapath_root, filename))
 os.chdir(dp.latex_path)
 doc = Document(default_filepath=dp.latex_path+"plots_" + "nve_" + str(n_nve))
 doc.packages.append(Package('placeins',"section"))
@@ -72,6 +79,7 @@ with doc.create(Section("Simulation Plot")):
     pic_path_wall_from_initial = natural_sort([pic for pic in pics_list if ("wall_force_from_initial" in pic)])
     pic_path_wall = natural_sort([pic for pic in pics_list if ("wall_force" in pic) and ("wall_force_from_initial" not in pic)])
     pic_path_vfield = natural_sort([pic for pic in pics_list if ("momentum_mass_field" in pic)])
+    pic_path_maxvy = natural_sort([pic for pic in pics_list if ("max_velocity_near_wall" in pic)])
     with doc.create(Subsection('Wall')):
         for pic_path in pic_path_wall:
             with doc.create(Figure(position='h!')) as pic:
@@ -86,6 +94,12 @@ with doc.create(Section("Simulation Plot")):
     doc.append(NoEscape("\\FloatBarrier"))
     with doc.create(Subsection('Wall from Initial')):
         for pic_path in pic_path_wall_from_initial:
+            with doc.create(Figure(position='h!')) as pic:
+                pic.add_image(pic_path)
+                pic.add_caption(NoEscape("\label{fig:epsart}"))
+    doc.append(NoEscape("\\FloatBarrier"))
+    with doc.create(Subsection('Maximum of Vy near wall')):
+        for pic_path in pic_path_maxvy:
             with doc.create(Figure(position='h!')) as pic:
                 pic.add_image(pic_path)
                 pic.add_caption(NoEscape("\label{fig:epsart}"))
