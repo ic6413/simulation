@@ -62,7 +62,7 @@ def combine_previous_allwall_data_and_save():
 
 def combine_previous_chunk_data():
     for index in range(rc.n_log_list):
-        logfile_inthis_index = logfilelist_from_lastest_to_initial[index]
+        logfile_inthis_index = rr.log_current_plus_previous(dp.lammps_directory)[index]
         d_step = int(logfile_inthis_index['freq_ave_chunk_momentum_mass_field'])
         with open(rc.folder_path_list_last_to_initial[index] + "output/momentum_mass_field/" + "fix.momentum_mass_field.all") as f:
             lines = f.read().strip().split('\n')
