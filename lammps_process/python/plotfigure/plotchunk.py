@@ -15,6 +15,7 @@ import pickle
 from mpl_toolkits.mplot3d import Axes3D
 # import module
 import datapath as dp
+import osmanage as om
 import read_setting.read_setting as rr
 # import calculate setting
 import read_setting.calculate_setting as rc
@@ -597,10 +598,6 @@ def plotchunk_vxaveoverz_y_ave(if_plot_to_last, step1, step2, n_ave, picksteplis
                 n_line_0 = (step_smallloop - step_begin)/d_step*(n_line_in_a_step+1) + 4
                 n_line_1 = n_line_0 + n_line_in_a_step
                 ## select data
-                if int(n_line_1)>len(lines):
-                    breakpoint()
-                if int(n_line_0)<0:
-                    breakpoint()
                 data = [lines[t].split() for t in range(int(n_line_0), int(n_line_1))]
                 
                 data = np.array(data, dtype=np.float64)
@@ -716,6 +713,136 @@ def plotchunk_vxaveoverz_y_ave(if_plot_to_last, step1, step2, n_ave, picksteplis
     else:
         plotchunk_1_vxaveoverz_y_ave(step1, step2, figformat="png", ifpickle=ifpickle)
 
+
+def plotchunk_tempaveoverz_y_ave(if_plot_to_last, step1, step2, n_ave, picksteplist, figformat="png", ifpickle=False):
+    f_tempaveoverz_y_ave_path = dp.diagram_path + "tempaveoverz_y_ave/"
+    om.create_directory(f_tempaveoverz_y_ave_path)
+    f_tempaveoverz_y_ave_path_nve = f_tempaveoverz_y_ave_path + "nve_" + str(n_ave) + "/"
+    if not os.path.isdir(f_tempaveoverz_y_ave_path_nve): 
+        os.mkdir(f_tempaveoverz_y_ave_path_nve)
+    index=0
+    with open(rc.folder_path_list_last_to_initial[index] + "output/momentum_mass_field/fix.momentum_mass_field.all") as f:
+        lines = f.read().strip().split('\n')
+    n_line_in_a_step = int(lines[3].split()[1])
+    header = lines[2].split()[1:]
+    step2_default = int(lines[-1 - n_line_in_a_step].split()[0])-n_ave*d_step
+    step1_default = 0
+    def index_of_variable_in_header(variable_name_in_header):
+        return [n for n in range(0,len(header)) if header[n]==variable_name_in_header][0]
+    def plotchunk_1_tempaveoverz_y_ave(step1_1, step2_1, figformat="png", ifpickle=False):
+        
+        with open(rc.folder_path_list_last_to_initial[0] + "output/momentum_mass_field/fix.momentum_mass_field.all") as f:
+            lines = f.read().strip().split('\n') 
+        n_lines = len(lines)
+
+        n_line_in_a_step = int(lines[3].split()[1])
+
+        n_timestep = int((n_lines-3)/(n_line_in_a_step+1))
+
+        step_array = np.array([int(lines[3+n*(n_line_in_a_step+1)].split()[0]) for n in range(n_timestep)])
+
+        def data_inloop(k):
+            n_line_0 = k*(n_line_in_a_step+1) + 4
+            n_line_1 = n_line_0 + n_line_in_a_step
+            ## select data
+            data = [lines[t].split() for t in range(int(n_line_0), int(n_line_1))]
+            
+            data = np.array(data, dtype=np.float64)
+            return data
+
+        data_array = np.empty([step_array.shape[0], n_line_in_a_step, len(header)])
+        
+        for k in range(step_array.shape[0]):
+            data_array[k,:,:] = data_inloop(k)
+
+        step_array_out = step_array
+        data_array_out = data_array
+        
+
+        step_sum_all = 0
+        for k in range(n_ave):
+            step_sum_all += step_array_out[k:step_array_out.shape[0]+1-n_ave+k]
+        step_mean_all = step_sum_all/n_ave
+        data_sum_all = 0
+        for k in range(n_ave):
+            data_sum_all += data_array_out[k:step_array_out.shape[0]+1-n_ave+k]
+        data_mean_all = data_sum_all/n_ave
+
+        if chunk_method == "rz":
+            x_array, y_array = np.meshgrid(
+                                        int(rr.logfile['ri_wall_dp_unit']) + (np.arange(n_1)+0.5)/n_1*width_wall_dp_unit,
+                                        (np.arange(n_2)+0.5)/n_2*height_dpunit,
+                                        )
+            x_array = x_array.reshape((-1))
+            y_array = y_array.reshape((-1))
+        elif chunk_method == "yz":
+            if rr.logfile["chunk/atom"][1] == "y":
+                x_array = data_mean_all[0][:,index_of_variable_in_header("Coord1")]
+                y_array = data_mean_all[0][:,index_of_variable_in_header("Coord2")]
+                x_array = x_array/diameter
+                y_array = y_array/diameter
+                
+            elif rr.logfile["chunk/atom"][1] == "z":
+                x_array = data_mean_all[0][:,index_of_variable_in_header("Coord2")]
+                y_array = data_mean_all[0][:,index_of_variable_in_header("Coord1")]
+                x_array = x_array/diameter
+                y_array = y_array/diameter
+            else:
+                sys.exit("wrong")
+        else:
+            sys.exit("chunk_method wrong")
+
+        vx_array_all = data_mean_all[:,:,index_of_variable_in_header("temp")]
+        
+        n_y = np.sum(x_array == x_array[0])
+        
+        x_array = x_array.reshape(-1, n_y)
+        x_array = x_array[:,0]
+        
+        if picksteplist=="all":
+            for index in range(step_mean_all.shape[0]):    
+                step = step_mean_all[index]
+                vx_array = vx_array_all[index]
+                vx_array = vx_array.reshape(-1, n_y).sum(axis=1)/n_y
+                fig_handle = plt.figure()
+
+                plt.xlabel('y')
+                plt.ylabel('temp')
+                plt.plot(x_array, vx_array)
+                plt.tight_layout()
+                
+                fig_handle.savefig(f_tempaveoverz_y_ave_path_nve + str(int(step)) + "." + figformat, format=figformat)
+                if ifpickle:
+                    # Save figure handle to disk
+                    with open(f_tempaveoverz_y_ave_path_nve + str(int(step)) + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
+                        pickle.dump(fig_handle, f)
+                plt.close('all')
+
+        else:
+            fig_handle = plt.figure()
+            for step in picksteplist:
+                index = int((step-step_mean_all[0])/(step_mean_all[1]-step_mean_all[0]))
+                step = step_mean_all[index]
+                vx_array = vx_array_all[index]
+                vx_array = vx_array.reshape(-1, n_y).sum(axis=1)/n_y
+                time = (step)*float(rr.logfile["ts"])
+                plt.plot(x_array, vx_array, label=" time=" + "{:.2E}".format(time))
+            plt.title("height="+str(rr.logfile["z_length_create_dp_unit"]))
+            plt.legend()
+            plt.xlabel('y')
+            plt.ylabel('temp')
+            plt.tight_layout()  
+            fig_handle.savefig(f_tempaveoverz_y_ave_path_nve + "from" + str(int(picksteplist[0])) + "to" + str(int(picksteplist[-1])) + "." + figformat, format=figformat)
+            if ifpickle:
+                # Save figure handle to disk
+                with open(f_tempaveoverz_y_ave_path_nve + "from" + str(int(picksteplist[0])) + "to" + str(int(picksteplist[-1])) + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
+                    pickle.dump(fig_handle, f)
+            plt.close('all')
+
+    if if_plot_to_last:
+        plotchunk_1_tempaveoverz_y_ave(step1_default, step2_default, figformat="png", ifpickle=ifpickle)
+    else:
+        plotchunk_1_tempaveoverz_y_ave(step1, step2, figformat="png", ifpickle=ifpickle)
 
 def plotchunk_vxaveoverz_y_ave_combine_diff_simu(if_plot_to_last, step1, step2, n_ave, figformat="png", ifpickle=False):
     lmp_path_list = [
