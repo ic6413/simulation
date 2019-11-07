@@ -402,7 +402,7 @@ else &
   "print 'n_type not 3 or 1'"
 
 if		"${freq_ave_wall} != 0" then &
-  "fix	sum_pairforce	all store/force" &
+  "fix	sum_pairforce	all store/force"
 
 # insert region
 region	out_inbdy_insert 	cylinder z 0. 0. ${ri_create} ${zlo_box} ${zhi_box} units box side out
@@ -581,7 +581,7 @@ neighbor	${skin} bin
 neigh_modify	delay 0 #page 20
 
 if		"${rst_from} != 0 && ${freq_ave_wall} != 0" then &
-  "fix	sum_pairforce	all store/force" &
+  "fix	sum_pairforce	all store/force"
 
 
 # balance

@@ -361,7 +361,7 @@ else &
  "quit 1"
 pair_coeff	* *
 if		"${freq_ave_wall} != 0" then &
-  "fix	sum_pairforce	all store/force" &
+  "fix	sum_pairforce	all store/force"
 
 # insert region
 region	out_inbdy_insert 	cylinder z 0. 0. ${ri_create} ${zlo_box} ${zhi_box} units box side out
@@ -570,7 +570,7 @@ label hooke_his_end4
 label contact_change_end1
 
 if		"${rst_from} != 0 && ${freq_ave_wall} != 0" then &
-  "fix	sum_pairforce	all store/force" &
+  "fix	sum_pairforce	all store/force"
 
 
 # balance

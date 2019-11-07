@@ -9,7 +9,9 @@ variable    ifzbottomshear      index no
 variable    ifsetinitialvelocity      index no
 variable    ifinitialvelocity_same_as_in_velocity      index no
 # ztop
-variable  ifztop   index yes
+variable    ifztop                  index yes
+# ybottom gran or flat
+variable    if_ybottom_wall_gran    index no
 # run step
 variable	rst_from		index 0
 variable ifset_velocity_after_rst index no
