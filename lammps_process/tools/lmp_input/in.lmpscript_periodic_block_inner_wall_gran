@@ -586,8 +586,6 @@ group not_near_ybottom_wall_small   intersect not_near_ybottom_wall group_small
 group not_near_ybottom_wall_middle  intersect not_near_ybottom_wall group_middle
 group not_near_ybottom_wall_big   intersect not_near_ybottom_wall group_big
 
-set		group near_ybottom_wall_gran 	vx ${in_velocity}
-
 delete_atoms overlap $((v_dp+v_dp_small)/2) not_near_ybottom_wall_small near_ybottom_wall_gran
 delete_atoms overlap $((v_dp+v_dp)/2) not_near_ybottom_wall_middle near_ybottom_wall_gran
 delete_atoms overlap $((v_dp+v_dp_big)/2) not_near_ybottom_wall_big near_ybottom_wall_gran
@@ -602,7 +600,9 @@ label		end_restart_skip1
 if		"${freq_ave_wall} != 0" then &
   "fix	sum_pairforce	${storeforcegroup} store/force"
 
-
+label ybottom_wall_gran_begin4
+set		group near_ybottom_wall_gran 	vx ${in_velocity}
+label ybottom_wall_gran_end4
 
 # jump if restart from nonzero step
 # this command specify in jobscribe "variable	rst_from equal N" be used as suffix in output file name
