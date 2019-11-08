@@ -75,6 +75,23 @@ elif chunk_method == "yz":
 else:
     sys.exit("chunk_method wrong")
 
+if chunk_method == "rz":
+    # chink first dim unchange in the begining
+    chunk_first_dim = "z"
+    chunk_second_dim = "r"
+elif chunk_method == "yz":
+    if rr.logfile["chunk/atom"][1] == "y":
+        chunk_first_dim = "y"
+        chunk_second_dim = "z"
+    elif rr.logfile["chunk/atom"][1] == "z":
+        chunk_first_dim = "z"
+        chunk_second_dim = "y"
+    else:
+        sys.exit("chunk_method wrong")
+else:
+    sys.exit("chunk_method wrong")
+
+
 def plotchunk_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", ifpickle=False):
     f_momentum_mass_field_v13x23_path_nve = dp.f_momentum_mass_field_v13x23_path + "nve_" + str(n_ave) + "/"
     f_momentum_mass_field_v23x23_path_nve = dp.f_momentum_mass_field_v23x23_path + "nve_" + str(n_ave) + "/"
@@ -714,14 +731,13 @@ def plotchunk_vxaveoverz_y_ave(if_plot_to_last, step1, step2, n_ave, picksteplis
         plotchunk_1_vxaveoverz_y_ave(step1, step2, figformat="png", ifpickle=ifpickle)
 
 
-def plotchunk_ekyaveoverz_y_ave(if_plot_to_last, step1, step2, n_ave, picksteplist, figformat="png", ifpickle=False, inputfilepath=None):
-    
-    
-    f_ekyaveoverz_y_ave_path = dp.diagram_path + "ekyaveoverz_y_ave/"
-    om.create_directory(f_ekyaveoverz_y_ave_path)
-    f_ekyaveoverz_y_ave_path_nve = f_ekyaveoverz_y_ave_path + "nve_" + str(n_ave) + "/"
-    if not os.path.isdir(f_ekyaveoverz_y_ave_path_nve): 
-        os.mkdir(f_ekyaveoverz_y_ave_path_nve)
+def plotchunk_ek_d1_aveover_d2_d3_ave(if_plot_to_last, step1, step2, n_ave, picksteplist, figformat="png", ifpickle=False, inputfilepath=None, d1="y",d2="z",d3="y"):
+
+    f_ek_d1_aveover_d2_d3_ave_path = dp.diagram_path + "ek" + d1 + "aveover" + d2 + "_" + d3 + "_ave/"
+    om.create_directory(f_ek_d1_aveover_d2_d3_ave_path)
+    f_ek_d1_aveover_d2_d3_ave_path_nve = f_ek_d1_aveover_d2_d3_ave_path + "nve_" + str(n_ave) + "/"
+    if not os.path.isdir(f_ek_d1_aveover_d2_d3_ave_path_nve): 
+        os.mkdir(f_ek_d1_aveover_d2_d3_ave_path_nve)
     index=0
     if inputfilepath == None:
         with open(rc.folder_path_list_last_to_initial[index] + "output/momentum_mass_field/fix.momentum_mass_field.all") as f:
@@ -729,13 +745,14 @@ def plotchunk_ekyaveoverz_y_ave(if_plot_to_last, step1, step2, n_ave, pickstepli
     else:
         with open(inputfilepath) as f:
             lines = f.read().strip().split('\n')
+    
     n_line_in_a_step = int(lines[3].split()[1])
     header = lines[2].split()[1:]
     step2_default = int(lines[-1 - n_line_in_a_step].split()[0])-n_ave*d_step
     step1_default = 0
     def index_of_variable_in_header(variable_name_in_header):
         return [n for n in range(0,len(header)) if header[n]==variable_name_in_header][0]
-    def plotchunk_1_ekyaveoverz_y_ave(step1_1, step2_1, figformat="png", ifpickle=False):
+    def plotchunk_1_ek_d1_aveover_d2_d3_ave(step1_1, step2_1, figformat="png", ifpickle=False):
         
         if inputfilepath == None:
             with open(rc.folder_path_list_last_to_initial[0] + "output/momentum_mass_field/fix.momentum_mass_field.all") as f:
@@ -779,35 +796,68 @@ def plotchunk_ekyaveoverz_y_ave(if_plot_to_last, step1, step2, n_ave, pickstepli
         data_mean_all = data_sum_all/n_ave
 
         if chunk_method == "rz":
-            x_array, y_array = np.meshgrid(
-                                        int(rr.logfile['ri_wall_dp_unit']) + (np.arange(n_1)+0.5)/n_1*width_wall_dp_unit,
-                                        (np.arange(n_2)+0.5)/n_2*height_dpunit,
-                                        )
-            x_array = x_array.reshape((-1))
-            y_array = y_array.reshape((-1))
+            coord1_array = int(rr.logfile['ri_wall_dp_unit']) + (np.arange(n_1)+0.5)/n_1*width_wall_dp_unit
+            n_grid_coord1 = len(coord1_array)
+            coord2_array = np.arange(n_2)+0.5/n_2*height_dpunit
+            n_grid_coord2 = len(coord2_array)
         elif chunk_method == "yz":
-            if rr.logfile["chunk/atom"][1] == "y":
-                x_array = data_mean_all[0][:,index_of_variable_in_header("Coord1")]
-                y_array = data_mean_all[0][:,index_of_variable_in_header("Coord2")]
-                x_array = x_array/diameter
-                y_array = y_array/diameter
-                
-            elif rr.logfile["chunk/atom"][1] == "z":
-                x_array = data_mean_all[0][:,index_of_variable_in_header("Coord2")]
-                y_array = data_mean_all[0][:,index_of_variable_in_header("Coord1")]
-                x_array = x_array/diameter
-                y_array = y_array/diameter
-            else:
-                sys.exit("wrong")
+            coord1_array = data_mean_all[0][:,index_of_variable_in_header("Coord1")]
+            n_grid_coord1 = np.sum(coord1_array == coord1_array[0])
+            coord1_array = coord1_array.reshape(-1, n_grid_coord1)
+            coord1_array = coord1_array[:,0]
+            n_grid_coord2 = len(coord1_array)
         else:
             sys.exit("chunk_method wrong")
 
-        vx_array_all = data_mean_all[:,:,index_of_variable_in_header("v_Eky")]
+        if chunk_method == "yz":
+            dic_map_coordinate_to_header={}
+            if rr.logfile["chunk/atom"][1] == "y":
+                dic_map_coordinate_to_header["y"] = "Coord1"
+                dic_map_coordinate_to_header["z"] = "Coord2"
+            elif rr.logfile["chunk/atom"][1] == "z":
+                dic_map_coordinate_to_header["y"] = "Coord2"
+                dic_map_coordinate_to_header["z"] = "Coord1"
+            else:
+                sys.exit("chunk_method wrong")
+
+        axis_number_for_d2 = {}
+        if chunk_method == "rz":
+            axis_number_for_d2["r"] = 0
+            axis_number_for_d2["r"] = 1
+        elif chunk_method == "yz":
+            if rr.logfile["chunk/atom"][1] == "y":
+                axis_number_for_d2["y"] = 0
+                axis_number_for_d2["z"] = 1
+            elif rr.logfile["chunk/atom"][1] == "z":
+                axis_number_for_d2["y"] = 1
+                axis_number_for_d2["z"] = 0
+            else:
+                sys.exit("chunk_method wrong")
+        else:
+            sys.exit("chunk_method wrong")
+
+
+
+        if chunk_method == "rz":
+            grid_r = int(rr.logfile['ri_wall_dp_unit']) + (np.arange(n_1)+0.5)/n_1*width_wall_dp_unit
+            grid_z = np.arange(n_2)+0.5/n_2*height_dpunit
+            if d3 == "r":
+                x_array = grid_r
+            elif d3 == "z":
+                x_array = grid_z
+            else:
+                sys.exit("chunk_method wrong")
+        elif chunk_method == "yz":
+            x_array = x_array/diameter
+        else:
+            sys.exit("chunk_method wrong")
+
+        n_grid_normal_to_shear_plane = n_grid_coord1
+        n_grid_z = n_grid_coord2
         
-        n_y = np.sum(x_array == x_array[0])
+        y_array_all = data_mean_all[:,:,index_of_variable_in_header("v_Ek"+d1)]
         
-        x_array = x_array.reshape(-1, n_y)
-        x_array = x_array[:,0]
+        
         
         fig_handle = plt.figure()
 
@@ -821,26 +871,33 @@ def plotchunk_ekyaveoverz_y_ave(if_plot_to_last, step1, step2, n_ave, pickstepli
                 sys.exit("no match step")
             index = index_2
             step = step_mean_all[index]
-            vx_array = vx_array_all[index]
-            vx_array = vx_array.reshape(-1, n_y).sum(axis=1)/n_y
+            y_array = y_array_all[index]
+            number_sum = axis_number_for_d2[d2]
+            y_array = y_array.reshape(-1, n_grid_coord1).sum(axis=axis_number_for_d2[d2])/number_sum
             time = (step)*float(rr.logfile["ts"])
-            plt.plot(x_array[0:9], vx_array[0:9], label=" time=" + "{:.2E}".format(time), linestyle="None", marker=11, markersize=15)
+            plt.plot(x_array[0:9], y_array[0:9], label=" time=" + "{:.2E}".format(time), linestyle="None", marker=11, markersize=15)
         plt.title("height="+str(rr.logfile["z_length_create_dp_unit"]))
         plt.legend()
-        plt.xlabel('y')
-        plt.ylabel('eky')
+        plt.xlabel(d3)
+        plt.ylabel('ek'+d1)
         plt.tight_layout()  
-        fig_handle.savefig(f_ekyaveoverz_y_ave_path_nve + "from" + str(int(picksteplist[0])) + "to" + str(int(picksteplist[-1])) + "." + figformat, format=figformat)
+        fig_handle.savefig(f_ek_d1_aveover_d2_d3_ave_path_nve + "from" + str(int(picksteplist[0])) + "to" + str(int(picksteplist[-1])) + "." + figformat, format=figformat)
         if ifpickle:
             # Save figure handle to disk
-            with open(f_ekyaveoverz_y_ave_path_nve + "from" + str(int(picksteplist[0])) + "to" + str(int(picksteplist[-1])) + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
+            with open(f_ek_d1_aveover_d2_d3_ave_path_nve + "from" + str(int(picksteplist[0])) + "to" + str(int(picksteplist[-1])) + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
                 pickle.dump(fig_handle, f)
         plt.close('all')
 
     if if_plot_to_last:
-        plotchunk_1_ekyaveoverz_y_ave(step1_default, step2_default, figformat="png", ifpickle=ifpickle)
+        plotchunk_1_ek_d1_aveover_d2_d3_ave(step1_default, step2_default, figformat="png", ifpickle=ifpickle)
     else:
-        plotchunk_1_ekyaveoverz_y_ave(step1, step2, figformat="png", ifpickle=ifpickle)
+        plotchunk_1_ek_d1_aveover_d2_d3_ave(step1, step2, figformat="png", ifpickle=ifpickle)
+
+
+def plotchunk_ekyaveoverz_y_ave(if_plot_to_last, step1, step2, n_ave, picksteplist, figformat="png", ifpickle=False, inputfilepath=None):
+    plotchunk_ek_d1_aveover_d2_d3_ave(if_plot_to_last, step1, step2, n_ave, picksteplist, figformat="png", ifpickle=False, inputfilepath=None)
+
+
 
 def plotchunk_vxaveoverz_y_ave_combine_diff_simu(if_plot_to_last, step1, step2, n_ave, figformat="png", ifpickle=False):
     lmp_path_list = [
