@@ -340,6 +340,8 @@ variable  mvz     atom mass*vz
 variable	mvx 		atom mass*vx
 variable	mvy 		atom mass*vy
 variable	Eky 		atom 0.5*mass*vy*vy
+variable	Ekx 		atom 0.5*mass*vx*vx
+variable	Ekz 		atom 0.5*mass*vz*vz
 # calculate chunk id
 variable	ybin		atom "floor((y-v_ylo_chunk)/ (v_yhi_chunk-v_ylo_chunk)* v_N_bin_y )"
 variable	zbin		atom "floor((z-v_zlo_chunk)/ (v_zhi_chunk-v_zlo_chunk)* v_N_bin_z)"
@@ -788,7 +790,7 @@ limit ${N_total_yz} exact units box bound y $(v_ylo_chunk) $(v_yhi_chunk) bound 
 if "${freq_ave_chunk_momentum_mass_field} == 0" then "jump SELF skip_ave_chunk"
 compute		m1 ${storeforcegroup} property/atom mass
 fix		avspatial ${storeforcegroup} ave/chunk ${every_ave_chunk_momentum_mass_field} ${repeat_ave_chunk_momentum_mass_field} ${freq_ave_chunk_momentum_mass_field} chunk_y_z &
-v_mvy v_mvx v_mvz v_Eky c_m1 temp norm none file output/momentum_mass_field/fix.momentum_mass_field.all
+v_mvy v_mvx v_mvz v_Ekx v_Eky v_Ekz c_m1 temp norm none file output/momentum_mass_field/fix.momentum_mass_field.all
 label skip_ave_chunk
 
 ### wall force
