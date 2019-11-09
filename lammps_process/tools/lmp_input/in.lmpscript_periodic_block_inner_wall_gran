@@ -818,7 +818,7 @@ if "${if_ybottom_wall_gran} == no" then &
   "jump SELF ybottom_wall_gran_end3"
 label ybottom_wall_gran_begin3
 # compute total force on particles after y_bottom apply 
-compute		sum_storeforce_y_bottom_after_xyz near_ybottom_wall_gran reduce sum f_sum_pairforce[*]
+compute		sum_storeforce_y_bottom_after_xyz ${storeforcegroup} reduce sum f_sum_pairforce[*]
 # total force all atoms on y_bottom by subtract
 variable	force_y_bottom_x equal c_sum_storeforce_y_bottom_after_xyz[1]
 variable	force_y_bottom_y equal c_sum_storeforce_y_bottom_after_xyz[2]

@@ -182,16 +182,32 @@ def read_log(folderpath):
 
 
     logfile_in_folder = read_variable()
-    for line in lines:
-        if line.startswith("fix") and line.split()[3] == "wall/gran":
-            if line.split()[1] == "inwall": 
-                logfile_in_folder["shearwall"] = line.split()[11]
-                break
-            elif line.split()[1] == "y_bottom":
-                logfile_in_folder["shearwall"] = line.split()[11]
-                break
-            else:
-                sys.exit("shearwall missed")
+    if "if_ybottom_wall_gran" in logfile_in_folder.keys():
+        if logfile_in_folder["if_ybottom_wall_gran"]=="yes":
+            logfile_in_folder["shearwall"] = "yplane"
+        else:
+            for line in lines:
+                if line.startswith("fix") and line.split()[3] == "wall/gran":
+                    if line.split()[1] == "inwall": 
+                        logfile_in_folder["shearwall"] = line.split()[11]
+                        break
+                    elif line.split()[1] == "y_bottom":
+                        logfile_in_folder["shearwall"] = line.split()[11]
+                        break
+                    else:
+                        sys.exit("shearwall missed")
+    else:
+        for line in lines:
+            if line.startswith("fix") and line.split()[3] == "wall/gran":
+                if line.split()[1] == "inwall": 
+                    logfile_in_folder["shearwall"] = line.split()[11]
+                    break
+                elif line.split()[1] == "y_bottom":
+                    logfile_in_folder["shearwall"] = line.split()[11]
+                    break
+                else:
+                    sys.exit("shearwall missed")
+            
     
     # start to read logfile_in_folder for starting from 0
     def read_log_0():

@@ -84,11 +84,12 @@ def combine_previous_chunk_data():
         data_array = np.empty([step_array.shape[0], n_line_in_a_step, len(header)])
         for n1 in range(step_array.shape[0]):
             data_array[n1,:,:] = data_inloop(step_array[n1])
-        if index 
+        
         ## select data
         data = [lines[t].split() for t in range(2, len(lines))]
         ## attach data
-        df = pd.DataFrame(data = data, columns = header, dtype = 'float64')
+        if index == 0:
+            df = pd.DataFrame(data = data, columns = header, dtype = 'float64')
         if index >= 1:
             df = df.loc[df['TimeStep']<next_step1]
         array = df['v_t'].values

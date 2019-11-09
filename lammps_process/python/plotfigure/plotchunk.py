@@ -731,7 +731,7 @@ def plotchunk_vxaveoverz_y_ave(if_plot_to_last, step1, step2, n_ave, picksteplis
         plotchunk_1_vxaveoverz_y_ave(step1, step2, figformat="png", ifpickle=ifpickle)
 
 
-def plotchunk_ek_d1_aveover_d2_d3_ave(if_plot_to_last, step1, step2, n_ave, picksteplist, figformat="png", ifpickle=False, inputfilepath=None, d1="y",d2="z",d3="y"):
+def plotchunk_ek_d1_aveover_d2_d3_ave(if_plot_to_last, step1, step2, n_ave, picksteplist, figformat="png", ifpickle=False, inputfilepath=None, d1="y",d2="z",d3="y", ifminus_ekc=True):
 
     f_ek_d1_aveover_d2_d3_ave_path = dp.diagram_path + "ek" + d1 + "aveover" + d2 + "_" + d3 + "_ave/"
     om.create_directory(f_ek_d1_aveover_d2_d3_ave_path)
@@ -801,11 +801,8 @@ def plotchunk_ek_d1_aveover_d2_d3_ave(if_plot_to_last, step1, step2, n_ave, pick
             coord2_array = np.arange(n_2)+0.5/n_2*height_dpunit
             n_grid_coord2 = len(coord2_array)
         elif chunk_method == "yz":
-            coord1_array = data_mean_all[0][:,index_of_variable_in_header("Coord1")]
-            n_grid_coord1 = np.sum(coord1_array == coord1_array[0])
-            coord1_array = coord1_array.reshape(-1, n_grid_coord1)
-            coord1_array = coord1_array[:,0]
-            n_grid_coord2 = len(coord1_array)
+            n_grid_coord1 = len(np.unique(data_mean_all[0][:,index_of_variable_in_header("Coord1")]))
+            n_grid_coord2 = len(np.unique(data_mean_all[0][:,index_of_variable_in_header("Coord2")]))
         else:
             sys.exit("chunk_method wrong")
 
@@ -823,7 +820,7 @@ def plotchunk_ek_d1_aveover_d2_d3_ave(if_plot_to_last, step1, step2, n_ave, pick
         axis_number_for_d2 = {}
         if chunk_method == "rz":
             axis_number_for_d2["r"] = 0
-            axis_number_for_d2["r"] = 1
+            axis_number_for_d2["z"] = 1
         elif chunk_method == "yz":
             if rr.logfile["chunk/atom"][1] == "y":
                 axis_number_for_d2["y"] = 0
@@ -848,16 +845,19 @@ def plotchunk_ek_d1_aveover_d2_d3_ave(if_plot_to_last, step1, step2, n_ave, pick
             else:
                 sys.exit("chunk_method wrong")
         elif chunk_method == "yz":
+            x_array = data_mean_all[:,:,index_of_variable_in_header(dic_map_coordinate_to_header[d3])][0]
             x_array = x_array/diameter
+            x_array = x_array.reshape(n_grid_coord1, n_grid_coord2).sum(axis=axis_number_for_d2[d2])/np.array([n_grid_coord1,n_grid_coord2])[axis_number_for_d2[d2]]
         else:
             sys.exit("chunk_method wrong")
-
-        n_grid_normal_to_shear_plane = n_grid_coord1
-        n_grid_z = n_grid_coord2
         
-        y_array_all = data_mean_all[:,:,index_of_variable_in_header("v_Ek"+d1)]
-        
-        
+        if ifminus_ekc:
+            def divide_zero(a,b):
+                c = np.divide(a, b, out=np.zeros_like(a), where=b!=0)
+                return c
+            y_array_all = data_mean_all[:,:,index_of_variable_in_header("v_Ek"+d1)]-divide_zero(0.5*data_mean_all[:,:,index_of_variable_in_header("v_mv"+d1)]**2,data_mean_all[:,:,index_of_variable_in_header("c_m1")])
+        else:
+            y_array_all = data_mean_all[:,:,index_of_variable_in_header("v_Ek"+d1)]
         
         fig_handle = plt.figure()
 
@@ -867,15 +867,13 @@ def plotchunk_ek_d1_aveover_d2_d3_ave(if_plot_to_last, step1, step2, n_ave, pick
                 if step == step_mean_all[index_2]:
                     break
             if not step == step_mean_all[index_2]:
-                breakpoint()
                 sys.exit("no match step")
             index = index_2
             step = step_mean_all[index]
             y_array = y_array_all[index]
-            number_sum = axis_number_for_d2[d2]
-            y_array = y_array.reshape(-1, n_grid_coord1).sum(axis=axis_number_for_d2[d2])/number_sum
+            y_array = y_array.reshape(n_grid_coord1, n_grid_coord2).sum(axis=axis_number_for_d2[d2])/np.array([n_grid_coord1,n_grid_coord2])[axis_number_for_d2[d2]]
             time = (step)*float(rr.logfile["ts"])
-            plt.plot(x_array[0:9], y_array[0:9], label=" time=" + "{:.2E}".format(time), linestyle="None", marker=11, markersize=15)
+            plt.plot(x_array, y_array, label=" time=" + "{:.2E}".format(time), linestyle="None", marker=11, markersize=15)
         plt.title("height="+str(rr.logfile["z_length_create_dp_unit"]))
         plt.legend()
         plt.xlabel(d3)
@@ -895,9 +893,13 @@ def plotchunk_ek_d1_aveover_d2_d3_ave(if_plot_to_last, step1, step2, n_ave, pick
 
 
 def plotchunk_ekyaveoverz_y_ave(if_plot_to_last, step1, step2, n_ave, picksteplist, figformat="png", ifpickle=False, inputfilepath=None):
-    plotchunk_ek_d1_aveover_d2_d3_ave(if_plot_to_last, step1, step2, n_ave, picksteplist, figformat="png", ifpickle=False, inputfilepath=None)
+    plotchunk_ek_d1_aveover_d2_d3_ave(if_plot_to_last, step1, step2, n_ave, picksteplist, d1="y",d2="z",d3="y", figformat="png", ifpickle=False, inputfilepath=None)
 
+def plotchunk_ekxaveoverz_y_ave(if_plot_to_last, step1, step2, n_ave, picksteplist, figformat="png", ifpickle=False, inputfilepath=None):
+    plotchunk_ek_d1_aveover_d2_d3_ave(if_plot_to_last, step1, step2, n_ave, picksteplist, d1="x",d2="z",d3="y", figformat="png", ifpickle=False, inputfilepath=None)
 
+def plotchunk_ekzaveoverz_y_ave(if_plot_to_last, step1, step2, n_ave, picksteplist, figformat="png", ifpickle=False, inputfilepath=None):
+    plotchunk_ek_d1_aveover_d2_d3_ave(if_plot_to_last, step1, step2, n_ave, picksteplist, d1="z",d2="z",d3="y", figformat="png", ifpickle=False, inputfilepath=None)
 
 def plotchunk_vxaveoverz_y_ave_combine_diff_simu(if_plot_to_last, step1, step2, n_ave, figformat="png", ifpickle=False):
     lmp_path_list = [

@@ -49,10 +49,7 @@ d_step = int(rr.logfile['freq_ave_wall'])
 
 
 def plot_wall_force(if_plot_to_last, step1, step2, figformat="png", ifpickle=False, ifplotfrominitial=True):
-    if ifplotfrominitial:
-        f_wall_force_plot_path = dp.f_wall_force_plot_from_initial_path
-    else:
-        f_wall_force_plot_path = dp.f_wall_force_plot_path
+    f_wall_force_plot_path = dp.f_wall_force_plot_path
     for wallfile in wallfiles:
         if ifplotfrominitial:
             with open(dp.lammps_directory + "output/wall/" + wallfile) as f:
@@ -101,10 +98,7 @@ def plot_wall_force(if_plot_to_last, step1, step2, figformat="png", ifpickle=Fal
 
 
 def plot_wall_force_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", ifpickle=False, ifplotfrominitial=True):
-    if ifplotfrominitial:
-        f_wall_force_plot_path = dp.f_wall_force_plot_from_initial_path
-    else:
-        f_wall_force_plot_path = dp.f_wall_force_plot_path
+    f_wall_force_plot_path = dp.f_wall_force_plot_path
     f_wall_force_plot_path_nve = f_wall_force_plot_path + "nve_" + str(n_ave) + "/"
 
     if not os.path.isdir(f_wall_force_plot_path_nve): 
