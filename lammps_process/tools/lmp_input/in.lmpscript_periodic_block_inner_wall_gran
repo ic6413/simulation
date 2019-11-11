@@ -574,10 +574,12 @@ region	region_near_ybottom_wall_create	block INF INF INF $(v_ylo_wall+0.1*v_dp) 
 region	region_near_ybottom_wall_freeze	block INF INF INF $(v_ylo_wall+0.1*v_dp) INF INF units box
 lattice       custom ${dp} origin ${x_fraction_of_lattice_ybottom_wall} ${y_fraction_of_lattice_ybottom_wall} ${z_fraction_of_lattice_ybottom_wall} &
 a1 1.0 0.0 0.0 a2 0.0 1.0 0.0 a3 0.0 0.0 1.0 basis 0.0 0.0 0.5
-
+if "${wall_gran_type} == 1" then "variable dp_wall_gran equal v_dp_small"
+if "${wall_gran_type} == 2" then "variable dp_wall_gran equal v_dp"
+if "${wall_gran_type} == 3" then "variable dp_wall_gran equal v_dp_big"
 create_atoms	${wall_gran_type} region region_near_ybottom_wall_create units lattice
 
-set		type 2 diameter ${dp}
+set		type ${wall_gran_type} diameter ${dp_wall_gran}
 set		atom * density 	${den}
 
 group group_small type 1
@@ -589,9 +591,7 @@ group not_near_ybottom_wall_small   intersect not_near_ybottom_wall group_small
 group not_near_ybottom_wall_middle  intersect not_near_ybottom_wall group_middle
 group not_near_ybottom_wall_big   intersect not_near_ybottom_wall group_big
 
-if "${wall_gran_type} == 1" then "variable dp_wall_gran equal v_dp_small"
-if "${wall_gran_type} == 2" then "variable dp_wall_gran equal v_dp"
-if "${wall_gran_type} == 3" then "variable dp_wall_gran equal v_dp_big"
+
 delete_atoms overlap $((v_dp_wall_gran+v_dp_small)/2) not_near_ybottom_wall_small near_ybottom_wall_gran
 delete_atoms overlap $((v_dp_wall_gran+v_dp)/2) not_near_ybottom_wall_middle near_ybottom_wall_gran
 delete_atoms overlap $((v_dp_wall_gran+v_dp_big)/2) not_near_ybottom_wall_big near_ybottom_wall_gran
