@@ -62,6 +62,7 @@ print "timestep ${ts}" screen no append output/setting/attribute.lammps
 variable  ifztop   index yes 
 # ybottom gran or flat
 variable    if_ybottom_wall_gran index no
+variable    wall_gran_type       index 2
 if "${if_ybottom_wall_gran} == no" then &
   "variable storeforcegroup string all" &
 else &
@@ -574,7 +575,7 @@ region	region_near_ybottom_wall_freeze	block INF INF INF $(v_ylo_wall+0.1*v_dp) 
 lattice       custom ${dp} origin ${x_fraction_of_lattice_ybottom_wall} ${y_fraction_of_lattice_ybottom_wall} ${z_fraction_of_lattice_ybottom_wall} &
 a1 1.0 0.0 0.0 a2 0.0 1.0 0.0 a3 0.0 0.0 1.0 basis 0.0 0.0 0.5
 
-create_atoms	2 region region_near_ybottom_wall_create units lattice
+create_atoms	${wall_gran_type} region region_near_ybottom_wall_create units lattice
 
 set		type 2 diameter ${dp}
 set		atom * density 	${den}
