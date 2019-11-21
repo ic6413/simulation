@@ -230,8 +230,8 @@ if if_plot_velocity_field_scale_same == "yes":
         om.create_directory(f_momentum_mass_field_v23x23_path)
         om.create_directory(f_momentum_mass_field_v13x23_path)
 
-    f_momentum_mass_field_density_x23_path = f_momentum_mass_field_samescale_path + "density_Xx_Xz/"
-    om.create_directory(f_momentum_mass_field_density_x23_path)
+    f_momentum_mass_field_volumnfraction_x23_path = f_momentum_mass_field_samescale_path + "density_Xx_Xz/"
+    om.create_directory(f_momentum_mass_field_volumnfraction_x23_path)
 else:
     if rr.logfile["shearwall"] == "zcylinder":
         f_momentum_mass_field_v23x23_path = f_momentum_mass_field_path + "Vr_Vz_Xr_Xz/"
@@ -244,20 +244,57 @@ else:
         om.create_directory(f_momentum_mass_field_v23x23_path)
         om.create_directory(f_momentum_mass_field_v13x23_path)
 
-    f_momentum_mass_field_density_x23_path = f_momentum_mass_field_path + "density_Xx_Xz/"
-    om.create_directory(f_momentum_mass_field_density_x23_path)    
+    f_momentum_mass_field_volumnfraction_x23_path = f_momentum_mass_field_path + "density_Xx_Xz/"
+    om.create_directory(f_momentum_mass_field_volumnfraction_x23_path)    
 
 f_max_velocity_near_wall = diagram_path + "max_velocity_near_wall/"
-om.create_directory(f_max_velocity_near_wall)
 
 f_wall_force_plot_path = diagram_path + "wall_force/"
-om.create_directory(f_wall_force_plot_path)
 
-f_shearratexyaveoverz_y_ave_path = diagram_path + "shearratexyaveoverz_y_ave/"
-om.create_directory(f_shearratexyaveoverz_y_ave_path)
+f_strain_rate_path = diagram_path + "strain_rate/"
+om.create_directory(f_strain_rate_path)
 
-f_vxaveoverz_y_ave_path = diagram_path + "vxaveoverz_y_ave/"
-om.create_directory(f_vxaveoverz_y_ave_path)
+f_ek_path = diagram_path + "ek/"
+om.create_directory(f_ek_path)
+
+f_velocity_path = diagram_path + "velocity/"
+om.create_directory(f_velocity_path)
+
+f_ekminusekave_path = diagram_path + "ekminusekave/"
+om.create_directory(f_ekminusekave_path)
+
+f_fraction_check_everygrid = diagram_path + "fraction_check_everygrid/"
+
+f_velocity_i_time_ave_j_fix_k_ave_path = diagram_path + "velocity_i_time_ave_j_fix_k_ave/"
+
+def f_path_strain_rate_i_j_ave_k(i,j,k):
+    f_path = f_strain_rate_path + "strain_rate_" + str(i) + str(j) + "ave" + str(k) + "/"
+    return f_path
+
+def f_path_ekovermass_i_j_ave_k(i,j,k):
+    f_path = f_ek_path + "ek" + str(i) + "_ave" + str(j) + "_x" + str(k) + "/"
+    return f_path
+
+def f_path_ekminusekaveovermass_i_j_ave_k(i,j,k):
+    f_path = f_ekminusekave_path + "ekminusekav" + str(i) + "_ave" + str(k) + "_x" + str(j) + "/"
+    return f_path
+
+def f_path_strain_rate_i_j_x23(i,j):
+    f_path = f_strain_rate_path + "strain_rate_" + str(i) + str(j) + "_x23" + "/"
+    return f_path
+
+def f_path_velocity_i_j_ave_k(i,j,k):
+    f_path = f_velocity_path + "velocity" + str(i) + "_ave" + str(j) + "_x" + str(k) + "/"
+    return f_path
+
+def f_path_velocity_i_j_ave_k_no_top(i,j,k):
+    f_path = f_velocity_path + "velocity_no_top" + str(i) + "_ave" + str(j) + "_x" + str(k) + "/"
+    return f_path
+
+def f_path_ek_i_j_ave_k_no_top(i,j,k):
+    f_path = f_ek_path + "ek_no_top" + str(i) + "_ave" + str(j) + "_x" + str(k) + "/"
+    return f_path
+
 # Latex report
 latex_path = post_process_path + 'latex/'
 om.create_directory(latex_path)

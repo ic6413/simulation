@@ -13,8 +13,14 @@ import read_setting.read_setting as rr
 # import calculate setting
 import read_setting.calculate_setting as rc
 
-def combine_previous_wall_data(wallfile_name):
+def combine_previous_wall_data(wallfile_name, ifplotfrominitial=False, ifplotfromrotate=True):
     for index in range(rc.n_log_list):
+
+        if ifplotfromrotate:
+            dic = rr.logfilelist_from_lastest_to_initial[index]
+            if dic["ifrotate"] == "no" or float(dic["Sa"]) == 0:
+                break
+
         with open(rc.folder_path_list_last_to_initial[index] + "output/wall/" + wallfile_name) as f:
             lines = f.read().strip().split('\n')
         header = lines[1].split()[1:]
@@ -40,8 +46,8 @@ def combine_previous_wall_data(wallfile_name):
     return df_full
 
 
-def combine_previous_wall_data_and_save(wallfile_name):
-    combine_previous_wall_data(wallfile_name).to_hdf(dp.combine_previous_from_output + "wall/" + wallfile_name, key='df', mode='w', format='fixed')
+def combine_previous_wall_data_and_save(wallfile_name, ifplotfrominitial=False, ifplotfromrotate=True):
+    combine_previous_wall_data(wallfile_name, ifplotfrominitial, ifplotfromrotate).to_hdf(dp.combine_previous_from_output + "wall/" + wallfile_name, key='df', mode='w', format='fixed')
 
 def combine_previous_allwall_data_and_save():
     if rr.logfile["shearwall"] == "zcylinder":
@@ -57,7 +63,7 @@ def combine_previous_allwall_data_and_save():
                     "force_y_bottom_to_particle.allstep",
         ]
     for wallfile_name in wallfiles_name:
-        combine_previous_wall_data_and_save(wallfile_name)
+        combine_previous_wall_data_and_save(wallfile_name, ifplotfrominitial=False, ifplotfromrotate=True)
 
 
 def combine_previous_chunk_data():

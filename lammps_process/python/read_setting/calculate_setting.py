@@ -9,7 +9,7 @@ lammps_directory = os.getcwd() + '/'  #os.path.expanduser('~/lammps_simulation/r
 n_log_list = len(rr.logfilelist_from_initial_to_lastest)
 
 log_path_list_last_to_initial = [lammps_directory+"../"*n+'log.lammps' for n in range(n_log_list)]
-log_path_list_initial_to_last = [log_path_list_last_to_initial[n_log_list-1-n] for n in range(n_log_list)]
+log_path_list_initial_to_last = log_path_list_last_to_initial[::-1]
 calculate_setting_diclist_from_initial_to_last = []
 
 def get_folder_path_list_initial_to_last(lammps_directory):
@@ -66,3 +66,23 @@ for index in range(n_log_list):
     calculate_setting_diclist_from_initial_to_last.append(calculate_setting_dic(index))
 
 calculate_setting_dic = calculate_setting_diclist_from_initial_to_last[-1]
+
+def calculate_rotate_start_time():
+    time_accumulation = 0
+    for i in range(len(rr.logfilelist_from_initial_to_lastest)):
+        
+        dic = rr.logfilelist_from_initial_to_lastest[i]
+        
+        if int(dic["rst_from"]) == 0:
+            previous_time_step = 0
+        else:
+            previous_time_step = float(rr.logfilelist_from_initial_to_lastest[i-1]["ts"])
+    
+        time_accumulation += previous_time_step*int(dic["rst_from"])
+        
+        if dic["ifrotate"] == "yes" and float(dic["Sa"]) != 0:
+            break
+  
+    return time_accumulation
+
+rotate_start_time = calculate_rotate_start_time()

@@ -7,5 +7,4 @@ def create_directory(post_process_folder_path):
             os.mkdir(post_process_folder_path)
         except OSError: 
             print ("Warn: Directory %s can not be created" % post_process_folder_path)
-        else:  
-            print ("Directory %s created " % post_process_folder_path)
+        

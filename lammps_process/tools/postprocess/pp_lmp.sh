@@ -65,6 +65,31 @@ restart_movie () {
 
 }
 
+vortex_movie () {
+    
+    local START_V_MOVIE=$1
+    local STEPDIFF_V_MOVIE=$2
+    local END_V_MOVIE=$3
+    local n_framerate_V=$4
+
+    rm -f /tmp/img*
+    
+    n_digit=$(bc -l <<< "l((($END_V_MOVIE - $START_V_MOVIE) / $STEPDIFF_V_MOVIE)+1)/l(10) + 1")
+    n_digit=${n_digit%.*}
+
+    x=1
+    for i in $(eval echo "{$START_V_MOVIE..$END_V_MOVIE..$STEPDIFF_V_MOVIE}")
+    do counter=$(printf %0"$n_digit"d $x)
+        ln postprocess/diagram/momentum_mass_field/same_scale/Vx_Vz_Xx_Xz/nve_10/"$i".png /tmp/img"$counter".png
+        x=$(($x+1))
+    done
+
+    ffmpeg -f image2 -framerate ${n_framerate_V} -i /tmp/img%0${n_digit}d.png postprocess/diagram/momentum_mass_field/same_scale/Vx_Vz_Xx_Xz/movie/movie_${START_V_MOVIE}_${END_V_MOVIE}.mov
+
+    rm -f /tmp/img*
+
+}
+
 velocity_field () {
     
     local if_plot_to_last=$1
@@ -125,6 +150,10 @@ if_plot_to_last=
 step1=
 step2=
 n_ave=
+START_V_MOVIE=
+STEPDIFF_V_MOVIE=
+END_V_MOVIE=
+n_framerate_V=
 
 ###### command line option
 while [ "$1" != "" ]; do
@@ -153,6 +182,16 @@ while [ "$1" != "" ]; do
                                 END_MOVIE=$1
                                 shift
                                 n_framerate=$1
+                                ;;
+        --r2movieV )            if_r2movieV=1
+                                shift
+                                START_V_MOVIE=$1
+                                shift
+                                STEPDIFF_V_MOVIE=$1
+                                shift
+                                END_V_MOVIE=$1
+                                shift
+                                n_framerate_V=$1
                                 ;;
         --vfield )              if_vfield=1
                                 shift
@@ -267,6 +306,19 @@ if [ "$interactive" == "1" ]; then
         read n_ave_wall
     fi
 
+    echo "Type the if_r2movieV that you want (1 or 0), followed by [ENTER]:"
+    read if_r2movieV
+    if [ "$if_r2movieV" == "1" ]; then
+        echo "Type the n_framerate_V that you want, followed by [ENTER]:"
+        read n_framerate_V
+        echo "Type the START_V_MOVIE that you want, followed by [ENTER]:"
+        read START_V_MOVIE
+        echo "Type the STEPDIFF_V_MOVIE that you want, followed by [ENTER]:"
+        read STEPDIFF_V_MOVIE
+        echo "Type the END_V_MOVIE that you want, followed by [ENTER]:"
+        read END_V_MOVIE
+    fi
+
 else
     echo "interactive off"
 fi
@@ -309,4 +361,12 @@ if [ "$if_wall" == "1" ]; then
     wall_force ${if_plot_to_last_wall} ${step1_wall} ${step2_wall} ${n_ave_wall}
 else
 	echo "if_wall is off"
+fi
+
+# r2movieV start
+if [ "$if_r2movieV" == "1" ]; then
+	echo "if_r2movieV is on"
+    vortex_movie ${START_V_MOVIE} ${STEPDIFF_V_MOVIE} ${END_V_MOVIE} ${n_framerateV}
+else
+	echo "if_r2movieV is off"
 fi

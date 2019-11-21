@@ -281,11 +281,12 @@ def log_current_plus_previous(currentfolderpath):
         )
     return logfilelist_from_lastest_to_initial
 
-n_loglist = len(log_current_plus_previous(lammps_directory))
-logfilelist_from_initial_to_lastest = [log_current_plus_previous(lammps_directory)[n_loglist-1-n] for n in range(n_loglist)]
-
 def log_current_plus_previousfrom_initial_to_lastest(currentfolderpath):
     logfilelist_from_lastest_to_initial=log_current_plus_previous(currentfolderpath)
     n_loglist = len(logfilelist_from_lastest_to_initial)
     logfilelist_from_initial_to_lastest = [logfilelist_from_lastest_to_initial[n_loglist-1-n] for n in range(n_loglist)]
     return logfilelist_from_initial_to_lastest
+
+n_loglist = len(log_current_plus_previous(lammps_directory))
+logfilelist_from_initial_to_lastest = [log_current_plus_previous(lammps_directory)[n_loglist-1-n] for n in range(n_loglist)]
+logfilelist_from_lastest_to_initial = logfilelist_from_initial_to_lastest[::-1]

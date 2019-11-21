@@ -16,6 +16,7 @@ from mpl_toolkits.mplot3d import Axes3D
 # import module
 import datapath as dp
 import read_setting.read_setting as rr
+import osmanage as om
 # import calculate setting
 import read_setting.calculate_setting as rc
 
@@ -104,6 +105,7 @@ else:
 
 
 def plot_wall_force(if_plot_to_last, step1, step2, figformat="png", ifpickle=False):
+    om.create_directory(dp.f_wall_force_plot_path)
     for wallfile in [wallfile1, wallfile2, wallfile3]:    
         with open(dp.lammps_directory + "output/wall/" + wallfile) as f:
             
@@ -154,9 +156,7 @@ def plot_wall_force(if_plot_to_last, step1, step2, figformat="png", ifpickle=Fal
 
 def plot_wall_force_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", ifpickle=False):
     f_wall_force_plot_path_nve = dp.f_wall_force_plot_path + "nve_" + str(n_ave) + "/"
-
-    if not os.path.isdir(f_wall_force_plot_path_nve): 
-            os.mkdir(f_wall_force_plot_path_nve)
+    om.create_directory(f_wall_force_plot_path_nve)
     
     for wallfile in [wallfile1, wallfile2, wallfile3]: 
         

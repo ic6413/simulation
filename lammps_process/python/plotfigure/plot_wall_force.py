@@ -15,6 +15,7 @@ import pickle
 from mpl_toolkits.mplot3d import Axes3D
 # import module
 import datapath as dp
+import osmanage as om
 import read_setting.read_setting as rr
 # import calculate setting
 import read_setting.calculate_setting as rc
@@ -23,7 +24,6 @@ import combine_other_run.combine_previous_run as cc
 # plot style
 
 plt.style.use('classic')
-
 
 # define function for extract data from fix txt to dataframe
 if rr.logfile["shearwall"] == "zcylinder":
@@ -48,14 +48,15 @@ g = float(rr.logfile['g'])
 d_step = int(rr.logfile['freq_ave_wall'])
 
 
-def plot_wall_force(if_plot_to_last, step1, step2, figformat="png", ifpickle=False, ifplotfrominitial=True):
+def plot_wall_force(if_plot_to_last, step1, step2, figformat="png", ifpickle=False, ifplotfrominitial=False, ifplotfromrotate=True):
     f_wall_force_plot_path = dp.f_wall_force_plot_path
+    om.create_directory(f_wall_force_plot_path)
     for wallfile in wallfiles:
-        if ifplotfrominitial:
+        if ifplotfrominitial or ifplotfromrotate:
             with open(dp.lammps_directory + "output/wall/" + wallfile) as f:
                 lines = f.read().strip().split('\n')
             header = lines[1].split()[1:]
-            df_full = cc.combine_previous_wall_data(wallfile)
+            df_full = cc.combine_previous_wall_data(wallfile, ifplotfrominitial, ifplotfromrotate)
         else:
             with open(dp.lammps_directory + "output/wall/" + wallfile) as f:
                 lines = f.read().strip().split('\n')
@@ -70,16 +71,18 @@ def plot_wall_force(if_plot_to_last, step1, step2, figformat="png", ifpickle=Fal
             df = df_full[(df_full['TimeStep']<=step2_1) & (df_full['TimeStep']>=step1_1)]
             
             ## repeat timestep
-
-            variable1 = 'v_t'
             
             for variable2 in header:
                 fig_handle = plt.figure()
-                x_array = df[variable1].values
+                x_array = df["v_t"].values - rc.rotate_start_time
                 y_array = df[variable2].values
                 
-                plt.xlabel(variable1)
-                plt.ylabel(variable2)
+                plt.xlabel("time(s)")
+                if "force" in variable2:
+                    label_y = variable2 + " (N)"
+                else:
+                    label_y = variable2
+                plt.ylabel(label_y)
                 
                 plt.plot(x_array, y_array)
                 plt.tight_layout()
@@ -97,19 +100,19 @@ def plot_wall_force(if_plot_to_last, step1, step2, figformat="png", ifpickle=Fal
             plot_wall_force_1(step1, step2)
 
 
-def plot_wall_force_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", ifpickle=False, ifplotfrominitial=True):
+def plot_wall_force_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", ifpickle=False, ifplotfrominitial=False, ifplotfromrotate=True):
     f_wall_force_plot_path = dp.f_wall_force_plot_path
+    om.create_directory(f_wall_force_plot_path)
     f_wall_force_plot_path_nve = f_wall_force_plot_path + "nve_" + str(n_ave) + "/"
 
-    if not os.path.isdir(f_wall_force_plot_path_nve): 
-            os.mkdir(f_wall_force_plot_path_nve)
+    om.create_directory(f_wall_force_plot_path_nve)
     
     for wallfile in wallfiles:
-        if ifplotfrominitial:
+        if ifplotfrominitial or ifplotfromrotate:
             with open(dp.lammps_directory + "output/wall/" + wallfile) as f:
                 lines = f.read().strip().split('\n')
             header = lines[1].split()[1:]
-            df_full = cc.combine_previous_wall_data(wallfile)
+            df_full = cc.combine_previous_wall_data(wallfile, ifplotfrominitial, ifplotfromrotate)
         else:
             with open(dp.lammps_directory + "output/wall/" + wallfile) as f:
                 lines = f.read().strip().split('\n')
@@ -121,12 +124,10 @@ def plot_wall_force_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", i
         
             df = df_full[(df_full['TimeStep']<=step2_1) & (df_full['TimeStep']>=step1_1)]
             ## repeat timestep
-
-            variable1 = 'v_t'
             
             for variable2 in header:
                 fig_handle = plt.figure()
-                x_array = df[variable1].values
+                x_array = df["v_t"].values - rc.rotate_start_time
                 y_array = df[variable2].values
 
                 def ave_over(array, n):
@@ -140,8 +141,12 @@ def plot_wall_force_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", i
                 x_array = ave_over(x_array, n_ave)
                 y_array = ave_over(y_array, n_ave)
 
-                plt.xlabel(variable1)
-                plt.ylabel(variable2)
+                plt.xlabel("time(s)")
+                if "force" in variable2:
+                    label_y = variable2 + " (N)"
+                else:
+                    label_y = variable2
+                plt.ylabel(label_y)
 
                 plt.plot(x_array, y_array)
                 plt.tight_layout()
@@ -153,8 +158,6 @@ def plot_wall_force_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", i
                     with open(f_wall_force_plot_path_nve + variable2 + "_" + str(step1_1) + "_" + str(step2_1) + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
                         pickle.dump(fig_handle, f)
 
-                
-                
                 plt.close('all')
 
 
