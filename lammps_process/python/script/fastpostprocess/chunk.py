@@ -13,7 +13,7 @@ import read_setting.calculate_setting as rc
 
 ###chunk current
 chunkobject = pp.chunk(n_ave, rr.lammps_directory)
-current_steps = chunkobject.first_100navedstep_middle_last_steps
+current_steps = chunkobject.first_extra_middle_last_steps
 chunkobject.save_v23_x23(current_steps)
 chunkobject.save_v13_x23(current_steps)
 chunkobject.save_fraction_x23(current_steps)
@@ -27,7 +27,7 @@ chunkobject.save_plotchunk_velocity_i_time_near_wall_ave(current_steps, 2, figfo
 
 ###chunk include pre
 chunk_all = pp.chunk_include_pre(n_ave, rr.lammps_directory)
-stepsarray_all = chunk_all.first_100navedstep_middle_last_steps_everysimu
+stepsarray_all = chunk_all.first_extra_middle_last_steps_everysimu
 chunk_all.save_plotchunk_strain_rate_ij_ave_k_ave(stepsarray_all, 0, 1, 2, figformat="png", ifpickle=False)
 chunk_all.save_plotchunk_fraction_ave_j_ave(stepsarray_all, 2, 1, figformat="png", ifpickle=False)
 for i in range(3):

@@ -688,7 +688,7 @@ compute		chunk_r_z all chunk/atom v_chunk_id_r_z limit ${N_total_rz} exact disca
 if "${freq_ave_chunk_momentum_mass_field} == 0" then "jump SELF skip_ave_chunk"
 compute		m1 all property/atom mass
 fix		avspatial all ave/chunk ${every_ave_chunk_momentum_mass_field} ${repeat_ave_chunk_momentum_mass_field} ${freq_ave_chunk_momentum_mass_field} chunk_r_z &
-v_mvr v_mvt v_mvz v_Ekt v_Ekr v_Ekz c_m1 temp v_my v_mz norm none file output/momentum_mass_field/fix.momentum_mass_field.all
+v_mvr v_mvt v_mvz v_Ekt v_Ekr v_Ekz c_m1 temp v_mr v_mz norm none file output/momentum_mass_field/fix.momentum_mass_field.all
 label skip_ave_chunk
 
 ### wall force

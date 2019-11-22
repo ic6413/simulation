@@ -331,14 +331,14 @@ class chunk(object):
             )
         self.allsteps = np.arange(self.step_first_in_file_change_by_n_ave, self.step_last_in_file_change_by_n_ave, self.d_step)
         self.first_middle_last_steps = np.array([self.step_first_in_file_change_by_n_ave, self.middle_step, self.step_last_in_file_change_by_n_ave])
-        self.first_100navedstep_middle_last_steps = np.array(
+        self.extrasteps = np.array(
             [
-            self.step_first_in_file_change_by_n_ave,
-            self.step_first_in_file_change_by_n_ave + 5*self.d_step*self.n_ave,
-            self.middle_step,
-            self.step_last_in_file_change_by_n_ave,
-            ]
+                self.step_first_in_file_change_by_n_ave + 5*self.d_step*self.n_ave,
+                ]
             )
+        maskextra = np.logical_and(self.extrasteps > self.step_first_in_file_change_by_n_ave, self.extrasteps < self.step_last_in_file_change_by_n_ave)
+        self.extrasteps = self.extrasteps[maskextra]
+        self.first_extra_middle_last_steps = np.append(self.first_middle_last_steps, self.extrasteps)
 
     def data_in_one_step(self, step):
 
@@ -619,8 +619,7 @@ class chunk(object):
             np.take(if_grid_surround_not_empty(mass), np.arange(len_in_diff_dim-1)+1, axis=diff_along_array_dim),
             )
         count_not_empty = np.sum(diff_not_empty, axis=sum_along_array_dim)
-        
-        vector_vi_diff = np.sum(np.diff(vector_vi,axis=diff_along_array_dim)*diff_not_empty, axis=sum_along_array_dim)/count_not_empty
+        vector_vi_diff = divide_zero(np.sum(np.diff(vector_vi,axis=diff_along_array_dim)*diff_not_empty, axis=sum_along_array_dim), count_not_empty)
         vector_j_diff = np.sum(np.diff(vector_j,axis=diff_along_array_dim),axis=sum_along_array_dim)/vector_j.shape[sum_along_array_dim]
         strain_rate = divide_zero(vector_vi_diff,vector_j_diff)
         strain_rate /= shear_rate_scale
@@ -1165,8 +1164,7 @@ class chunk(object):
             ave_along_array_dim = position_index_to_array_dim_index[j]
                     
             count_not_empty = np.sum(if_grid_surround_not_empty(mass_step), axis=ave_along_array_dim)
-        
-            vector_vi_sum = np.take(np.sum(vector_vi,axis=ave_along_array_dim), k_index, axis=fix_along_array_dim)/np.take(count_not_empty, k_index, axis=fix_along_array_dim)
+            vector_vi_sum = divide_zero(np.take(np.sum(vector_vi,axis=ave_along_array_dim), k_index, axis=fix_along_array_dim), np.take(count_not_empty, k_index, axis=fix_along_array_dim))
 
             time = time_in_a_step_from_start_rotate(step)
             vector_vi_sum_array= np.append(vector_vi_sum_array, vector_vi_sum)
@@ -1270,7 +1268,7 @@ class chunk(object):
         count_not_surroundemptyorselfempty = np.sum(not_surroundemptyorselfempty, axis=sum_along_array_dim)
         fraction_only_not_surround_empty = fraction*not_surroundemptyorselfempty
 
-        fraction_ave = np.sum(fraction_only_not_surround_empty, axis=sum_along_array_dim)/count_not_surroundemptyorselfempty
+        fraction_ave = divide_zero(np.sum(fraction_only_not_surround_empty, axis=sum_along_array_dim), count_not_surroundemptyorselfempty)
 
         vector = np.sum(vector,axis=sum_along_array_dim)/vector.shape[sum_along_array_dim]
         
@@ -1538,19 +1536,19 @@ class chunk_include_pre(object):
         self.end_step = chunk(self.n_ave, self.folder_path_list_initial_to_last[-1]).step_last_in_file_change_by_n_ave
         allsteps_since_rotate = np.empty(0)
         first_middle_last_steps_everysimu = np.empty(0)
-        first_100navedstep_middle_last_steps_everysimu = np.empty(0)
+        first_extra_middle_last_steps_everysimu = np.empty(0)
         for index in range(self.first_rotate_index, self.n_log_list):
             chunk_simu = chunk(self.n_ave, self.folder_path_list_initial_to_last[index])
             allsteps_since_rotate = np.append(allsteps_since_rotate, chunk_simu.allsteps)
             first_middle_last_steps_everysimu = np.append(
                 first_middle_last_steps_everysimu, chunk_simu.first_middle_last_steps
                 )
-            first_100navedstep_middle_last_steps_everysimu = np.append(
-                first_100navedstep_middle_last_steps_everysimu, chunk_simu.first_100navedstep_middle_last_steps
+            first_extra_middle_last_steps_everysimu = np.append(
+                first_extra_middle_last_steps_everysimu, chunk_simu.first_extra_middle_last_steps
                 )
         self.allsteps_since_rotate = allsteps_since_rotate
         self.first_middle_last_steps_everysimu = first_middle_last_steps_everysimu
-        self.first_100navedstep_middle_last_steps_everysimu = first_100navedstep_middle_last_steps_everysimu
+        self.first_extra_middle_last_steps_everysimu = first_extra_middle_last_steps_everysimu
     def current_and_remain_stepsarray(self, stepsarray, index):
 
         step2 = step_last_fix_change_by_n_ave(self.n_ave, index)
@@ -1781,7 +1779,7 @@ class chunk_include_pre(object):
         )
 
     def plotchunk_all(self):
-        stepsarray = self.first_100navedstep_middle_last_steps_everysimu
+        stepsarray = self.first_extra_middle_last_steps_everysimu
         self.save_plotchunk_strain_rate_ij_ave_k_ave(stepsarray, 0, 1, 2, figformat="png", ifpickle=False)
         for i in range(3):
             self.save_plotchunk_velocity_i_ave_j_xk_ave(stepsarray, i, 2, 1, figformat="png", ifpickle=False)
