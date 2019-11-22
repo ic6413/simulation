@@ -334,6 +334,12 @@ variable	vt 		atom (vx*(-y)+vy*x)/sqrt(x*x+y*y)
 variable  mvz     atom mass*vz
 variable	mvr 		atom mass*v_vr
 variable	mvt 		atom mass*v_vt
+variable	Ekz 		atom 0.5*mass*vz*vz
+variable	Ekr 		atom 0.5*mass*v_vr*v_vr
+variable	Ekt 		atom 0.5*mass*v_vt*v_vt
+variable	mr 		atom mass*v_vr
+variable	mz 		atom mass*z
+
 variable	check_vrvtvxvy 	atom v_vt*v_vt+v_vr*v_vr-vx*vx-vy*vy
 
 # calculate chunk id
@@ -693,7 +699,8 @@ compute		chunk_r_z all chunk/atom v_chunk_id_r_z limit ${N_total_rz} exact disca
 # file, output by fix ave/chunk
 if "${freq_ave_chunk_momentum_mass_field} == 0" then "jump SELF skip_ave_chunk"
 compute		m1 all property/atom mass
-fix		avspatial all ave/chunk ${every_ave_chunk_momentum_mass_field} ${repeat_ave_chunk_momentum_mass_field} ${freq_ave_chunk_momentum_mass_field} chunk_r_z v_mvr v_mvt v_mvz c_m1 temp norm none file output/momentum_mass_field/fix.momentum_mass_field.all
+fix		avspatial all ave/chunk ${every_ave_chunk_momentum_mass_field} ${repeat_ave_chunk_momentum_mass_field} ${freq_ave_chunk_momentum_mass_field} chunk_r_z &
+v_mvr v_mvt v_mvz v_Ekt v_Ekr v_Ekz c_m1 temp v_my v_mz norm none file output/momentum_mass_field/fix.momentum_mass_field.all
 label skip_ave_chunk
 ### wall force
 if "${freq_ave_wall} == 0" then "jump SELF skip_ave_wall1"
