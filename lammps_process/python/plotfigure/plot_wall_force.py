@@ -24,6 +24,30 @@ import combine_other_run.combine_previous_run as cc
 # plot style
 
 plt.style.use('classic')
+plt.rcParams.update({'font.size': 16})
+
+
+if "if_ybottom_wall_gran" in rr.logfile.keys():
+    if rr.logfile["if_ybottom_wall_gran"] == "yes":
+        if "wall_gran_type" in rr.logfile.keys():
+            if rr.logfile["wall_gran_type"] == "1":
+                ybottomwalltype = "rough (d=1.1)"
+            elif rr.logfile["wall_gran_type"] == "2":
+                ybottomwalltype = "rough (d=1)"
+            elif rr.logfile["wall_gran_type"] == "3":
+                ybottomwalltype = "rough (d=0.9)"
+            else:
+                sys.exit("can not get wall gran type")
+        else:
+            ybottomwalltype = "rough (d=1)"
+    else:
+        ybottomwalltype = "smooth"
+else:
+    ybottomwalltype = "smooth"
+height = rr.logfile["z_length_create_dp_unit"]
+width = rr.logfile["width_wall_dp_unit"]
+periodlength = rr.logfile["x_period_dp_unit"]
+labelstring_size_walltype = "L: " + periodlength + "\n" + "W: " + width + "\n" + "H: " + height + "\n" + ybottomwalltype
 
 # define function for extract data from fix txt to dataframe
 if rr.logfile["shearwall"] == "zcylinder":
@@ -46,6 +70,8 @@ width_wall_dp_unit = int(rr.logfile['width_wall_dp_unit'])
 
 g = float(rr.logfile['g'])
 d_step = int(rr.logfile['freq_ave_wall'])
+
+force_scale = 0.6*float(rr.logfile['den'])*g*float(height)**2*float(periodlength)/2*diameter**3
 
 
 def plot_wall_force(if_plot_to_last, step1, step2, figformat="png", ifpickle=False, ifplotfrominitial=False, ifplotfromrotate=True):
@@ -73,24 +99,45 @@ def plot_wall_force(if_plot_to_last, step1, step2, figformat="png", ifpickle=Fal
             ## repeat timestep
             
             for variable2 in header:
-                fig_handle = plt.figure()
+                fig = plt.figure()
+                ax = fig.add_subplot(111)
                 x_array = df["v_t"].values - rc.rotate_start_time
                 y_array = df[variable2].values
-                
-                plt.xlabel("time(s)")
                 if "force" in variable2:
-                    label_y = variable2 + " (N)"
+                    y_array /= force_scale
+                
+                ax.set_xlabel("time (s)")
+                
+                if "force" in variable2:
+                    if "y_top" in variable2:
+                        wallstring = " on static wall"
+                    
+                    elif "y_bottom" in variable2:
+                        wallstring = " on moving wall"
+                    
+                    elif "zbottom" in variable2:
+                        wallstring = " on ground"
+
+                    force_string = "F" + variable2[-1]
+
+                    label_y = force_string + wallstring  + " (normalized)"
                 else:
                     label_y = variable2
-                plt.ylabel(label_y)
+                ax.set_ylabel(label_y)
                 
-                plt.plot(x_array, y_array)
+                ax.plot(x_array, y_array, label=labelstring_size_walltype)
+                ax.legend(
+                    title="",
+                    bbox_to_anchor=(1.04,1),
+                    loc="upper left",
+                    )
+                plt.xticks(rotation=45)
                 plt.tight_layout()
-                fig_handle.savefig(f_wall_force_plot_path + variable2 + "_" + str(step1_1) + "_" + str(step2_1) + "." + figformat, format=figformat)
+                fig.savefig(f_wall_force_plot_path + variable2 + "_" + str(step1_1) + "_" + str(step2_1) + "." + figformat, format=figformat)
                 if ifpickle:
                     # Save figure handle to disk
                     with open(f_wall_force_plot_path + variable2 + "_" + str(step1_1) + "_" + str(step2_1) + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
-                        pickle.dump(fig_handle, f)
+                        pickle.dump(fig, f)
 
                 plt.close('all')
     
@@ -126,9 +173,12 @@ def plot_wall_force_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", i
             ## repeat timestep
             
             for variable2 in header:
-                fig_handle = plt.figure()
+                fig = plt.figure()
+                ax = fig.add_subplot(111)
                 x_array = df["v_t"].values - rc.rotate_start_time
                 y_array = df[variable2].values
+                if "force" in variable2:
+                    y_array /= force_scale
 
                 def ave_over(array, n):
                     length = len(array)
@@ -141,22 +191,40 @@ def plot_wall_force_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", i
                 x_array = ave_over(x_array, n_ave)
                 y_array = ave_over(y_array, n_ave)
 
-                plt.xlabel("time(s)")
+                ax.set_xlabel("time (s)")
                 if "force" in variable2:
-                    label_y = variable2 + " (N)"
+                    if "y_top" in variable2:
+                        wallstring = " on static wall"
+                    
+                    elif "y_bottom" in variable2:
+                        wallstring = " on moving wall"
+                    
+                    elif "zbottom" in variable2:
+                        wallstring = " on ground"
+
+                    force_string = "F" + variable2[-1]
+
+                    label_y = force_string + wallstring  + " (normalized)"
                 else:
                     label_y = variable2
-                plt.ylabel(label_y)
 
-                plt.plot(x_array, y_array)
+                ax.set_ylabel(label_y)
+
+                ax.plot(x_array, y_array, label=labelstring_size_walltype)
+                ax.legend(
+                    title="",
+                    bbox_to_anchor=(1.04,1),
+                    loc="upper left",
+                    )
+                plt.xticks(rotation=45)
                 plt.tight_layout()
 
 
-                fig_handle.savefig(f_wall_force_plot_path_nve + variable2 + "_" + str(step1_1) + "_" + str(step2_1) + "." + figformat, format=figformat)
+                fig.savefig(f_wall_force_plot_path_nve + variable2 + "_" + str(step1_1) + "_" + str(step2_1) + "." + figformat, format=figformat)
                 if ifpickle:
                     # Save figure handle to disk
                     with open(f_wall_force_plot_path_nve + variable2 + "_" + str(step1_1) + "_" + str(step2_1) + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
-                        pickle.dump(fig_handle, f)
+                        pickle.dump(fig, f)
 
                 plt.close('all')
 

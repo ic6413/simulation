@@ -9,6 +9,7 @@ from itertools import islice
 import pandas as pd
 import numpy as np
 import sys
+import matplotlib
 import matplotlib.pyplot as plt
 import pickle
 import functools
@@ -23,7 +24,30 @@ import read_setting.calculate_setting as rc
 # plot style
 
 plt.style.use('classic')
-    
+plt.rcParams.update({'font.size': 16})
+
+if "if_ybottom_wall_gran" in rr.logfile.keys():
+    if rr.logfile["if_ybottom_wall_gran"] == "yes":
+        if "wall_gran_type" in rr.logfile.keys():
+            if rr.logfile["wall_gran_type"] == "1":
+                ybottomwalltype = "rough (d=0.9)"
+            elif rr.logfile["wall_gran_type"] == "2":
+                ybottomwalltype = "rough (d=1)"
+            elif rr.logfile["wall_gran_type"] == "3":
+                ybottomwalltype = "rough (d=1.1)"
+            else:
+                sys.exit("can not get wall gran type")
+        else:
+            ybottomwalltype = "rough (d=1)"
+    else:
+        ybottomwalltype = "smooth"
+else:
+    ybottomwalltype = "smooth"
+height = rr.logfile["z_length_create_dp_unit"]
+width = rr.logfile["width_wall_dp_unit"]
+periodlength = rr.logfile["x_period_dp_unit"]
+labelstring_size_walltype = "L= " + periodlength + ", W= " + width + ", H= " + height + ", " + ybottomwalltype
+
 # define function for extract data from fix txt to dataframe
 if rr.logfile["shearwall"] == "zcylinder":
     chunk_method = 'rz'
@@ -339,6 +363,31 @@ class chunk(object):
         maskextra = np.logical_and(self.extrasteps > self.step_first_in_file_change_by_n_ave, self.extrasteps < self.step_last_in_file_change_by_n_ave)
         self.extrasteps = self.extrasteps[maskextra]
         self.first_extra_middle_last_steps = np.append(self.first_middle_last_steps, self.extrasteps)
+        self.first_extra_middle_last_steps.sort()
+        if "if_ybottom_wall_gran" in rr.logfile.keys():
+            if rr.logfile["if_ybottom_wall_gran"] == "yes":
+                if "wall_gran_type" in rr.logfile.keys():
+                    if rr.logfile["wall_gran_type"] == "1":
+                        self.ybottomwalltype = "rough (d=0.9)"
+                    elif rr.logfile["wall_gran_type"] == "2":
+                        self.ybottomwalltype = "rough (d=1)"
+                    elif rr.logfile["wall_gran_type"] == "3":
+                        self.ybottomwalltype = "rough (d=1.1)"
+                    else:
+                        sys.exit("can not get wall gran type")
+                else:
+                    self.ybottomwalltype = "rough (d=1)"
+            else:
+                self.ybottomwalltype = "smooth"
+        else:
+            self.ybottomwalltype = "smooth"
+
+        self.height = rr.logfile["z_length_create_dp_unit"]
+        self.width = rr.logfile["width_wall_dp_unit"]
+        self.periodlength = rr.logfile["x_period_dp_unit"]
+        self.labelstring_size_walltype = self.ybottomwalltype + "\n" + "L " + self.periodlength + "\n" + "W " + self.width + "\n" + "H " + self.height
+        self.labelstring_size_walltype_one_line = self.ybottomwalltype + ", " + "L " + self.periodlength + ", " + "W " + self.width + ", " + "H " + self.height
+        
 
     def data_in_one_step(self, step):
 
@@ -408,7 +457,7 @@ class chunk(object):
                     )
 
         ax1.quiverkey(Q, 0.2, 0.95, label_scale,
-                    "This arrow present {:.2E} wall velocity in 45 degree".format(label_scale)+ ", time={:.2E}".format(time),
+                    " : {:.2e} wall velocity in 45 degree".format(label_scale)+ ". At {:.2e} s".format(time),
                     labelpos='E', coordinates='figure', angle=45)
         
         return (fig1, ax1)
@@ -459,7 +508,7 @@ class chunk(object):
                     )
 
         ax1.quiverkey(Q, 0.2, 0.95, label_scale,
-                    label = "This arrow present {:.2E} wall velocity in 45 degree".format(label_scale),
+                    label = " : {:.2e} wall velocity in 45 degree".format(label_scale),
                     labelpos='E', coordinates='figure', angle=45)
         return (fig1, ax1)
 
@@ -492,7 +541,7 @@ class chunk(object):
                     )
 
         ax1.quiverkey(Q, 0.2, 0.95, label_scale,
-                    label = "This arrow present solid fraction = {:.2E}".format(label_scale) + ", time={:.2E}".format(time),
+                    label = "equal solid fraction = {:.2e}".format(label_scale) + ". At {:.2e} s".format(time),
                     labelpos='E',
                     coordinates='figure', angle=90)
         return (fig1, ax1)
@@ -505,7 +554,6 @@ class chunk(object):
             fig, ax = self.plotchunk_ave_one_step_v23x23(step, figformat="png", ifpickle=False)
             save_one_plot(fig, ax, foldersave, str(int(step)), figformat="png", ifpickle=False)
             
-
     def save_v13_x23(self, stepsarray, figformat="png", ifpickle=False):
         add_nve_subfolder_in_folder(self.n_ave, dp.f_momentum_mass_field_v13x23_path)
         foldersave = path_nve_subfolder_in_folder(self.n_ave, dp.f_momentum_mass_field_v13x23_path)
@@ -523,21 +571,30 @@ class chunk(object):
 
     ########## plot 1D-2D strain_rate-position ##########
     def plotchunk_strain_rate_i_j_x23(self, step, i, j, figformat="png", ifpickle=False):
-        mass = value_in_a_step_ave(step, "c_m1", self.n_ave, self.lines)        
-        vector_mv = value_in_a_step_ave(step, "v_mv" + map_dim_index_to_coordinate[i], self.n_ave, self.lines)
+        
+        mass = np.resize(
+            value_in_a_step_ave(step, "c_m1", self.n_ave, self.lines),
+            (n_1, n_2),
+            )         
+        vector_mv = np.resize(
+            value_in_a_step_ave(step, "v_mv" + map_dim_index_to_coordinate[i], self.n_ave, self.lines),
+            (n_1, n_2),
+            ) 
+        vector_x2 = np.resize(
+            value_in_a_step_ave(step, xyztoCoor[map_dim_index_to_coordinate[1]], self.n_ave, self.lines),
+            (n_1, n_2),
+            ) 
+        vector_x3 = np.resize(
+            value_in_a_step_ave(step, xyztoCoor[map_dim_index_to_coordinate[2]], self.n_ave, self.lines),
+            (n_1, n_2),
+            ) 
+
         vector_vi = divide_zero(vector_mv, mass)
-        vector_x2 = value_in_a_step_ave(step, xyztoCoor[map_dim_index_to_coordinate[1]], self.n_ave, self.lines)
-        vector_x3 = value_in_a_step_ave(step, xyztoCoor[map_dim_index_to_coordinate[2]], self.n_ave, self.lines)
         
         if j == 1:
             vector_xi = vector_x2
         elif j == 2:
             vector_xi = vector_x3
-
-        vector_vi = np.resize(vector_vi, (n_1, n_2))
-        vector_xi = np.resize(vector_xi, (n_1, n_2))
-        vector_x2 = np.resize(vector_x2, (n_1, n_2))
-        vector_x3 = np.resize(vector_x3, (n_1, n_2))
 
         diff_along_array_dim = position_index_to_array_dim_index[j]
         if diff_along_array_dim == 0:
@@ -551,6 +608,16 @@ class chunk(object):
         
         vector_vi_diff = np.diff(vector_vi,axis=diff_along_array_dim)
         vector_xi_diff = np.diff(vector_xi,axis=diff_along_array_dim)
+
+        len_diff_axis = mass.shape[diff_along_array_dim]
+        A = np.take(mass, np.arange(len_diff_axis-1), axis=diff_along_array_dim)
+        B = np.take(mass, np.arange(1, len_diff_axis), axis=diff_along_array_dim)
+        maskbothnotzero = np.logical_and(
+            (A!=0), 
+            (B!=0),
+            )
+
+        vector_vi_diff = vector_vi_diff*maskbothnotzero
     
         strain_rate = divide_zero(vector_vi_diff,vector_xi_diff)
         strain_rate /= shear_rate_scale
@@ -568,14 +635,13 @@ class chunk(object):
                     )
         time = time_in_a_step_from_start_rotate(step)
         labelstring = (
-            "This arrow present strain_rate_"
+            " : strain_rate_"
             + map_dim_index_to_coordinate[i]
             + map_dim_index_to_coordinate[j]
-            + " = {:.2E}".format(label_scale)
-            + "average shear_rate"
-            + ", time={:.2E}".format(time)
+            + " = {:.2e}".format(label_scale)
+            + ". At {:.2e} s".format(time)
         )
-        
+
         ax1.quiverkey(Q, 0.2, 0.95, label_scale,
                     label = labelstring,
                     labelpos='E',
@@ -626,7 +692,11 @@ class chunk(object):
         middle_point_vector_j /= diameter
 
         time = time_in_a_step_from_start_rotate(step)
-        ax.plot(middle_point_vector_j, strain_rate, label="{:.2E}".format(time))
+        ax.plot(middle_point_vector_j, strain_rate, label="{:.2e}".format(time),
+                marker = ".",
+                linestyle = 'None',
+                markersize=16,
+                )
         
         return (fig, ax)
 
@@ -659,7 +729,11 @@ class chunk(object):
         middle_point_vector_j /= diameter
 
         time = time_in_a_step_from_start_rotate(step)
-        ax.plot(middle_point_vector_j, strain_rate, label="{:.2E}".format(time))
+        ax.plot(middle_point_vector_j, strain_rate, label="{:.2e}".format(time),
+                marker = ".",
+                linestyle = 'None',
+                markersize=16,
+                )
         
         return (fig, ax)
         
@@ -685,7 +759,7 @@ class chunk(object):
                 fig, ax = self.plotchunk_strain_rate_ij_ave_k_ave(step, fig, ax, i, j, k, figformat="png", ifpickle=False)
             
         ax.legend(
-                title = "time from start rotate",
+                title = "Time (s)",
                 bbox_to_anchor=(1.04,1), 
                 loc="upper left"
                 )
@@ -741,7 +815,11 @@ class chunk(object):
 
         vector = vector/diameter
         time = time_in_a_step_from_start_rotate(step)
-        ax.plot(vector, velocity, label="{:.2E}".format(time))
+        ax.plot(vector, velocity, label="{:.2e}".format(time),
+                marker = ".",
+                linestyle = 'None',
+                markersize=16,
+                )
 
         return (fig, ax)
     
@@ -767,12 +845,13 @@ class chunk(object):
                 fig, ax = self.plotchunk_velocity_i_ave_j_xk_ave(step, fig, ax, i, j, k, figformat="png", ifpickle=False)
         
         ax.legend(
-            title = "time from start rotate",
+            title = "Time (s)",
             bbox_to_anchor=(1.04,1),
             loc="upper left",
             )
         ax.set_xlabel(map_dim_index_to_coordinate[k])
-        ax.set_ylabel("velocity_" + map_dim_index_to_coordinate[i] + "_average_" + map_dim_index_to_coordinate[j])
+        ax.set_ylabel("V" + map_dim_index_to_coordinate[i] + " (Vwall)")
+        ax.set_title(self.labelstring_size_walltype_one_line)
         plt.tight_layout()
 
         return (fig, ax)
@@ -816,12 +895,16 @@ class chunk(object):
         eki = np.sum(eki,axis=sum_along_array_dim)
         mass = np.sum(mass,axis=sum_along_array_dim)
         vector = np.sum(vector,axis=sum_along_array_dim)/vector.shape[sum_along_array_dim]
-        ekovermass = divide_zero(eki, mass)
+        ekovermass = 2*divide_zero(eki, mass)
         
         ekovermass /= velocity_scale**2
         vector = vector/diameter
         time = time_in_a_step_from_start_rotate(step)
-        ax.plot(vector, ekovermass, label="{:.2E}".format(time))
+        ax.plot(vector, ekovermass, label="{:.2e}".format(time),
+                marker = ".",
+                linestyle = 'None',
+                markersize=16,
+                )
 
         return (fig, ax)
     
@@ -847,12 +930,13 @@ class chunk(object):
                 fig, ax = self.plotchunk_ekovermass_i_ave_j_xk_ave(step, fig, ax, i, j, k, figformat="png", ifpickle=False)
         
         ax.legend(
-            title = "time from start rotate",
+            title = "Time (s)",
             bbox_to_anchor=(1.04,1),
             loc="upper left",
             )
+        ax.set_title(self.labelstring_size_walltype_one_line)
         ax.set_xlabel(map_dim_index_to_coordinate[k])
-        ax.set_ylabel("ekovermass_" + map_dim_index_to_coordinate[i] + "_average_" + map_dim_index_to_coordinate[j])
+        ax.set_ylabel("<E" + map_dim_index_to_coordinate[i] + ">" + "/" + "<m>")
         plt.tight_layout()
 
         return (fig, ax)
@@ -885,7 +969,10 @@ class chunk(object):
     def plotchunk_ekminusekaveovermass_i_ave_j_ave(self, step, fig, ax, i, j, k, figformat="png", ifpickle=False):
 
         mass = value_in_a_step_ave(step, "c_m1", self.n_ave, self.lines)
-        ekminusekavi = divide_zero(value_in_a_step_ave(step, "v_Ek" + map_dim_index_to_coordinate[i], self.n_ave, self.lines),mass)-value_in_a_step_ave(step, "v_mv" + map_dim_index_to_coordinate[i], self.n_ave, self.lines)**2
+        ekminusekavi = divide_zero(
+            2*value_in_a_step_ave(step, "v_Ek" + map_dim_index_to_coordinate[i],self.n_ave, self.lines) - divide_zero(value_in_a_step_ave(step, "v_mv" + map_dim_index_to_coordinate[i], self.n_ave, self.lines)**2, mass),
+            mass
+            )
         vector = value_in_a_step_ave(step, xyztoCoor[map_dim_index_to_coordinate[k]], self.n_ave, self.lines)
         mass = np.resize(mass, (n_1, n_2))
         ekminusekavi = np.resize(ekminusekavi, (n_1, n_2))
@@ -900,7 +987,11 @@ class chunk(object):
         
         vector = vector/diameter
         time = time_in_a_step_from_start_rotate(step)
-        ax.plot(vector, ekminusekaveovermass, label="{:.2E}".format(time))
+        ax.plot(vector, ekminusekaveovermass, label="{:.2e}".format(time),
+                marker = ".",
+                linestyle = 'None',
+                markersize=16,
+                )
 
         return (fig, ax)
     
@@ -926,12 +1017,13 @@ class chunk(object):
         
 
         ax.legend(
-                title = "time from start rotate",
+                title = "Time (s)",
                 bbox_to_anchor=(1.04,1),
                 loc="upper left",
                 )
+        ax.set_title(self.labelstring_size_walltype_one_line)
         ax.set_xlabel(map_dim_index_to_coordinate[k])
-        ax.set_ylabel("ekminusekaveovermass_" + map_dim_index_to_coordinate[i] + "_average_" + map_dim_index_to_coordinate[j])
+        ax.set_ylabel("<V" + map_dim_index_to_coordinate[i] + "^2>" + " - <V" + map_dim_index_to_coordinate[i] + ">^2")
         plt.tight_layout()
 
         return (fig, ax)
@@ -1098,9 +1190,9 @@ class chunk(object):
                         folder = folder_decrease
                     om.create_directory(folder)
                     if chunk_method == "rz":
-                        labelstring = "r_ " + "{:.2E}".format(x_array[i]) + ", z_ " + "{:.2E}".format(y_array[i])
+                        labelstring = "r_ " + "{:.2e}".format(x_array[i]) + ", z_ " + "{:.2e}".format(y_array[i])
                     elif chunk_method == "yz":
-                        labelstring = "y_ " + "{:.2E}".format(x_array[i]) + ", z_ " + "{:.2E}".format(y_array[i])
+                        labelstring = "y_ " + "{:.2e}".format(x_array[i]) + ", z_ " + "{:.2e}".format(y_array[i])
                     else:
                         sys.exit("chunk_method wrong")
 
@@ -1141,7 +1233,6 @@ class chunk(object):
                 step2 = step_last_fix_change_by_n_ave(self.n_ave, index)
                 sort_final_index = np.searchsorted(steparray, step2, side='right')
                 steparray_index = steparray[:sort_final_index]
-
                 mass = np.append(mass, manysteparray(steparray_index, "c_m1", self.n_ave, self.lines), axis=-1)
                 vector_mv = np.append(vector_mv, manysteparray(steparray_index, "v_mv" + map_dim_index_to_coordinate[i], self.n_ave, self.lines), axis=-1)
                 steparray_new = np.append(steparray_new, steparray_index, axis=-1)
@@ -1176,22 +1267,79 @@ class chunk(object):
         ax = fig.add_subplot(111)
 
         ax.plot(time_array, vector_vi_sum_array, 
-                label="tmp",
-                marker = ".",
-                linestyle = 'None',
-                markersize=10,
+                label=self.labelstring_size_walltype,
                 )
+        plt.xticks(rotation=45)
 
         ax.legend(
-            title="time (s)",
+            title="",
             bbox_to_anchor=(1.04,1),
             loc="upper left",
             )
-        ax.set_xlabel("time (s)")
-        ax.set_ylabel("velocity_" + str(i) + "_ave_" + str(j) + "_fix_" + str(k) + "=" + str(k_index))
-        plt.tight_layout()
+
+        return (fig, ax)########## plot 1D-1D omega i ave j fix k - time index change##########
+    def plotchunk_omega_i_time_ave_j_fix_k_ave(self, steparray, i, j, k, k_index, figformat="png", ifpickle=False, ifmanysimu=True):
+        steparray.astype(int)
+
+        if ifmanysimu:
+            steparray.sort()
+            mass = np.empty([n_line_in_a_step, 0])
+            vector_mv = np.empty([n_line_in_a_step, 0])
+            steparray_new = np.empty(0)
+            
+            for index in range(rr.n_loglist):
+                self.lines = lines_from_one_simu(rc.folder_path_list_initial_to_last[index])
+                step2 = step_last_fix_change_by_n_ave(self.n_ave, index)
+                sort_final_index = np.searchsorted(steparray, step2, side='right')
+                steparray_index = steparray[:sort_final_index]
+
+                mass = np.append(mass, manysteparray(steparray_index, "c_m1", self.n_ave, self.lines), axis=-1)
+                vector_mv = np.append(vector_mv, manysteparray(steparray_index, "c_omega[1]", self.n_ave, self.lines), axis=-1)
+                steparray_new = np.append(steparray_new, steparray_index, axis=-1)
+                steparray = steparray[sort_final_index:]
+
+            steparray = steparray_new
+        else:
+            mass = manysteparray(steparray, "c_m1", self.n_ave, self.lines)
+            vector_mv = manysteparray(steparray_index, "c_omega[1]" + map_dim_index_to_coordinate[i], self.n_ave, self.lines)
+
+        vector_vi_sum_array = np.empty(0)
+        time_array = np.empty(0)
+
+        for nn, step in enumerate(steparray):
+            
+            vector_mv_step = np.resize(vector_mv[:,nn], (n_1, n_2))
+            mass_step = np.resize(mass[:,nn], (n_1, n_2))
+            vector_vi = divide_zero(vector_mv_step, mass_step)
+            fix_along_array_dim = position_index_to_array_dim_index[k]
+            ave_along_array_dim = position_index_to_array_dim_index[j]
+                    
+            count_not_empty = np.sum(if_grid_surround_not_empty(mass_step), axis=ave_along_array_dim)
+            vector_vi_sum = np.take(np.sum(vector_vi,axis=ave_along_array_dim), k_index, axis=fix_along_array_dim)
+
+            time = time_in_a_step_from_start_rotate(step)
+            vector_vi_sum_array= np.append(vector_vi_sum_array, vector_vi_sum)
+            time_array= np.append(time_array, time)
+        
+        vector_vi_sum_array = vector_vi_sum_array/velocity_scale
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+        ax.plot(time_array, vector_vi_sum_array, 
+                label=self.labelstring_size_walltype,
+                )
+        plt.xticks(rotation=45)
+
+        ax.legend(
+            title="",
+            bbox_to_anchor=(1.04,1),
+            loc="upper left",
+            )
 
         return (fig, ax)
+    
+
 
     def save_plotchunk_velocity_i_time_ave_j_fix_k_ave(self, steparray, i, j, k, k_index, figformat="png", ifpickle=False, ifmanysimu=True):
 
@@ -1205,6 +1353,10 @@ class chunk(object):
         foldersave = path_nve_subfolder_in_folder(self.n_ave, folder)
             
         fig, ax = self.plotchunk_velocity_i_time_ave_j_fix_k_ave(steparray, i, j, k, k_index, figformat="png", ifpickle=False, ifmanysimu=True)
+        
+        ax.set_xlabel("time (s)")
+        ax.set_ylabel("V" + map_dim_index_to_coordinate[i] + " (Vwall)" + "_at " + map_dim_index_to_coordinate[k] + "=" + str(k_index))
+        plt.tight_layout()
 
         figurepath_no_extension = foldersave + "combine" + str(int(steparray[0])) + "_to_" + str(int(steparray[-1]))
 
@@ -1214,11 +1366,34 @@ class chunk(object):
             with open(figurepath_no_extension + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
                 pickle.dump(fig, f)
         plt.close('all')
+    
+    def save_plotchunk_omega_i_time_ave_j_fix_k_ave(self, steparray, i, j, k, k_index, figformat="png", ifpickle=False, ifmanysimu=True):
+        f_create = dp.diagram_path + "omega1/"
+        om.create_directory(f_create)
+
+        folder = f_create + "omega_" + 0 + "_ave_" + str(j) + "_fix_" + str(k) + "/"
+        om.create_directory(folder)
+
+        add_nve_subfolder_in_folder(self.n_ave, folder)
         
+        foldersave = path_nve_subfolder_in_folder(self.n_ave, folder)
+            
+        fig, ax = self.plotchunk_omega_i_time_ave_j_fix_k_ave(steparray, i, j, k, k_index, figformat="png", ifpickle=False, ifmanysimu=True)
+        
+        ax.set_xlabel("time (s)")
+        ax.set_ylabel("Omega_x" + " (Vwall)" + "_at " + map_dim_index_to_coordinate[k] + "=" + str(k_index))
+        plt.tight_layout()
+
+        figurepath_no_extension = foldersave + "combine" + str(int(steparray[0])) + "_to_" + str(int(steparray[-1]))
+
+        fig.savefig(figurepath_no_extension + "." + figformat, format=figformat)
+        if ifpickle:
+            # Save figure handle to disk
+            with open(figurepath_no_extension + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
+                pickle.dump(fig, f)
+        plt.close('all')
+
     def save_plotchunk_velocity_i_time_near_wall_ave(self, steparray, i, figformat="png", ifpickle=False, ifmanysimu=True):
-        j=2
-        k=1
-        k_index=0
 
         om.create_directory(dp.f_velocity_i_time_ave_j_fix_k_ave_path)
 
@@ -1229,7 +1404,35 @@ class chunk(object):
         
         foldersave = path_nve_subfolder_in_folder(self.n_ave, folder)
             
-        fig, ax = self.plotchunk_velocity_i_time_ave_j_fix_k_ave(steparray, i, j, k, k_index, figformat="png", ifpickle=False, ifmanysimu=True)
+        fig, ax = self.plotchunk_velocity_i_time_ave_j_fix_k_ave(steparray, i, 2, 1, 0, figformat="png", ifpickle=False, ifmanysimu=True)
+
+        ax.set_xlabel("time (s)")
+        ax.set_ylabel("V" + map_dim_index_to_coordinate[i] + " (V_wall)")
+        plt.tight_layout()
+
+        figurepath_no_extension = foldersave + "combine" + str(int(steparray[0])) + "_to_" + str(int(steparray[-1]))
+
+        fig.savefig(figurepath_no_extension + "." + figformat, format=figformat)
+        if ifpickle:
+            # Save figure handle to disk
+            with open(figurepath_no_extension + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
+                pickle.dump(fig, f)
+        plt.close('all')
+
+    def save_plotchunk_omega_i_time_near_wall_ave(self, steparray, i, figformat="png", ifpickle=False, ifmanysimu=True):
+        om.create_directory(dp.diagram_path + "omega_0_near_wall/")
+        folder = dp.diagram_path + "omega_0_near_wall/" + "V_" + str(i) + "_near_wall" + "/"
+        om.create_directory(folder)
+
+        add_nve_subfolder_in_folder(self.n_ave, folder)
+        
+        foldersave = path_nve_subfolder_in_folder(self.n_ave, folder)
+            
+        fig, ax = self.plotchunk_omega_i_time_ave_j_fix_k_ave(steparray, i, 2, 1, 0, figformat="png", ifpickle=False, ifmanysimu=True)
+
+        ax.set_xlabel("time (s)")
+        ax.set_ylabel("Omega_x" + " (V_wall)")
+        plt.tight_layout()
 
         figurepath_no_extension = foldersave + "combine" + str(int(steparray[0])) + "_to_" + str(int(steparray[-1]))
 
@@ -1276,7 +1479,7 @@ class chunk(object):
 
         time = time_in_a_step_from_start_rotate(step)
 
-        ax.plot(vector, fraction_ave, label="{:.2E}".format(time))
+        ax.plot(vector, fraction_ave, label="{:.2e}".format(time))
 
         return (fig, ax)
 
@@ -1307,7 +1510,8 @@ class chunk(object):
             loc="upper left",
             )
         ax.set_xlabel(map_dim_index_to_coordinate[k])
-        ax.set_ylabel("fraction_" + map_dim_index_to_coordinate[i] + "_average_" + map_dim_index_to_coordinate[j])
+        ax.set_ylabel("Volumn Fraction")
+        ax.set_title(self.labelstring_size_walltype_one_line)
         plt.tight_layout()
 
         return (fig, ax)
@@ -1364,7 +1568,11 @@ class chunk(object):
         velocity /= velocity_scale
         vector = vector/diameter
         time = time_in_a_step_from_start_rotate(step)
-        ax.plot(vector, velocity, label="{:.2E}".format(time))
+        ax.plot(vector, velocity, label="{:.2e}".format(time),
+                marker = ".",
+                linestyle = 'None',
+                markersize=16,
+                )
 
         return (fig, ax)
     
@@ -1390,12 +1598,13 @@ class chunk(object):
                 fig, ax = self.plotchunk_velocity_i_ave_j_xk_ave_no_top(step, fig, ax, i, j, k, figformat="png", ifpickle=False)
         
         ax.legend(
-            title = "time from start rotate",
+            title = "Time (s)",
             bbox_to_anchor=(1.04,1),
             loc="upper left",
             )
         ax.set_xlabel(map_dim_index_to_coordinate[k] + " (d)")
-        ax.set_ylabel("velocity_" + map_dim_index_to_coordinate[i] + "_average_" + map_dim_index_to_coordinate[j] + " (V_wall)")
+        ax.set_ylabel("V" + map_dim_index_to_coordinate[i] + " (V_wall)")
+        ax.set_title(self.labelstring_size_walltype_one_line)
         plt.tight_layout()
 
         return (fig, ax)
@@ -1452,7 +1661,7 @@ class chunk(object):
         ekiovermass /= velocity_scale**2
         vector = vector/diameter
         time = time_in_a_step_from_start_rotate(step)
-        ax.plot(vector, ekiovermass, label="{:.2E}".format(time))
+        ax.plot(vector, ekiovermass, label="{:.2e}".format(time))
 
         return (fig, ax)
     
@@ -1478,7 +1687,7 @@ class chunk(object):
                 fig, ax = self.plotchunk_ek_i_ave_j_xk_ave_no_top(step, fig, ax, i, j, k, figformat="png", ifpickle=False)
         
         ax.legend(
-            title = "time from start rotate",
+            title = "Time (s)",
             bbox_to_anchor=(1.04,1),
             loc="upper left",
             )
@@ -1577,7 +1786,7 @@ class chunk_include_pre(object):
                 chunkobject.plotchunk_strain_rate_ij_ave_k_ave(step, fig, ax, i, j, k, figformat="png", ifpickle=False)
             
         ax.legend(
-                title = "time from start rotate",
+                title = "Time (s)",
                 bbox_to_anchor=(1.04,1), 
                 loc="upper left"
                 )
@@ -1619,14 +1828,15 @@ class chunk_include_pre(object):
             chunkobject = chunk(self.n_ave, lmp_path)
             for step in stepsarray_current:
                 chunkobject.plotchunk_velocity_i_ave_j_xk_ave(step, fig, ax, i, j, k, figformat="png", ifpickle=False)
-                
+  
         ax.legend(
-            title = "time from start rotate",
+            title = "Time (s)",
             bbox_to_anchor=(1.04,1),
             loc="upper left",
             )
         ax.set_xlabel(map_dim_index_to_coordinate[k])
-        ax.set_ylabel("velocity_" + map_dim_index_to_coordinate[i] + "_average_" + map_dim_index_to_coordinate[j])
+        ax.set_ylabel("V" + map_dim_index_to_coordinate[i] + " (Vwall)")
+        ax.set_title(chunkobject.labelstring_size_walltype_one_line)
         plt.tight_layout()
 
         return (fig, ax)
@@ -1664,12 +1874,13 @@ class chunk_include_pre(object):
                 chunkobject.plotchunk_ekovermass_i_ave_j_xk_ave(step, fig, ax, i, j, k, figformat="png", ifpickle=False)
                 
         ax.legend(
-            title = "time from start rotate",
+            title = "Time (s)",
             bbox_to_anchor=(1.04,1),
             loc="upper left",
             )
         ax.set_xlabel(map_dim_index_to_coordinate[k])
-        ax.set_ylabel("ekovermass_" + map_dim_index_to_coordinate[i] + "_average_" + map_dim_index_to_coordinate[j])
+        ax.set_ylabel("<E" + map_dim_index_to_coordinate[i] + ">" + "/" + "<m>")
+        ax.set_title(chunkobject.labelstring_size_walltype_one_line)
         plt.tight_layout()
 
         return (fig, ax)
@@ -1708,12 +1919,13 @@ class chunk_include_pre(object):
                 chunkobject.plotchunk_ekminusekaveovermass_i_ave_j_ave(step, fig, ax, i, j, k, figformat="png", ifpickle=False)
                 
         ax.legend(
-                title = "time from start rotate",
+                title = "Time (s)",
                 bbox_to_anchor=(1.04,1),
                 loc="upper left",
                 )
+        ax.set_title(chunkobject.labelstring_size_walltype_one_line)
         ax.set_xlabel(map_dim_index_to_coordinate[k])
-        ax.set_ylabel("ekminusekaveovermass_" + map_dim_index_to_coordinate[i] + "_average_" + map_dim_index_to_coordinate[j])
+        ax.set_ylabel("<V" + map_dim_index_to_coordinate[i] + "^2>" + " - <V" + map_dim_index_to_coordinate[i] + ">^2")
         plt.tight_layout()
 
         return (fig, ax)
@@ -1754,7 +1966,8 @@ class chunk_include_pre(object):
             loc="upper left",
             )
         ax.set_xlabel(map_dim_index_to_coordinate[k])
-        ax.set_ylabel("fraction_" + map_dim_index_to_coordinate[i] + "_average_" + map_dim_index_to_coordinate[j])
+        ax.set_ylabel("Volumn Fraction")
+        ax.set_title(chunkobject.labelstring_size_walltype_one_line)
         plt.tight_layout()
 
         return (fig, ax)
@@ -1836,7 +2049,7 @@ def plotchunk_ave_one_step_v23x23(step, n_ave, lines, figformat="png", ifpickle=
                 )
     time = time_in_a_step_from_start_rotate(step)
     ax1.quiverkey(Q, 0.2, 0.95, label_scale,
-                "This arrow present {:.2E} wall velocity in 45 degree".format(label_scale) + ", time={:.2E}".format(time),
+                " : {:.2e} wall velocity in 45 degree".format(label_scale) + ". At {:.2e} s".format(time),
                 labelpos='E', coordinates='figure', angle=45)
     return (fig1, ax1)    
 
@@ -1886,7 +2099,7 @@ def plotchunk_ave_one_step_v13x23(step, n_ave, lines,figformat="png", ifpickle=F
                 )
     time = time_in_a_step_from_start_rotate(step)
     ax1.quiverkey(Q, 0.2, 0.95, label_scale,
-                label = "This arrow present {:.2E} wall velocity in 45 degree".format(label_scale) + ", time={:.2E}".format(time),
+                label = " : {:.2e} wall velocity in 45 degree".format(label_scale) + ". At {:.2e} s".format(time),
                 labelpos='E', coordinates='figure', angle=45)
     return (fig1, ax1)
 
@@ -1918,7 +2131,7 @@ def plotchunk_ave_one_step_volumnfraction_x23(step, n_ave, lines, figformat="png
                 )
     time = time_in_a_step_from_start_rotate(step)
     ax1.quiverkey(Q, 0.2, 0.95, label_scale,
-                label = "This arrow present solid fraction = {:.2E}".format(label_scale) + ", time={:.2E}".format(time),
+                label = "equal solid fraction = {:.2e}".format(label_scale) + ". At {:.2e} s".format(time),
                 labelpos='E',
                 coordinates='figure', angle=90)
     return (fig1, ax1)
@@ -2011,12 +2224,11 @@ def plotchunk_strain_rate_i_j_x23(step, n_ave, lines, i, j, figformat="png", ifp
     time = time_in_a_step_from_start_rotate(step)
 
     labelstring = (
-        "This arrow present strain_rate_"
+        " : strain_rate_"
         + map_dim_index_to_coordinate[i]
         + map_dim_index_to_coordinate[j]
-        + " = {:.2E}".format(label_scale)
-        + "average shear_rate"
-        + ", time={:.2E}".format(time)
+        + " = {:.2e}".format(label_scale)
+        + ". At {:.2e} s".format(time)
     )
     
     ax1.quiverkey(Q, 0.2, 0.95, label_scale,
@@ -2077,7 +2289,7 @@ def plotchunk_strain_rate_ij_ave_k_ave(step, fig, ax, n_ave, lines, i, j, k, fig
     middle_point_vector_j /= diameter
 
     time = time_in_a_step_from_start_rotate(step)
-    ax.plot(middle_point_vector_j, strain_rate, label="{:.2E}".format(time))
+    ax.plot(middle_point_vector_j, strain_rate, label="{:.2e}".format(time))
     
     return (fig, ax)
 
@@ -2110,7 +2322,7 @@ def plotchunk_strain_rate_ij_fix_k_ave(step, fig, ax, n_ave, lines, i, j, k, k_i
     middle_point_vector_j /= diameter
 
     time = time_in_a_step_from_start_rotate(step)
-    ax.plot(middle_point_vector_j, strain_rate, label="{:.2E}".format(time))
+    ax.plot(middle_point_vector_j, strain_rate, label="{:.2e}".format(time))
     
     return (fig, ax)
     
@@ -2136,7 +2348,7 @@ def plotchunk_strain_rate_ij_ave_k_ave_manytime(stepsarray, n_ave, lines, i, j, 
             fig, ax = plotchunk_strain_rate_ij_ave_k_ave(step, fig, ax, n_ave, lines, i, j, k, figformat="png", ifpickle=False)
         
     ax.legend(
-              title = "time from start rotate",
+              title = "Time (s)",
               bbox_to_anchor=(1.04,1), 
               loc="upper left"
               )
@@ -2201,7 +2413,7 @@ def plotchunk_velocity_i_ave_j_xk_ave(step, fig, ax, n_ave, lines, i, j, k, figf
 
     vector = vector/diameter
     time = time_in_a_step_from_start_rotate(step)
-    ax.plot(vector, velocity, label="{:.2E}".format(time))
+    ax.plot(vector, velocity, label="{:.2e}".format(time))
 
     return (fig, ax)
 ########## plot 1D-1D velocity-position index change##########
@@ -2226,12 +2438,12 @@ def plotchunk_velocity_i_ave_j_xk_ave_manytime(stepsarray, n_ave, lines, i, j, k
             fig, ax = plotchunk_velocity_i_ave_j_xk_ave(step, fig, ax, n_ave, lines, i, j, k, figformat="png", ifpickle=False)
     
     ax.legend(
-        title = "time from start rotate",
+        title = "Time (s)",
         bbox_to_anchor=(1.04,1),
         loc="upper left",
         )
     ax.set_xlabel(map_dim_index_to_coordinate[k])
-    ax.set_ylabel("velocity_" + map_dim_index_to_coordinate[i] + "_average_" + map_dim_index_to_coordinate[j])
+    ax.set_ylabel("V" + map_dim_index_to_coordinate[i] + " (Vwall)")
     plt.tight_layout()
 
     return (fig, ax)
@@ -2287,12 +2499,12 @@ def plotchunk_ekovermass_i_ave_j_xk_ave(step, fig, ax, n_ave, lines, i, j, k, fi
     eki = np.sum(eki,axis=sum_along_array_dim)
     mass = np.sum(mass,axis=sum_along_array_dim)
     vector = np.sum(vector,axis=sum_along_array_dim)/vector.shape[sum_along_array_dim]
-    ekovermass = divide_zero(eki, mass)
+    ekovermass = 2*divide_zero(eki, mass)
     
     ekovermass /= velocity_scale**2
     vector = vector/diameter
     time = time_in_a_step_from_start_rotate(step)
-    ax.plot(vector, ekovermass, label="{:.2E}".format(time))
+    ax.plot(vector, ekovermass, label="{:.2e}".format(time))
 
     return (fig, ax)
 ########## plot 1D-1D ek-position index change##########
@@ -2317,12 +2529,12 @@ def plotchunk_ekovermass_i_ave_j_xk_ave_manytime(stepsarray, n_ave, lines, i, j,
             fig, ax = plotchunk_ekovermass_i_ave_j_xk_ave(step, fig, ax, n_ave, lines, i, j, k, figformat="png", ifpickle=False)
     
     ax.legend(
-        title = "time from start rotate",
+        title = "Time (s)",
         bbox_to_anchor=(1.04,1),
         loc="upper left",
         )
     ax.set_xlabel(map_dim_index_to_coordinate[k])
-    ax.set_ylabel("ekovermass_" + map_dim_index_to_coordinate[i] + "_average_" + map_dim_index_to_coordinate[j])
+    ax.set_ylabel("<E" + map_dim_index_to_coordinate[i] + ">" + "/" + "<m>")
     plt.tight_layout()
 
     return (fig, ax)
@@ -2368,7 +2580,11 @@ def save_plotchunk_ekovermass_i_ave_j_xk_ave(stepsarray, n_ave, lines, i, j, k, 
 def plotchunk_ekminusekaveovermass_i_ave_j_ave(step, fig, ax, n_ave, lines, i, j, k, figformat="png", ifpickle=False):
 
     mass = value_in_a_step_ave(step, "c_m1", n_ave, lines)
-    ekminusekavi = divide_zero(value_in_a_step_ave(step, "v_Ek" + map_dim_index_to_coordinate[i], n_ave, lines),mass)-value_in_a_step_ave(step, "v_mv" + map_dim_index_to_coordinate[i], n_ave, lines)**2
+    ekminusekavi = divide_zero(
+            2*value_in_a_step_ave(step, "v_Ek" + map_dim_index_to_coordinate[i], n_ave, lines) - divide_zero(value_in_a_step_ave(step, "v_mv" + map_dim_index_to_coordinate[i], n_ave, lines)**2, mass),
+            mass
+            )
+            
     vector = value_in_a_step_ave(step, xyztoCoor[map_dim_index_to_coordinate[k]], n_ave, lines)
     mass = np.resize(mass, (n_1, n_2))
     ekminusekavi = np.resize(ekminusekavi, (n_1, n_2))
@@ -2384,7 +2600,7 @@ def plotchunk_ekminusekaveovermass_i_ave_j_ave(step, fig, ax, n_ave, lines, i, j
     ekminusekaveovermass /= velocity_scale**2
     vector = vector/diameter
     time = time_in_a_step_from_start_rotate(step)
-    ax.plot(vector, ekminusekaveovermass, label="{:.2E}".format(time))
+    ax.plot(vector, ekminusekaveovermass, label="{:.2e}".format(time))
 
     return (fig, ax)
 ##########  plot 1D-1D ekdiff-position index change##########    
@@ -2409,12 +2625,12 @@ def plotchunk_ekminusekaveovermass_i_ave_j_ave_manytime(stepsarray, n_ave, lines
     
 
     ax.legend(
-              title = "time from start rotate",
+              title = "Time (s)",
               bbox_to_anchor=(1.04,1),
               loc="upper left",
               )
     ax.set_xlabel(map_dim_index_to_coordinate[k])
-    ax.set_ylabel("ekminusekaveovermass_" + map_dim_index_to_coordinate[i] + "_average_" + map_dim_index_to_coordinate[j])
+    ax.set_ylabel("<V" + map_dim_index_to_coordinate[i] + "^2>" + " - <V" + map_dim_index_to_coordinate[i] + ">^2")
     plt.tight_layout()
 
     return (fig, ax)
@@ -2596,9 +2812,9 @@ def check_volumnfraction_x23_increase_decrease_plot(steparray, n_ave, lines, fig
                     folder = folder_decrease
                 om.create_directory(folder)
                 if chunk_method == "rz":
-                    labelstring = "r_ " + "{:.2E}".format(x_array[i]) + ", z_ " + "{:.2E}".format(y_array[i])
+                    labelstring = "r_ " + "{:.2e}".format(x_array[i]) + ", z_ " + "{:.2e}".format(y_array[i])
                 elif chunk_method == "yz":
-                    labelstring = "y_ " + "{:.2E}".format(x_array[i]) + ", z_ " + "{:.2E}".format(y_array[i])
+                    labelstring = "y_ " + "{:.2e}".format(x_array[i]) + ", z_ " + "{:.2e}".format(y_array[i])
                 else:
                     sys.exit("chunk_method wrong")
 
@@ -2676,10 +2892,7 @@ def plotchunk_velocity_i_time_ave_j_fix_k_ave(steparray, n_ave, lines, i, j, k, 
     ax = fig.add_subplot(111)
 
     ax.plot(time_array, vector_vi_sum_array, 
-            label="tmp",
-            marker = ".",
-            linestyle = 'None',
-            markersize=10,
+            label=labelstring_size_walltype,
             )
 
     ax.legend(
@@ -2688,7 +2901,7 @@ def plotchunk_velocity_i_time_ave_j_fix_k_ave(steparray, n_ave, lines, i, j, k, 
         loc="upper left",
         )
     ax.set_xlabel("time (s)")
-    ax.set_ylabel("velocity_" + str(i) + "_ave_" + str(j) + "_fix_" + str(k) + "=" + str(k_index))
+    ax.set_ylabel("V" + map_dim_index_to_coordinate[i] + " (Vwall)" + " at " + map_dim_index_to_coordinate[k] + "=" + str(k_index))
     plt.tight_layout()
 
     return (fig, ax)
@@ -2778,7 +2991,7 @@ def plotchunk_fraction_ave_j_ave(step, fig, ax, n_ave, lines, j, k, figformat="p
 
     time = time_in_a_step_from_start_rotate(step)
 
-    ax.plot(vector, fraction_ave, label="{:.2E}".format(time))
+    ax.plot(vector, fraction_ave, label="{:.2e}".format(time))
 
     return (fig, ax)
 
@@ -2809,7 +3022,7 @@ def plotchunk_fraction_ave_j_ave_manytime(stepsarray, n_ave, lines, j, k, figfor
         loc="upper left",
         )
     ax.set_xlabel(map_dim_index_to_coordinate[k])
-    ax.set_ylabel("fraction_" + map_dim_index_to_coordinate[i] + "_average_" + map_dim_index_to_coordinate[j])
+    ax.set_ylabel("Volumn Fraction")
     plt.tight_layout()
 
     return (fig, ax)
@@ -2987,7 +3200,7 @@ def plotchunk_velocity_i_ave_j_xk_ave_no_top(step, fig, ax, n_ave, lines, i, j, 
     velocity /= velocity_scale
     vector = vector/diameter
     time = time_in_a_step_from_start_rotate(step)
-    ax.plot(vector, velocity, label="{:.2E}".format(time))
+    ax.plot(vector, velocity, label="{:.2e}".format(time))
 
     return (fig, ax)
 ########## plot 1D-1D velocity(no top)-position index change##########
@@ -3012,12 +3225,12 @@ def plotchunk_velocity_i_ave_j_xk_ave_no_top_manytime(stepsarray, n_ave, lines, 
             fig, ax = plotchunk_velocity_i_ave_j_xk_ave_no_top(step, fig, ax, n_ave, lines, i, j, k, figformat="png", ifpickle=False)
     
     ax.legend(
-        title = "time from start rotate",
+        title = "Time (s)",
         bbox_to_anchor=(1.04,1),
         loc="upper left",
         )
     ax.set_xlabel(map_dim_index_to_coordinate[k] + " (d)")
-    ax.set_ylabel("velocity_" + map_dim_index_to_coordinate[i] + "_average_" + map_dim_index_to_coordinate[j] + " (V_wall)")
+    ax.set_ylabel("V" + map_dim_index_to_coordinate[i] + " (V_wall)")
     plt.tight_layout()
 
     return (fig, ax)
@@ -3088,7 +3301,7 @@ def plotchunk_ek_i_ave_j_xk_ave_no_top(step, fig, ax, n_ave, lines, i, j, k, fig
     ekiovermass /= velocity_scale**2
     vector = vector/diameter
     time = time_in_a_step_from_start_rotate(step)
-    ax.plot(vector, ekiovermass, label="{:.2E}".format(time))
+    ax.plot(vector, ekiovermass, label="{:.2e}".format(time))
 
     return (fig, ax)
 ########## plot 1D-1D ek(no top)-position index change##########
@@ -3113,7 +3326,7 @@ def plotchunk_ek_i_ave_j_xk_ave_no_top_manytime(stepsarray, n_ave, lines, i, j, 
             fig, ax = plotchunk_ek_i_ave_j_xk_ave_no_top(step, fig, ax, n_ave, lines, i, j, k, figformat="png", ifpickle=False)
     
     ax.legend(
-        title = "time from start rotate",
+        title = "Time (s)",
         bbox_to_anchor=(1.04,1),
         loc="upper left",
         )
