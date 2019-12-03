@@ -170,7 +170,7 @@ print "gravitational_acceleration ${g}" screen no append output/setting/attribut
 
 
 # particle diameter
-variable	dp 			equal 8.3e-4		#particle diameter
+variable	dp 			index 0.00083		#particle diameter
 print "diameter ${dp}" screen no append output/setting/attribute.lammps
 # define nbd radius
 variable 	cutoff_dumpnb equal (1.11*v_dp)

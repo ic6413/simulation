@@ -23,6 +23,8 @@ variable	runstep_loop		index 0
 variable	ts_scale		index 1
 # reset dt
 variable	ifresetdt		index no
+# particle diameter
+variable	dp 			index 0.00083
 # region height width
 variable	z_length_create_dp_unit	index 31
 variable	width_wall_dp_unit		index 17
