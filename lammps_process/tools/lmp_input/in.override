@@ -1,3 +1,8 @@
+# get simulation path
+variable    home_path     getenv HOME
+variable    lmp_input_dir     string "${home_path}/simulation/lammps_process/tools/lmp_input"
+variable    contact_model_dir     string "${lmp_input_dir}/contact_model"
+variable    contact_model_file_name     string in.contact_model_glass_bead
 # override variables
 variable    ifsoft   index no
 variable    iftestinthisfolder  index no
@@ -23,20 +28,16 @@ variable	runstep_loop		index 0
 variable	ts_scale		index 1
 # reset dt
 variable	ifresetdt		index no
-# particle diameter
-variable	dp 			index 0.00083
+
 # region height width
 variable	z_length_create_dp_unit	index 31
 variable	width_wall_dp_unit		index 17
 variable	x_period_dp_unit		index 36	#only for block geometry
 variable	ri_wall_dp_unit		index 36	#inner radius only for cylinder geometry
-# contact model
-variable	contact_change 		index no
-variable  	eliminate_history   	index no 
-variable	contact_model		index hooke_his #hooke hooke_his hertz hertz_his
-variable	kn_scale		index 1000000
-variable	gamma_n_scale		index 317
-variable	xmu			index 0.5
+
+# include diameter, density, contact model parameter (kn kt gammma_n gamma_t xmu)
+include     ${contact_model_dir}/${contact_model_file_name}
+
 # air
 variable	ifairviscous		index no 
 variable	gamma_air		index 0
@@ -92,9 +93,6 @@ variable  	freq_test3      	index 0
 # freq check_condition_exit
 variable  	freq_check_condition_exit      	index -1
 variable    ke_per_atom_check index 1.0e-17
-# get simulation path
-variable    home_path     getenv HOME
-variable    lmp_input_dir     string "${home_path}/simulation/lammps_process/tools/lmp_input"
 
 if "${iftestinthisfolder} == yes" then "jump SELF end_not_testinthisfolder1"
 

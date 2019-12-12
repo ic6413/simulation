@@ -170,7 +170,7 @@ variable 	cutoff_dumpnb equal (1.11*v_dp)
 # calculate radius
 variable	rp		equal $(v_dp/2)		#particle radius
 # particle density
-variable	den 			equal 2500
+variable	den 			index 2500
 print "density ${den}" screen no append output/setting/attribute.lammps
 # calculate mass
 variable	mp 		equal $(4/3*PI*v_rp^3*v_den)

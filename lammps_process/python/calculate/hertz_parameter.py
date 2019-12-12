@@ -7,6 +7,11 @@ import numpy as np
 def k_n(young_modules, poisson_ratio):
     return 2*young_modules/3/(1-poisson_ratio**2)
 
+def k_0(density, d):
+    r = d/2
+    m = 4/3*np.pi*r**3*density
+    return m*9.8/d
+
 def gamma_n(young_modules, poisson_ratio, meff, shear_visocus, bulk_viscous):
     A = (
         1/3
@@ -45,3 +50,36 @@ def max_velocity_allowed(young_modules, poisson_ratio, meff, min_number_step_in_
                             )**(-5)
     return max_velocity_allowed
 
+def print_all_contact_parameter(young_modules, poisson_ratio, diameter=10**-4,density=2500, shear_visocus=10**-15, bulk_viscous=10**-15):
+    r = diameter/2
+    density = 2500
+    m = 4/3*np.pi*r**3*density
+    meff = m/2
+
+    print(
+        "kn "
+        + str(
+            k_n(young_modules, poisson_ratio)
+            )
+    )
+    
+    print(
+        "gamma_n "
+        + str(
+            gamma_n(young_modules, poisson_ratio, meff, shear_visocus, bulk_viscous)
+            )
+    )
+
+    print(
+        "kt "
+        + str(
+            k_t(young_modules, poisson_ratio)
+            )
+    )
+
+    print(
+        "gamma_t "
+        + str(
+            gamma_t(young_modules, poisson_ratio, meff, shear_visocus, bulk_viscous)
+        )
+    )
