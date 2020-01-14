@@ -4,6 +4,7 @@
 import numpy as np
 
 ####
+
 def k_n(young_modules, poisson_ratio):
     return 2*young_modules/3/(1-poisson_ratio**2)
 
@@ -50,7 +51,13 @@ def max_velocity_allowed(young_modules, poisson_ratio, meff, min_number_step_in_
                             )**(-5)
     return max_velocity_allowed
 
-def print_all_contact_parameter(young_modules, poisson_ratio, diameter=10**-4,density=2500, shear_visocus=10**-15, bulk_viscous=10**-15):
+def estitution_coefficients(young_modules, poisson_ratio, meff, ):
+
+
+def print_all_contact_parameter(young_modules=8.36*10**10, poisson_ratio=0.22,
+                                diameter=10**-4,density=2500,
+                                shear_visocus=10**-15, bulk_viscous=0,
+                                initial_v_n=0.001):
     r = diameter/2
     density = 2500
     m = 4/3*np.pi*r**3*density
@@ -58,28 +65,30 @@ def print_all_contact_parameter(young_modules, poisson_ratio, diameter=10**-4,de
 
     print(
         "kn "
-        + str(
-            k_n(young_modules, poisson_ratio)
-            )
+        + '{:.3E}'.format(k_n(young_modules, poisson_ratio))
     )
     
     print(
         "gamma_n "
-        + str(
-            gamma_n(young_modules, poisson_ratio, meff, shear_visocus, bulk_viscous)
-            )
+        + '{:.3E}'.format(gamma_n(young_modules, poisson_ratio, meff, shear_visocus, bulk_viscous))
     )
 
     print(
         "kt "
-        + str(
-            k_t(young_modules, poisson_ratio)
-            )
+        + '{:.3E}'.format(k_t(young_modules, poisson_ratio))
     )
 
     print(
         "gamma_t "
-        + str(
-            gamma_t(young_modules, poisson_ratio, meff, shear_visocus, bulk_viscous)
-        )
+        + '{:.3E}'.format(gamma_t(young_modules, poisson_ratio, meff, shear_visocus, bulk_viscous))
+    )
+
+    print(
+        "collision_time "
+        + '{:.3E}'.format(collision_time(young_modules, poisson_ratio, meff, initial_v_n))
+    )
+
+    print(
+        "m "
+        + '{:.3E}'.format(m)
     )

@@ -54,6 +54,24 @@ print "startstep ${rst_from}" screen no append output/setting/attribute.lammps
 # step start from. weather rotate start.
 variable  contact_change index no
 variable  contact_model index hooke_his #hooke hooke_his hertz hertz_his
+if "${contact_model} == hooke_his" then &
+  "variable  contact_model_string string gran/hooke/history" &
+elif "${contact_model} == hooke" &
+ "variable  contact_model_string string gran/hooke" &
+elif "${contact_model} == hertz_his" &
+ "variable  contact_model_string string gran/hertz/history" &
+else &
+ "quit 1"
+
+if "${contact_model} == hooke_his" then &
+  "variable  contact_model_wall_string string hooke/history" &
+elif "${contact_model} == hooke" &
+ "variable  contact_model_wall_string string hooke" &
+elif "${contact_model} == hertz_his" &
+ "variable  contact_model_wall_string string hertz/history" &
+else &
+ "quit 1"
+
 # timestep
 variable	ts_scale		index 1
 variable  ts          equal $(v_ts_scale*4e-7)
@@ -362,12 +380,8 @@ region		simulation_box block ${xlo_box} ${xhi_box} ${ylo_box} ${yhi_box} ${zlo_b
 create_box	${n_type} simulation_box
 # contact force style, no restart
 
-if "${contact_model} == hooke_his" then &
-  "pair_style	gran/hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent}" &
-elif "${contact_model} == hooke" &
- "pair_style	gran/hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent}" &
-else &
- "quit 1"
+pair_style	${contact_model_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent}
+
 pair_coeff	* *
 if		"${freq_ave_wall} != 0" then &
   "fix	sum_pairforce	all store/force"
@@ -573,7 +587,7 @@ if "${contact_change} == no || ${rst_from} == 0" &
 if "${contact_model} != hooke" &
  then "jump SELF hooke_end4"
 pair_style none
-pair_style	gran/hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent}
+pair_style	${contact_model_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent}
 pair_coeff	* *
 
 label hooke_end4
@@ -585,7 +599,7 @@ if "${eliminate_history} == no || ${rst_from} == 0" then &
 pair_style zero
 pair_coeff	* *
 run 1
-pair_style	gran/hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent}
+pair_style	${contact_model_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent}
 pair_coeff	* *
 label   reset_pair_history_end
 label hooke_his_end4
@@ -607,29 +621,18 @@ if		"${rst_from} != 0 && ${freq_ave_wall} != 0" then &
 # define inner wall, if pour then define inner wall after pouring
 if "${ifpour} == yes && ${rst_from} == 0" then "jump SELF end_pour6_innerwall"
 if "${freq_ave_wall} != 0" then "fix	storeforce_y_bottom_before	all store/force"
-if "${contact_model} != hooke_his" &
- then "jump SELF hooke_his_end1"
 
 if "${ifrotate} == yes" then &
-  "fix	y_bottom		all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane ${ylo_wall} NULL shear x ${in_velocity}" &
+  "fix	y_bottom		all wall/gran ${contact_model_wall_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane ${ylo_wall} NULL shear x ${in_velocity}" &
 else &
-  "fix	y_bottom		all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane ${ylo_wall} NULL"
-label hooke_his_end1
+  "fix	y_bottom		all wall/gran ${contact_model_wall_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane ${ylo_wall} NULL"
 
-if "${contact_model} != hooke" &
- then "jump SELF hooke_end1"
-if "${ifrotate} == yes" then &
-  "fix	y_bottom		all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane ${ylo_wall} NULL shear x ${in_velocity}" &
-else &
-  "fix	y_bottom		all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane ${ylo_wall} NULL"
-label hooke_end1
 if "${freq_ave_wall} != 0" then "fix	storeforce_y_bottom_after	all store/force"
 label	end_pour6_innerwall
 
-if "${contact_model} != hooke_his" &
- then "jump SELF hooke_his_end2"
+
 if "${freq_ave_wall} != 0" then "fix	storeforce_y_top_before	all store/force"
-fix	y_top 	all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane NULL ${yhi_wall}
+fix	y_top 	all wall/gran ${contact_model_wall_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane NULL ${yhi_wall}
 if "${freq_ave_wall} != 0" then "fix	storeforce_y_top_after	all store/force"
 if "${freq_ave_wall} != 0" then "fix	storeforce_zbottom_before	all store/force"
 
@@ -638,48 +641,18 @@ then "jump SELF z_bottom_shear_begin1" &
 else &
 "jump SELF z_bottom_not_shear_begin1"
 label z_bottom_shear_begin1
-fix	zplane_bottom 	all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane ${zlo_wall} NULL shear x ${in_velocity}
+fix	zplane_bottom 	all wall/gran ${contact_model_wall_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane ${zlo_wall} NULL shear x ${in_velocity}
 jump SELF z_bottom_end1
 label z_bottom_not_shear_begin1
-fix	zplane_bottom 	all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane ${zlo_wall} NULL
+fix	zplane_bottom 	all wall/gran ${contact_model_wall_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane ${zlo_wall} NULL
 jump SELF z_bottom_end1
 label z_bottom_end1
-
 if "${freq_ave_wall} != 0" then "fix	storeforce_zbottom_after	all store/force"
 if "${ifztop} != yes" then "jump SELF ztop_end1"
 if "${freq_ave_wall} != 0" then "fix	storeforce_ztop_before	all store/force"
-fix	zplane_top 	all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane NULL ${zhi_wall}
+fix	zplane_top 	all wall/gran ${contact_model_wall_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane NULL ${zhi_wall}
 if "${freq_ave_wall} != 0" then "fix	storeforce_ztop_after	all store/force"
 label ztop_end1
-label hooke_his_end2
-
-if "${contact_model} != hooke" &
- then "jump SELF hooke_end2"
-if "${freq_ave_wall} != 0" then "fix	storeforce_y_top_before	all store/force"
-fix	y_top 	all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane NULL ${yhi_wall}
-if "${freq_ave_wall} != 0" then "fix	storeforce_y_top_after	all store/force"
-if "${freq_ave_wall} != 0" then "fix	storeforce_zbottom_before	all store/force"
-
-if "${ifzbottomshear} == yes" &
-then "jump SELF z_bottom_shear_begin2" &
-else &
-"jump SELF z_bottom_not_shear_begin2"
-label z_bottom_shear_begin2
-fix	zplane_bottom 	all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane ${zlo_wall} NULL shear x ${in_velocity}
-jump SELF z_bottom_end2
-label z_bottom_not_shear_begin2
-fix	zplane_bottom 	all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane ${zlo_wall} NULL
-jump SELF z_bottom_end2
-label z_bottom_end2
-
-fix	zplane_bottom 	all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane ${zlo_wall} NULL
-if "${freq_ave_wall} != 0" then "fix	storeforce_zbottom_after	all store/force"
-if "${ifztop} != yes" then "jump SELF ztop_end2"
-if "${freq_ave_wall} != 0" then "fix	storeforce_ztop_before	all store/force"
-fix	zplane_top 	all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane NULL ${zhi_wall}
-if "${freq_ave_wall} != 0" then "fix	storeforce_ztop_after	all store/force"
-label ztop_end2
-label hooke_end2
 
 
 # jump gravity ifpour and step from 0
@@ -751,7 +724,7 @@ variable	force_y_bottom_z equal c_sum_storeforce_y_bottom_after_xyz[3]-c_sum_sto
 
 ## y_top force
 # compute total force on particles before y_top apply 
-compute		sum_storeforce_y_top_before_xyz all reduce sum f_storeforce_y_top_before[*]
+if "${freq_ave_wall} != 0" then "compute		sum_storeforce_y_top_before_xyz all reduce sum f_storeforce_y_top_before[*]"
 # compute total force on particles after y_top apply 
 compute		sum_storeforce_y_top_after_xyz all reduce sum f_storeforce_y_top_after[*]
 # total force all atoms on y_top by substract
@@ -1275,17 +1248,17 @@ if "${freq_ave_wall} != 0" then "fix	storeforce_y_bottom_before	all store/force"
 if "${contact_model} != hooke_his" &
  then "jump SELF hooke_his_end3"
 if "${ifrotate} == yes" then &
-  "fix	y_bottom		all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane ${ylo_wall} NULL shear x ${in_velocity}" &
+  "fix	y_bottom		all wall/gran ${contact_model_wall_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane ${ylo_wall} NULL shear x ${in_velocity}" &
 else &
-  "fix	y_bottom		all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane ${ylo_wall} NULL"
+  "fix	y_bottom		all wall/gran ${contact_model_wall_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane ${ylo_wall} NULL"
 label hooke_his_end3
 
 if "${contact_model} != hooke" &
  then "jump SELF hooke_end3"
 if "${ifrotate} == yes" then &
-  "fix	y_bottom		all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane ${ylo_wall} NULL shear x ${in_velocity}" &
+  "fix	y_bottom		all wall/gran ${contact_model_wall_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane ${ylo_wall} NULL shear x ${in_velocity}" &
 else &
-  "fix	y_bottom		all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane ${ylo_wall} NULL"
+  "fix	y_bottom		all wall/gran ${contact_model_wall_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane ${ylo_wall} NULL"
 label hooke_end3
 if "${freq_ave_wall} != 0" then "fix	storeforce_y_bottom_after	all store/force"
 label	end_pour2_innerwall
