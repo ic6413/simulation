@@ -169,10 +169,12 @@ def read_log(folderpath):
                     last_satisfy_line = satisfy_lines[-1]
                     last_line_words = last_satisfy_line.split()
                     variable_value = last_line_words[3]
+                
+                elif first_line_words[2] == "getenv":
+                    variable_value = first_line_words[3]
 
                 else:
                     pass
-
                 logfile_in_folder_in[variable_name] = variable_value
 
             else:

@@ -1,0 +1,11 @@
+# particle diameter density
+variable	dp 			index 0.0001
+variable    den         index 2500
+
+# contact model
+variable	contact_change 		index no
+variable  	eliminate_history   	index no 
+variable	contact_model		index hooke_his #hooke hooke_his hertz hertz_his
+variable	kn_scale		index 1000000
+variable	gamma_n_scale		index 317
+variable	xmu			index 0.5

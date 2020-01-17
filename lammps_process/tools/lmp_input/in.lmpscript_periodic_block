@@ -249,11 +249,11 @@ variable	y_hi_freeze_dp_unit	equal $(v_width_wall_dp_unit+v_rp_big_dp_unit)
 
 # contact model variable
 variable	kn_scale	index 1000000
-variable	kn		equal $(v_kn_scale*v_mp*v_g/v_dp)
-variable	kt		equal $(2/7*v_kn)
+variable	kn		index $(v_kn_scale*v_mp*v_g/v_dp)
+variable	kt		index $(2/7*v_kn)
 variable	gamma_n_scale	index 317
-variable	gamma_n		equal $(v_gamma_n_scale*sqrt(v_g/v_dp))
-variable	gamma_t 	equal $(v_gamma_n/2)
+variable	gamma_n		index $(v_gamma_n_scale*sqrt(v_g/v_dp))
+variable	gamma_t 	index $(v_gamma_n/2)
 variable	xmu		index 0.5
 print "kn ${kn}" screen no append output/setting/attribute.lammps
 print "kt ${kt}" screen no append output/setting/attribute.lammps

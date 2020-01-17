@@ -3,9 +3,11 @@ variable	dp 			index 0.0001
 variable    den         index 2500
 
 # contact model
-variable	contact_change 		index no
-variable  	eliminate_history   	index no 
+variable	contact_change 		index yes
+variable  	eliminate_history   	index yes
 variable	contact_model		index hertz_his #hooke hooke_his hertz hertz_his
-variable	kn_scale		index 1000000
-variable	gamma_n_scale		index 317
+variable	kn		index 58570000000
+variable	kt		index 51330000000
+variable    gamma_n index 0.000002946
+variable    gamma_t index 0.000002582
 variable	xmu			index 0.5

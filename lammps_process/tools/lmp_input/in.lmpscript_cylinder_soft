@@ -50,17 +50,24 @@ print "startstep ${rst_from}" screen no append output/setting/attribute.lammps
 # step start from. weather rotate start.
 variable  contact_change index no
 variable  contact_model index hooke_his #hooke hooke_his hertz hertz_his
-variable  contact_model_string string 
 if "${contact_model} == hooke_his" then &
-  "variable  contact_model_string gran/hooke/history " &
+  "variable  contact_model_string string gran/hooke/history" &
 elif "${contact_model} == hooke" &
- "variable  contact_model_string gran/hooke " &
+ "variable  contact_model_string string gran/hooke" &
 elif "${contact_model} == hertz_his" &
- "variable  contact_model_string gran/hertz/history " &
-elif "${contact_model} == hertz" &
- "variable  contact_model_string gran/hertz " &
+ "variable  contact_model_string string gran/hertz/history" &
 else &
  "quit 1"
+
+if "${contact_model} == hooke_his" then &
+  "variable  contact_model_wall_string string hooke/history" &
+elif "${contact_model} == hooke" &
+ "variable  contact_model_wall_string string hooke" &
+elif "${contact_model} == hertz_his" &
+ "variable  contact_model_wall_string string hertz/history" &
+else &
+ "quit 1"
+
 # task number from slurm
 variable    n_mpi_tasks     getenv OMPI_COMM_WORLD_SIZE
 # processor cut in x dimension

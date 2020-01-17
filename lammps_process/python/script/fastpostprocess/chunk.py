@@ -25,7 +25,7 @@ chunkobject.save_strain_rate_ij_x23(current_steps, 2, 1)
 chunk_all = pp.chunk_include_pre(n_ave, rr.lammps_directory)
 allsteps_since_rotate = chunk_all.allsteps_since_rotate
 stepsarray_all = chunk_all.first_extra_middle_last_steps_everysimu
-stepsarray_all_tmp = stepsarray_all[np.array([0,1,4,7])]
+#stepsarray_all_tmp = stepsarray_all[np.array([0,1,4,7])]
 ## use allsteps since rotate to plot near wall velocity
 """
 chunkobject.save_plotchunk_velocity_i_time_near_wall_ave(allsteps_since_rotate, 0, figformat="png", ifpickle=False, ifmanysimu=True)

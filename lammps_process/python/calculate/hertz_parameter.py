@@ -51,7 +51,8 @@ def max_velocity_allowed(young_modules, poisson_ratio, meff, min_number_step_in_
                             )**(-5)
     return max_velocity_allowed
 
-def estitution_coefficients(young_modules, poisson_ratio, meff, ):
+def estitution_coefficients(young_modules, poisson_ratio, meff,):
+    pass
 
 
 def print_all_contact_parameter(young_modules=8.36*10**10, poisson_ratio=0.22,
