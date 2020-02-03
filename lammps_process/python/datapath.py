@@ -52,10 +52,10 @@ gravitation_direction_z = -1
 g = eval(rr.logfile['g'])*np.array([gravitation_direction_x, gravitation_direction_y, gravitation_direction_z])
 # parameter
 mu = eval(rr.logfile['xmu'])
-kn = eval(rr.logfile['kn']) 
-kt = eval(rr.logfile['kt'])
-gamma_n = eval(rr.logfile['gamma_n'])
-gamma_t = eval(rr.logfile['gamma_t'])
+#kn = eval(rr.logfile['kn']) 
+#kt = eval(rr.logfile['kt'])
+#gamma_n = eval(rr.logfile['gamma_n'])
+#gamma_t = eval(rr.logfile['gamma_t'])
 n_type = int(rr.logfile['n_type'])
 if n_type == 1:
     type_radius_list = [
