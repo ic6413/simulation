@@ -20,6 +20,8 @@ variable    if_ybottom_wall_gran    index no
 variable    wall_gran_type       index 2
 # run step
 variable	rst_from		index 0
+# if rst_from = N, then copy restart file from parent folder
+shell cp ../output/rst/restart.mpiio.${rst_from} ./
 variable ifset_velocity_after_rst index no
 variable ifset_angular_velocity_after_rst index no
 variable	runstep			index 3000000
