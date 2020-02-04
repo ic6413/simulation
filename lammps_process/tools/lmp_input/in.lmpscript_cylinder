@@ -248,11 +248,11 @@ variable	ro_freeze_dp_unit	equal $(v_ro_wall_dp_unit+v_rp_big_dp_unit)
 
 # contact model variable
 variable	kn_scale	index 1000000
-variable	kn		equal $(v_kn_scale*v_mp*v_g/v_dp)
-variable	kt		equal $(2/7*v_kn)
+variable	kn		index $(v_kn_scale*v_mp*v_g/v_dp)
+variable	kt		index $(2/7*v_kn)
 variable	gamma_n_scale	index 317
-variable	gamma_n		equal $(v_gamma_n_scale*sqrt(v_g/v_dp))
-variable	gamma_t 	equal $(v_gamma_n/2)
+variable	gamma_n		index $(v_gamma_n_scale*sqrt(v_g/v_dp))
+variable	gamma_t 	index $(v_gamma_n/2)
 variable	xmu		index 0.5
 print "kn ${kn}" screen no append output/setting/attribute.lammps
 print "kt ${kt}" screen no append output/setting/attribute.lammps
@@ -376,14 +376,8 @@ region		simulation_box cylinder z 0. 0. ${ro_box} ${zlo_box} ${zhi_box} units bo
 create_box	${n_type} simulation_box
 # contact force style, no restart
 
-if "${contact_model} == hooke_his" then &
-  "pair_style	gran/hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent}" &
-elif "${contact_model} == hooke" &
- "pair_style	gran/hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent}" &
-elif "${contact_model} == hertz_his" &
- "pair_style	gran/hertz/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent}" &
-else &
- "quit 1"
+pair_style	${contact_model_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent}
+
 pair_coeff	* *
 if		"${freq_ave_wall} != 0" then &
   "fix	sum_pairforce	all store/force"
@@ -575,7 +569,8 @@ if "${contact_change} == no || ${rst_from} == 0" &
 
 if "${contact_model} != hooke" &
  then "jump SELF hooke_end4"
-pair_style	gran/hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent}
+pair_style none
+pair_style	${contact_model_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent}
 pair_coeff	* *
 
 label hooke_end4
@@ -584,10 +579,10 @@ if "${contact_model} != hooke_his" &
  then "jump SELF hooke_his_end4"
 if "${eliminate_history} == no || ${rst_from} == 0" then &
   "jump SELF reset_pair_history_end"
-pair_style zero ${dp}
+pair_style zero
 pair_coeff	* *
 run 1
-pair_style	gran/hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent}
+pair_style	${contact_model_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent}
 pair_coeff	* *
 label   reset_pair_history_end
 label hooke_his_end4
@@ -613,17 +608,17 @@ if "${contact_model} != hooke_his" &
  then "jump SELF hooke_his_end1"
 
 if "${ifrotate} == yes" then &
-  "fix	inwall		all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri_wall} shear x ${in_velocity_negative}" &
+  "fix	inwall		all wall/gran ${contact_model_wall_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri_wall} shear x ${in_velocity_negative}" &
 else &
-  "fix	inwall		all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri_wall}"
+  "fix	inwall		all wall/gran ${contact_model_wall_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri_wall}"
 label hooke_his_end1
 
 if "${contact_model} != hooke" &
  then "jump SELF hooke_end1"
 if "${ifrotate} == yes" then &
-  "fix	inwall		all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri_wall} shear x ${in_velocity_negative}" &
+  "fix	inwall		all wall/gran ${contact_model_wall_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri_wall} shear x ${in_velocity_negative}" &
 else &
-  "fix	inwall		all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri_wall}"
+  "fix	inwall		all wall/gran ${contact_model_wall_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri_wall}"
 label hooke_end1
 if "${freq_ave_wall} != 0" then "fix	storeforce_inwall_after	all store/force"
 label	end_pour6_innerwall
@@ -631,14 +626,14 @@ label	end_pour6_innerwall
 if "${contact_model} != hooke_his" &
  then "jump SELF hooke_his_end2"
 if "${freq_ave_wall} != 0" then "fix	storeforce_outwall_before	all store/force"
-fix	outwall 	all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ro_wall}
+fix	outwall 	all wall/gran ${contact_model_wall_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ro_wall}
 if "${freq_ave_wall} != 0" then "fix	storeforce_outwall_after	all store/force"
 if "${freq_ave_wall} != 0" then "fix	storeforce_zbottom_before	all store/force"
-fix	zplane_bottom 	all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane ${zlo_wall} NULL
+fix	zplane_bottom 	all wall/gran ${contact_model_wall_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane ${zlo_wall} NULL
 if "${freq_ave_wall} != 0" then "fix	storeforce_zbottom_after	all store/force"
 if "${ifztop} != yes" then "jump SELF ztop_end1"
 if "${freq_ave_wall} != 0" then "fix	storeforce_ztop_before	all store/force"
-fix	zplane_top 	all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane NULL ${zhi_wall}
+fix	zplane_top 	all wall/gran ${contact_model_wall_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane NULL ${zhi_wall}
 if "${freq_ave_wall} != 0" then "fix	storeforce_ztop_after	all store/force"
 label ztop_end1
 label hooke_his_end2
@@ -646,14 +641,14 @@ label hooke_his_end2
 if "${contact_model} != hooke" &
  then "jump SELF hooke_end2"
 if "${freq_ave_wall} != 0" then "fix	storeforce_outwall_before	all store/force"
-fix	outwall 	all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ro_wall}
+fix	outwall 	all wall/gran ${contact_model_wall_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ro_wall}
 if "${freq_ave_wall} != 0" then "fix	storeforce_outwall_after	all store/force"
 if "${freq_ave_wall} != 0" then "fix	storeforce_zbottom_before	all store/force"
-fix	zplane_bottom 	all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane ${zlo_wall} NULL
+fix	zplane_bottom 	all wall/gran ${contact_model_wall_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane ${zlo_wall} NULL
 if "${freq_ave_wall} != 0" then "fix	storeforce_zbottom_after	all store/force"
 if "${ifztop} != yes" then "jump SELF ztop_end2"
 if "${freq_ave_wall} != 0" then "fix	storeforce_ztop_before	all store/force"
-fix	zplane_top 	all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane NULL ${zhi_wall}
+fix	zplane_top 	all wall/gran ${contact_model_wall_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane NULL ${zhi_wall}
 if "${freq_ave_wall} != 0" then "fix	storeforce_ztop_after	all store/force"
 label ztop_end2
 label hooke_end2
@@ -1284,17 +1279,17 @@ if "${freq_ave_wall} != 0" then "fix	storeforce_inwall_before	all store/force"
 if "${contact_model} != hooke_his" &
  then "jump SELF hooke_his_end3"
 if "${ifrotate} == yes" then &
-  "fix	inwall		all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri_wall} shear x ${in_velocity_negative}" &
+  "fix	inwall		all wall/gran ${contact_model_wall_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri_wall} shear x ${in_velocity_negative}" &
 else &
-  "fix	inwall		all wall/gran hooke/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri_wall}"
+  "fix	inwall		all wall/gran ${contact_model_wall_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri_wall}"
 label hooke_his_end3
 
 if "${contact_model} != hooke" &
  then "jump SELF hooke_end3"
 if "${ifrotate} == yes" then &
-  "fix	inwall		all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri_wall} shear x ${in_velocity_negative}" &
+  "fix	inwall		all wall/gran ${contact_model_wall_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri_wall} shear x ${in_velocity_negative}" &
 else &
-  "fix	inwall		all wall/gran hooke ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri_wall}"
+  "fix	inwall		all wall/gran ${contact_model_wall_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zcylinder ${ri_wall}"
 label hooke_end3
 if "${freq_ave_wall} != 0" then "fix	storeforce_inwall_after	all store/force"
 label	end_pour2_innerwall
