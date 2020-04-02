@@ -27,8 +27,8 @@ plt.style.use('classic')
 plt.rcParams.update({'font.size': 16})
 
 
-if "if_ybottom_wall_gran" in rr.logfile.keys():
-    if rr.logfile["if_ybottom_wall_gran"] == "yes":
+if "if_inwall_wall_gran" in rr.logfile.keys():
+    if rr.logfile["if_inwall_wall_gran"] == "yes":
         if "wall_gran_type" in rr.logfile.keys():
             if rr.logfile["wall_gran_type"] == "1":
                 ybottomwalltype = "rough (d=1.1)"

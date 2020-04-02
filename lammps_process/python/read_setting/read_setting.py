@@ -184,8 +184,8 @@ def read_log(folderpath):
 
 
     logfile_in_folder = read_variable()
-    if "if_ybottom_wall_gran" in logfile_in_folder.keys():
-        if logfile_in_folder["if_ybottom_wall_gran"]=="yes":
+    if "if_inwall_wall_gran" in logfile_in_folder.keys():
+        if logfile_in_folder["if_inwall_wall_gran"]=="yes":
             logfile_in_folder["shearwall"] = "yplane"
         else:
             for line in lines:

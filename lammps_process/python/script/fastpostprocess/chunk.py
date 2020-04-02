@@ -5,6 +5,7 @@ n_ave = int(sys.argv[1])
 import numpy as np
 
 import plotfigure.plotchunk as pp
+import plotfigure.plotchunkstress as pps
 import read_setting.read_setting as rr
 import read_setting.calculate_setting as rc
 
@@ -44,3 +45,9 @@ for i in range(3):
     chunk_all.save_plotchunk_ekovermass_i_ave_j_xk_ave(stepsarray_all_tmp, i, 2, 1, figformat="png", ifpickle=False)
     chunk_all.save_plotchunk_ekminusekaveovermass_i_ave_j_ave(stepsarray_all_tmp, i, 2, 1, figformat="png", ifpickle=False)
 """
+
+
+###chunk stress current
+chunkobject = pps.chunk(n_ave, rr.lammps_directory)
+current_steps = chunkobject.first_extra_middle_last_steps
+chunkobject.plotchunk_1(current_steps)

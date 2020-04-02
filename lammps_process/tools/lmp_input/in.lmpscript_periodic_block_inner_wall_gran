@@ -79,9 +79,9 @@ print "timestep ${ts}" screen no append output/setting/attribute.lammps
 # ztop
 variable  ifztop   index yes 
 # ybottom gran or flat
-variable    if_ybottom_wall_gran index no
+variable    if_inwall_wall_gran index no
 variable    wall_gran_type       index 2
-if "${if_ybottom_wall_gran} == no" then &
+if "${if_inwall_wall_gran} == no" then &
   "variable storeforcegroup string all" &
 else &
   "variable storeforcegroup string not_near_ybottom_wall"
@@ -339,7 +339,6 @@ variable	in_velocity_negative 	equal $(-v_in_velocity)
 variable	zhi_freeze		equal $(v_zhi_freeze_dp_unit*v_dp)
 variable	y_lo_freeze		equal $(v_y_lo_freeze_dp_unit*v_dp)
 variable        y_hi_freeze		equal $(v_y_hi_freeze_dp_unit*v_dp)
-
 # lattice primitive vectors length
 variable	edge_lattice		equal $(2/(sqrt(3))*v_dp_big)
 variable	z_fraction_of_lattice	equal $(sqrt(3)/4)
@@ -355,12 +354,12 @@ variable	y_fraction_of_lattice_ybottom_wall	equal $(v_ylo_wall/v_edge_lattice_yb
 variable	x_fraction_of_lattice_ybottom_wall	equal $(v_xlo_box/v_edge_lattice_ybottom_wall-floor(v_xlo_box/v_edge_lattice_ybottom_wall))
 
 # lattice primitive vectors length
-variable  mvz     atom mass*vz
-variable	mvx 		atom mass*vx
-variable	mvy 		atom mass*vy
-variable	Eky 		atom 0.5*mass*vy*vy
-variable	Ekx 		atom 0.5*mass*vx*vx
-variable	Ekz 		atom 0.5*mass*vz*vz
+variable  mv3     atom mass*vz
+variable	mv1 		atom mass*vx
+variable	mv2 		atom mass*vy
+variable	Ek2 		atom 0.5*mass*vy*vy
+variable	Ek1 		atom 0.5*mass*vx*vx
+variable	Ek3 		atom 0.5*mass*vz*vz
 variable	my 		atom mass*y
 variable	mz 		atom mass*z
 # calculate chunk id
@@ -502,7 +501,7 @@ label   end_test_collide_1wall1atom
 if "${create_atom_method} != test_collide_twoatoms" then &
   "jump SELF end_test_collide_twoatoms"
 
-#create_atoms	1 region region_ins units lattice 
+# create_atoms	1 region region_ins units lattice 
 # test create 3 single atoms let 1 2 collision
 create_atoms 1 single $(0.434*v_dp) $((v_ylo_create_dp_unit+3.5)*v_dp) $(1*v_dp) units box
 create_atoms 1 single $(-0.434*v_dp) $((v_ylo_create_dp_unit+3)*v_dp) $(1*v_dp) units box
@@ -579,7 +578,7 @@ jump SELF end_deposit
 label	end_deposit
 
 # create freezed atoms as ybottom_wall and delete original created atoms if overlap with ybottom_wall atoms
-if "${if_ybottom_wall_gran} == no" then &
+if "${if_inwall_wall_gran} == no" then &
   "jump SELF ybottom_wall_gran_end1"
 label ybottom_wall_gran_begin1
 
@@ -607,7 +606,6 @@ group not_near_ybottom_wall_small   intersect not_near_ybottom_wall group_small
 group not_near_ybottom_wall_middle  intersect not_near_ybottom_wall group_middle
 group not_near_ybottom_wall_big   intersect not_near_ybottom_wall group_big
 
-
 delete_atoms overlap $((v_dp_wall_gran+v_dp_small)/2) not_near_ybottom_wall_small near_ybottom_wall_gran
 delete_atoms overlap $((v_dp_wall_gran+v_dp)/2) not_near_ybottom_wall_middle near_ybottom_wall_gran
 delete_atoms overlap $((v_dp_wall_gran+v_dp_big)/2) not_near_ybottom_wall_big near_ybottom_wall_gran
@@ -617,22 +615,15 @@ label ybottom_wall_gran_end1
 # no need restart command end
 label		end_restart_skip1
 
-
 # need restart command begin
-
-
 # jump if restart from nonzero step
 # this command specify in jobscribe "variable	rst_from equal N" be used as suffix in output file name
 if		"${rst_from} != 0" then &
   "read_restart restart.mpiio.${rst_from}"
 
-
-
 # bin size and memory
 neighbor	${skin} bin
 neigh_modify	delay 0 #page 20
-
-
 
 if		"${rst_from} != 0 && ${ifset_velocity_after_rst} == yes" then &
   "set group ${storeforcegroup} vx 0.0 vy 0.0 vz 0.0"
@@ -668,12 +659,11 @@ label contact_change_end1
 if		"${freq_ave_wall} != 0" then &
   "fix	sum_pairforce	${storeforcegroup} store/force"
 
-if "${if_ybottom_wall_gran} == no" then &
+if "${if_inwall_wall_gran} == no" then &
   "jump SELF ybottom_wall_gran_end4"
 label ybottom_wall_gran_begin4
 set		group near_ybottom_wall_gran 	vx ${in_velocity}
 label ybottom_wall_gran_end4
-
 
 # balance
 #balance 	1.0 shift yz 100 1.02
@@ -686,8 +676,7 @@ label ybottom_wall_gran_end4
 # define inner wall, if pour then define inner wall after pouring
 if "${ifpour} == yes && ${rst_from} == 0" then "jump SELF end_pour6_innerwall"
 if "${freq_ave_wall} != 0" then "fix	storeforce_y_bottom_before	${storeforcegroup} store/force"
-
-if "${if_ybottom_wall_gran} != no" then &
+if "${if_inwall_wall_gran} != no" then &
   "jump SELF ybottom_wall_flat_end1"
 
 if "${ifrotate} == yes" then &
@@ -696,14 +685,13 @@ else &
   "fix	y_bottom		all wall/gran ${contact_model_wall_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane ${ylo_wall} NULL"
 
 if "${freq_ave_wall} != 0" then "fix	storeforce_y_bottom_after	all store/force"
-
 label ybottom_wall_flat_end1
 label	end_pour6_innerwall
 
-if "${freq_ave_wall} != 0" then "fix	storeforce_y_top_before	all store/force"
+if "${freq_ave_wall} != 0" then "fix	storeforce_y_top_before	${storeforcegroup} store/force"
 fix	y_top 	all wall/gran ${contact_model_wall_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane NULL ${yhi_wall}
-if "${freq_ave_wall} != 0" then "fix	storeforce_y_top_after	all store/force"
-if "${freq_ave_wall} != 0" then "fix	storeforce_zbottom_before	all store/force"
+if "${freq_ave_wall} != 0" then "fix	storeforce_y_top_after	${storeforcegroup} store/force"
+if "${freq_ave_wall} != 0" then "fix	storeforce_zbottom_before	${storeforcegroup} store/force"
 
 if "${ifzbottomshear} == yes" &
 then "jump SELF z_bottom_shear_begin1" &
@@ -714,16 +702,13 @@ fix	zplane_bottom 	${storeforcegroup} wall/gran ${contact_model_wall_string} ${k
 jump SELF z_bottom_end1
 label z_bottom_not_shear_begin1
 fix	zplane_bottom 	${storeforcegroup} wall/gran ${contact_model_wall_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane ${zlo_wall} NULL
-jump SELF z_bottom_end1
-label z_bottom_end1
-
 if "${freq_ave_wall} != 0" then "fix	storeforce_zbottom_after	${storeforcegroup} store/force"
+label z_bottom_end1
 if "${ifztop} != yes" then "jump SELF ztop_end1"
 if "${freq_ave_wall} != 0" then "fix	storeforce_ztop_before	${storeforcegroup} store/force"
 fix	zplane_top 	all wall/gran ${contact_model_wall_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} zplane NULL ${zhi_wall}
 if "${freq_ave_wall} != 0" then "fix	storeforce_ztop_after	${storeforcegroup} store/force"
 label ztop_end1
-label hooke_his_end2
 
 if "${contact_model} != hooke" &
  then "jump SELF hooke_end2"
@@ -805,56 +790,54 @@ if "${freq_ave_chunk_momentum_mass_field} == 0" then "jump SELF skip_ave_chunk"
 compute		m1 all property/atom mass
 compute		omega all property/atom omegax omegay omegaz
 fix		avspatial ${storeforcegroup} ave/chunk ${every_ave_chunk_momentum_mass_field} ${repeat_ave_chunk_momentum_mass_field} ${freq_ave_chunk_momentum_mass_field} chunk_y_z &
-v_mvy v_mvx v_mvz v_Ekx v_Eky v_Ekz c_m1 temp v_my v_mz c_omega[*] norm none file output/momentum_mass_field/fix.momentum_mass_field.all
+v_mv2 v_mv1 v_mv3 v_Ek1 v_Ek2 v_Ek3 c_m1 temp v_my v_mz c_omega[*] norm none file output/momentum_mass_field/fix.momentum_mass_field.all
 label skip_ave_chunk
 
 ### wall force
 if "${freq_ave_wall} == 0" then "jump SELF skip_ave_wall1"
-## y_bottom force
-if "${if_ybottom_wall_gran} != no" then &
+## inwall force
+if "${if_inwall_wall_gran} != no" then &
   "jump SELF ybottom_wall_flat_end3"
 label ybottom_wall_flat_begin3
-# compute total force on particles before y_bottom apply 
+# compute total force on particles before inwall apply
 compute		sum_storeforce_y_bottom_before_xyz ${storeforcegroup} reduce sum f_storeforce_y_bottom_before[*]
-# compute total force on particles after y_bottom apply 
+# compute total force on particles after inwall apply 
 compute		sum_storeforce_y_bottom_after_xyz ${storeforcegroup} reduce sum f_storeforce_y_bottom_after[*]
-# total force all atoms on y_bottom by subtract
-variable	force_y_bottom_x equal c_sum_storeforce_y_bottom_after_xyz[1]-c_sum_storeforce_y_bottom_before_xyz[1]
-variable	force_y_bottom_y equal c_sum_storeforce_y_bottom_after_xyz[2]-c_sum_storeforce_y_bottom_before_xyz[2]
-variable	force_y_bottom_z equal c_sum_storeforce_y_bottom_after_xyz[3]-c_sum_storeforce_y_bottom_before_xyz[3]
+# total force all atoms on inwall by substract
+variable	force_inwall_1 equal c_sum_storeforce_y_bottom_after_xyz[1]-c_sum_storeforce_y_bottom_before_xyz[1]
+variable	force_inwall_2 equal c_sum_storeforce_y_bottom_after_xyz[2]-c_sum_storeforce_y_bottom_before_xyz[2]
+variable	force_inwall_3 equal c_sum_storeforce_y_bottom_after_xyz[3]-c_sum_storeforce_y_bottom_before_xyz[3]
 label ybottom_wall_flat_end3
 
-if "${if_ybottom_wall_gran} == no" then &
-  "jump SELF ybottom_wall_gran_end3"
+if "${if_inwall_wall_gran} == no" then &
+  "jump SELF inwall_wall_gran_end3"
 label ybottom_wall_gran_begin3
 # compute total force on particles after y_bottom apply 
 compute		sum_storeforce_y_bottom_after_xyz ${storeforcegroup} reduce sum f_sum_pairforce[*]
-# total force all atoms on y_bottom by subtract
-variable	force_y_bottom_x equal c_sum_storeforce_y_bottom_after_xyz[1]
-variable	force_y_bottom_y equal c_sum_storeforce_y_bottom_after_xyz[2]
-variable	force_y_bottom_z equal c_sum_storeforce_y_bottom_after_xyz[3]
-label ybottom_wall_gran_end3
+# total force all atoms on y_bottom by substract
+variable	force_inwall_1 equal c_sum_storeforce_y_bottom_after_xyz[1]
+variable	force_inwall_2 equal c_sum_storeforce_y_bottom_after_xyz[2]
+variable	force_inwall_3 equal c_sum_storeforce_y_bottom_after_xyz[3]
+label inwall_wall_gran_end3
 
-## y_top force
+## outwall force
 # compute total force on particles before y_top apply 
 compute		sum_storeforce_y_top_before_xyz ${storeforcegroup} reduce sum f_storeforce_y_top_before[*]
 # compute total force on particles after y_top apply 
 compute		sum_storeforce_y_top_after_xyz ${storeforcegroup} reduce sum f_storeforce_y_top_after[*]
-# total force all atoms on y_top by subtract
-variable	force_y_top_x equal c_sum_storeforce_y_top_after_xyz[1]-c_sum_storeforce_y_top_before_xyz[1]
-variable	force_y_top_y equal c_sum_storeforce_y_top_after_xyz[2]-c_sum_storeforce_y_top_before_xyz[2]
-variable	force_y_top_z equal c_sum_storeforce_y_top_after_xyz[3]-c_sum_storeforce_y_top_before_xyz[3]
-
+# total force all atoms on y_top by substract
+variable	force_outwall_1 equal c_sum_storeforce_y_top_after_xyz[1]-c_sum_storeforce_y_top_before_xyz[1]
+variable	force_outwall_2 equal c_sum_storeforce_y_top_after_xyz[2]-c_sum_storeforce_y_top_before_xyz[2]
+variable	force_outwall_3 equal c_sum_storeforce_y_top_after_xyz[3]-c_sum_storeforce_y_top_before_xyz[3]
 ## zbottom force
 # compute total force on particles before zbottom apply 
 compute		sum_storeforce_zbottom_before_xyz ${storeforcegroup} reduce sum f_storeforce_zbottom_before[*]
 # compute total force on particles after zbottom apply 
 compute		sum_storeforce_zbottom_after_xyz ${storeforcegroup} reduce sum f_storeforce_zbottom_after[*]
-# total force all atoms on zbottom by subtract
-variable	force_zbottom_x equal c_sum_storeforce_zbottom_after_xyz[1]-c_sum_storeforce_zbottom_before_xyz[1]
-variable	force_zbottom_y equal c_sum_storeforce_zbottom_after_xyz[2]-c_sum_storeforce_zbottom_before_xyz[2]
-variable	force_zbottom_z equal c_sum_storeforce_zbottom_after_xyz[3]-c_sum_storeforce_zbottom_before_xyz[3]
-
+# total force all atoms on zbottom by substract
+variable	force_zbottom_1 equal c_sum_storeforce_zbottom_after_xyz[1]-c_sum_storeforce_zbottom_before_xyz[1]
+variable	force_zbottom_2 equal c_sum_storeforce_zbottom_after_xyz[2]-c_sum_storeforce_zbottom_before_xyz[2]
+variable	force_zbottom_3 equal c_sum_storeforce_zbottom_after_xyz[3]-c_sum_storeforce_zbottom_before_xyz[3]
 label skip_ave_wall1
 #
 #variable	fr_in equal c_sumupfr_in-c_sumupfr_no
@@ -1360,7 +1343,7 @@ delete_atoms 	region delete_in_small
 if "${freq_ave_wall} != 0" then "fix	storeforce_y_bottom_before	${storeforcegroup} store/force"
 if "${contact_model} != hooke_his" &
  then "jump SELF hooke_his_end3"
-if "${if_ybottom_wall_gran} != no" then &
+if "${if_inwall_wall_gran} != no" then &
   "jump SELF ybottom_wall_flat_end2"
 if "${ifrotate} == yes" then &
   "fix	y_bottom		${storeforcegroup} wall/gran ${contact_model_wall_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent} yplane ${ylo_wall} NULL shear x ${in_velocity}" &
@@ -1378,32 +1361,28 @@ label hooke_end3
 if "${freq_ave_wall} != 0" then "fix	storeforce_y_bottom_after	${storeforcegroup} store/force"
 label ybottom_wall_flat_end2
 label	end_pour2_innerwall
-
-if "${freq_ave_wall} == 0" then "jump SELF skip_ave_wall2"
-
 # file, time average of total force of wall to particles
 if "${freq_ave_wall} == 0" then "jump SELF skip_ave_wall2"
-fix		timeav_y_bottom_force ${storeforcegroup} ave/time ${every_ave_wall} ${repeat_ave_wall} ${freq_ave_wall} &
+fix		timeav_inwall_force ${storeforcegroup} ave/time ${every_ave_wall} ${repeat_ave_wall} ${freq_ave_wall} &
 v_t &
-v_force_y_bottom_x v_force_y_bottom_y v_force_y_bottom_z &
+v_force_inwall_1 v_force_inwall_2 v_force_inwall_3 &
 mode scalar ave one file output/wall/force_y_bottom_to_particle.allstep
-fix		timeav_y_top_force ${storeforcegroup} ave/time ${every_ave_wall} ${repeat_ave_wall} ${freq_ave_wall} &
+fix		timeav_outwall_force ${storeforcegroup} ave/time ${every_ave_wall} ${repeat_ave_wall} ${freq_ave_wall} &
 v_t &
-v_force_y_top_x v_force_y_top_y v_force_y_top_z &
+v_force_outwall_1 v_force_outwall_2 v_force_outwall_3 &
 mode scalar ave one file output/wall/force_y_top_to_particle.allstep
 fix		timeav_zbottom_force ${storeforcegroup} ave/time ${every_ave_wall} ${repeat_ave_wall} ${freq_ave_wall} &
 v_t &
-v_force_zbottom_x v_force_zbottom_y v_force_zbottom_z &
+v_force_zbottom_1 v_force_zbottom_2 v_force_zbottom_3 &
 mode scalar ave one file output/wall/force_zbottom_to_particle.allstep
 label skip_ave_wall2
 
 # ybottom_wall freeze, need restart
-if "${if_ybottom_wall_gran} == no" then &
+if "${if_inwall_wall_gran} == no" then &
   "jump SELF ybottom_wall_gran_end2"
 label ybottom_wall_gran_begin2
 fix     freeze_ybottom_wall near_ybottom_wall_gran freeze
 label ybottom_wall_gran_end2
-
 # balance every freq_balance step
 if "${freq_balance} == 0" then "jump SELF skip_balance1"
 #balance 	1.0 shift yz 100 1.05
@@ -1426,7 +1405,3 @@ label skip_loop1
 if "${runstep_loop} != 0" then "jump SELF skip_run1"
 run ${runstep}
 label skip_run1
-
-
-
-

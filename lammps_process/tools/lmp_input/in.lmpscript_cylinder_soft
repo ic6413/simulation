@@ -349,12 +349,12 @@ variable	d_z_axis	atom sqrt(x*x+y*y)
 variable	theta 		atom atan2(y,x)
 variable	vr 		atom (vx*x+vy*y)/sqrt(x*x+y*y)
 variable	vt 		atom (vx*(-y)+vy*x)/sqrt(x*x+y*y)
-variable  mvz     atom mass*vz
-variable	mvr 		atom mass*v_vr
-variable	mvt 		atom mass*v_vt
-variable	Ekz 		atom 0.5*mass*vz*vz
-variable	Ekr 		atom 0.5*mass*v_vr*v_vr
-variable	Ekt 		atom 0.5*mass*v_vt*v_vt
+variable  mv3     atom mass*vz
+variable	mv2 		atom mass*v_vr
+variable	mv1 		atom mass*v_vt
+variable	Ek3 		atom 0.5*mass*vz*vz
+variable	Ek2 		atom 0.5*mass*v_vr*v_vr
+variable	Ek1 		atom 0.5*mass*v_vt*v_vt
 variable	mr 		atom mass*v_vr
 variable	mz 		atom mass*z
 
@@ -718,27 +718,27 @@ compute		chunk_r_z all chunk/atom v_chunk_id_r_z limit ${N_total_rz} exact disca
 if "${freq_ave_chunk_momentum_mass_field} == 0" then "jump SELF skip_ave_chunk"
 compute		m1 all property/atom mass
 fix		avspatial all ave/chunk ${every_ave_chunk_momentum_mass_field} ${repeat_ave_chunk_momentum_mass_field} ${freq_ave_chunk_momentum_mass_field} chunk_r_z &
-v_mvr v_mvt v_mvz v_Ekt v_Ekr v_Ekz c_m1 temp v_mr v_mz norm none file output/momentum_mass_field/fix.momentum_mass_field.all
+v_mv2 v_mv1 v_mv3 v_Ek1 v_Ek2 v_Ek3 c_m1 temp v_mr v_mz norm none file output/momentum_mass_field/fix.momentum_mass_field.all
 label skip_ave_chunk
 ### wall force
 if "${freq_ave_wall} == 0" then "jump SELF skip_ave_wall1"
 ## inwall force
 # compute total force on particles before inwall apply 
-variable	storeforce_inwall_before_r atom (f_storeforce_inwall_before[1]*x+f_storeforce_inwall_before[2]*y)/sqrt(x*x+y*y)
-variable	storeforce_inwall_before_theta atom (f_storeforce_inwall_before[1]*(-y)+f_storeforce_inwall_before[2]*x)/sqrt(x*x+y*y)
-compute		sum_storeforce_inwall_before_r all reduce sum v_storeforce_inwall_before_r
-compute		sum_storeforce_inwall_before_theta all reduce sum v_storeforce_inwall_before_theta
-compute		sum_storeforce_inwall_before_z all reduce sum f_storeforce_inwall_before[3]
+variable	storeforce_inwall_before_2 atom (f_storeforce_inwall_before[1]*x+f_storeforce_inwall_before[2]*y)/sqrt(x*x+y*y)
+variable	storeforce_inwall_before_1 atom (f_storeforce_inwall_before[1]*(-y)+f_storeforce_inwall_before[2]*x)/sqrt(x*x+y*y)
+compute		sum_storeforce_inwall_before_2 all reduce sum v_storeforce_inwall_before_2
+compute		sum_storeforce_inwall_before_1 all reduce sum v_storeforce_inwall_before_1
+compute		sum_storeforce_inwall_before_3 all reduce sum f_storeforce_inwall_before[3]
 # compute total force on particles after inwall apply 
-variable	storeforce_inwall_after_r atom (f_storeforce_inwall_after[1]*x+f_storeforce_inwall_after[2]*y)/sqrt(x*x+y*y)
-variable	storeforce_inwall_after_theta atom (f_storeforce_inwall_after[1]*(-y)+f_storeforce_inwall_after[2]*x)/sqrt(x*x+y*y)
-compute		sum_storeforce_inwall_after_r all reduce sum v_storeforce_inwall_after_r
-compute		sum_storeforce_inwall_after_theta all reduce sum v_storeforce_inwall_after_theta
-compute		sum_storeforce_inwall_after_z all reduce sum f_storeforce_inwall_after[3]
+variable	storeforce_inwall_after_2 atom (f_storeforce_inwall_after[1]*x+f_storeforce_inwall_after[2]*y)/sqrt(x*x+y*y)
+variable	storeforce_inwall_after_1 atom (f_storeforce_inwall_after[1]*(-y)+f_storeforce_inwall_after[2]*x)/sqrt(x*x+y*y)
+compute		sum_storeforce_inwall_after_2 all reduce sum v_storeforce_inwall_after_2
+compute		sum_storeforce_inwall_after_1 all reduce sum v_storeforce_inwall_after_1
+compute		sum_storeforce_inwall_after_3 all reduce sum f_storeforce_inwall_after[3]
 # total force all atoms on inwall by substract 
-variable	force_inwall_r equal c_sum_storeforce_inwall_after_r-c_sum_storeforce_inwall_before_r
-variable	force_inwall_theta equal c_sum_storeforce_inwall_after_theta-c_sum_storeforce_inwall_before_theta
-variable	force_inwall_z equal c_sum_storeforce_inwall_after_z-c_sum_storeforce_inwall_before_z
+variable	force_inwall_2 equal c_sum_storeforce_inwall_after_2-c_sum_storeforce_inwall_before_2
+variable	force_inwall_1 equal c_sum_storeforce_inwall_after_1-c_sum_storeforce_inwall_before_1
+variable	force_inwall_3 equal c_sum_storeforce_inwall_after_3-c_sum_storeforce_inwall_before_3
 
 ## outwall force
 # compute total force on particles before outwall apply 
@@ -754,9 +754,9 @@ compute		sum_storeforce_outwall_after_r all reduce sum v_storeforce_outwall_afte
 compute		sum_storeforce_outwall_after_theta all reduce sum v_storeforce_outwall_after_theta
 compute		sum_storeforce_outwall_after_z all reduce sum f_storeforce_outwall_after[3]
 # total force all atoms on outwall by substract 
-variable	force_outwall_r equal c_sum_storeforce_outwall_after_r-c_sum_storeforce_outwall_before_r
-variable	force_outwall_theta equal c_sum_storeforce_outwall_after_theta-c_sum_storeforce_outwall_before_theta
-variable	force_outwall_z equal c_sum_storeforce_outwall_after_z-c_sum_storeforce_outwall_before_z
+variable	force_outwall_2 equal c_sum_storeforce_outwall_after_r-c_sum_storeforce_outwall_before_r
+variable	force_outwall_1 equal c_sum_storeforce_outwall_after_theta-c_sum_storeforce_outwall_before_theta
+variable	force_outwall_3 equal c_sum_storeforce_outwall_after_z-c_sum_storeforce_outwall_before_z
 
 ## zbottom force
 # compute total force on particles before zbottom apply 
@@ -772,9 +772,9 @@ compute		sum_storeforce_zbottom_after_r all reduce sum v_storeforce_zbottom_afte
 compute		sum_storeforce_zbottom_after_theta all reduce sum v_storeforce_zbottom_after_theta
 compute		sum_storeforce_zbottom_after_z all reduce sum f_storeforce_zbottom_after[3]
 # total force all atoms on zbottom by substract 
-variable	force_zbottom_r equal c_sum_storeforce_zbottom_after_r-c_sum_storeforce_zbottom_before_r
-variable	force_zbottom_theta equal c_sum_storeforce_zbottom_after_theta-c_sum_storeforce_zbottom_before_theta
-variable	force_zbottom_z equal c_sum_storeforce_zbottom_after_z-c_sum_storeforce_zbottom_before_z
+variable	force_zbottom_2 equal c_sum_storeforce_zbottom_after_r-c_sum_storeforce_zbottom_before_r
+variable	force_zbottom_1 equal c_sum_storeforce_zbottom_after_theta-c_sum_storeforce_zbottom_before_theta
+variable	force_zbottom_3 equal c_sum_storeforce_zbottom_after_z-c_sum_storeforce_zbottom_before_z
 
 label skip_ave_wall1
 
@@ -1312,15 +1312,15 @@ label	end_pour2_innerwall
 if "${freq_ave_wall} == 0" then "jump SELF skip_ave_wall2"
 fix		timeav_inwall_force all ave/time ${every_ave_wall} ${repeat_ave_wall} ${freq_ave_wall} &
 v_t &
-v_force_inwall_r v_force_inwall_theta v_force_inwall_z &
+v_force_inwall_2 v_force_inwall_1 v_force_inwall_3 &
 mode scalar ave one file output/wall/force_inwall_to_particle.allstep
 fix		timeav_outwall_force all ave/time ${every_ave_wall} ${repeat_ave_wall} ${freq_ave_wall} &
 v_t &
-v_force_outwall_r v_force_outwall_theta v_force_outwall_z &
+v_force_outwall_2 v_force_outwall_1 v_force_outwall_3 &
 mode scalar ave one file output/wall/force_outwall_to_particle.allstep
 fix		timeav_zbottom_force all ave/time ${every_ave_wall} ${repeat_ave_wall} ${freq_ave_wall} &
 v_t &
-v_force_zbottom_r v_force_zbottom_theta v_force_zbottom_z &
+v_force_zbottom_2 v_force_zbottom_1 v_force_zbottom_3 &
 mode scalar ave one file output/wall/force_zbottom_to_particle.allstep
 label skip_ave_wall2
 

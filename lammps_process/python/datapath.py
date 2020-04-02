@@ -213,11 +213,36 @@ interactive_path = post_process_path + 'interactive/'
 # diagram
 diagram_path = post_process_path + 'diagram/'
 om.create_directory(diagram_path)
+# momentum
 f_momentum_mass_field_path = diagram_path + "momentum_mass_field/"
 om.create_directory(f_momentum_mass_field_path)
+# stress
+f_stress_field_path = diagram_path + "stress/"
+om.create_directory(f_stress_field_path)
+# same scale
 f_momentum_mass_field_samescale_path = f_momentum_mass_field_path + "same_scale/"
 om.create_directory(f_momentum_mass_field_samescale_path)
+f_stress_field_samescale_path = f_stress_field_path + "same_scale/"
+om.create_directory(f_stress_field_samescale_path)
 
+# stress path
+f_stress_field_11_path = f_momentum_mass_field_samescale_path + "11/"
+f_stress_field_22_path = f_momentum_mass_field_samescale_path + "22/"
+f_stress_field_33_path = f_momentum_mass_field_samescale_path + "33/"
+f_stress_field_12_path = f_momentum_mass_field_samescale_path + "12/"
+f_stress_field_13_path = f_momentum_mass_field_samescale_path + "13/"
+f_stress_field_23_path = f_momentum_mass_field_samescale_path + "23/"
+# create stress folder
+for folder_path in [
+                    f_stress_field_11_path,
+                    f_stress_field_22_path,
+                    f_stress_field_33_path,
+                    f_stress_field_12_path,
+                    f_stress_field_13_path,
+                    f_stress_field_23_path,
+                    ]:
+    om.create_directory(folder_path)
+# 
 if if_plot_velocity_field_scale_same == "yes":
     if rr.logfile["shearwall"] == "zcylinder":
         f_momentum_mass_field_v23x23_path = f_momentum_mass_field_samescale_path + "Vr_Vz_Xr_Xz/"
@@ -245,7 +270,7 @@ else:
         om.create_directory(f_momentum_mass_field_v13x23_path)
 
     f_momentum_mass_field_volumnfraction_x23_path = f_momentum_mass_field_path + "density_Xx_Xz/"
-    om.create_directory(f_momentum_mass_field_volumnfraction_x23_path)    
+    om.create_directory(f_momentum_mass_field_volumnfraction_x23_path) 
 
 f_max_velocity_near_wall = diagram_path + "max_velocity_near_wall/"
 

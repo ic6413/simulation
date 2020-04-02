@@ -26,8 +26,8 @@ import read_setting.calculate_setting as rc
 plt.style.use('classic')
 plt.rcParams.update({'font.size': 16})
 
-if "if_ybottom_wall_gran" in rr.logfile.keys():
-    if rr.logfile["if_ybottom_wall_gran"] == "yes":
+if "if_inwall_wall_gran" in rr.logfile.keys():
+    if rr.logfile["if_inwall_wall_gran"] == "yes":
         if "wall_gran_type" in rr.logfile.keys():
             if rr.logfile["wall_gran_type"] == "1":
                 ybottomwalltype = "rough (d=0.9)"
@@ -164,7 +164,6 @@ def lines_from_one_simu(lammps_directory):
     with open(lammps_directory + "output/momentum_mass_field/fix.momentum_mass_field.all") as f:
         lines = f.read().strip().split('\n')
     return lines
-
 
 lines = lines_from_one_simu(dp.lammps_directory)
 header = lines[2].split()[1:]
@@ -364,8 +363,8 @@ class chunk(object):
         self.extrasteps = self.extrasteps[maskextra]
         self.first_extra_middle_last_steps = np.append(self.first_middle_last_steps, self.extrasteps)
         self.first_extra_middle_last_steps.sort()
-        if "if_ybottom_wall_gran" in rr.logfile.keys():
-            if rr.logfile["if_ybottom_wall_gran"] == "yes":
+        if "if_inwall_wall_gran" in rr.logfile.keys():
+            if rr.logfile["if_inwall_wall_gran"] == "yes":
                 if "wall_gran_type" in rr.logfile.keys():
                     if rr.logfile["wall_gran_type"] == "1":
                         self.ybottomwalltype = "rough (d=0.9)"
@@ -429,15 +428,15 @@ class chunk(object):
         else:
             sys.exit("chunk_method wrong")
         if chunk_method == "rz":
-            mvr = value_in_a_step_ave(step, "v_mvr", self.n_ave, self.lines)
-            mvz = value_in_a_step_ave(step, "v_mvz", self.n_ave, self.lines)
-            vx_array = divide_zero(mvr,mass)/velocity_scale
-            vy_array = divide_zero(mvz,mass)/velocity_scale
+            mv2 = value_in_a_step_ave(step, "v_mv2", self.n_ave, self.lines)
+            mv3 = value_in_a_step_ave(step, "v_mv3", self.n_ave, self.lines)
+            vx_array = divide_zero(mv2,mass)/velocity_scale
+            vy_array = divide_zero(mv3,mass)/velocity_scale
         elif chunk_method == "yz":
-            mvy = value_in_a_step_ave(step, "v_mvy", self.n_ave, self.lines)
-            mvz = value_in_a_step_ave(step, "v_mvz", self.n_ave, self.lines)
-            vx_array = divide_zero(mvy,mass)/velocity_scale
-            vy_array = divide_zero(mvz,mass)/velocity_scale
+            mv2 = value_in_a_step_ave(step, "v_mv2", self.n_ave, self.lines)
+            mv3 = value_in_a_step_ave(step, "v_mv3", self.n_ave, self.lines)
+            vx_array = divide_zero(mv2,mass)/velocity_scale
+            vy_array = divide_zero(mv3,mass)/velocity_scale
         else:
             sys.exit("chunk_method wrong")
         v_length_array = (vx_array**2+vy_array**2)**0.5
@@ -479,15 +478,15 @@ class chunk(object):
             sys.exit("chunk_method wrong")
 
         if chunk_method == "rz":
-            mvt = value_in_a_step_ave(step, "v_mvt", self.n_ave, self.lines)
-            mvz = value_in_a_step_ave(step, "v_mvz", self.n_ave, self.lines)
-            vx_array = divide_zero(mvt,mass)/velocity_scale
-            vy_array = divide_zero(mvz,mass)/velocity_scale
+            mv1 = value_in_a_step_ave(step, "v_mv1", self.n_ave, self.lines)
+            mv3 = value_in_a_step_ave(step, "v_mv3", self.n_ave, self.lines)
+            vx_array = divide_zero(mv1,mass)/velocity_scale
+            vy_array = divide_zero(mv3,mass)/velocity_scale
         elif chunk_method == "yz":
-            mvx = value_in_a_step_ave(step, "v_mvx", self.n_ave, self.lines)
-            mvz = value_in_a_step_ave(step, "v_mvz", self.n_ave, self.lines)
-            vx_array = divide_zero(mvx,mass)/velocity_scale
-            vy_array = divide_zero(mvz,mass)/velocity_scale
+            mv1 = value_in_a_step_ave(step, "v_mv1", self.n_ave, self.lines)
+            mv3 = value_in_a_step_ave(step, "v_mv3", self.n_ave, self.lines)
+            vx_array = divide_zero(mv1,mass)/velocity_scale
+            vy_array = divide_zero(mv3,mass)/velocity_scale
         else:
             sys.exit("chunk_method wrong")
         
@@ -1758,6 +1757,7 @@ class chunk_include_pre(object):
         self.allsteps_since_rotate = allsteps_since_rotate
         self.first_middle_last_steps_everysimu = first_middle_last_steps_everysimu
         self.first_extra_middle_last_steps_everysimu = first_extra_middle_last_steps_everysimu
+    
     def current_and_remain_stepsarray(self, stepsarray, index):
 
         step2 = step_last_fix_change_by_n_ave(self.n_ave, index)
@@ -2022,15 +2022,15 @@ def plotchunk_ave_one_step_v23x23(step, n_ave, lines, figformat="png", ifpickle=
     else:
         sys.exit("chunk_method wrong")
     if chunk_method == "rz":
-        mvr = value_in_a_step_ave(step, "v_mvr", n_ave, lines)
-        mvz = value_in_a_step_ave(step, "v_mvz", n_ave, lines)
-        vx_array = divide_zero(mvr,mass)/velocity_scale
-        vy_array = divide_zero(mvz,mass)/velocity_scale
+        mv2 = value_in_a_step_ave(step, "v_mv2", n_ave, lines)
+        mv3 = value_in_a_step_ave(step, "v_mv3", n_ave, lines)
+        vx_array = divide_zero(mv2,mass)/velocity_scale
+        vy_array = divide_zero(mv3,mass)/velocity_scale
     elif chunk_method == "yz":
-        mvy = value_in_a_step_ave(step, "v_mvy", n_ave, lines)
-        mvz = value_in_a_step_ave(step, "v_mvz", n_ave, lines)
-        vx_array = divide_zero(mvy,mass)/velocity_scale
-        vy_array = divide_zero(mvz,mass)/velocity_scale
+        mv2 = value_in_a_step_ave(step, "v_mv2", n_ave, lines)
+        mv3 = value_in_a_step_ave(step, "v_mv3", n_ave, lines)
+        vx_array = divide_zero(mv2,mass)/velocity_scale
+        vy_array = divide_zero(mv3,mass)/velocity_scale
     else:
         sys.exit("chunk_method wrong")
     v_length_array = (vx_array**2+vy_array**2)**0.5
@@ -2070,15 +2070,15 @@ def plotchunk_ave_one_step_v13x23(step, n_ave, lines,figformat="png", ifpickle=F
         sys.exit("chunk_method wrong")
 
     if chunk_method == "rz":
-        mvt = value_in_a_step_ave(step, "v_mvt", n_ave, lines)
-        mvz = value_in_a_step_ave(step, "v_mvz", n_ave, lines)
-        vx_array = divide_zero(mvt,mass)/velocity_scale
-        vy_array = divide_zero(mvz,mass)/velocity_scale
+        mv1 = value_in_a_step_ave(step, "v_mv1", n_ave, lines)
+        mv3 = value_in_a_step_ave(step, "v_mv3", n_ave, lines)
+        vx_array = divide_zero(mv1,mass)/velocity_scale
+        vy_array = divide_zero(mv3,mass)/velocity_scale
     elif chunk_method == "yz":
-        mvx = value_in_a_step_ave(step, "v_mvx", n_ave, lines)
-        mvz = value_in_a_step_ave(step, "v_mvz", n_ave, lines)
-        vx_array = divide_zero(mvx,mass)/velocity_scale
-        vy_array = divide_zero(mvz,mass)/velocity_scale
+        mv1 = value_in_a_step_ave(step, "v_mv1", n_ave, lines)
+        mv3 = value_in_a_step_ave(step, "v_mv3", n_ave, lines)
+        vx_array = divide_zero(mv1,mass)/velocity_scale
+        vy_array = divide_zero(mv3,mass)/velocity_scale
     else:
         sys.exit("chunk_method wrong")
     
@@ -3132,7 +3132,7 @@ def plotVymax_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", ifpickl
                                             )
                 x_array = x_array.reshape((-1))
                 y_array = y_array.reshape((-1))
-                vy_array = divide_zero(data[:,dic_index_of_variable_in_header(lines)["v_mvz"]],data[:,dic_index_of_variable_in_header(lines)["c_m1"]])/velocity_scale
+                vy_array = divide_zero(data[:,dic_index_of_variable_in_header(lines)["v_mv3"]],data[:,dic_index_of_variable_in_header(lines)["c_m1"]])/velocity_scale
             elif chunk_method == "yz":
                 if rr.logfile["chunk/atom"][1] == "y":
                     x_array = data[:,dic_index_of_variable_in_header(lines)["Coord1"]]
@@ -3147,7 +3147,7 @@ def plotVymax_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", ifpickl
                     y_array = y_array/diameter
                 else:
                     sys.exit("wrong")
-                vy_array = divide_zero(data[:,dic_index_of_variable_in_header(lines)["v_mvz"]],data[:,dic_index_of_variable_in_header(lines)["c_m1"]])/velocity_scale
+                vy_array = divide_zero(data[:,dic_index_of_variable_in_header(lines)["v_mv3"]],data[:,dic_index_of_variable_in_header(lines)["c_m1"]])/velocity_scale
             else:
                 sys.exit("chunk_method wrong")
             kk = np.argmax(np.absolute(vy_array))

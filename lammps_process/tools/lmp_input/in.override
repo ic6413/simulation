@@ -16,7 +16,7 @@ variable    ifinitialvelocity_same_as_in_velocity      index no
 # ztop
 variable    ifztop                  index yes
 # ybottom gran or flat
-variable    if_ybottom_wall_gran    index no
+variable    if_inwall_wall_gran    index no
 variable    wall_gran_type       index 2
 # run step
 variable	rst_from		index 0

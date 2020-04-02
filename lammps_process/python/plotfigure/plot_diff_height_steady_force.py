@@ -153,7 +153,7 @@ def plot_wall_diff_height_steady_time(if_plot_to_last, step1, step2, figformat="
 
             variable1 = 'v_t'
             
-            for variable2 in ["v_force_zbottom_x"]:
+            for variable2 in ["v_force_zbottom_1"]:
                 
                 x_array = df[variable1].values
                 y_array = df[variable2].values
