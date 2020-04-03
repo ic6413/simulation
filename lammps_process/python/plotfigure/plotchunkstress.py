@@ -1,6 +1,33 @@
 
 
 
+
+
+# pics info
+    # from simulation, geometry, size,
+    # variable_component
+
+# single pics, single plot,  1D-2D,   stress i j at x23 single timestep
+    # n_ave, time
+# multi pics, single plot,   1D-2D, stress i j at x23 multi timestep
+    # n_ave, time
+# single pics, single plot,  1D-1D,    stress i j at xk=k_index
+    # pics info add: xk, k_index, time
+# single pics, multi plot,      1D-1D,  stress i j at xk=k_index, time=timearray
+    # pics info add: xk, k_index, time
+
+
+
+# save data
+
+# read data
+
+# data for plot output in the same path as figure
+
+# plot figure
+
+
+
 # import
 import os
 from io import StringIO
@@ -223,7 +250,7 @@ def step_last_fix_change_by_n_ave(n_ave, index):
 
 def data_in_one_step(step, lines):
 
-    n_line_0 = int(int(step - step_first_in_file(lines))/d_step*(n_line_in_a_step+1) + 4)
+    n_line_0 = int(int(step - step_first_in_file(lines))/d_step)*(n_line_in_a_step+1) + 4
     n_line_1 = int(n_line_0 + n_line_in_a_step)
     ## select data
     data = [lines[t].split() for t in range(n_line_0, n_line_1)]
@@ -326,7 +353,6 @@ def save_one_plot(fig, ax, foldersave, f_name, figformat="png", ifpickle=False):
     plt.close('all')
 
 
-
 class chunk(object):
 
     def __init__(self, n_ave, lmp_path):
@@ -405,8 +431,8 @@ class chunk(object):
         
         return value
 
-    ########## plot 1D-2D stress-position ##########
-    def plotchunk_ave_one_step_stressij_x23(self, step, i, j, figformat="png", ifpickle=False):
+    def stress_variable_name(self, i, j):
+
         if i == 1 and j == 1:
             variable_name = "c_stress[1]"
         elif i == 2 and j == 2:
@@ -422,7 +448,13 @@ class chunk(object):
         else:
             sys.exit("i j index not correct, only ij 11 22 33 12 13 23")
 
-        stress_array = value_in_a_step_ave(step, variable_name, self.n_ave, self.lines)
+        return variable_name
+
+
+    ########## plot 1D-2D stress-position ##########
+    def datachunk_ave_one_step_stressij_x23(self, step, i, j):
+
+        stress_array = value_in_a_step_ave(step, self.stress_variable_name(i,j), self.n_ave, self.lines)
 
         if chunk_method == "rz":
             r = value_in_a_step_ave(step, "v_r", self.n_ave, self.lines)
@@ -436,14 +468,22 @@ class chunk(object):
             y_array = z/diameter
         else:
             sys.exit("chunk_method wrong")
-        quiver_scale = 1
-        label_scale = 1
-        stress_array = stress_array/stress_scale/vol_in_chunks
-        fig1, ax1 = plt.subplots()
         
+        stress_array = stress_array/stress_scale/vol_in_chunks
+        time = time_in_a_step_from_start_rotate(step)
+
+        return [time, x_array, y_array, stress_array]
+
+
+
+    ########## plot 1D-2D stress-position ##########
+    def plotchunk_ave_one_step_stressij_x23(self, step, i, j, quiver_scale=0.1, label_scale=0.2):
+
+        [time, x_array, y_array, stress_array] = self.datachunk_ave_one_step_stressij_x23(step, i, j)
+
+        fig1, ax1 = plt.subplots()
         #fig1.figsize = [12.8, 9.6]
         plot_quiver_position_label(fig1, ax1)
-        time = time_in_a_step_from_start_rotate(step)
         #ax1.set_title('velocity field r-z direction (average over theta)')
         Q = ax1.quiver(x_array, y_array, np.zeros_like(stress_array), stress_array,
                     units='width',angles='xy', scale_units='xy', scale=quiver_scale,
@@ -455,57 +495,43 @@ class chunk(object):
                     coordinates='figure', angle=90)
         return (fig1, ax1)
 
-    ########## save plot 1D-2D volumn fraction-position ##########
+    ########## save plot  ##########
     def save_stress_x23(self, stepsarray, i, j, figformat="png", ifpickle=False):
-        savepath = "f_stress_field_" + "i" + "j" + "_path"
+        savepath = dp.stress_folder_path(i,j)
         add_nve_subfolder_in_folder(self.n_ave, savepath)
         foldersave = path_nve_subfolder_in_folder(self.n_ave, savepath)
         for step in stepsarray:
-            fig, ax = self.plotchunk_ave_one_step_stressij_x23(step, i, j, figformat="png", ifpickle=False)
+            fig, ax = self.plotchunk_ave_one_step_stressij_x23(step, i, j)
             save_one_plot(fig, ax, foldersave, str(int(step)), figformat="png", ifpickle=False)
 
-    ########## plot 1D-1D stress-position index change##########
-    def plotchunk_stress_ij_fix_k_ave(self, step, fig, ax, i, j, k, k_index, figformat="png", ifpickle=False):
+    def datachunk_stress_ij_fix_k_ave(self, step, i, j, k, k_index):
 
         fix_along_array_dim = position_index_to_array_dim_index[k]
 
-        if i == 1 and j == 1:
-            variable_name = "c_stress[1]"
-        elif i == 2 and j == 2:
-            variable_name = "c_stress[2]"
-        elif i == 3 and j == 3:
-            variable_name = "c_stress[3]"
-        elif i == 1 and j == 2:
-            variable_name = "c_stress[4]"
-        elif i == 1 and j == 3:
-            variable_name = "c_stress[5]"
-        elif i == 2 and j == 3:
-            variable_name = "c_stress[6]"
-        else:
-            sys.exit("i j index not correct, only ij 11 22 33 12 13 23")
-
-        stress_array = value_in_a_step_ave(step, variable_name, self.n_ave, self.lines)
-
-        if chunk_method == "rz":
-            r = value_in_a_step_ave(step, "v_r", self.n_ave, self.lines)
-            z = value_in_a_step_ave(step, "v_z", self.n_ave, self.lines)
-            x_array = r/diameter
-            y_array = z/diameter
-        elif chunk_method == "yz":
-            y = value_in_a_step_ave(step, "Coord1", self.n_ave, self.lines)
-            z = value_in_a_step_ave(step, "Coord2", self.n_ave, self.lines)
-            x_array = y/diameter
-            y_array = z/diameter
-        else:
-            sys.exit("chunk_method wrong")
-        quiver_scale = 1
-        label_scale = 1
+        stress_array = value_in_a_step_ave(step, self.stress_variable_name(i,j), self.n_ave, self.lines)
+        
         stress_array = stress_array/stress_scale/vol_in_chunks
         stress = np.take(stress_array, k_index, axis=fix_along_array_dim)
-        vector_j = value_in_a_step_ave(step, xyztoCoor[map_dim_index_to_coordinate[j]], self.n_ave, self.lines)
-        vector = np.take(vector_j, k_index, axis=fix_along_array_dim)
+        
+        if k == 2:
+            anotherdim = 3
+        elif k == 3:
+            anotherdim = 2
+        else:
+            sys.exit("not 2 not 3")
+
+        vector_origin = value_in_a_step_ave(step, xyztoCoor[map_dim_index_to_coordinate[anotherdim-1]], self.n_ave, self.lines)
+        vector = np.take(vector_origin, k_index, axis=fix_along_array_dim)
 
         time = time_in_a_step_from_start_rotate(step)
+        
+        return [time, vector, stress]
+
+    ########## plot 1D-1D stress-position index change##########
+    def plotchunk_stress_ij_fix_k_ave(self, step, i, j, k, k_index):
+
+        [time, vector, stress] = self.datachunk_stress_ij_fix_k_ave(step, i, j, k, k_index)
+        fig, ax = plt.subplots()
         ax.plot(vector, stress, label="{:.2e}".format(time),
                 marker = ".",
                 linestyle = 'None',
@@ -513,7 +539,16 @@ class chunk(object):
                 )
         
         return (fig, ax)
-        
+    
+    def save_stress_fix_k(self, stepsarray, i, j, k, k_index, figformat="png", ifpickle=False):
+        savepath = dp.stress_fix_k_folder_path(i,j,k)
+        om.create_directory(savepath)
+        add_nve_subfolder_in_folder(self.n_ave, savepath)
+        foldersave = path_nve_subfolder_in_folder(self.n_ave, savepath)
+        for step in stepsarray:
+            fig, ax = self.plotchunk_stress_ij_fix_k_ave(step, i, j, k, k_index)
+            save_one_plot(fig, ax, foldersave, "step_" + str(int(step) + "k" + str(k_index)), figformat="png", ifpickle=False)
+
 
     def plotchunk_1(self, stepsarray, figformat="png", ifpickle=False):
         self.save_stress_x23(stepsarray, 1, 1, figformat="png", ifpickle=False)

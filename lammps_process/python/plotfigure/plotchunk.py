@@ -228,7 +228,7 @@ def step_last_fix_change_by_n_ave(n_ave, index):
 
 def data_in_one_step(step, lines):
 
-    n_line_0 = int(int(step - step_first_in_file(lines))/d_step*(n_line_in_a_step+1) + 4)
+    n_line_0 = int(int(step - step_first_in_file(lines))/d_step)*(n_line_in_a_step+1) + 4
     n_line_1 = int(n_line_0 + n_line_in_a_step)
     ## select data
     data = [lines[t].split() for t in range(n_line_0, n_line_1)]
@@ -1101,16 +1101,16 @@ class chunk(object):
     def plotchunk_velocity_fraction_step1to2(self, step1, step2, figformat="png", ifpickle=False):
         #if smallstep largestep
         # need combine
-        self.plotchunk_1_step1to2(save_v23_x23, step1, step2, figformat="png", ifpickle=False)
-        self.plotchunk_1_step1to2(save_v13_x23, step1, step2, figformat="png", ifpickle=False)
-        self.plotchunk_1_step1to2(save_fraction_x23, step1, step2, figformat="png", ifpickle=False)
+        self.plotchunk_1_step1to2(self.save_v23_x23, step1, step2, figformat="png", ifpickle=False)
+        self.plotchunk_1_step1to2(self.save_v13_x23, step1, step2, figformat="png", ifpickle=False)
+        self.plotchunk_1_step1to2(self.save_fraction_x23, step1, step2, figformat="png", ifpickle=False)
 
     def plotchunk_velocity_fraction_every(self, figformat="png", ifpickle=False):
         #if smallstep largestep
         # need combine
-        self.plotchunk_1_every(save_v23_x23, figformat="png", ifpickle=False)
-        self.plotchunk_1_every(save_v13_x23, figformat="png", ifpickle=False)
-        self.plotchunk_1_every(save_fraction_x23, figformat="png", ifpickle=False)
+        self.plotchunk_1_every(self.save_v23_x23, figformat="png", ifpickle=False)
+        self.plotchunk_1_every(self.save_v13_x23, figformat="png", ifpickle=False)
+        self.plotchunk_1_every(self.save_fraction_x23, figformat="png", ifpickle=False)
 
     ########## get 1D time-1D fraction - 2D x23 ##########
     def manysteparray(self, steparray, v_name):

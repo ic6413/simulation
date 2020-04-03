@@ -219,29 +219,27 @@ om.create_directory(f_momentum_mass_field_path)
 # stress
 f_stress_field_path = diagram_path + "stress/"
 om.create_directory(f_stress_field_path)
-# same scale
+# same scale for each plot
 f_momentum_mass_field_samescale_path = f_momentum_mass_field_path + "same_scale/"
 om.create_directory(f_momentum_mass_field_samescale_path)
 f_stress_field_samescale_path = f_stress_field_path + "same_scale/"
 om.create_directory(f_stress_field_samescale_path)
 
 # stress path
-f_stress_field_11_path = f_momentum_mass_field_samescale_path + "11/"
-f_stress_field_22_path = f_momentum_mass_field_samescale_path + "22/"
-f_stress_field_33_path = f_momentum_mass_field_samescale_path + "33/"
-f_stress_field_12_path = f_momentum_mass_field_samescale_path + "12/"
-f_stress_field_13_path = f_momentum_mass_field_samescale_path + "13/"
-f_stress_field_23_path = f_momentum_mass_field_samescale_path + "23/"
+def stress_folder_path(i,j):
+    return f_stress_field_samescale_path + str(i) + str(j) + "/"
+def stress_fix_k_folder_path(i,j,k):
+    return f_stress_field_samescale_path + str(i) + str(j) + "_k_" + str(k) + "/"
 # create stress folder
-for folder_path in [
-                    f_stress_field_11_path,
-                    f_stress_field_22_path,
-                    f_stress_field_33_path,
-                    f_stress_field_12_path,
-                    f_stress_field_13_path,
-                    f_stress_field_23_path,
-                    ]:
-    om.create_directory(folder_path)
+for [i, j] in [
+                [1, 1],
+                [2, 2],
+                [3, 3],
+                [1, 2],
+                [1, 3],
+                [2, 3],
+                ]:
+    om.create_directory(stress_folder_path(i,j))
 # 
 if if_plot_velocity_field_scale_same == "yes":
     if rr.logfile["shearwall"] == "zcylinder":
