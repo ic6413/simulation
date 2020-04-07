@@ -983,7 +983,7 @@ fix		avspatial ${storeforcegroup} ave/chunk ${every_ave_chunk_momentum_mass_fiel
 v_mv2 v_mv1 v_mv3 v_Ek1 v_Ek2 v_Ek3 c_m1 temp v_my v_mz c_omega[*] norm none file output/momentum_mass_field/fix.momentum_mass_field.all
 
 fix		avspatialstress ${storeforcegroup} ave/chunk ${every_ave_chunk_momentum_mass_field} ${repeat_ave_chunk_momentum_mass_field} ${freq_ave_chunk_momentum_mass_field} chunk_2_3 &
-c_stress[*] v_inwall_per_atom_1 v_inwall_per_atom_2 v_inwall_per_atom_3 norm none file output/stress/fix.stress.all
+c_stress[*] v_inwall_per_atom_1 v_inwall_per_atom_2 v_inwall_per_atom_3 outwall_per_atom_1 outwall_per_atom_2 outwall_per_atom_3 zbottom_per_atom_1 zbottom_per_atom_2 zbottom_per_atom_3 norm none file output/stress/fix.stress.all
 label skip_ave_chunk
 
 ### wall force
