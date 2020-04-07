@@ -232,12 +232,12 @@ def stress_fix_k_folder_path(i,j,k):
     return f_stress_field_samescale_path + str(i) + str(j) + "_k_" + str(k) + "/"
 # create stress folder
 for [i, j] in [
+                [0, 0],
                 [1, 1],
                 [2, 2],
-                [3, 3],
+                [0, 1],
+                [0, 2],
                 [1, 2],
-                [1, 3],
-                [2, 3],
                 ]:
     om.create_directory(stress_folder_path(i,j))
 # 

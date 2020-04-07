@@ -432,24 +432,27 @@ class chunk(object):
         return value
 
     def stress_variable_name(self, i, j):
-
-        if i == 1 and j == 1:
+        # i j = 0 1 2
+        if i == 0 and j == 0:
             variable_name = "c_stress[1]"
-        elif i == 2 and j == 2:
+        elif i == 1 and j == 1:
             variable_name = "c_stress[2]"
-        elif i == 3 and j == 3:
+        elif i == 2 and j == 2:
             variable_name = "c_stress[3]"
-        elif i == 1 and j == 2:
+        elif i == 0 and j == 1:
             variable_name = "c_stress[4]"
-        elif i == 1 and j == 3:
+        elif i == 0 and j == 2:
             variable_name = "c_stress[5]"
-        elif i == 2 and j == 3:
+        elif i == 1 and j == 2:
             variable_name = "c_stress[6]"
         else:
             sys.exit("i j index not correct, only ij 11 22 33 12 13 23")
 
         return variable_name
 
+    def force_wall_variable_name(self, i):
+        i += 1
+        return "v_inwall_per_atom_" + str(i) 
 
     ########## plot 1D-2D stress-position ##########
     def datachunk_ave_one_step_stressij_x23(self, step, i, j):
@@ -473,7 +476,6 @@ class chunk(object):
         time = time_in_a_step_from_start_rotate(step)
 
         return [time, x_array, y_array, stress_array]
-
 
 
     ########## plot 1D-2D stress-position ##########
@@ -508,23 +510,26 @@ class chunk(object):
 
         fix_along_array_dim = position_index_to_array_dim_index[k]
 
-        stress_array = value_in_a_step_ave(step, self.stress_variable_name(i,j), self.n_ave, self.lines)
+        stress_array = np.resize(
+            value_in_a_step_ave(step, self.stress_variable_name(i,j), self.n_ave, self.lines),
+            (n_1, n_2),
+            )
         
         stress_array = stress_array/stress_scale/vol_in_chunks
         stress = np.take(stress_array, k_index, axis=fix_along_array_dim)
-        
-        if k == 2:
-            anotherdim = 3
-        elif k == 3:
+        if k == 1:
             anotherdim = 2
+        elif k == 2:
+            anotherdim = 1
         else:
-            sys.exit("not 2 not 3")
+            sys.exit("not 1 not 2")
 
-        vector_origin = value_in_a_step_ave(step, xyztoCoor[map_dim_index_to_coordinate[anotherdim-1]], self.n_ave, self.lines)
+        vector_origin = np.resize(
+            value_in_a_step_ave(step, xyztoCoor[map_dim_index_to_coordinate[anotherdim]], self.n_ave, self.lines),
+            (n_1, n_2),
+            )
         vector = np.take(vector_origin, k_index, axis=fix_along_array_dim)
-
         time = time_in_a_step_from_start_rotate(step)
-        
         return [time, vector, stress]
 
     ########## plot 1D-1D stress-position index change##########
@@ -547,16 +552,18 @@ class chunk(object):
         foldersave = path_nve_subfolder_in_folder(self.n_ave, savepath)
         for step in stepsarray:
             fig, ax = self.plotchunk_stress_ij_fix_k_ave(step, i, j, k, k_index)
-            save_one_plot(fig, ax, foldersave, "step_" + str(int(step) + "k" + str(k_index)), figformat="png", ifpickle=False)
+            save_one_plot(fig, ax, foldersave, "step_" + str(int(step)) + "k" + str(k_index), figformat="png", ifpickle=False)
 
 
     def plotchunk_1(self, stepsarray, figformat="png", ifpickle=False):
-        self.save_stress_x23(stepsarray, 1, 1, figformat="png", ifpickle=False)
-        self.save_stress_x23(stepsarray, 1, 2, figformat="png", ifpickle=False)
-        self.save_stress_x23(stepsarray, 1, 3, figformat="png", ifpickle=False)
-        self.save_stress_x23(stepsarray, 2, 2, figformat="png", ifpickle=False)
-        self.save_stress_x23(stepsarray, 2, 3, figformat="png", ifpickle=False)
-        self.save_stress_x23(stepsarray, 3, 3, figformat="png", ifpickle=False)
+        #self.save_stress_x23(stepsarray, 0, 0, figformat="png", ifpickle=False)
+        #self.save_stress_x23(stepsarray, 0, 1, figformat="png", ifpickle=False)
+        #self.save_stress_x23(stepsarray, 0, 2, figformat="png", ifpickle=False)
+        #self.save_stress_x23(stepsarray, 1, 1, figformat="png", ifpickle=False)
+        #self.save_stress_x23(stepsarray, 1, 2, figformat="png", ifpickle=False)
+        #self.save_stress_x23(stepsarray, 2, 2, figformat="png", ifpickle=False)
+        self.save_stress_fix_k(stepsarray,2,2,1,0)
+        self.save_stress_fix_k(stepsarray,2,2,1,-1)
 
     def plotchunk_1_step1to2(self, func, step1, step2, figformat="png", ifpickle=False):
         #if smallstep largestep
