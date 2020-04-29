@@ -15,10 +15,10 @@ import pickle
 from mpl_toolkits.mplot3d import Axes3D
 # import module
 import datapath as dp
-import read_setting.read_setting as rr
-import osmanage as om
+import read_setting as rr
+import os
 # import calculate setting
-import read_setting.calculate_setting as rc
+
 
 
 # plot style
@@ -105,9 +105,9 @@ else:
 
 
 def plot_wall_force(if_plot_to_last, step1, step2, figformat="png", ifpickle=False):
-    om.create_directory(dp.f_wall_force_plot_path)
+    os.makedirs(dp.f_wall_force_plot_path, exist_ok=True)
     for wallfile in [wallfile1, wallfile2, wallfile3]:    
-        with open(dp.lammps_directory + "output/wall/" + wallfile) as f:
+        with open(rr.lammps_directory + "output/wall/" + wallfile) as f:
             
             lines = f.read().strip().split('\n')
             
@@ -132,7 +132,7 @@ def plot_wall_force(if_plot_to_last, step1, step2, figformat="png", ifpickle=Fal
                 fig_handle = plt.figure()
                 x_array = df[variable1].values
                 if variable1 == 'v_t':
-                    x_array += rc.calculate_setting_dic["previous_time"]
+                    x_array += rr.calculate_setting_dic["previous_time"]
                 y_array = df[variable2].values
 
                 plt.xlabel(variable1)
@@ -156,11 +156,11 @@ def plot_wall_force(if_plot_to_last, step1, step2, figformat="png", ifpickle=Fal
 
 def plot_wall_force_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", ifpickle=False):
     f_wall_force_plot_path_nve = dp.f_wall_force_plot_path + "nve_" + str(n_ave) + "/"
-    om.create_directory(f_wall_force_plot_path_nve)
+    os.makedirs(f_wall_force_plot_path_nve, exist_ok=True)
     
     for wallfile in [wallfile1, wallfile2, wallfile3]: 
         
-        with open(dp.lammps_directory + "output/wall/" + wallfile) as f:
+        with open(rr.lammps_directory + "output/wall/" + wallfile) as f:
             
             lines = f.read().strip().split('\n')
             
@@ -185,7 +185,7 @@ def plot_wall_force_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", i
                 fig_handle = plt.figure()
                 x_array = df[variable1].values
                 if variable1 == 'v_t':
-                    x_array += rc.calculate_setting_dic["previous_time"]
+                    x_array += rr.calculate_setting_dic["previous_time"]
                 y_array = df[variable2].values
 
                 def ave_over(array, n):

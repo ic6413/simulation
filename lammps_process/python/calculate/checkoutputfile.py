@@ -4,7 +4,7 @@ import pprint
 import datetime
 import numpy as np
 # import module in simulation folder
-import osmanage as om
+import os
 import datapath as dp
 # import module in calculate folder
 import calculate.checksimulation as cs
@@ -19,7 +19,7 @@ class checkfile(object):
         self.step1 = step1
         self.step2 = step2
         # begin
-        om.create_directory(dp.debug_print_path)
+        os.makedirs(dp.debug_print_path, exist_ok=True)
         np.set_printoptions(threshold = 100000)
         np.set_printoptions(precision=6)
 

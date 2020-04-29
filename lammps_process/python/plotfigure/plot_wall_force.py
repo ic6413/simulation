@@ -15,10 +15,10 @@ import pickle
 from mpl_toolkits.mplot3d import Axes3D
 # import module
 import datapath as dp
-import osmanage as om
-import read_setting.read_setting as rr
+import os
+import read_setting as rr
 # import calculate setting
-import read_setting.calculate_setting as rc
+
 # import combine
 import combine_other_run.combine_previous_run as cc
 # plot style
@@ -76,15 +76,15 @@ force_scale = 0.6*float(rr.logfile['den'])*g*float(height)**2*float(periodlength
 
 def plot_wall_force(if_plot_to_last, step1, step2, figformat="png", ifpickle=False, ifplotfrominitial=False, ifplotfromrotate=True):
     f_wall_force_plot_path = dp.f_wall_force_plot_path
-    om.create_directory(f_wall_force_plot_path)
+    os.makedirs(f_wall_force_plot_path, exist_ok=True)
     for wallfile in wallfiles:
         if ifplotfrominitial or ifplotfromrotate:
-            with open(dp.lammps_directory + "output/wall/" + wallfile) as f:
+            with open(rr.lammps_directory + "output/wall/" + wallfile) as f:
                 lines = f.read().strip().split('\n')
             header = lines[1].split()[1:]
             df_full = cc.combine_previous_wall_data(wallfile, ifplotfrominitial, ifplotfromrotate)
         else:
-            with open(dp.lammps_directory + "output/wall/" + wallfile) as f:
+            with open(rr.lammps_directory + "output/wall/" + wallfile) as f:
                 lines = f.read().strip().split('\n')
             header = lines[1].split()[1:]
             data = [lines[t].split() for t in range(2, len(lines))]
@@ -101,7 +101,7 @@ def plot_wall_force(if_plot_to_last, step1, step2, figformat="png", ifpickle=Fal
             for variable2 in header:
                 fig = plt.figure()
                 ax = fig.add_subplot(111)
-                x_array = df["v_t"].values - rc.rotate_start_time
+                x_array = df["v_t"].values - rr.rotate_start_time
                 y_array = df[variable2].values
                 if "force" in variable2:
                     y_array /= force_scale
@@ -149,19 +149,19 @@ def plot_wall_force(if_plot_to_last, step1, step2, figformat="png", ifpickle=Fal
 
 def plot_wall_force_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", ifpickle=False, ifplotfrominitial=False, ifplotfromrotate=True):
     f_wall_force_plot_path = dp.f_wall_force_plot_path
-    om.create_directory(f_wall_force_plot_path)
+    os.makedirs(f_wall_force_plot_path, exist_ok=True)
     f_wall_force_plot_path_nve = f_wall_force_plot_path + "nve_" + str(n_ave) + "/"
 
-    om.create_directory(f_wall_force_plot_path_nve)
+    os.makedirs(f_wall_force_plot_path_nve, exist_ok=True)
     
     for wallfile in wallfiles:
         if ifplotfrominitial or ifplotfromrotate:
-            with open(dp.lammps_directory + "output/wall/" + wallfile) as f:
+            with open(rr.lammps_directory + "output/wall/" + wallfile) as f:
                 lines = f.read().strip().split('\n')
             header = lines[1].split()[1:]
             df_full = cc.combine_previous_wall_data(wallfile, ifplotfrominitial, ifplotfromrotate)
         else:
-            with open(dp.lammps_directory + "output/wall/" + wallfile) as f:
+            with open(rr.lammps_directory + "output/wall/" + wallfile) as f:
                 lines = f.read().strip().split('\n')
             header = lines[1].split()[1:]
             data = [lines[t].split() for t in range(2, len(lines))]
@@ -175,7 +175,7 @@ def plot_wall_force_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", i
             for variable2 in header:
                 fig = plt.figure()
                 ax = fig.add_subplot(111)
-                x_array = df["v_t"].values - rc.rotate_start_time
+                x_array = df["v_t"].values - rr.rotate_start_time
                 y_array = df[variable2].values
                 if "force" in variable2:
                     y_array /= force_scale

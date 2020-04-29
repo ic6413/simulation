@@ -2,21 +2,14 @@
 import sys
 import os
 import numpy as np
-import osmanage as om
+import os
 # import read_setting
-import read_setting.read_setting as rr
-# import calculate setting
-import read_setting.calculate_setting as rc
+import read_setting as rr
 # setting
 abs_error_tolerence = 1e-13
 if_plot_velocity_field_scale_same = "yes"
 quiver_scale_velocity_xaxis_shearplanenormal_yaxis_z = 0.1
 quiver_scale_velocity_xaxis_shearplaneshear_yaxis_z = 1
-
-# === current module inputvariable ===
-# set lammps directory (current workspace directory or path)
-lammps_directory = rc.lammps_directory
-print('current working directory:' + lammps_directory)
 
 # ====================================== import attribute
 
@@ -148,25 +141,25 @@ def put_maxlabel_on_file(maxlabel, f_name_without_id):
     return f_name_add_id
 
 # Lammps output path of inputvariable files
-pair_all_path = lammps_directory + 'output/pair_all/dump.all.pair.allstep'
-custom_all_path = lammps_directory + 'output/single_all/dump.all.single.allstep'
+pair_all_path = rr.lammps_directory + 'output/pair_all/dump.all.pair.allstep'
+custom_all_path = rr.lammps_directory + 'output/single_all/dump.all.single.allstep'
 
-filelist = os.listdir(lammps_directory + 'output/single_all/')
+filelist = os.listdir(rr.lammps_directory + 'output/single_all/')
 try:
     for i in range(2):
         file = filelist[i]
         if not file.endswith("allstep"):
-            custom_all_firststep_path = lammps_directory + 'output/single_all/' + file
+            custom_all_firststep_path = rr.lammps_directory + 'output/single_all/' + file
         else:
             pass
 except:
     pass
 
-custom_near_trace_path = lammps_directory + 'output/single_trace/dump.trace.single.allstep'
-custom_near_trace_firststep_path = lammps_directory + 'output/single_trace/dump.trace.single.' + str(startstep)
-thermo_path = lammps_directory + "log.lammps"
+custom_near_trace_path = rr.lammps_directory + 'output/single_trace/dump.trace.single.allstep'
+custom_near_trace_firststep_path = rr.lammps_directory + 'output/single_trace/dump.trace.single.' + str(startstep)
+thermo_path = rr.lammps_directory + "log.lammps"
 def trace_print_path(label, id):
-    path = lammps_directory + 'output/trace/' + str(id) + "/" + label
+    path = rr.lammps_directory + 'output/trace/' + str(id) + "/" + label
     return path
 
 
@@ -174,24 +167,24 @@ def trace_print_path(label, id):
 ## folder path of output
 
 # postprocess
-post_process_path = lammps_directory + 'postprocess/'
-om.create_directory(post_process_path)
+post_process_path = rr.lammps_directory + 'postprocess/'
+os.makedirs(post_process_path, exist_ok=True)
 
 # processed data
 post_data_path = post_process_path + "post_data/"
-om.create_directory(post_data_path)
+os.makedirs(post_data_path, exist_ok=True)
 # combine previous
 combine_previous_path = post_data_path + "combine_previous/"
-om.create_directory(combine_previous_path)
+os.makedirs(combine_previous_path, exist_ok=True)
 # combine previous output
 combine_previous_from_output = combine_previous_path + "output/"
-om.create_directory(combine_previous_from_output)
+os.makedirs(combine_previous_from_output, exist_ok=True)
 # copy folder in output to folder for previous data 
-for root, dirnames, filenames in os.walk(lammps_directory + 'output/'):
+for root, dirnames, filenames in os.walk(rr.lammps_directory + 'output/'):
     for dirname in dirnames:
         folderpath = os.path.join(root, dirname)
-        createfolderpath = folderpath.replace(lammps_directory + 'output/', combine_previous_from_output)
-        om.create_directory(createfolderpath)
+        createfolderpath = folderpath.replace(rr.lammps_directory + 'output/', combine_previous_from_output)
+        os.makedirs(createfolderpath, exist_ok=True)
 
 # hdf5
 hdf5_csv_path = post_process_path + 'hdf5_csv/'
@@ -202,7 +195,7 @@ f_cipcj = hdf5_csv_path + "cipcj.h5"
 
 # debug
 debug_print_path = post_process_path + 'debug/'
-om.create_directory(debug_print_path)
+os.makedirs(debug_print_path, exist_ok=True)
 debug_fig_path = debug_print_path + 'fig/'
 debug_fig_thermo_path = debug_fig_path + 'thermo/'
 debug_fig_oneatom_path = debug_fig_path + 'oneatom/'
@@ -212,24 +205,26 @@ debug_fig_atomij_path = debug_fig_path + 'atomij/'
 interactive_path = post_process_path + 'interactive/'
 # diagram
 diagram_path = post_process_path + 'diagram/'
-om.create_directory(diagram_path)
+os.makedirs(diagram_path, exist_ok=True)
 # momentum
 f_momentum_mass_field_path = diagram_path + "momentum_mass_field/"
-om.create_directory(f_momentum_mass_field_path)
+os.makedirs(f_momentum_mass_field_path, exist_ok=True)
 # stress
 f_stress_field_path = diagram_path + "stress/"
-om.create_directory(f_stress_field_path)
+os.makedirs(f_stress_field_path, exist_ok=True)
 # same scale for each plot
 f_momentum_mass_field_samescale_path = f_momentum_mass_field_path + "same_scale/"
-om.create_directory(f_momentum_mass_field_samescale_path)
+os.makedirs(f_momentum_mass_field_samescale_path, exist_ok=True)
 f_stress_field_samescale_path = f_stress_field_path + "same_scale/"
-om.create_directory(f_stress_field_samescale_path)
+os.makedirs(f_stress_field_samescale_path, exist_ok=True)
 
 # stress path
 def stress_folder_path(i,j):
     return f_stress_field_samescale_path + str(i) + str(j) + "/"
 def stress_fix_k_folder_path(i,j,k):
     return f_stress_field_samescale_path + str(i) + str(j) + "_k_" + str(k) + "/"
+def stress_time_folder_path(i,j):
+    return f_stress_field_samescale_path + str(i) + str(j) + "_vs_time/"
 # create stress folder
 for [i, j] in [
                 [0, 0],
@@ -239,52 +234,55 @@ for [i, j] in [
                 [0, 2],
                 [1, 2],
                 ]:
-    om.create_directory(stress_folder_path(i,j))
-# 
+    os.makedirs(stress_folder_path(i,j), exist_ok=True)
+# wall stress
+def wall_stress_fix_k_folder_path(i,j,k):
+    return f_stress_field_samescale_path + "wall/" + str(i) + str(j) + "_k_" + str(k) + "/"
+
 if if_plot_velocity_field_scale_same == "yes":
     if rr.logfile["shearwall"] == "zcylinder":
         f_momentum_mass_field_v23x23_path = f_momentum_mass_field_samescale_path + "Vr_Vz_Xr_Xz/"
         f_momentum_mass_field_v13x23_path = f_momentum_mass_field_samescale_path + "Vr_Vtheta_Xr_Xz/"
-        om.create_directory(f_momentum_mass_field_v23x23_path)
-        om.create_directory(f_momentum_mass_field_v13x23_path)
+        os.makedirs(f_momentum_mass_field_v23x23_path, exist_ok=True)
+        os.makedirs(f_momentum_mass_field_v13x23_path, exist_ok=True)
     if rr.logfile["shearwall"] == "yplane":
         f_momentum_mass_field_v23x23_path = f_momentum_mass_field_samescale_path + "Vx_Vz_Xx_Xz/"
         f_momentum_mass_field_v13x23_path = f_momentum_mass_field_samescale_path + "Vx_Vtheta_Xx_Xz/"
-        om.create_directory(f_momentum_mass_field_v23x23_path)
-        om.create_directory(f_momentum_mass_field_v13x23_path)
+        os.makedirs(f_momentum_mass_field_v23x23_path, exist_ok=True)
+        os.makedirs(f_momentum_mass_field_v13x23_path, exist_ok=True)
 
     f_momentum_mass_field_volumnfraction_x23_path = f_momentum_mass_field_samescale_path + "density_Xx_Xz/"
-    om.create_directory(f_momentum_mass_field_volumnfraction_x23_path)
+    os.makedirs(f_momentum_mass_field_volumnfraction_x23_path, exist_ok=True)
 else:
     if rr.logfile["shearwall"] == "zcylinder":
         f_momentum_mass_field_v23x23_path = f_momentum_mass_field_path + "Vr_Vz_Xr_Xz/"
         f_momentum_mass_field_v13x23_path = f_momentum_mass_field_path + "Vr_Vtheta_Xr_Xz/"
-        om.create_directory(f_momentum_mass_field_v23x23_path)
-        om.create_directory(f_momentum_mass_field_v13x23_path)
+        os.makedirs(f_momentum_mass_field_v23x23_path, exist_ok=True)
+        os.makedirs(f_momentum_mass_field_v13x23_path, exist_ok=True)
     if rr.logfile["shearwall"] == "yplane":
         f_momentum_mass_field_v23x23_path = f_momentum_mass_field_path + "Vx_Vz_Xx_Xz/"
         f_momentum_mass_field_v13x23_path = f_momentum_mass_field_path + "Vx_Vtheta_Xx_Xz/"
-        om.create_directory(f_momentum_mass_field_v23x23_path)
-        om.create_directory(f_momentum_mass_field_v13x23_path)
+        os.makedirs(f_momentum_mass_field_v23x23_path, exist_ok=True)
+        os.makedirs(f_momentum_mass_field_v13x23_path, exist_ok=True)
 
     f_momentum_mass_field_volumnfraction_x23_path = f_momentum_mass_field_path + "density_Xx_Xz/"
-    om.create_directory(f_momentum_mass_field_volumnfraction_x23_path) 
+    os.makedirs(f_momentum_mass_field_volumnfraction_x23_path, exist_ok=True) 
 
 f_max_velocity_near_wall = diagram_path + "max_velocity_near_wall/"
 
 f_wall_force_plot_path = diagram_path + "wall_force/"
 
 f_strain_rate_path = diagram_path + "strain_rate/"
-om.create_directory(f_strain_rate_path)
+os.makedirs(f_strain_rate_path, exist_ok=True)
 
 f_ek_path = diagram_path + "ek/"
-om.create_directory(f_ek_path)
+os.makedirs(f_ek_path, exist_ok=True)
 
 f_velocity_path = diagram_path + "velocity/"
-om.create_directory(f_velocity_path)
+os.makedirs(f_velocity_path, exist_ok=True)
 
 f_ekminusekave_path = diagram_path + "ekminusekave/"
-om.create_directory(f_ekminusekave_path)
+os.makedirs(f_ekminusekave_path, exist_ok=True)
 
 f_fraction_check_everygrid = diagram_path + "fraction_check_everygrid/"
 
@@ -320,6 +318,6 @@ def f_path_ek_i_j_ave_k_no_top(i,j,k):
 
 # Latex report
 latex_path = post_process_path + 'latex/'
-om.create_directory(latex_path)
+os.makedirs(latex_path, exist_ok=True)
 latex_pics_path = latex_path + 'pics/'
-om.create_directory(latex_pics_path)
+os.makedirs(latex_pics_path, exist_ok=True)

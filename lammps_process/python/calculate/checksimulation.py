@@ -14,9 +14,9 @@ import matplotlib.pyplot as plt
 # This import registers the 3D projection, but is otherwise unused.
 from mpl_toolkits.mplot3d import Axes3D
 # import module in simulation folder
-import osmanage as om
+import os
 import datapath as dp
-import read_setting.read_setting as rr
+import read_setting as rr
 
 
 # ==== inputvariable varables ====
@@ -26,24 +26,24 @@ overlap_tolerence = 0
 abs_error_tolerence = dp.abs_error_tolerence
 # ==== inputvariable varables end ====
 # timestep
-ts = dp.ts 
+ts = float(rr.logfile['ts']) 
 # atom radius
-dp0 = dp.dp0 
-density = dp.density
+dp0 = float(rr.logfile['dp']) 
+density = flaot(rr.logfile["den"])
 # intersection pointmu
-r_in = dp.r_in
-r_out = dp.r_out
+r_in = float(rr.logfile["r_in"]) 
+r_out = float(rr.logfile["r_out"]) 
 # gravity
-g = dp.g 
+g = float(rr.logfile["g"])  
 # parameter
-mu = dp.mu
-kn = dp.kn 
-kt = dp.kt 
-gamma_n = dp.gamma_n
-gamma_t = dp.gamma_t
-type_radius_array = dp.type_radius_array
-zlo_wall = dp.zlo_wall
-walls = dp.walls
+mu = float(rr.logfile["mu"]) 
+kn = float(rr.logfile["kn"])  
+kt = float(rr.logfile["kt"])  
+gamma_n = float(rr.logfile["gamma_n"]) 
+gamma_t = float(rr.logfile["gamma_t"]) 
+type_radius_array = int(rr.logfile["type_radius_array"]) 
+zlo_wall = rr.logfile["zlo_wall"]
+walls = rr.logfile["walls"]
 # ====================================== end import attribute
 
 

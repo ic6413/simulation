@@ -7,10 +7,10 @@ from pylatex.utils import italic
 from pylatex.utils import NoEscape
 import os
 import os.path
-import read_setting.read_setting as rr
+import read_setting as rr
 import datapath as dp
 import re
-import osmanage
+import os
 
 def natural_sort(l): 
     convert = lambda text: int(text) if text.isdigit() else text.lower() 
@@ -24,7 +24,7 @@ for root, dirnames, filenames in os.walk(dp.diagram_path):
     for dirname in dirnames:
         folderpath = os.path.join(root, dirname)
         createfolderpath = folderpath.replace(dp.diagram_path, dp.latex_pics_path)
-        osmanage.create_directory(createfolderpath)
+        os.makedirs(createfolderpath, exist_ok=True)
 # copy diagram wall    
 subprocess.run(["cp", "-r", dp.f_wall_force_plot_path, dp.latex_pics_path])
 subprocess.run(["cp", "-r", dp.f_wall_force_plot_from_initial_path, dp.latex_pics_path])
@@ -106,4 +106,4 @@ with doc.create(Section("Simulation Plot")):
 
 doc.generate_pdf(clean_tex=False)
 
-os.chdir(dp.lammps_directory)
+os.chdir(rr.lammps_directory)

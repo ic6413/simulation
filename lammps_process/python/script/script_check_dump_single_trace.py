@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import sys
-import read_setting.read_setting as rr
+import read_setting as rr
 
 id_i = int(sys.argv[1])
 step1 = sys.argv[2]

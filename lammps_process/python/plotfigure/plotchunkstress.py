@@ -47,10 +47,10 @@ import functools
 from mpl_toolkits.mplot3d import Axes3D
 # import module
 import datapath as dp
-import osmanage as om
-import read_setting.read_setting as rr
+import os
+import read_setting as rr
 # import calculate setting
-import read_setting.calculate_setting as rc
+
 # plot style
 
 plt.style.use('classic')
@@ -105,11 +105,9 @@ else:
     sys.exit("chunk_method wrong")
 g = float(rr.logfile['g'])
 d_step = int(rr.logfile['freq_ave_chunk_momentum_mass_field'])
-den = float(rr.logfile['den'])
 height_dpunit = float(rr.logfile['zhi_chunk_dp_unit'])
-stress_scale = den*g*height_dpunit*diameter
-
 shear_rate_scale = float(rr.logfile['in_velocity'])/(float(rr.logfile['width_wall_dp_unit'])*float(rr.logfile['dp']))
+stress_scale = float(rr.logfile['den'])*g*height_dpunit*diameter
 
 if chunk_method == "rz":
     position_index_to_array_dim_index = {
@@ -182,12 +180,12 @@ else:
 chunk_first_dim_number = [i for i, coord in enumerate(map_dim_index_to_coordinate) if coord == chunk_first_dim_coord][0]
 chunk_second_dim_number = [i for i, coord in enumerate(map_dim_index_to_coordinate) if coord == chunk_second_dim_coord][0]
 
-def lines_from_one_simu(lammps_directory):
-    with open(lammps_directory + "output/stress/fix.stress.all") as f:
+def lines_from_one_simu(lammps_directory, f_path_rela_lmpfolder="output/stress/fix.stress.all"):
+    with open(lammps_directory + f_path_rela_lmpfolder) as f:
         lines = f.read().strip().split('\n')
     return lines
 
-lines = lines_from_one_simu(dp.lammps_directory)
+lines = lines_from_one_simu(rr.lammps_directory)
 header = lines[2].split()[1:]
 n_line_in_a_step = int(lines[3].split()[1])
 
@@ -221,17 +219,17 @@ def step_last_in_file_change_by_n_ave(n_ave,lines):
 
 
 def step2_fix_initial_to_last_func(index):
-    if index == rr.n_loglist-1:
-        lines = lines_from_one_simu(dp.lammps_directory)
+    if index == rr.n_simu_total-1:
+        lines = lines_from_one_simu(rr.lammps_directory)
         step2_fix = step_last_in_file(lines)
     else:
-        lmp_dir_next = rc.folder_path_list_initial_to_last[index+1]
+        lmp_dir_next = rr.folder_path_list_initial_to_last[index+1]
         lines_next = lines_from_one_simu(lmp_dir_next)
         step1_next = step_first_in_file(lines_next)
 
-        lmp_dir = rc.folder_path_list_initial_to_last[index]
+        lmp_dir = rr.folder_path_list_initial_to_last[index]
         lines = lines_from_one_simu(lmp_dir)
-        logfile = rr.logfilelist_from_initial_to_lastest[index]
+        logfile = rr.logdiclist[index]
         freq = int(logfile["freq_ave_chunk_momentum_mass_field"])
         step1 = step_first_in_file(lines)
         step2 = step_last_in_file(lines)
@@ -245,7 +243,7 @@ def step2_fix_initial_to_last_func(index):
 
 
 def step_last_fix_change_by_n_ave(n_ave, index):
-    return step2_fix_initial_to_last_func(index)-int((n_ave-1)/2*int(rr.logfilelist_from_initial_to_lastest[index]["freq_ave_chunk_momentum_mass_field"]))
+    return step2_fix_initial_to_last_func(index)-int((n_ave-1)/2*int(rr.logdiclist[index]["freq_ave_chunk_momentum_mass_field"]))
 
 
 def data_in_one_step(step, lines):
@@ -281,7 +279,7 @@ def time_in_a_step(step):
 
 
 def time_in_a_step_from_start_rotate(step):
-    return step*float(rr.logfile["ts"])-rc.rotate_start_time
+    return step*float(rr.logfile["ts"])-rr.rotate_start_time
 
 
 def path_nve_subfolder_in_folder(n_ave, folder):
@@ -343,9 +341,9 @@ def plot_quiver_position_label(fig, ax):
     return (fig, ax)
 
 
-def save_one_plot(fig, ax, foldersave, f_name, figformat="png", ifpickle=False):
-    
-    fig.savefig(foldersave + f_name + "." + figformat, format=figformat)
+def save_one_plot(fig, ax, foldersave, f_name, figformat="png", ifpickle=False, bbox_inches = None):
+    # using bbox_inches = 'tight' to ensure legend in plot and outside axe
+    fig.savefig(foldersave + f_name + "." + figformat, format=figformat, bbox_inches = bbox_inches)
     if ifpickle:
         # Save figure handle to disk
         with open(foldersave + f_name + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
@@ -409,7 +407,6 @@ class chunk(object):
         
 
     def data_in_one_step(self, step):
-
         n_line_0 = int(int(step - self.step_first_in_file)/self.d_step*(self.n_line_in_a_step+1) + 4)
         n_line_1 = int(n_line_0 + self.n_line_in_a_step)
         ## select data
@@ -450,11 +447,7 @@ class chunk(object):
 
         return variable_name
 
-    def force_wall_variable_name(self, i):
-        i += 1
-        return "v_inwall_per_atom_" + str(i) 
-
-    ########## plot 1D-2D stress-position ##########
+    ########## data 1D-2D stress-position ##########
     def datachunk_ave_one_step_stressij_x23(self, step, i, j):
 
         stress_array = value_in_a_step_ave(step, self.stress_variable_name(i,j), self.n_ave, self.lines)
@@ -517,6 +510,15 @@ class chunk(object):
         
         stress_array = stress_array/stress_scale/vol_in_chunks
         stress = np.take(stress_array, k_index, axis=fix_along_array_dim)
+
+        k_value_array = np.resize(
+            value_in_a_step_ave(step, xyztoCoor[map_dim_index_to_coordinate[k]], self.n_ave, self.lines),
+            (n_1, n_2),
+            )
+        k_value = np.take(k_value_array, k_index, axis=fix_along_array_dim)
+        k_value = k_value[0]
+        k_value = k_value/diameter
+
         if k == 1:
             anotherdim = 2
         elif k == 2:
@@ -529,41 +531,71 @@ class chunk(object):
             (n_1, n_2),
             )
         vector = np.take(vector_origin, k_index, axis=fix_along_array_dim)
+        vector = vector/diameter
         time = time_in_a_step_from_start_rotate(step)
-        return [time, vector, stress]
+        return [time, vector, stress, k_value]
 
     ########## plot 1D-1D stress-position index change##########
-    def plotchunk_stress_ij_fix_k_ave(self, step, i, j, k, k_index):
-
-        [time, vector, stress] = self.datachunk_stress_ij_fix_k_ave(step, i, j, k, k_index)
-        fig, ax = plt.subplots()
-        ax.plot(vector, stress, label="{:.2e}".format(time),
-                marker = ".",
-                linestyle = 'None',
-                markersize=16,
-                )
+    def plotchunk_stress_ij_fix_k_ave(self, stepsarray, i, j, k, k_index_array):
         
+        fig, ax = plt.subplots()
+        for k_index in k_index_array:
+            for step in stepsarray:
+
+                [time, vector, stress, k_value] = self.datachunk_stress_ij_fix_k_ave(step, i, j, k, k_index)
+                
+                ax.plot(vector, stress, label="t={:.2e} s".format(time) + ", " + map_dim_index_to_coordinate[k] + "=" + "{:.2f}".format(k_value),
+                        marker = ".",
+                        linestyle = 'None',
+                        markersize=12,
+                        )
+        if k == 1:
+            anotherdim = 2
+        elif k == 2:
+            anotherdim = 1
+        else:
+            sys.exit("not 1 not 2")
+        ax.set_xlabel(map_dim_index_to_coordinate[anotherdim])
+        ax.set_ylabel("stress"+str(i)+str(j))
+        # Shrink current axis by 20%
+        box = ax.get_position()
+        ax.set_position([box.x0, box.y0, box.width * 0.6, box.height])
+
+        ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
+
+
         return (fig, ax)
     
-    def save_stress_fix_k(self, stepsarray, i, j, k, k_index, figformat="png", ifpickle=False):
+    def save_stress_fix_k(self, stepsarray, i, j, k, k_index_array, figformat="png", ifpickle=False, onefigure=True):
         savepath = dp.stress_fix_k_folder_path(i,j,k)
-        om.create_directory(savepath)
+        os.makedirs(savepath, exist_ok=True)
         add_nve_subfolder_in_folder(self.n_ave, savepath)
         foldersave = path_nve_subfolder_in_folder(self.n_ave, savepath)
-        for step in stepsarray:
-            fig, ax = self.plotchunk_stress_ij_fix_k_ave(step, i, j, k, k_index)
-            save_one_plot(fig, ax, foldersave, "step_" + str(int(step)) + "k" + str(k_index), figformat="png", ifpickle=False)
-
-
+        if onefigure:
+            fig, ax = self.plotchunk_stress_ij_fix_k_ave(stepsarray, i, j, k, k_index_array)
+            save_one_plot(fig, ax, foldersave, "step_" + "-".join([str(number) for number in stepsarray]) + map_dim_index_to_coordinate[k] + "_" + "-".join([str(number) for number in k_index_array]), figformat="png", ifpickle=False, bbox_inches="tight")
+        else:
+            for k_index in k_index_array:
+                for step in stepsarray:
+                    fig, ax = self.plotchunk_stress_ij_fix_k_ave([step], i, j, k, [k_index])
+                    save_one_plot(fig, ax, foldersave, "step_" + str(int(step)) + map_dim_index_to_coordinate[k] + "_" + str(k_index), figformat="png", ifpickle=False, bbox_inches="tight")
+        
     def plotchunk_1(self, stepsarray, figformat="png", ifpickle=False):
         #self.save_stress_x23(stepsarray, 0, 0, figformat="png", ifpickle=False)
         #self.save_stress_x23(stepsarray, 0, 1, figformat="png", ifpickle=False)
         #self.save_stress_x23(stepsarray, 0, 2, figformat="png", ifpickle=False)
         #self.save_stress_x23(stepsarray, 1, 1, figformat="png", ifpickle=False)
         #self.save_stress_x23(stepsarray, 1, 2, figformat="png", ifpickle=False)
-        #self.save_stress_x23(stepsarray, 2, 2, figformat="png", ifpickle=False)
-        self.save_stress_fix_k(stepsarray,2,2,1,0)
-        self.save_stress_fix_k(stepsarray,2,2,1,-1)
+        self.save_stress_x23(stepsarray, 2, 2, figformat="png", ifpickle=False)
+        
+        self.save_stress_fix_k(stepsarray,2,2,1,[0,-1])
+        self.save_stress_fix_k(stepsarray,0,0,1,[0,-1])
+        self.save_stress_fix_k(stepsarray,1,1,1,[0,-1])
+        self.save_stress_fix_k(stepsarray,0,1,1,[0,-1])
+        self.save_stress_fix_k(stepsarray,0,2,1,[0,-1])
+        self.save_stress_fix_k(stepsarray,1,2,1,[0,-1])
+        self.save_stress_fix_k(stepsarray,2,2,1,[0])
+        self.save_stress_fix_k(stepsarray,2,2,1,[-1])
 
     def plotchunk_1_step1to2(self, func, step1, step2, figformat="png", ifpickle=False):
         #if smallstep largestep

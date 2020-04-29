@@ -17,10 +17,10 @@ import functools
 from mpl_toolkits.mplot3d import Axes3D
 # import module
 import datapath as dp
-import osmanage as om
-import read_setting.read_setting as rr
+import os
+import read_setting as rr
 # import calculate setting
-import read_setting.calculate_setting as rc
+
 # plot style
 
 plt.style.use('classic')
@@ -43,6 +43,7 @@ if "if_inwall_wall_gran" in rr.logfile.keys():
         ybottomwalltype = "smooth"
 else:
     ybottomwalltype = "smooth"
+
 height = rr.logfile["z_length_create_dp_unit"]
 width = rr.logfile["width_wall_dp_unit"]
 periodlength = rr.logfile["x_period_dp_unit"]
@@ -88,6 +89,7 @@ if velocity_scale == 0:
 
 height_dpunit = float(rr.logfile['zhi_chunk_dp_unit'])
 shear_rate_scale = float(rr.logfile['in_velocity'])/(float(rr.logfile['width_wall_dp_unit'])*float(rr.logfile['dp']))
+stress_scale = float(rr.logfile['den'])*g*height_dpunit*diameter
 
 if chunk_method == "rz":
     position_index_to_array_dim_index = {
@@ -160,12 +162,12 @@ else:
 chunk_first_dim_number = [i for i, coord in enumerate(map_dim_index_to_coordinate) if coord == chunk_first_dim_coord][0]
 chunk_second_dim_number = [i for i, coord in enumerate(map_dim_index_to_coordinate) if coord == chunk_second_dim_coord][0]
 
-def lines_from_one_simu(lammps_directory):
-    with open(lammps_directory + "output/momentum_mass_field/fix.momentum_mass_field.all") as f:
+def lines_from_one_simu(lammps_directory, f_path_rela_lmpfolder="output/momentum_mass_field/fix.momentum_mass_field.all"):
+    with open(lammps_directory + f_path_rela_lmpfolder) as f:
         lines = f.read().strip().split('\n')
     return lines
 
-lines = lines_from_one_simu(dp.lammps_directory)
+lines = lines_from_one_simu(rr.lammps_directory)
 header = lines[2].split()[1:]
 n_line_in_a_step = int(lines[3].split()[1])
 
@@ -199,17 +201,17 @@ def step_last_in_file_change_by_n_ave(n_ave,lines):
 
 
 def step2_fix_initial_to_last_func(index):
-    if index == rr.n_loglist-1:
-        lines = lines_from_one_simu(dp.lammps_directory)
+    if index == rr.n_simu_total-1:
+        lines = lines_from_one_simu(rr.lammps_directory)
         step2_fix = step_last_in_file(lines)
     else:
-        lmp_dir_next = rc.folder_path_list_initial_to_last[index+1]
+        lmp_dir_next = rr.folder_path_list_initial_to_last[index+1]
         lines_next = lines_from_one_simu(lmp_dir_next)
         step1_next = step_first_in_file(lines_next)
 
-        lmp_dir = rc.folder_path_list_initial_to_last[index]
+        lmp_dir = rr.folder_path_list_initial_to_last[index]
         lines = lines_from_one_simu(lmp_dir)
-        logfile = rr.logfilelist_from_initial_to_lastest[index]
+        logfile = rr.logdiclist[index]
         freq = int(logfile["freq_ave_chunk_momentum_mass_field"])
         step1 = step_first_in_file(lines)
         step2 = step_last_in_file(lines)
@@ -223,7 +225,7 @@ def step2_fix_initial_to_last_func(index):
 
 
 def step_last_fix_change_by_n_ave(n_ave, index):
-    return step2_fix_initial_to_last_func(index)-int((n_ave-1)/2*int(rr.logfilelist_from_initial_to_lastest[index]["freq_ave_chunk_momentum_mass_field"]))
+    return step2_fix_initial_to_last_func(index)-int((n_ave-1)/2*int(rr.logdiclist[index]["freq_ave_chunk_momentum_mass_field"]))
 
 
 def data_in_one_step(step, lines):
@@ -259,7 +261,7 @@ def time_in_a_step(step):
 
 
 def time_in_a_step_from_start_rotate(step):
-    return step*float(rr.logfile["ts"])-rc.rotate_start_time
+    return step*float(rr.logfile["ts"])-rr.rotate_start_time
 
 
 def path_nve_subfolder_in_folder(n_ave, folder):
@@ -321,9 +323,9 @@ def plot_quiver_position_label(fig, ax):
     return (fig, ax)
 
 
-def save_one_plot(fig, ax, foldersave, f_name, figformat="png", ifpickle=False):
-    
-    fig.savefig(foldersave + f_name + "." + figformat, format=figformat)
+def save_one_plot(fig, ax, foldersave, f_name, figformat="png", ifpickle=False, bbox_inches = None):
+    # using bbox_inches = 'tight' to ensure legend in plot and outside axe
+    fig.savefig(foldersave + f_name + "." + figformat, format=figformat, bbox_inches = bbox_inches)
     if ifpickle:
         # Save figure handle to disk
         with open(foldersave + f_name + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
@@ -334,12 +336,11 @@ def save_one_plot(fig, ax, foldersave, f_name, figformat="png", ifpickle=False):
 
 class chunk(object):
 
-
     def __init__(self, n_ave, lmp_path):
 
         self.n_ave = n_ave
         self.lmp_path = lmp_path
-        self.logfile = rr.read_log(self.lmp_path)
+        self.logfile = rr.logdiclist[-1]
         self.lines = lines_from_one_simu(self.lmp_path)
         self.header = self.lines[2].split()[1:]
         self.n_line_in_a_step = int(self.lines[3].split()[1])
@@ -411,6 +412,24 @@ class chunk(object):
         
         return value
 
+    def stress_variable_name(self, i, j):
+        # i j = 0 1 2
+        if i == 0 and j == 0:
+            variable_name = "c_stress[1]"
+        elif i == 1 and j == 1:
+            variable_name = "c_stress[2]"
+        elif i == 2 and j == 2:
+            variable_name = "c_stress[3]"
+        elif i == 0 and j == 1:
+            variable_name = "c_stress[4]"
+        elif i == 0 and j == 2:
+            variable_name = "c_stress[5]"
+        elif i == 1 and j == 2:
+            variable_name = "c_stress[6]"
+        else:
+            sys.exit("i j index not correct, only ij 11 22 33 12 13 23")
+
+        return variable_name
 
     ########## plot 2D-2D velocity-position ##########
     def plotchunk_ave_one_step_v23x23(self, step, figformat="png", ifpickle=False):
@@ -744,8 +763,8 @@ class chunk(object):
 
         if ifmanysimu:
             stepsarray.sort()
-            for index in range(rr.n_loglist):
-                self.lines = lines_from_one_simu(rc.folder_path_list_initial_to_last[index])
+            for index in range(rr.n_simu_total):
+                self.lines = lines_from_one_simu(rr.folder_path_list_initial_to_last[index])
                 step2 = step_last_fix_change_by_n_ave(self.n_ave, index)
                 sort_final_index = np.searchsorted(stepsarray, step2, side='right')
                 stepsarray_index = stepsarray[:sort_final_index]
@@ -830,8 +849,8 @@ class chunk(object):
         
         if ifmanysimu:
             stepsarray.sort()
-            for index in range(rr.n_loglist):
-                self.lines = lines_from_one_simu(rc.folder_path_list_initial_to_last[index])
+            for index in range(rr.n_simu_total):
+                self.lines = lines_from_one_simu(rr.folder_path_list_initial_to_last[index])
                 step2 = step_last_fix_change_by_n_ave(self.n_ave, index)
                 sort_final_index = np.searchsorted(stepsarray, step2, side='right')
                 stepsarray_index = stepsarray[:sort_final_index]
@@ -915,8 +934,8 @@ class chunk(object):
         
         if ifmanysimu:
             stepsarray.sort()
-            for index in range(rr.n_loglist):
-                self.lines = lines_from_one_simu(rc.folder_path_list_initial_to_last[index])
+            for index in range(rr.n_simu_total):
+                self.lines = lines_from_one_simu(rr.folder_path_list_initial_to_last[index])
                 step2 = step_last_fix_change_by_n_ave(self.n_ave, index)
                 sort_final_index = np.searchsorted(stepsarray, step2, side='right')
                 stepsarray_index = stepsarray[:sort_final_index]
@@ -1002,8 +1021,8 @@ class chunk(object):
         
         if ifmanysimu:
             stepsarray.sort()
-            for index in range(rr.n_loglist):
-                self.lines = lines_from_one_simu(rc.folder_path_list_initial_to_last[index])
+            for index in range(rr.n_simu_total):
+                self.lines = lines_from_one_simu(rr.folder_path_list_initial_to_last[index])
                 step2 = step_last_fix_change_by_n_ave(self.n_ave, index)
                 sort_final_index = np.searchsorted(stepsarray, step2, side='right')
                 stepsarray_index = stepsarray[:sort_final_index]
@@ -1128,7 +1147,7 @@ class chunk(object):
     ########## plot 1D volumn fraction-time for every grid ##########
     def check_volumnfraction_x23_increase_decrease_plot(self, steparray, figformat="png", ifpickle=False, ifmanysimu=True):
         
-        om.create_directory(dp.f_fraction_check_everygrid)
+        os.makedirs(dp.f_fraction_check_everygrid, exist_ok=True)
         tolerence = 0.5
 
         if ifmanysimu:
@@ -1137,8 +1156,8 @@ class chunk(object):
             time = np.empty(0)
             steparray_new = np.empty(0)
             
-            for index in range(rr.n_loglist):
-                self.lines = lines_from_one_simu(rc.folder_path_list_initial_to_last[index])
+            for index in range(rr.n_simu_total):
+                self.lines = lines_from_one_simu(rr.folder_path_list_initial_to_last[index])
                 step2 = step_last_fix_change_by_n_ave(self.n_ave, index)
                 sort_final_index = np.searchsorted(steparray, step2, side='right')
                 steparray_index = steparray[:sort_final_index]
@@ -1171,11 +1190,11 @@ class chunk(object):
             sys.exit("chunk_method wrong")
 
         folder_increase = dp.f_fraction_check_everygrid + "increase/"
-        om.create_directory(folder_increase)
+        os.makedirs(folder_increase, exist_ok=True)
         folder_decrease = dp.f_fraction_check_everygrid + "decrease/"
-        om.create_directory(folder_decrease)
+        os.makedirs(folder_decrease, exist_ok=True)
         folder_increase_decrease = dp.f_fraction_check_everygrid + "increase_decrease/"
-        om.create_directory(folder_increase_decrease)
+        os.makedirs(folder_increase_decrease, exist_ok=True)
 
         for i in range(n_line_in_a_step):
             if not np.all(diff_t_volumn_fraction[i,:] < 0.1):
@@ -1187,7 +1206,7 @@ class chunk(object):
                         folder = folder_increase
                     elif np.all(diff_t_volumn_fraction[i,:] < (0 + tolerence)):
                         folder = folder_decrease
-                    om.create_directory(folder)
+                    os.makedirs(folder, exist_ok=True)
                     if chunk_method == "rz":
                         labelstring = "r_ " + "{:.2e}".format(x_array[i]) + ", z_ " + "{:.2e}".format(y_array[i])
                     elif chunk_method == "yz":
@@ -1227,8 +1246,8 @@ class chunk(object):
             vector_mv = np.empty([n_line_in_a_step, 0])
             steparray_new = np.empty(0)
             
-            for index in range(rr.n_loglist):
-                self.lines = lines_from_one_simu(rc.folder_path_list_initial_to_last[index])
+            for index in range(rr.n_simu_total):
+                self.lines = lines_from_one_simu(rr.folder_path_list_initial_to_last[index])
                 step2 = step_last_fix_change_by_n_ave(self.n_ave, index)
                 sort_final_index = np.searchsorted(steparray, step2, side='right')
                 steparray_index = steparray[:sort_final_index]
@@ -1286,8 +1305,8 @@ class chunk(object):
             vector_mv = np.empty([n_line_in_a_step, 0])
             steparray_new = np.empty(0)
             
-            for index in range(rr.n_loglist):
-                self.lines = lines_from_one_simu(rc.folder_path_list_initial_to_last[index])
+            for index in range(rr.n_simu_total):
+                self.lines = lines_from_one_simu(rr.folder_path_list_initial_to_last[index])
                 step2 = step_last_fix_change_by_n_ave(self.n_ave, index)
                 sort_final_index = np.searchsorted(steparray, step2, side='right')
                 steparray_index = steparray[:sort_final_index]
@@ -1342,10 +1361,10 @@ class chunk(object):
 
     def save_plotchunk_velocity_i_time_ave_j_fix_k_ave(self, steparray, i, j, k, k_index, figformat="png", ifpickle=False, ifmanysimu=True):
 
-        om.create_directory(dp.f_velocity_i_time_ave_j_fix_k_ave_path)
+        os.makedirs(dp.f_velocity_i_time_ave_j_fix_k_ave_path, exist_ok=True)
 
         folder = dp.f_velocity_i_time_ave_j_fix_k_ave_path + "V_" + str(i) + "_ave_" + str(j) + "_fix_" + str(k) + "/"
-        om.create_directory(folder)
+        os.makedirs(folder, exist_ok=True)
 
         add_nve_subfolder_in_folder(self.n_ave, folder)
         
@@ -1368,10 +1387,10 @@ class chunk(object):
     
     def save_plotchunk_omega_i_time_ave_j_fix_k_ave(self, steparray, i, j, k, k_index, figformat="png", ifpickle=False, ifmanysimu=True):
         f_create = dp.diagram_path + "omega1/"
-        om.create_directory(f_create)
+        os.makedirs(f_create, exist_ok=True)
 
         folder = f_create + "omega_" + 0 + "_ave_" + str(j) + "_fix_" + str(k) + "/"
-        om.create_directory(folder)
+        os.makedirs(folder, exist_ok=True)
 
         add_nve_subfolder_in_folder(self.n_ave, folder)
         
@@ -1394,10 +1413,10 @@ class chunk(object):
 
     def save_plotchunk_velocity_i_time_near_wall_ave(self, steparray, i, figformat="png", ifpickle=False, ifmanysimu=True):
 
-        om.create_directory(dp.f_velocity_i_time_ave_j_fix_k_ave_path)
+        os.makedirs(dp.f_velocity_i_time_ave_j_fix_k_ave_path, exist_ok=True)
 
         folder = dp.f_velocity_i_time_ave_j_fix_k_ave_path + "V_" + str(i) + "_near_wall" + "/"
-        om.create_directory(folder)
+        os.makedirs(folder, exist_ok=True)
 
         add_nve_subfolder_in_folder(self.n_ave, folder)
         
@@ -1419,9 +1438,9 @@ class chunk(object):
         plt.close('all')
 
     def save_plotchunk_omega_i_time_near_wall_ave(self, steparray, i, figformat="png", ifpickle=False, ifmanysimu=True):
-        om.create_directory(dp.diagram_path + "omega_0_near_wall/")
+        os.makedirs(dp.diagram_path + "omega_0_near_wall/", exist_ok=True)
         folder = dp.diagram_path + "omega_0_near_wall/" + "V_" + str(i) + "_near_wall" + "/"
-        om.create_directory(folder)
+        os.makedirs(folder, exist_ok=True)
 
         add_nve_subfolder_in_folder(self.n_ave, folder)
         
@@ -1490,8 +1509,8 @@ class chunk(object):
         
         if ifmanysimu:
             stepsarray.sort()
-            for index in range(rr.n_loglist):
-                self.lines = lines_from_one_simu(rc.folder_path_list_initial_to_last[index])
+            for index in range(rr.n_simu_total):
+                self.lines = lines_from_one_simu(rr.folder_path_list_initial_to_last[index])
                 step2 = step_last_fix_change_by_n_ave(self.n_ave, index)
                 sort_final_index = np.searchsorted(stepsarray, step2, side='right')
                 stepsarray_index = stepsarray[:sort_final_index]
@@ -1519,7 +1538,7 @@ class chunk(object):
     def save_plotchunk_fraction_ave_j_ave(self, stepsarray, j, k, figformat="png", ifpickle=False, inonefigure=False):
         
         f_path_fraction = dp.diagram_path + "fraction/"
-        om.create_directory(f_path_fraction)
+        os.makedirs(f_path_fraction, exist_ok=True)
 
         f_path_ave_jk = f_path_fraction + "ave_" + str(j) + "x" + str(k) + "/"
 
@@ -1583,8 +1602,8 @@ class chunk(object):
         
         if ifmanysimu:
             stepsarray.sort()
-            for index in range(rr.n_loglist):
-                self.lines = lines_from_one_simu(rc.folder_path_list_initial_to_last[index])
+            for index in range(rr.n_simu_total):
+                self.lines = lines_from_one_simu(rr.folder_path_list_initial_to_last[index])
                 step2 = step_last_fix_change_by_n_ave(self.n_ave, index)
                 sort_final_index = np.searchsorted(stepsarray, step2, side='right')
                 stepsarray_index = stepsarray[:sort_final_index]
@@ -1672,8 +1691,8 @@ class chunk(object):
         
         if ifmanysimu:
             stepsarray.sort()
-            for index in range(rr.n_loglist):
-                self.lines = lines_from_one_simu(rc.folder_path_list_initial_to_last[index])
+            for index in range(rr.n_simu_total):
+                self.lines = lines_from_one_simu(rr.folder_path_list_initial_to_last[index])
                 step2 = step_last_fix_change_by_n_ave(self.n_ave, index)
                 sort_final_index = np.searchsorted(stepsarray, step2, side='right')
                 stepsarray_index = stepsarray[:sort_final_index]
@@ -1739,7 +1758,7 @@ class chunk_include_pre(object):
         
         self.first_rotate_index = first_rotate_index
         
-        self.folder_path_list_initial_to_last = rc.folder_path_list_initial_to_last
+        self.folder_path_list_initial_to_last = rr.folder_path_list_initial_to_last
         self.first_rotate_step = chunk(self.n_ave, self.folder_path_list_initial_to_last[self.first_rotate_index]).step_first_in_file_change_by_n_ave
         self.end_step = chunk(self.n_ave, self.folder_path_list_initial_to_last[-1]).step_last_in_file_change_by_n_ave
         allsteps_since_rotate = np.empty(0)
@@ -1976,7 +1995,7 @@ class chunk_include_pre(object):
     def save_plotchunk_fraction_ave_j_ave(self, stepsarray, j, k, figformat="png", ifpickle=False):
         
         f_path_fraction = dp.diagram_path + "fraction/"
-        om.create_directory(f_path_fraction)
+        os.makedirs(f_path_fraction, exist_ok=True)
 
         f_path_ave_jk = f_path_fraction + "ave_" + str(j) + "x" + str(k) + "/"
 
@@ -2334,8 +2353,8 @@ def plotchunk_strain_rate_ij_ave_k_ave_manytime(stepsarray, n_ave, lines, i, j, 
 
     if ifmanysimu:
         stepsarray.sort()
-        for index in range(rr.n_loglist):
-            lines = lines_from_one_simu(rc.folder_path_list_initial_to_last[index])
+        for index in range(rr.n_simu_total):
+            lines = lines_from_one_simu(rr.folder_path_list_initial_to_last[index])
             step2 = step_last_fix_change_by_n_ave(n_ave, index)
             sort_final_index = np.searchsorted(stepsarray, step2, side='right')
             stepsarray_index = stepsarray[:sort_final_index]
@@ -2424,8 +2443,8 @@ def plotchunk_velocity_i_ave_j_xk_ave_manytime(stepsarray, n_ave, lines, i, j, k
     
     if ifmanysimu:
         stepsarray.sort()
-        for index in range(rr.n_loglist):
-            lines = lines_from_one_simu(rc.folder_path_list_initial_to_last[index])
+        for index in range(rr.n_simu_total):
+            lines = lines_from_one_simu(rr.folder_path_list_initial_to_last[index])
             step2 = step_last_fix_change_by_n_ave(n_ave, index)
             sort_final_index = np.searchsorted(stepsarray, step2, side='right')
             stepsarray_index = stepsarray[:sort_final_index]
@@ -2515,8 +2534,8 @@ def plotchunk_ekovermass_i_ave_j_xk_ave_manytime(stepsarray, n_ave, lines, i, j,
     
     if ifmanysimu:
         stepsarray.sort()
-        for index in range(rr.n_loglist):
-            lines = lines_from_one_simu(rc.folder_path_list_initial_to_last[index])
+        for index in range(rr.n_simu_total):
+            lines = lines_from_one_simu(rr.folder_path_list_initial_to_last[index])
             step2 = step_last_fix_change_by_n_ave(n_ave, index)
             sort_final_index = np.searchsorted(stepsarray, step2, side='right')
             stepsarray_index = stepsarray[:sort_final_index]
@@ -2611,8 +2630,8 @@ def plotchunk_ekminusekaveovermass_i_ave_j_ave_manytime(stepsarray, n_ave, lines
     
     if ifmanysimu:
         stepsarray.sort()
-        for index in range(rr.n_loglist):
-            lines = lines_from_one_simu(rc.folder_path_list_initial_to_last[index])
+        for index in range(rr.n_simu_total):
+            lines = lines_from_one_simu(rr.folder_path_list_initial_to_last[index])
             step2 = step_last_fix_change_by_n_ave(n_ave, index)
             sort_final_index = np.searchsorted(stepsarray, step2, side='right')
             stepsarray_index = stepsarray[:sort_final_index]
@@ -2751,7 +2770,7 @@ def manysteparray(steparray, v_name, n_ave, lines):
 ########## plot 1D volumn fraction-time for every grid ##########
 def check_volumnfraction_x23_increase_decrease_plot(steparray, n_ave, lines, figformat="png", ifpickle=False, ifmanysimu=True):
     
-    om.create_directory(dp.f_fraction_check_everygrid)
+    os.makedirs(dp.f_fraction_check_everygrid, exist_ok=True)
     tolerence = 0.5
 
     if ifmanysimu:
@@ -2760,8 +2779,8 @@ def check_volumnfraction_x23_increase_decrease_plot(steparray, n_ave, lines, fig
         time = np.empty(0)
         steparray_new = np.empty(0)
         
-        for index in range(rr.n_loglist):
-            lines = lines_from_one_simu(rc.folder_path_list_initial_to_last[index])
+        for index in range(rr.n_simu_total):
+            lines = lines_from_one_simu(rr.folder_path_list_initial_to_last[index])
             step2 = step_last_fix_change_by_n_ave(n_ave, index)
             sort_final_index = np.searchsorted(steparray, step2, side='right')
             steparray_index = steparray[:sort_final_index]
@@ -2794,11 +2813,11 @@ def check_volumnfraction_x23_increase_decrease_plot(steparray, n_ave, lines, fig
         sys.exit("chunk_method wrong")
 
     folder_increase = dp.f_fraction_check_everygrid + "increase/"
-    om.create_directory(folder_increase)
+    os.makedirs(folder_increase, exist_ok=True)
     folder_decrease = dp.f_fraction_check_everygrid + "decrease/"
-    om.create_directory(folder_decrease)
+    os.makedirs(folder_decrease, exist_ok=True)
     folder_increase_decrease = dp.f_fraction_check_everygrid + "increase_decrease/"
-    om.create_directory(folder_increase_decrease)
+    os.makedirs(folder_increase_decrease, exist_ok=True)
 
     for i in range(n_line_in_a_step):
         if not np.all(diff_t_volumn_fraction[i,:] < 0.1):
@@ -2810,7 +2829,7 @@ def check_volumnfraction_x23_increase_decrease_plot(steparray, n_ave, lines, fig
                     folder = folder_increase
                 elif np.all(diff_t_volumn_fraction[i,:] < (0 + tolerence)):
                     folder = folder_decrease
-                om.create_directory(folder)
+                os.makedirs(folder, exist_ok=True)
                 if chunk_method == "rz":
                     labelstring = "r_ " + "{:.2e}".format(x_array[i]) + ", z_ " + "{:.2e}".format(y_array[i])
                 elif chunk_method == "yz":
@@ -2851,8 +2870,8 @@ def plotchunk_velocity_i_time_ave_j_fix_k_ave(steparray, n_ave, lines, i, j, k, 
         vector_mv = np.empty([n_line_in_a_step, 0])
         steparray_new = np.empty(0)
         
-        for index in range(rr.n_loglist):
-            lines = lines_from_one_simu(rc.folder_path_list_initial_to_last[index])
+        for index in range(rr.n_simu_total):
+            lines = lines_from_one_simu(rr.folder_path_list_initial_to_last[index])
             step2 = step_last_fix_change_by_n_ave(n_ave, index)
             sort_final_index = np.searchsorted(steparray, step2, side='right')
             steparray_index = steparray[:sort_final_index]
@@ -2909,10 +2928,10 @@ def plotchunk_velocity_i_time_ave_j_fix_k_ave(steparray, n_ave, lines, i, j, k, 
 
 def save_plotchunk_velocity_i_time_ave_j_fix_k_ave(steparray, n_ave, lines, i, j, k, k_index, figformat="png", ifpickle=False, ifmanysimu=True):
 
-    om.create_directory(dp.f_velocity_i_time_ave_j_fix_k_ave_path)
+    os.makedirs(dp.f_velocity_i_time_ave_j_fix_k_ave_path, exist_ok=True)
 
     folder = dp.f_velocity_i_time_ave_j_fix_k_ave_path + "V_" + str(i) + "_ave_" + str(j) + "_fix_" + str(k) + "/"
-    om.create_directory(folder)
+    os.makedirs(folder, exist_ok=True)
 
     add_nve_subfolder_in_folder(n_ave, folder)
     
@@ -2936,10 +2955,10 @@ def save_plotchunk_velocity_i_time_near_wall_ave(steparray, n_ave, lines, i, fig
     k=1
     k_index=0
 
-    om.create_directory(dp.f_velocity_i_time_ave_j_fix_k_ave_path)
+    os.makedirs(dp.f_velocity_i_time_ave_j_fix_k_ave_path, exist_ok=True)
 
     folder = dp.f_velocity_i_time_ave_j_fix_k_ave_path + "V_" + str(i) + "_near_wall" + "/"
-    om.create_directory(folder)
+    os.makedirs(folder, exist_ok=True)
 
     add_nve_subfolder_in_folder(n_ave, folder)
     
@@ -3003,8 +3022,8 @@ def plotchunk_fraction_ave_j_ave_manytime(stepsarray, n_ave, lines, j, k, figfor
     
     if ifmanysimu:
         stepsarray.sort()
-        for index in range(rr.n_loglist):
-            lines = lines_from_one_simu(rc.folder_path_list_initial_to_last[index])
+        for index in range(rr.n_simu_total):
+            lines = lines_from_one_simu(rr.folder_path_list_initial_to_last[index])
             step2 = step_last_fix_change_by_n_ave(n_ave, index)
             sort_final_index = np.searchsorted(stepsarray, step2, side='right')
             stepsarray_index = stepsarray[:sort_final_index]
@@ -3031,7 +3050,7 @@ def plotchunk_fraction_ave_j_ave_manytime(stepsarray, n_ave, lines, j, k, figfor
 def save_plotchunk_fraction_ave_j_ave(stepsarray, n_ave, lines, j, k, figformat="png", ifpickle=False, inonefigure=False):
     
     f_path_fraction = dp.diagram_path + "fraction/"
-    om.create_directory(f_path_fraction)
+    os.makedirs(f_path_fraction, exist_ok=True)
 
     f_path_ave_jk = f_path_fraction + "ave_" + str(j) + "_x" + str(k) + "/"
 
@@ -3072,7 +3091,7 @@ def save_plotchunk_fraction_ave_j_ave(stepsarray, n_ave, lines, j, k, figformat=
 def plotVymax_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", ifpickle=False):
     add_nve_subfolder_in_folder(n_ave, dp.f_max_velocity_near_wall)
 
-    with open(dp.lammps_directory + "output/momentum_mass_field/fix.momentum_mass_field.all") as f:  
+    with open(rr.lammps_directory + "output/momentum_mass_field/fix.momentum_mass_field.all") as f:  
         lines = f.read().strip().split('\n')
         header = lines[2].split()[1:]
         n_line_in_a_step = int(lines[3].split()[1])
@@ -3211,8 +3230,8 @@ def plotchunk_velocity_i_ave_j_xk_ave_no_top_manytime(stepsarray, n_ave, lines, 
     
     if ifmanysimu:
         stepsarray.sort()
-        for index in range(rr.n_loglist):
-            lines = lines_from_one_simu(rc.folder_path_list_initial_to_last[index])
+        for index in range(rr.n_simu_total):
+            lines = lines_from_one_simu(rr.folder_path_list_initial_to_last[index])
             step2 = step_last_fix_change_by_n_ave(n_ave, index)
             sort_final_index = np.searchsorted(stepsarray, step2, side='right')
             stepsarray_index = stepsarray[:sort_final_index]
@@ -3312,8 +3331,8 @@ def plotchunk_ek_i_ave_j_xk_ave_no_top_manytime(stepsarray, n_ave, lines, i, j, 
     
     if ifmanysimu:
         stepsarray.sort()
-        for index in range(rr.n_loglist):
-            lines = lines_from_one_simu(rc.folder_path_list_initial_to_last[index])
+        for index in range(rr.n_simu_total):
+            lines = lines_from_one_simu(rr.folder_path_list_initial_to_last[index])
             step2 = step_last_fix_change_by_n_ave(n_ave, index)
             sort_final_index = np.searchsorted(stepsarray, step2, side='right')
             stepsarray_index = stepsarray[:sort_final_index]

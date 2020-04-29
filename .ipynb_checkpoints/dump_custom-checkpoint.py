@@ -13,12 +13,12 @@ from mpl_toolkits.mplot3d import Axes3D
 import dataarrange as da
 import datapath as dp
 import output_control as oc
-import osmanage as om
+import os
 # ======================================
 
 custom_id_i_list = 'all'
 
 # create folder
-om.create_directory(dp.post_process_path)
-om.create_directory(dp.hdf5_csv_path)
+os.makedirs(dp.post_process_path, exist_ok=True)
+os.makedirs(dp.hdf5_csv_path, exist_ok=True)
 da.file_to_h5_csv(None, dp.custom_near_trace_path, custom_id_i_list, dp.f_custom, override ='yes')

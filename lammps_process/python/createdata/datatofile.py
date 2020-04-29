@@ -1,12 +1,12 @@
 # import module in simulation folder
-import osmanage as om
+import os
 import datapath as dp
 # import module in createdata folder
 import createdata.dataarrange as da
 # ======================================
 
-om.create_directory(dp.post_process_path)
-om.create_directory(dp.hdf5_csv_path)
+os.makedirs(dp.post_process_path, exist_ok=True)
+os.makedirs(dp.hdf5_csv_path, exist_ok=True)
 
 override='no'
 ifcsv='no'

@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 # This import registers the 3D projection, but is otherwise unused.
 from mpl_toolkits.mplot3d import Axes3D
 import rename_variable as rv
-import osmanage as om
+import os
 # =======================================
 
 # Change sign when switch i j
@@ -148,12 +148,3 @@ def file_to_h5_csv(f_dumppair, f_dumpcustom, id_i_list, f_output_name, override 
             dfc_select.to_csv(f_output_name + '.csv', encoding='utf-8')
 
 
-def create_directory(post_process_folder_path):
-    # define the name of the directory to be created
-    if not os.path.isdir(post_process_folder_path):
-        try:  
-            os.mkdir(post_process_folder_path)
-        except OSError:  
-            print ("Creation of the directory %s failed" % post_process_folder_path)
-        else:  
-            print ("Successfully created the directory %s " % post_process_folder_path)

@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import itertools
 # import simulation module
-import osmanage as om
+import os
 import datapath as dp
 # import calculate module
 import calculate.checksimulation as cs
@@ -16,9 +16,9 @@ import calculate.checksimulation as cs
 import createdata.datatofile as cd
 
 # create folder
-om.create_directory(dp.debug_fig_atomij_path)
-om.create_directory(dp.debug_fig_thermo_path)
-om.create_directory(dp.debug_fig_oneatom_path)
+os.makedirs(dp.debug_fig_atomij_path, exist_ok=True)
+os.makedirs(dp.debug_fig_thermo_path, exist_ok=True)
+os.makedirs(dp.debug_fig_oneatom_path, exist_ok=True)
 # define method
 method = 1
 
@@ -156,7 +156,7 @@ class lammp_figure_atomi_wall(lammp_figure):
 
 class lammp_3Dtrajfigure(lammp_figure):
 
-    def __init__(self, step1, step2, array_x, array_y, array_z, xlabel,ylabel,zlabel):
+    def __init__(self, step1, step2, array_x, array_y, array_z, xlabel="x",ylabel="y",zlabel="z"):
         super().__init__(step1, step2, xlabel, ylabel)
         self.array_z = array_z
         self.zlabel = zlabel
@@ -203,11 +203,11 @@ class lammp_3Dtrajfigure(lammp_figure):
 class plotclass(object):
 
     def __init__(self):
-        om.create_directory(dp.debug_print_path)
-        om.create_directory(dp.debug_fig_path)
-        om.create_directory(dp.debug_fig_thermo_path)
-        om.create_directory(dp.debug_fig_oneatom_path)
-        om.create_directory(dp.debug_fig_atomij_path)
+        os.makedirs(dp.debug_print_path, exist_ok=True)
+        os.makedirs(dp.debug_fig_path, exist_ok=True)
+        os.makedirs(dp.debug_fig_thermo_path, exist_ok=True)
+        os.makedirs(dp.debug_fig_oneatom_path, exist_ok=True)
+        os.makedirs(dp.debug_fig_atomij_path, exist_ok=True)
         
 
 class plotfromcustom(plotclass):
@@ -438,7 +438,7 @@ class plotfromcustom(plotclass):
 
         cd.dumptofile(self.fromtraceorall).dump_custom_max(maxlabel)
         debug_fig_max_path = dp.debug_fig_path + 'max_' + maxlabel + '/'
-        om.create_directory(debug_fig_max_path)
+        os.makedirs(debug_fig_max_path, exist_ok=True)
 
         df = pd.read_hdf(dp.put_maxlabel_on_file(maxlabel, dp.f_custom))
 
@@ -514,7 +514,7 @@ class plotfromcustomselect(plotclass):
         array_y = df_step[y_label].values
         array_z = df_step[z_label].values
 
-        figclass = lammp_3Dtrajfigure(self.step1, self.step2, label_x, label_y, label_z)
+        figclass = lammp_3Dtrajfigure(self.step1, self.step2, array_x, array_y, array_z)
         figclass.create_and_save(dp.debug_fig_oneatom_path, array_x, array_y, array_z)
         plt.close('all')
 
@@ -616,7 +616,7 @@ class plotfromtraceprint_max(plotclass):
         super().__init__()
         self.maxlabel = maxlabel
         self.debug_fig_max_path = dp.debug_fig_path + 'max_' + self.maxlabel + '/'
-        om.create_directory(self.debug_fig_max_path)
+        os.makedirs(self.debug_fig_max_path, exist_ok=True)
         
         
     def traceprinttexttoarray(self, file):

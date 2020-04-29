@@ -6,10 +6,7 @@ import numpy as np
 
 import plotfigure.plotchunk as pp
 import plotfigure.plotchunkstress as pps
-import read_setting.read_setting as rr
-import read_setting.calculate_setting as rc
-
-
+import read_setting as rr
 
 ###chunk current
 chunkobject = pp.chunk(n_ave, rr.lammps_directory)

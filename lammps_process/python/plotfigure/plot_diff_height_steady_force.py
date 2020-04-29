@@ -15,9 +15,9 @@ import pickle
 from mpl_toolkits.mplot3d import Axes3D
 # import module
 import datapath as dp
-import read_setting.read_setting as rr
+import read_setting as rr
 # import calculate setting
-import read_setting.calculate_setting as rc
+
 n_lastpoints = 250
 
 # plot style
@@ -63,9 +63,9 @@ def plot_wall_diff_height_steady_time(if_plot_to_last, step1, step2, figformat="
         
         for wallfile in wallfiles:
             if ifplotfrominitial:
-                logfilelist_from_initial_to_lastest = rr.log_current_plus_previousfrom_initial_to_lastest(lammps_directory)
-                for index in range(len(logfilelist_from_initial_to_lastest)):
-                    n_log_list = len(logfilelist_from_initial_to_lastest)
+                logdiclist = rr.log_current_plus_previousfrom_initial_to_lastest(lammps_directory)
+                for index in range(len(logdiclist)):
+                    n_log_list = len(logdiclist)
                     folder_path_list_initial_to_last = [lammps_directory+"../"*(n_log_list-1-n) for n in range(n_log_list)]
                     folder_path_list_last_to_initial = [folder_path_list_initial_to_last[n_log_list-1-n] for n in range(n_log_list)]
 
@@ -92,7 +92,7 @@ def plot_wall_diff_height_steady_time(if_plot_to_last, step1, step2, figformat="
                             if n == 0:
                                 restart_time_from_last_to_current = 0
                             else:
-                                logfile = logfilelist_from_initial_to_lastest[n]
+                                logfile = logdiclist[n]
                                 rst_from_current = str(logfile['rst_from'])
                                 last_log_path = log_path_list_initial_to_last[n-1]
                             
@@ -136,7 +136,7 @@ def plot_wall_diff_height_steady_time(if_plot_to_last, step1, step2, figformat="
 
                 df_full = df_out
             else:
-                with open(dp.lammps_directory + "output/wall/" + wallfile) as f:
+                with open(rr.lammps_directory + "output/wall/" + wallfile) as f:
                     lines = f.read().strip().split('\n')
                 header = lines[1].split()[1:]
                 
@@ -181,10 +181,10 @@ def plot_wall_diff_height_steady_time(if_plot_to_last, step1, step2, figformat="
     plt.xlabel("height")
     plt.ylabel("time_from10to90")
     plt.tight_layout()
-    fig_handle.savefig(dp.lammps_directory + "walls" + "." + figformat, format=figformat)
+    fig_handle.savefig(rr.lammps_directory + "walls" + "." + figformat, format=figformat)
     if ifpickle:
         # Save figure handle to disk
-        with open(dp.lammps_directory + "walls" + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
+        with open(rr.lammps_directory + "walls" + ".pickle", 'wb') as f: # should be 'wb' rather than 'w'
             pickle.dump(fig_handle, f)
 
     plt.close('all')
