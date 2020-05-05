@@ -1,9 +1,3 @@
-# get env variable home path
-variable    home_path     getenv HOME
-# get the string name often appear in the home path of my computer 
-variable    strhomeic6413    string   "/home/ic6413"
-# check if my computer
-variable    ifmycomputer    equal   "v_home_path == v_strhomeic6413"
 # test mode
 variable    test_for_simple_run index   no #set no to skip test mode, set yes to override some variable to test mode
 # skip test mode
@@ -30,8 +24,10 @@ variable	freq_dump_single_trace	index 100
 variable	freq_dump_single_all	index 100
 variable	freq_dump_pair_trace	index 100
 variable	freq_dump_pair_all	index 100
-# freq image
-if "${ifmycomputer}" then &
+# freq image 
+# get env variable USER
+variable    struser         getenv  USER
+if "${struser} == ic6413" then &
     "variable	freq_dump_trace_image	index 100" &
     "variable	freq_dump_all_image	index 100"
 # freq thermo
@@ -54,6 +50,7 @@ variable	every_ave_wall		index 10
 variable  	freq_balance      	index 100
 label test_for_simple_run_yes_end_1
 # get simulation path
+variable    home_path     getenv HOME
 variable    lmp_input_dir     string "${home_path}/simulation/lammps_process/tools/lmp_input"
 variable    contact_model_dir     string "${lmp_input_dir}/contact_model"
 variable    contact_model_file_name     string in.nott
