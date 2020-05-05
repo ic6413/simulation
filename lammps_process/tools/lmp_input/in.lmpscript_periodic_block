@@ -175,6 +175,10 @@ variable	freq_ave_chunk_momentum_mass_field		index 0  #Nevery=2, Nrepeat=6, and 
 variable	repeat_ave_chunk_momentum_mass_field	index 0
 variable	every_ave_chunk_momentum_mass_field		index 0
 print "freq_ave_chunk_momentum_mass_field ${freq_ave_chunk_momentum_mass_field}" screen no append output/setting/attribute.lammps
+# freq print wall chunk
+variable    freq_ave_chunk_wallforce                index 0
+variable	repeat_ave_chunk_wallforce          	index 0
+variable	every_ave_chunk_wallforce               index 0
 # freq print wall
 variable	freq_ave_wall		index 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
 variable	repeat_ave_wall		index 0
