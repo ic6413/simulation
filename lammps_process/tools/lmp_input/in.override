@@ -1,7 +1,7 @@
 # test mode
 variable    test_for_simple_run index   no #set no to skip test mode, set yes to override some variable to test mode
 # skip test mode
-if "test_for_simple_run == no" then &
+if "${test_for_simple_run} == no" then &
     "jump SELF test_for_simple_run_yes_end_1"
 # test mode begin
 label test_for_simple_run_yes_begin_1
