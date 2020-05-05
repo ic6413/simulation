@@ -118,10 +118,10 @@ else:
 
             # select compute line
             lines_start_compute = [line for line in lines if line.startswith("compute")]
-            satisfy_lines = [line for line in lines_start_compute if line.split()[3] == 'chunk/atom']
+            satisfy_lines = [line for line in lines_start_compute if line.split()[3] == 'chunk/atom' and line.split()[1] == "chunk_2_3"]
             # get chunk/atom
             if len(satisfy_lines) != 0:
-                logfile["chunk/atom"] = [
+                logfile["chunk/atom 23"] = [
                                         satisfy_lines[0].split()[1],
                                         satisfy_lines[0].split()[5],
                                         ]

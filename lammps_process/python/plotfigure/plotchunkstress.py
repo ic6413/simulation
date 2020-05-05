@@ -132,14 +132,14 @@ if chunk_method == "rz":
 elif chunk_method == "yz":
     n_y = int(rr.logfile['N_bin_y'])
     n_z = int(rr.logfile['N_bin_z'])
-    if rr.logfile["chunk/atom"][1] == "y":
+    if rr.logfile["chunk/atom 23"][1] == "y":
         position_index_to_array_dim_index = {
                                         1: 0,
                                         2: 1,
                                         }
         n_1 = n_y
         n_2 = n_z
-    elif rr.logfile["chunk/atom"][1] == "z":
+    elif rr.logfile["chunk/atom 23"][1] == "z":
         position_index_to_array_dim_index = {
                                         2: 0,
                                         1: 1,
@@ -161,13 +161,13 @@ if chunk_method == "rz":
     chunk_first_dim_coord = "z"
     chunk_second_dim_coord = "r"
 elif chunk_method == "yz":
-    if rr.logfile["chunk/atom"][1] == "y":
+    if rr.logfile["chunk/atom 23"][1] == "y":
         chunk_first_dim_coord = "y"
         chunk_second_dim_coord = "z"
         xyztoCoor = {}
         xyztoCoor["y"] = "Coord1"
         xyztoCoor["z"] = "Coord2"
-    elif rr.logfile["chunk/atom"][1] == "z":
+    elif rr.logfile["chunk/atom 23"][1] == "z":
         chunk_first_dim_coord = "z"
         chunk_second_dim_coord = "y"
         xyztoCoor["z"] = "Coord1"

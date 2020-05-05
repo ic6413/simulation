@@ -114,14 +114,14 @@ if chunk_method == "rz":
 elif chunk_method == "yz":
     n_y = int(rr.logfile['N_bin_y'])
     n_z = int(rr.logfile['N_bin_z'])
-    if rr.logfile["chunk/atom"][1] == "y":
+    if rr.logfile["chunk/atom 23"][1] == "y":
         position_index_to_array_dim_index = {
                                         1: 0,
                                         2: 1,
                                         }
         n_1 = n_y
         n_2 = n_z
-    elif rr.logfile["chunk/atom"][1] == "z":
+    elif rr.logfile["chunk/atom 23"][1] == "z":
         position_index_to_array_dim_index = {
                                         2: 0,
                                         1: 1,
@@ -143,13 +143,13 @@ if chunk_method == "rz":
     chunk_first_dim_coord = "z"
     chunk_second_dim_coord = "r"
 elif chunk_method == "yz":
-    if rr.logfile["chunk/atom"][1] == "y":
+    if rr.logfile["chunk/atom 23"][1] == "y":
         chunk_first_dim_coord = "y"
         chunk_second_dim_coord = "z"
         xyztoCoor = {}
         xyztoCoor["y"] = "Coord1"
         xyztoCoor["z"] = "Coord2"
-    elif rr.logfile["chunk/atom"][1] == "z":
+    elif rr.logfile["chunk/atom 23"][1] == "z":
         chunk_first_dim_coord = "z"
         chunk_second_dim_coord = "y"
         xyztoCoor["z"] = "Coord1"
@@ -3108,11 +3108,11 @@ def plotVymax_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", ifpickl
             x_array_to_movingwall_dp_unit = x_array - rr.logfile['ri_wall_dp_unit']
 
         elif chunk_method == "yz":
-            if rr.logfile["chunk/atom"][1] == "y":
+            if rr.logfile["chunk/atom 23"][1] == "y":
                 x_array = data0[:,dic_index_of_variable_in_header(lines)["Coord1"]]
                 x_array = x_array/diameter
                 
-            elif rr.logfile["chunk/atom"][1] == "z":
+            elif rr.logfile["chunk/atom 23"][1] == "z":
                 x_array = data0[:,dic_index_of_variable_in_header(lines)["Coord2"]]
                 x_array = x_array/diameter
             else:
@@ -3153,13 +3153,13 @@ def plotVymax_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", ifpickl
                 y_array = y_array.reshape((-1))
                 vy_array = divide_zero(data[:,dic_index_of_variable_in_header(lines)["v_mv3"]],data[:,dic_index_of_variable_in_header(lines)["c_m1"]])/velocity_scale
             elif chunk_method == "yz":
-                if rr.logfile["chunk/atom"][1] == "y":
+                if rr.logfile["chunk/atom 23"][1] == "y":
                     x_array = data[:,dic_index_of_variable_in_header(lines)["Coord1"]]
                     y_array = data[:,dic_index_of_variable_in_header(lines)["Coord2"]]
                     x_array = x_array/diameter
                     y_array = y_array/diameter
                     
-                elif rr.logfile["chunk/atom"][1] == "z":
+                elif rr.logfile["chunk/atom 23"][1] == "z":
                     x_array = data[:,dic_index_of_variable_in_header(lines)["Coord2"]]
                     y_array = data[:,dic_index_of_variable_in_header(lines)["Coord1"]]
                     x_array = x_array/diameter

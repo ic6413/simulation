@@ -76,12 +76,12 @@ if chunk_method == "rz":
                                 (np.arange(n_2)+0.5)/n_2*height_dpunit,
                                 )
 elif chunk_method == "yz":
-    if rr.logfile["chunk/atom"][1] == "y":
+    if rr.logfile["chunk/atom 23"][1] == "y":
         y_array, x_array = np.meshgrid(
                                        (np.arange(n_2)+0.5)/n_2*height_dpunit,
                                        (np.arange(n_1)+0.5)/n_1*width_wall_dp_unit,
                                     )
-    elif rr.logfile["chunk/atom"][1] == "z":
+    elif rr.logfile["chunk/atom 23"][1] == "z":
         x_array, y_array = np.meshgrid(
                                        (np.arange(n_1)+0.5)/n_1*width_wall_dp_unit,
                                        (np.arange(n_2)+0.5)/n_2*height_dpunit,
