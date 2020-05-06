@@ -57,7 +57,7 @@ single_script () {
     #LOAD MODULES, INSERT CODE, AND RUN YOUR PROGRAMS HERE
     module purge
     module load openmpi/4.0.1
-    module load lmp/190809unstable_openmpi401_mpiio #20200402_stable3Mar2020_openmpi401_gran_mpiio_useromp # 190809unstable_openmpi401_mpiio  190916master_openmpi401_omp_mpiio  #190809unstable_openmpi401_mpiio
+    module load lmp/20200402_stable3Mar2020_openmpi401_gran_mpiio_useromp #190809unstable_openmpi401_mpiio #20200402_stable3Mar2020_openmpi401_gran_mpiio_useromp # 190809unstable_openmpi401_mpiio  190916master_openmpi401_omp_mpiio  #190809unstable_openmpi401_mpiio
     #check setting after load module
     module list
     ${OMPIRUN_basic} lmp -in ${LMP_INSCRIPT}
