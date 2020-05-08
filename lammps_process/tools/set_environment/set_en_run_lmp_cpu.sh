@@ -49,8 +49,6 @@ module load lmp/20200402_stable3Mar2020_openmpi401_gran_mpiio_useromp #190809uns
 #check setting after load module
 module list
 ${OMPIRUN_basic} lmp -in ${LMP_INSCRIPT}
-${OMPIRUN_basic} ${OMPIRUNBIND_c} lmp -in ${LMP_INSCRIPT}
-${OMPIRUN_basic} ${OMPIRUNBIND_s} lmp -in ${LMP_INSCRIPT}
 
 :'
 ##===========normal do not bind socket============
