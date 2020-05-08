@@ -28,7 +28,7 @@ OMPIRUNBIND_c="--bind-to core"   #when the number of processes is <= 2
 OMPIRUNBIND_s="--bind-to socket --map-by socket"  #when the number of processes is > 2
 
 #====set ompi MCA environment====
-export OMPI_MCA_btl=^openib
+#export OMPI_MCA_btl=^openib
 #test
 #export OMPI_MCA_btl="self,sm,tcp,^openib"
 
@@ -60,8 +60,8 @@ single_script () {
     module load lmp/20200402_stable3Mar2020_openmpi401_gran_mpiio_useromp #190809unstable_openmpi401_mpiio #20200402_stable3Mar2020_openmpi401_gran_mpiio_useromp # 190809unstable_openmpi401_mpiio  190916master_openmpi401_omp_mpiio  #190809unstable_openmpi401_mpiio
     #check setting after load module
     module list
-    ${OMPIRUN_basic} lmp -in ${LMP_INSCRIPT}
-    #${OMPIRUN_basic} ${OMPIRUNBIND_c} lmp -in ${LMP_INSCRIPT}
+    #${OMPIRUN_basic} lmp -in ${LMP_INSCRIPT}
+    ${OMPIRUN_basic} ${OMPIRUNBIND_c} lmp -in ${LMP_INSCRIPT}
 
     :'
     ##===========normal do not bind socket============
