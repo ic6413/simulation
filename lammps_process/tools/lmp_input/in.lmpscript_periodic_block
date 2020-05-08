@@ -42,14 +42,14 @@ variable KEtr_to_jumpout equal 1e-25
 
 
 # cd to output
-shell	mkdir	output
+shell	'mkdir -p'	output
 # create output folders
-shell	mkdir output/rst output/trace output/image/ output/image/all output/image/trace 
-shell	mkdir output/momentum_mass_field output/vtk output/stl output/movie output/setting
-shell	mkdir output/stress output/stress/chunkfixtimeave
-shell	mkdir output/pair_trace output/single_trace output/pair_all output/single_all
-shell	mkdir output/wall output/wall/chunk output/wall/chunkfixtimeave
-shell	mkdir output/test
+shell	'mkdir -p' output/rst output/trace output/image/ output/image/all output/image/trace 
+shell	'mkdir -p' output/momentum_mass_field output/vtk output/stl output/movie output/setting
+shell	'mkdir -p' output/stress output/stress/chunkfixtimeave
+shell	'mkdir -p' output/pair_trace output/single_trace output/pair_all output/single_all
+shell	'mkdir -p' output/wall output/wall/chunk output/wall/chunkfixtimeave
+shell	'mkdir -p' output/test
 # print start step
 print "startstep ${rst_from}" screen no append output/setting/attribute.lammps
 # step start from. weather rotate start.
@@ -102,19 +102,19 @@ variable	trace_id3		index 0  # 0 means no trace
 variable	iftrace_maxKEt		index no
 variable	iftrace_maxKEr		index no
 variable	iftrace_maxKEtr		index no
-shell	mkdir output/trace/
+shell	'mkdir -p' output/trace/
 if "${trace_id1} != 0" then &
-"shell	mkdir output/trace/${trace_id1}"
+"shell	'mkdir -p' output/trace/${trace_id1}"
 if "${trace_id2} != 0" then &
-"shell	mkdir output/trace/${trace_id2}"
+"shell	'mkdir -p' output/trace/${trace_id2}"
 if "${trace_id3} != 0" then &
-"shell	mkdir output/trace/${trace_id3}"
+"shell	'mkdir -p' output/trace/${trace_id3}"
 if "${iftrace_maxKEt} == yes" then &
-"shell	mkdir output/trace/maxKEt"
+"shell	'mkdir -p' output/trace/maxKEt"
 if "${iftrace_maxKEr} == yes" then &
-"shell	mkdir output/trace/maxKEr"
+"shell	'mkdir -p' output/trace/maxKEr"
 if "${iftrace_maxKEtr} == yes" then &
-"shell	mkdir output/trace/maxKEtr"
+"shell	'mkdir -p' output/trace/maxKEtr"
 
 variable	ifappend		string no
 variable	iffreeze		string no
