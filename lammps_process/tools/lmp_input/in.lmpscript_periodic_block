@@ -1786,6 +1786,7 @@ fix	storeforce_inwall_after	all store/force
 label ybottom_wall_flat_end2
 label	end_pour2_innerwall
 # file,  time average of total force of wall to particles
+if "${freq_ave_wall} == 0" then "jump SELF end_freq_ave_wall"
 label begin_timeaverage
 if "${boundary_geometry} == block" then &
   "jump SELF begin_timeaverage_block" &
@@ -1827,7 +1828,7 @@ mode scalar ave one file output/wall/force_zbottom_to_particle.allstep
 label end_timeaverage_cy
 jump SELF end_timeaverage
 label end_timeaverage
-
+label end_freq_ave_wall
 
 label skip_ave_wall2
 
