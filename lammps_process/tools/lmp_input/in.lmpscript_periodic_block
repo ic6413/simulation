@@ -1061,10 +1061,10 @@ label skip_ave_chunk_2_3
 if "${freq_ave_chunk_wallforce} == 0" then "jump SELF skip_ave_chunk_wall"
 # chunk z chunk_z_near_inwall
 if "${boundary_geometry} == block" then &
-  "compute		chunk_z_near_inwall ${storeforcegroup} chunk/atom bin/1d z $(v_zlo_chunk) $((v_zhi_chunk-v_zlo_chunk)/v_N_bin_z) &
+  "compute              chunk_z_near_inwall ${storeforcegroup} chunk/atom bin/2d y $(v_ylo_chunk) $(v_ylo_chunk+1.01*v_dp_big) z $(v_zlo_chunk) $((v_zhi_chunk-v_zlo_chunk)/v_N_bin_z) &
   limit ${N_bin_z} exact units box bound y $(v_ylo_chunk) $(v_ylo_chunk+1.01*v_dp_big) bound z $(v_zlo_chunk) $(v_zhi_chunk) discard yes nchunk once" &
 elif "${boundary_geometry} == cylinder" &
-  "compute		chunk_z_near_inwall ${storeforcegroup} chunk/atom bin/cylinder z $(v_zlo_chunk) $((v_zhi_chunk-v_zlo_chunk)/v_N_bin_z) &
+  "compute              chunk_z_near_inwall ${storeforcegroup} chunk/atom bin/cylinder z $(v_zlo_chunk) $((v_zhi_chunk-v_zlo_chunk)/v_N_bin_z) &
   x y $(v_rlo_chunk) $(v_rlo_chunk + 1.01*v_dp_big) 1 &
   limit ${N_bin_z} exact units box bound z $(v_zlo_chunk) $(v_zhi_chunk) discard yes nchunk once" &
 else &
@@ -1072,10 +1072,10 @@ else &
   "quit 1"
 # chunk z chunk_z_near_outwall
 if "${boundary_geometry} == block" then &
-  "compute		chunk_z_near_outwall ${storeforcegroup} chunk/atom bin/1d z $(v_zlo_chunk) $((v_zhi_chunk-v_zlo_chunk)/v_N_bin_z) &
+  "compute              chunk_z_near_outwall ${storeforcegroup} chunk/atom bin/2d y $(v_yhi_chunk-1.01*v_dp_big) $(v_yhi_chunk) z $(v_zlo_chunk) $((v_zhi_chunk-v_zlo_chunk)/v_N_bin_z) &
   limit ${N_bin_z} exact units box bound y $(v_yhi_chunk-1.01*v_dp_big) $(v_yhi_chunk) bound z $(v_zlo_chunk) $(v_zhi_chunk) discard yes nchunk once" &
 elif "${boundary_geometry} == cylinder" &
-  "compute		chunk_z_near_outwall ${storeforcegroup} chunk/atom bin/cylinder z $(v_zlo_chunk) $((v_zhi_chunk-v_zlo_chunk)/v_N_bin_z) &
+  "compute              chunk_z_near_outwall ${storeforcegroup} chunk/atom bin/cylinder z $(v_zlo_chunk) $((v_zhi_chunk-v_zlo_chunk)/v_N_bin_z) &
   x y $(v_rhi_chunk - 1.01*v_dp_big) $(v_rhi_chunk) 1 &
   limit ${N_bin_z} exact units box bound z $(v_zlo_chunk) $(v_zhi_chunk) discard yes nchunk once" &
 else &
@@ -1083,10 +1083,10 @@ else &
   "quit 1"
 # chunk 2 chunk_2_near_bottom
 if "${boundary_geometry} == block" then &
-  "compute		chunk_2_near_bottom ${storeforcegroup} chunk/atom bin/1d y $(v_ylo_chunk) $((v_yhi_chunk-v_ylo_chunk)/v_N_bin_y) &
+  "compute              chunk_2_near_bottom ${storeforcegroup} chunk/atom bin/2d y $(v_ylo_chunk) $((v_yhi_chunk-v_ylo_chunk)/v_N_bin_y) z $(v_zlo_chunk) $(v_zlo_chunk+1.01*v_dp_big)&
   limit ${N_bin_y} exact units box bound z $(v_zlo_chunk) $(v_zlo_chunk+1.01*v_dp_big) bound y $(v_ylo_chunk) $(v_yhi_chunk) discard yes nchunk once" &
 elif "${boundary_geometry} == cylinder" &
-  "compute		chunk_2_near_bottom ${storeforcegroup} chunk/atom bin/cylinder z $(v_zlo_chunk) $((v_zhi_chunk-v_zlo_chunk)/v_N_bin_z) &
+  "compute              chunk_2_near_bottom ${storeforcegroup} chunk/atom bin/cylinder z $(v_zlo_chunk) $((v_zhi_chunk-v_zlo_chunk)/v_N_bin_z) &
   x y $(v_rlo_chunk) $(v_rhi_chunk) $(v_N_bin_r) &
   limit ${N_bin_r} exact units box bound z $(v_zlo_chunk) $(v_zlo_chunk+1.01*v_dp_big) discard yes nchunk once" &
 else &
@@ -1094,14 +1094,17 @@ else &
   "quit 1"
 
 # compute wall force in chunk
-compute inwallforce ${storeforcegroup} reduce/chunk chunk_z_near_inwall sum v_inwall_per_atom_1 v_inwall_per_atom_2 v_inwall_per_atom_3
-fix inwallforceprint ${storeforcegroup} ave/time ${every_ave_chunk_wallforce} ${repeat_ave_chunk_wallforce} ${freq_ave_chunk_wallforce} c_inwallforce[*] mode vector file output/wall/chunk/inwallforcefile
+fix             inwallforceprint ${storeforcegroup} ave/chunk ${every_ave_chunk_wallforce} ${repeat_ave_chunk_wallforce} ${freq_ave_chunk_wallforce} chunk_z_near_inwall &
+v_inwall_per_atom_1 v_inwall_per_atom_2 v_inwall_per_atom_3 &
+norm none file output/wall/chunk/inwallforcefile
 
-compute outwallforce ${storeforcegroup} reduce/chunk chunk_z_near_outwall sum v_outwall_per_atom_1 v_outwall_per_atom_2 v_outwall_per_atom_3
-fix outforceprint ${storeforcegroup} ave/time ${every_ave_chunk_wallforce} ${repeat_ave_chunk_wallforce} ${freq_ave_chunk_wallforce} c_outwallforce[*] mode vector file output/wall/chunk/outwallforcefile
+fix             outallforceprint ${storeforcegroup} ave/chunk ${every_ave_chunk_wallforce} ${repeat_ave_chunk_wallforce} ${freq_ave_chunk_wallforce} chunk_z_near_outwall &
+v_outwall_per_atom_1 v_outwall_per_atom_2 v_outwall_per_atom_3 &
+norm none file output/wall/chunk/outwallforcefile
 
-compute zbottomforce ${storeforcegroup} reduce/chunk chunk_2_near_bottom sum v_zbottom_per_atom_1 v_zbottom_per_atom_2 v_zbottom_per_atom_3
-fix zbottomforceprint ${storeforcegroup} ave/time ${every_ave_chunk_wallforce} ${repeat_ave_chunk_wallforce} ${freq_ave_chunk_wallforce} c_zbottomforce[*] mode vector file output/wall/chunk/zbottomforcefile
+fix             zbottomforceprint ${storeforcegroup} ave/chunk ${every_ave_chunk_wallforce} ${repeat_ave_chunk_wallforce} ${freq_ave_chunk_wallforce} chunk_2_near_bottom &
+v_zbottom_per_atom_1 v_zbottom_per_atom_2 v_zbottom_per_atom_3 &
+norm none file output/wall/chunk/zbottomforcefile
 label skip_ave_chunk_wall
 
 ### wall force

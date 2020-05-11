@@ -36,16 +36,16 @@ variable	freq_thermo		index 100 #stagger(1e3,2e2)       #
 variable	freq_print_trace	index 10
 # freq print velocity field
 variable	freq_ave_chunk_momentum_mass_field		index 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
-variable	repeat_ave_chunk_momentum_mass_field	index 1
-variable	every_ave_chunk_momentum_mass_field		index 1
+variable	repeat_ave_chunk_momentum_mass_field	index 0
+variable	every_ave_chunk_momentum_mass_field		index 0
 # freq print wall chunk
 variable    freq_ave_chunk_wallforce                index 1
 variable	repeat_ave_chunk_wallforce          	index 1
 variable	every_ave_chunk_wallforce               index 1
 # freq print wall
-variable	freq_ave_wall		index 1  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
-variable	repeat_ave_wall		index 1
-variable	every_ave_wall		index 1
+variable	freq_ave_wall		index 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
+variable	repeat_ave_wall		index 0
+variable	every_ave_wall		index 0
 # freq rebalance
 variable  	freq_balance      	index 100
 label test_for_simple_run_yes_end_1

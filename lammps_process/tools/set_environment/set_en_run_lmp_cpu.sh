@@ -50,7 +50,7 @@ module load lmp/20200402_stable3Mar2020_openmpi401_gran_mpiio_useromp #190809uns
 module list
 ${OMPIRUN_basic} lmp -in ${LMP_INSCRIPT}
 
-:'
+'
 ##===========normal do not bind socket============
 #LOAD MODULES, INSERT CODE, AND RUN YOUR PROGRAMS HERE
 module purge
