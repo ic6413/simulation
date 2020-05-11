@@ -979,11 +979,11 @@ else &
 compute		m1 all property/atom mass
 compute		omega all property/atom omegax omegay omegaz
 # file, output momentum energy mass temp m*y m*z omega by fix ave/chunk, pre column: Coord1 Coord2 Ncount
-# test
-jump SELF skip_ave_chunk_2_3
 fix		avspatial ${storeforcegroup} ave/chunk ${every_ave_chunk_momentum_mass_field} ${repeat_ave_chunk_momentum_mass_field} ${freq_ave_chunk_momentum_mass_field} chunk_2_3 &
 v_mv2 v_mv1 v_mv3 v_Ek1 v_Ek2 v_Ek3 c_m1 temp v_my v_mz c_omega[*] &
 norm none file output/momentum_mass_field/fix.momentum_mass_field.all
+# test
+jump SELF skip_ave_chunk_2_3
 # compute per-atom stress for output in fix chunk
 # compute 6-element vector in the following order: xx, yy, zz, xy, xz, yz
 compute stress ${storeforcegroup} stress/atom NULL ke pair
