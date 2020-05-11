@@ -990,7 +990,8 @@ fix		avspatialstress ${storeforcegroup} ave/chunk ${every_ave_chunk_momentum_mas
 c_stress[*] v_inwall_per_atom_1 v_inwall_per_atom_2 v_inwall_per_atom_3 v_outwall_per_atom_1 v_outwall_per_atom_2 v_outwall_per_atom_3 v_zbottom_per_atom_1 v_zbottom_per_atom_2 v_zbottom_per_atom_3 &
 norm none
 
-"""
+# test
+jump SELF skip_ave_chunk_2_3
 # fix ave stress 
 variable stress11    vector f_avspatialstress[4]
 variable stress11_sq vector v_stress11^2
@@ -1054,8 +1055,6 @@ variable zbottom_3_sq vector v_zbottom_3^2
 fix zbottom_3 ${storeforcegroup} ave/time 1 1 1 v_zbottom_3 mode vector file output/wall/chunkfixtimeave/zbottom_3 ave window 10
 fix zbottom_3_sq ${storeforcegroup} ave/time 1 1 1 v_zbottom_3_sq mode vector file output/wall/chunkfixtimeave/zbottom_3_sq ave window 10
 # end chunk_2_3
-"""
-
 label skip_ave_chunk_2_3
 
 # compute chunk wall
