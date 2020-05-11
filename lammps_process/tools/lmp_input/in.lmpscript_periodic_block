@@ -18,6 +18,8 @@
 #      correct unit of freeze region to box. set no output if freq_* =0
 # v5:  rounding number
 # v4:  store force before fix (after pair). so get pair force
+
+##### define variable begin ######
 # only for block
 variable    ifzbottomshear      index no
 # only for create_atom_method latt
@@ -435,8 +437,9 @@ variable	zbin		atom "floor((z-v_zlo_chunk)/ (v_zhi_chunk-v_zlo_chunk)* v_N_bin_z
 variable        chunk_id_r_z	atom 1+v_N_bin_r*v_zbin+v_rbin
 # calculate chunk id for chunk r
 variable        chunk_id_r	atom 1+v_rbin
+##### define variable end ######
 
-# processors
+# processors cut
 if "${boundary_geometry} == block" then &
   "processors  * * *" &
 elif "${boundary_geometry} == cylinder" &
@@ -444,16 +447,16 @@ elif "${boundary_geometry} == cylinder" &
 else &
   "print 'boundary_geometry not block not cylinder'" &
   "quit 1"
-
-
-# jump to restart section
+# skip section not need to do when read restart
 if	"${rst_from} > 0" 	then "jump SELF end_restart_skip1"
-#newton
-# default is on so only need when off
-#newton       on
-# setting, no restart
+
+##### begin: no need to do when restart #####
+#newton, default is on so only need when off
+newton       on
+# particles or atom style to define, no restart
 atom_style	sphere
-atom_modify	map array
+# modify certain attributes of atoms defined and stored within LAMMPS, map default is array, sort defalt is 1000 0
+atom_modify	map array #sort 10000 0 #test20200508
 if "${boundary_geometry} == block" then &
   "boundary	p f f" &
 elif "${boundary_geometry} == cylinder" &
@@ -461,14 +464,14 @@ elif "${boundary_geometry} == cylinder" &
 else &
   "print 'boundary_geometry not block not cylinder'" &
   "quit 1"
+# define unit
 units		si
-#timestep
+# timestep
 timestep     ${ts}
 # communication, no restart
 comm_style	brick
 comm_modify	vel yes
-
-# reg to define box, no restart
+# region to define box, no restart
 if "${boundary_geometry} == block" then &
   "region		simulation_box block ${xlo_box} ${xhi_box} ${ylo_box} ${yhi_box} ${zlo_box} ${zhi_box} units box" &
 elif "${boundary_geometry} == cylinder" &
@@ -476,24 +479,19 @@ elif "${boundary_geometry} == cylinder" &
 else &
   "print 'boundary_geometry not block not cylinder'" &
   "quit 1"
-
 # create box
 create_box	${n_type} simulation_box
 # contact force style, no restart
-
 pair_style	${contact_model_string} ${kn} ${kt} ${gamma_n} ${gamma_t} ${xmu} ${ifdamp_tangent}
-
 pair_coeff	* *
-
-
-# insert region
+## insert region
 # block
 region	in_outbdy_insert 	block ${xlo_create} ${xhi_create} ${ylo_create} ${yhi_create} ${zlo_create} ${zhi_create} units box
 # cylinder
 region	out_inbdy_insert_cy 	cylinder z 0. 0. ${ri_create} ${zlo_box} ${zhi_box} units box side out
 region	in_outbdy_insert_cy 	cylinder z 0. 0. ${ro_create} ${zlo_create} ${zhi_create} units box
 region	region_ins_0_cy		intersect 2 out_inbdy_insert_cy in_outbdy_insert_cy units box
-# insert more region
+## insert more region
 # block
 region	in_outbdy_append 	block 0 ${xhi_box} ${y_lo_freeze} ${y_hi_freeze} 0 ${zhi_freeze} units box
 # cylinder
@@ -786,6 +784,7 @@ label ybottom_wall_gran_end1
 
 # no need restart command end
 label		end_restart_skip1
+##### end: no need to do when restart #####
 
 # need restart command begin
 # jump if restart from nonzero step
@@ -991,6 +990,7 @@ fix		avspatialstress ${storeforcegroup} ave/chunk ${every_ave_chunk_momentum_mas
 c_stress[*] v_inwall_per_atom_1 v_inwall_per_atom_2 v_inwall_per_atom_3 v_outwall_per_atom_1 v_outwall_per_atom_2 v_outwall_per_atom_3 v_zbottom_per_atom_1 v_zbottom_per_atom_2 v_zbottom_per_atom_3 &
 norm none
 
+"""
 # fix ave stress 
 variable stress11    vector f_avspatialstress[4]
 variable stress11_sq vector v_stress11^2
@@ -1054,6 +1054,8 @@ variable zbottom_3_sq vector v_zbottom_3^2
 fix zbottom_3 ${storeforcegroup} ave/time 1 1 1 v_zbottom_3 mode vector file output/wall/chunkfixtimeave/zbottom_3 ave window 10
 fix zbottom_3_sq ${storeforcegroup} ave/time 1 1 1 v_zbottom_3_sq mode vector file output/wall/chunkfixtimeave/zbottom_3_sq ave window 10
 # end chunk_2_3
+"""
+
 label skip_ave_chunk_2_3
 
 # compute chunk wall
