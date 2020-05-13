@@ -261,7 +261,7 @@ def time_in_a_step(step):
 
 
 def time_in_a_step_from_start_rotate(step):
-    return step*float(rr.logfile["ts"])-rr.rotate_start_time
+    return step*float(rr.logfile["ts"])-rr.logfile["rotate_start_time"]
 
 
 def path_nve_subfolder_in_folder(n_ave, folder):

@@ -13,7 +13,6 @@ quiver_scale_velocity_xaxis_shearplaneshear_yaxis_z = 1
 
 # ====================================== import attribute
 
-
 # startstep
 startstep = int(rr.logfile['rst_from'])
 # timestep

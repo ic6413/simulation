@@ -5,11 +5,10 @@ import os
 
 # executive path 
 lammps_directory = os.getcwd() + '/'
-
 # read from pickle if exist
 if os.path.isfile(lammps_directory + 'python_global.pckl'):
     f = open(lammps_directory + 'python_global.pckl', 'rb')
-    [logdiclist, n_simu_total, line_log_list] = pickle.load(f)
+    [logdiclist, n_simu_total, line_log_list, logfile] = pickle.load(f)
     f.close()
 # if global pickle not exist
 else: 
@@ -52,58 +51,39 @@ else:
         # find rst_from
         # read variable from log file
         lines_start_variable = [line for line in lines if line.startswith("variable")]
-        rst_from = int(
-            [line for line in lines_start_variable if line.split()[1] == 'rst_from'][0].split()[3]
-        )
-
-        # if rst_from = 0 stop reading otherwise continue to set dir to parent folder
-        if rst_from == 0:
-            break
-        else:
-            dir = os.path.abspath(os.path.join(dir, os.pardir))
         
-            variable_names = [line.split()[1] for line in lines_start_variable]
-            logfile = dict.fromkeys(variable_names)
-            # get variable
-            for variable_name in logfile.keys():
-                satisfy_lines = [line for line in lines_start_variable if line.split()[1] == variable_name]
-                
-                if len(satisfy_lines) != 0:
-                    first_line_words = satisfy_lines[0].split()
-                
-                    if first_line_words[2] == "index":
-                        variable_value = first_line_words[3]
+        
+        variable_names = [line.split()[1] for line in lines_start_variable]
+        logfile = dict.fromkeys(variable_names)
+        # get variable
+        for variable_name in logfile.keys():
+            satisfy_lines = [line for line in lines_start_variable if line.split()[1] == variable_name]
+            
+            if len(satisfy_lines) != 0:
+                first_line_words = satisfy_lines[0].split()
+            
+                if first_line_words[2] == "index":
+                    variable_value = first_line_words[3]
 
-                    elif first_line_words[2] == "equal" or first_line_words[2] == "string":
-                        last_satisfy_line = satisfy_lines[-1]
-                        last_line_words = last_satisfy_line.split()
-                        variable_value = last_line_words[3]
-                    
-                    elif first_line_words[2] == "getenv":
-                        variable_value = first_line_words[3]
-
-                    else:
-                        pass
-                    logfile[variable_name] = variable_value
+                elif first_line_words[2] == "equal" or first_line_words[2] == "string":
+                    last_satisfy_line = satisfy_lines[-1]
+                    last_line_words = last_satisfy_line.split()
+                    variable_value = last_line_words[3]
+                
+                elif first_line_words[2] == "getenv":
+                    variable_value = first_line_words[3]
 
                 else:
-                    sys.exit("can not find variable {} in log file".format(variable_name))
+                    pass
+                logfile[variable_name] = variable_value
 
-            # shearwall
-            if "if_inwall_wall_gran" in logfile.keys():
-                if logfile["if_inwall_wall_gran"]=="yes":
-                    logfile["shearwall"] = "yplane"
-                else:
-                    for line in lines:
-                        if line.startswith("fix") and line.split()[3] == "wall/gran":
-                            if line.split()[1] == "inwall": 
-                                logfile["shearwall"] = line.split()[11]
-                                break
-                            elif line.split()[1] == "y_bottom":
-                                logfile["shearwall"] = line.split()[11]
-                                break
-                            else:
-                                sys.exit("shearwall missed")
+            else:
+                sys.exit("can not find variable {} in log file".format(variable_name))
+
+        # shearwall
+        if "if_inwall_wall_gran" in logfile.keys():
+            if logfile["if_inwall_wall_gran"]=="yes":
+                logfile["shearwall"] = "yplane"
             else:
                 for line in lines:
                     if line.startswith("fix") and line.split()[3] == "wall/gran":
@@ -115,28 +95,43 @@ else:
                             break
                         else:
                             sys.exit("shearwall missed")
+        else:
+            for line in lines:
+                if line.startswith("fix") and line.split()[3] == "wall/gran":
+                    if line.split()[1] == "inwall": 
+                        logfile["shearwall"] = line.split()[11]
+                        break
+                    elif line.split()[1] == "y_bottom":
+                        logfile["shearwall"] = line.split()[11]
+                        break
+                    else:
+                        sys.exit("shearwall missed")
 
-            # select compute line
-            lines_start_compute = [line for line in lines if line.startswith("compute")]
-            # get chunk 23 info
-            satisfy_lines = [line for line in lines_start_compute if line.split()[3] == 'chunk/atom' and line.split()[1] == "chunk_2_3"]
-            # get chunk/atom
-            if len(satisfy_lines) != 0:
-                logfile["chunk/atom 23"] = [
-                                        satisfy_lines[0].split()[1],
-                                        satisfy_lines[0].split()[5],
-                                        satisfy_lines[0].split()[4],
-                                        ]
-            else:
-                pass
-            
-            
+        # select compute line
+        lines_start_compute = [line for line in lines if line.startswith("compute")]
+        # get chunk 23 info
+        satisfy_lines = [line for line in lines_start_compute if line.split()[3] == 'chunk/atom' and line.split()[1] == "chunk_2_3"]
+        # get chunk/atom
+        if len(satisfy_lines) != 0:
+            logfile["chunk/atom 23"] = [
+                                    satisfy_lines[0].split()[1],
+                                    satisfy_lines[0].split()[5],
+                                    satisfy_lines[0].split()[4],
+                                    ]
+        else:
+            pass
+        # append logfile to logdiclist
         logdiclist.append(logfile)
-
+        # if rst_from = 0 stop reading otherwise continue to set dir to parent folder
+        rst_from = int(
+            [line for line in lines_start_variable if line.split()[1] == 'rst_from'][0].split()[3]
+        )
+        if rst_from == 0:
+            break
+        else:
+            dir = os.path.abspath(os.path.join(dir, os.pardir))
     logdiclist = logdiclist[::-1]
     line_log_list = line_log_list[::-1]
-    logfile = logdiclist[-1]
-
     folder_path_list_initial_to_last = [lammps_directory+"../"*(n_simu_total-1-n) for n in range(n_simu_total)]
     folder_path_list_last_to_initial = folder_path_list_initial_to_last[::-1]
     # variable names in lammps log file should be contained 
@@ -271,75 +266,6 @@ else:
         "x_period_dp_unit",
     ]
     """
-
-    # create logfile
-    # specify the path
-    log_path = lammps_directory + 'log.lammps'
-    if os.path.isfile(log_path):        
-        with open(log_path, mode='r') as f:
-            lines = f.read().strip().split('\n')
-    else:
-        sys.exit("file not exist")
-
-    lines_start_variable = [line for line in lines if line.startswith("variable")]
-    # variable names in lammps log file should be contained
-    variable_names_must_be_contained = [line.split()[1] for line in lines if line.startswith("variable")]
-    lines_start_compute = [line for line in lines if line.startswith("compute")]
-
-    # read variable from log file
-    logfile = {}
-    variable_names = [line.split()[1] for line in lines_start_variable]
-
-    for variable_name in variable_names:
-
-        satisfy_lines = [line for line in lines_start_variable if line.split()[1] == variable_name]
-        
-        if len(satisfy_lines) != 0:
-            first_line_words = satisfy_lines[0].split()
-        
-            if first_line_words[2] == "index":
-                variable_value = first_line_words[3]
-
-            elif first_line_words[2] == "equal" or first_line_words[2] == "string":
-                last_satisfy_line = satisfy_lines[-1]
-                last_line_words = last_satisfy_line.split()
-                variable_value = last_line_words[3]
-            
-            elif first_line_words[2] == "getenv":
-                variable_value = first_line_words[3]
-
-            else:
-                pass
-            logfile[variable_name] = variable_value
-
-        else:
-            sys.exit("can not find variable {} in log file".format(variable_name))
-    # shearwall
-    if "if_inwall_wall_gran" in logfile.keys():
-        if logfile["if_inwall_wall_gran"]=="yes":
-            logfile["shearwall"] = "yplane"
-        else:
-            for line in lines:
-                if line.startswith("fix") and line.split()[3] == "wall/gran":
-                    if line.split()[1] == "inwall": 
-                        logfile["shearwall"] = line.split()[11]
-                        break
-                    elif line.split()[1] == "y_bottom":
-                        logfile["shearwall"] = line.split()[11]
-                        break
-                    else:
-                        sys.exit("shearwall missed")
-    else:
-        for line in lines:
-            if line.startswith("fix") and line.split()[3] == "wall/gran":
-                if line.split()[1] == "inwall": 
-                    logfile["shearwall"] = line.split()[11]
-                    break
-                elif line.split()[1] == "y_bottom":
-                    logfile["shearwall"] = line.split()[11]
-                    break
-                else:
-                    sys.exit("shearwall missed")
     # calculate previous time for every log
     restart_time = 0
     for n in range(n_simu_total):
@@ -376,9 +302,9 @@ else:
         else:
             logdiclist[i]["rotate_start_time"] = None # have not rotate
     
+    # logfile
+    logfile = logdiclist[-1]
     # save all global variable get from logfile to pickle
     f = open(lammps_directory + 'python_global.pckl', 'wb')
-    pickle.dump([logdiclist, n_simu_total, line_log_list], f)
+    pickle.dump([logdiclist, n_simu_total, line_log_list, logfile], f)
     f.close()
-
-

@@ -30,19 +30,26 @@ if chunk_method == "rz":
     chunk_first_dim_coord = "z"
     chunk_second_dim_coord = "r"
 elif chunk_method == "yz":
-    if rr.logfile["chunk/atom 23"][1] == "y":
+    if "chunk/atom 23" in rr.logfile.keys():
+        if rr.logfile["chunk/atom 23"][1] == "y":
+            chunk_first_dim_coord = "y"
+            chunk_second_dim_coord = "z"
+            xyztoCoor = {}
+            xyztoCoor["y"] = "Coord1"
+            xyztoCoor["z"] = "Coord2"
+        elif rr.logfile["chunk/atom 23"][1] == "z":
+            chunk_first_dim_coord = "z"
+            chunk_second_dim_coord = "y"
+            xyztoCoor["z"] = "Coord1"
+            xyztoCoor["y"] = "Coord2"
+        else:
+            sys.exit("chunk_method wrong")
+    else:
         chunk_first_dim_coord = "y"
         chunk_second_dim_coord = "z"
         xyztoCoor = {}
         xyztoCoor["y"] = "Coord1"
         xyztoCoor["z"] = "Coord2"
-    elif rr.logfile["chunk/atom 23"][1] == "z":
-        chunk_first_dim_coord = "z"
-        chunk_second_dim_coord = "y"
-        xyztoCoor["z"] = "Coord1"
-        xyztoCoor["y"] = "Coord2"
-    else:
-        sys.exit("chunk_method wrong")
 else:
     sys.exit("chunk_method wrong")
 
@@ -70,22 +77,31 @@ if chunk_method == "rz":
 elif chunk_method == "yz":
     n_y = int(rr.logfile['N_bin_y'])
     n_z = int(rr.logfile['N_bin_z'])
-    if rr.logfile["chunk/atom 23"][1] == "y":
+    if "chunk/atom 23" in rr.logfile.keys():
+        if rr.logfile["chunk/atom 23"][1] == "y":
+            position_index_to_array_dim_index = {
+                                            1: 0,
+                                            2: 1,
+                                            }
+            n_1 = n_y
+            n_2 = n_z
+        elif rr.logfile["chunk/atom 23"][1] == "z":
+            position_index_to_array_dim_index = {
+                                            2: 0,
+                                            1: 1,
+                                            }
+            n_1 = n_z
+            n_2 = n_y
+        else:
+            sys.exit("chunk_method wrong")
+    else:
         position_index_to_array_dim_index = {
                                         1: 0,
                                         2: 1,
                                         }
         n_1 = n_y
         n_2 = n_z
-    elif rr.logfile["chunk/atom 23"][1] == "z":
-        position_index_to_array_dim_index = {
-                                        2: 0,
-                                        1: 1,
-                                        }
-        n_1 = n_z
-        n_2 = n_y
-    else:
-        sys.exit("chunk_method wrong")
+
     n_12 = n_1*n_2
     dx = 1/n_y*int(rr.logfile['width_wall_dp_unit'])
     dy = 1/n_z*float(rr.logfile['zhi_chunk_dp_unit'])
@@ -102,16 +118,25 @@ def time_from_step_0(step):
 
 # time count from rotate started
 def time_from_start_rotate(step):
-    return time_from_step_0(step)-rr.rotate_start_time
+    return time_from_step_0(step)-rr.logfile["rotate_start_time"]
 
 def firstdata(n_line_in_a_step, lines, variable_name, header):
-        n_line_0 = 4
-        n_line_1 = n_line_0 + n_line_in_a_step
-        ## select data
-        data = [lines[t].split() for t in range(n_line_0, n_line_1)]
-        return (
-            np.asarray(data, dtype=np.float64, order='F')[:, header.index(variable_name)].reshape(n_1, n_2)
-        )
+    n_line_0 = 4
+    n_line_1 = n_line_0 + n_line_in_a_step
+    ## select data
+    data = [lines[t].split() for t in range(n_line_0, n_line_1)]
+    return (
+        np.asarray(data, dtype=np.float64, order='F')[:, header.index(variable_name)].reshape(n_1, n_2)
+    )
+
+def firstdatareshapen1n2(n_line_in_a_step, lines, variable_name, header, reshape_n1, reshape_n2):
+    n_line_0 = 4
+    n_line_1 = n_line_0 + n_line_in_a_step
+    ## select data
+    data = [lines[t].split() for t in range(n_line_0, n_line_1)]
+    return (
+        np.asarray(data, dtype=np.float64, order='F')[:, header.index(variable_name)].reshape(reshape_n1, reshape_n2)
+    )
 
 # class chunk common
 class chunk(object):
@@ -125,7 +150,7 @@ class chunk(object):
         with open(self.lmp_path + f_path_rela_lmpfolder) as f:
             self.lines = f.read().strip().split('\n')
 
-        self.logfile = rr.read_log(self.lmp_path)
+        self.logfile = rr.logfile
         self.header = self.lines[2].split()[1:]
         self.n_line_in_a_step = int(self.lines[3].split()[1])
         self.step_first_in_file = int(self.lines[3].split()[0])
@@ -608,16 +633,437 @@ class chunkstress(chunk):
 # chunk momentum
 class chunkmomentum(chunk):
 
-    def __init__(self, n_ave, lmp_path):
+    def __init__(self, n_ave, lmp_path, f_path_rela_lmpfolder):
         super().__init__(n_ave, lmp_path, "output/momentum_mass_field/fix.momentum_mass_field.all")
 
+    
 
+
+# chunk wall force
+class chunkwallforce(chunk):
+
+    call_header_by_bettername = {
+            "F_inwall_0": "v_inwall_per_atom_1", 
+            "F_inwall_1": "v_inwall_per_atom_2", 
+            "F_inwall_2": "v_inwall_per_atom_3", 
+            "F_outwall_0": "v_outwall_per_atom_1", 
+            "F_outwall_1": "v_outwall_per_atom_2", 
+            "F_outwall_2": "v_outwall_per_atom_3", 
+            "F_zbottom_0": "v_zbottom_per_atom_1", 
+            "F_zbottom_1": "v_zbottom_per_atom_2", 
+            "F_zbottom_2": "v_zbottom_per_atom_3",
+            }
+
+    def __init__(self, n_ave, lmp_path, f_path_rela_lmpfolder, coord_index_horizental_in_plot, k, k_index):
+        self.n_ave = n_ave
+        self.lmp_path = lmp_path
+        self.f_path_rela_lmpfolder = f_path_rela_lmpfolder
+        # get lines from files
+        with open(self.lmp_path + f_path_rela_lmpfolder) as f:
+            self.lines = f.read().strip().split('\n')
+
+        self.logfile = rr.logfile
+        self.header = self.lines[2].split()[1:]
+        self.n_line_in_a_step = int(self.lines[3].split()[1])
+        self.step_first_in_file = int(self.lines[3].split()[0])
+        self.step_second_in_file = int(self.lines[3 + self.n_line_in_a_step + 1].split()[0])
+        self.step_last_in_file = int(self.lines[-1 - self.n_line_in_a_step].split()[0])
+        self.d_step = self.step_second_in_file - self.step_first_in_file
+        self.step_first_in_file_change_by_n_ave = self.step_first_in_file + int((self.n_ave)/2*self.d_step)
+        self.step_last_in_file_change_by_n_ave = self.step_last_in_file - int((self.n_ave)/2*self.d_step)
+        self.middle_step = int(
+            int((self.step_last_in_file_change_by_n_ave - self.step_first_in_file_change_by_n_ave)/2/self.d_step)*self.d_step + self.step_first_in_file_change_by_n_ave
+            )
+        self.allsteps = np.arange(self.step_first_in_file_change_by_n_ave, self.step_last_in_file_change_by_n_ave, self.d_step)
+        self.first_middle_last_steps = np.array([self.step_first_in_file_change_by_n_ave, self.middle_step, self.step_last_in_file_change_by_n_ave])
+        self.extrasteps = np.array(
+            [
+                self.step_first_in_file_change_by_n_ave + 5*self.d_step*self.n_ave,
+                ]
+            )
+        maskextra = np.logical_and(self.extrasteps > self.step_first_in_file_change_by_n_ave, self.extrasteps < self.step_last_in_file_change_by_n_ave)
+        self.extrasteps = self.extrasteps[maskextra]
+        self.first_extra_middle_last_steps = np.append(self.first_middle_last_steps, self.extrasteps)
+        self.first_extra_middle_last_steps.sort()
+        if "if_inwall_wall_gran" in rr.logfile.keys():
+            if rr.logfile["if_inwall_wall_gran"] == "yes":
+                if "wall_gran_type" in rr.logfile.keys():
+                    if rr.logfile["wall_gran_type"] == "1":
+                        self.ybottomwalltype = "rough (d=0.9)"
+                    elif rr.logfile["wall_gran_type"] == "2":
+                        self.ybottomwalltype = "rough (d=1)"
+                    elif rr.logfile["wall_gran_type"] == "3":
+                        self.ybottomwalltype = "rough (d=1.1)"
+                    else:
+                        sys.exit("can not get wall gran type")
+                else:
+                    self.ybottomwalltype = "rough (d=1)"
+            else:
+                self.ybottomwalltype = "smooth"
+        else:
+            self.ybottomwalltype = "smooth"
+
+        self.height = rr.logfile["z_length_create_dp_unit"]
+        self.width = rr.logfile["width_wall_dp_unit"]
+        self.periodlength = rr.logfile["x_period_dp_unit"]
+        self.labelstring_size_walltype = self.ybottomwalltype + "\n" + "L " + self.periodlength + "\n" + "W " + self.width + "\n" + "H " + self.height
+        self.labelstring_size_walltype_one_line = self.ybottomwalltype + ", " + "L " + self.periodlength + ", " + "W " + self.width + ", " + "H " + self.height
+
+        self.coord_index_horizental_in_plot = coord_index_horizental_in_plot
+        self.k = k
+        self.k_index = k_index
+    
+    def datachunk_ave_one_step_XY_fix_k(
+        self,
+        step, Y_name,
+        Y_scale,
+        X_scale=float(rr.logfile['dp']),
+        ):
+
+        # data 1D-1D
+        return super().datachunk_ave_one_step_XY_fix_k(
+        step, self.coord_index_horizental_in_plot, Y_name,
+        Y_scale,
+        self.k, self.k_index,
+        X_scale,
+        )
+
+    # plot 1D-1D
+    def plot_XY_fix_k(
+        self,
+        stepsarray,
+        Y_name,
+        Y_scale,
+        Ylabel,
+        X_scale=float(rr.logfile['dp']),
+        ):
+        super().plot_XY_fix_k(
+        stepsarray,
+        self.coord_index_horizental_in_plot, Y_name,
+        Y_scale,
+        self.k, [self.k_index],
+        Ylabel,
+        X_scale=float(rr.logfile['dp']),
+        )
+    # save X-Y
+    def save_XY_fix_k(
+        self,
+        stepsarray,
+        Y_name,
+        Y_scale,
+        Ylabel,
+        savepath,
+        X_scale=float(rr.logfile['dp']),
+        figformat="png", ifpickle=False, bbox_inches="tight", onefigure=True
+        ):
+        super().save_XY_fix_k(
+        stepsarray,
+        self.coord_index_horizental_in_plot, Y_name,
+        Y_scale,
+        self.k, [self.k_index],
+        Ylabel,
+        savepath,
+        X_scale=float(rr.logfile['dp']),
+        figformat="png", ifpickle=False, bbox_inches="tight", onefigure=True
+        )
+        
+class chunkinwallforce(chunkwallforce):
+    call_header_by_bettername = {
+            "F_inwall_0": "v_inwall_per_atom_1", 
+            "F_inwall_1": "v_inwall_per_atom_2", 
+            "F_inwall_2": "v_inwall_per_atom_3",
+            }
+
+    def __init__(self, n_ave, lmp_path):
+        super().__init__(n_ave, lmp_path, "output/wall/chunk/inwallforcefile", 2, 1, 0)
+        # x-y coordinate in chunk
+        if chunk_method == "rz":
+            self.chunk_x_array = firstdatareshapen1n2(self.n_line_in_a_step, self.lines, "v_r", self.header, 1, n_2)
+            self.chunk_y_array = firstdatareshapen1n2(self.n_line_in_a_step, self.lines, "v_z", self.header, 1, n_2)
+            self.chunk_x_array_label = "r"
+            self.chunk_y_array_label = "z"
+        elif chunk_method == "yz":
+            self.chunk_x_array = firstdatareshapen1n2(self.n_line_in_a_step, self.lines, "Coord1", self.header, 1, n_2)
+            self.chunk_y_array = firstdatareshapen1n2(self.n_line_in_a_step, self.lines, "Coord2", self.header, 1, n_2)
+            self.chunk_x_array_label = "y"
+            self.chunk_y_array_label = "z"
+        else:
+            sys.exit("chunk_method wrong")
+
+    def value_in_a_step_ave(self, step, variable_name, index_n_1=None, index_n_2=None, ddof=1):
+        # mean value
+        value = 0
+        # sum_square_2 = sum of (xi-x_ave)**2
+        sum_square_2 = 0
+
+        if index_n_1 == None:
+            if index_n_2 == None:
+                for i in range(self.n_ave):
+                    oldvalue = value
+                    step_inloop = int(step - (self.n_ave-1)*self.d_step/2 + i*self.d_step)
+                    n_line_0 = int(int(step_inloop - self.step_first_in_file)/self.d_step)*(self.n_line_in_a_step+1) + 4
+                    n_line_1 = int(n_line_0 + self.n_line_in_a_step)
+                    ## select data
+                    data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
+                    data = np.asarray(data, dtype=np.float64, order='F')
+                    x = data[:, self.header.index(variable_name)].reshape(1, n_2)
+                    value = value + (
+                        x - value
+                        )/(i + 1)
+                    sum_square_2 += (x-value)*(x-oldvalue)
+            else:
+                for i in range(self.n_ave):
+                    oldvalue = value
+                    step_inloop = int(step - (self.n_ave-1)*self.d_step/2 + i*self.d_step)
+                    n_line_0 = int(int(step_inloop - self.step_first_in_file)/self.d_step)*(self.n_line_in_a_step+1) + 4
+                    n_line_1 = int(n_line_0 + self.n_line_in_a_step)
+                    ## select data
+                    data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
+                    data = np.asarray(data, dtype=np.float64, order='F')
+                    x = data[:, self.header.index(variable_name)].reshape(1, n_2)[:, index_n_2]
+                    value = value + (
+                        x - value
+                        )/(i + 1)
+                    sum_square_2 += (x-value)*(x-oldvalue)
+                    
+        else:
+            if index_n_2 == None:
+                for i in range(self.n_ave):
+                    oldvalue = value
+                    step_inloop = int(step - (self.n_ave-1)*self.d_step/2 + i*self.d_step)
+                    n_line_0 = int(int(step_inloop - self.step_first_in_file)/self.d_step)*(self.n_line_in_a_step+1) + 4
+                    n_line_1 = int(n_line_0 + self.n_line_in_a_step)
+                    ## select data
+                    data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
+                    data = np.asarray(data, dtype=np.float64, order='F')
+                    x = data[:, self.header.index(variable_name)].reshape(1, n_2)[index_n_1, :]
+                    value = value + (
+                        x - value
+                        )/(i + 1)
+                    sum_square_2 += (x-value)*(x-oldvalue)
+            else:
+                for i in range(self.n_ave):
+                    oldvalue = value
+                    step_inloop = int(step - (self.n_ave-1)*self.d_step/2 + i*self.d_step)
+                    n_line_0 = int(int(step_inloop - self.step_first_in_file)/self.d_step)*(self.n_line_in_a_step+1) + 4
+                    n_line_1 = int(n_line_0 + self.n_line_in_a_step)
+                    ## select data
+                    data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
+                    data = np.asarray(data, dtype=np.float64, order='F')
+                    x = data[:, self.header.index(variable_name)].reshape(1, n_2)[index_n_1, index_n_2]
+                    value = value + (
+                        x - value
+                        )/(i + 1)
+                    sum_square_2 += (x-value)*(x-oldvalue)
+
+        if (ddof == 1 and self.n_ave == 1):
+            std = 0
+        else:
+            std = (
+                sum_square_2/(self.n_ave-ddof)
+            )**0.5
+        return (value, std)
+
+class chunkoutwallforce(chunkwallforce):
+    call_header_by_bettername = {
+            "F_outwall_0": "v_outwall_per_atom_1", 
+            "F_outwall_1": "v_outwall_per_atom_2", 
+            "F_outwall_2": "v_outwall_per_atom_3",
+            }
+
+    def __init__(self, n_ave, lmp_path):
+        super().__init__(n_ave, lmp_path, "output/wall/chunk/outwallforcefile", 2, 1, 0)
+        # x-y coordinate in chunk
+        if chunk_method == "rz":
+            self.chunk_x_array = firstdatareshapen1n2(self.n_line_in_a_step, self.lines, "v_r", self.header, 1, n_2)
+            self.chunk_y_array = firstdatareshapen1n2(self.n_line_in_a_step, self.lines, "v_z", self.header, 1, n_2)
+            self.chunk_x_array_label = "r"
+            self.chunk_y_array_label = "z"
+        elif chunk_method == "yz":
+            self.chunk_x_array = firstdatareshapen1n2(self.n_line_in_a_step, self.lines, "Coord1", self.header, 1, n_2)
+            self.chunk_y_array = firstdatareshapen1n2(self.n_line_in_a_step, self.lines, "Coord2", self.header, 1, n_2)
+            self.chunk_x_array_label = "y"
+            self.chunk_y_array_label = "z"
+        else:
+            sys.exit("chunk_method wrong")
+
+    def value_in_a_step_ave(self, step, variable_name, index_n_1=None, index_n_2=None, ddof=1):
+        # mean value
+        value = 0
+        # sum_square_2 = sum of (xi-x_ave)**2
+        sum_square_2 = 0
+
+        if index_n_1 == None:
+            if index_n_2 == None:
+                for i in range(self.n_ave):
+                    oldvalue = value
+                    step_inloop = int(step - (self.n_ave-1)*self.d_step/2 + i*self.d_step)
+                    n_line_0 = int(int(step_inloop - self.step_first_in_file)/self.d_step)*(self.n_line_in_a_step+1) + 4
+                    n_line_1 = int(n_line_0 + self.n_line_in_a_step)
+                    ## select data
+                    data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
+                    data = np.asarray(data, dtype=np.float64, order='F')
+                    x = data[:, self.header.index(variable_name)].reshape(1, n_2)
+                    value = value + (
+                        x - value
+                        )/(i + 1)
+                    sum_square_2 += (x-value)*(x-oldvalue)
+            else:
+                for i in range(self.n_ave):
+                    oldvalue = value
+                    step_inloop = int(step - (self.n_ave-1)*self.d_step/2 + i*self.d_step)
+                    n_line_0 = int(int(step_inloop - self.step_first_in_file)/self.d_step)*(self.n_line_in_a_step+1) + 4
+                    n_line_1 = int(n_line_0 + self.n_line_in_a_step)
+                    ## select data
+                    data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
+                    data = np.asarray(data, dtype=np.float64, order='F')
+                    x = data[:, self.header.index(variable_name)].reshape(1, n_2)[:, index_n_2]
+                    value = value + (
+                        x - value
+                        )/(i + 1)
+                    sum_square_2 += (x-value)*(x-oldvalue)
+                    
+        else:
+            if index_n_2 == None:
+                for i in range(self.n_ave):
+                    oldvalue = value
+                    step_inloop = int(step - (self.n_ave-1)*self.d_step/2 + i*self.d_step)
+                    n_line_0 = int(int(step_inloop - self.step_first_in_file)/self.d_step)*(self.n_line_in_a_step+1) + 4
+                    n_line_1 = int(n_line_0 + self.n_line_in_a_step)
+                    ## select data
+                    data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
+                    data = np.asarray(data, dtype=np.float64, order='F')
+                    x = data[:, self.header.index(variable_name)].reshape(1, n_2)[index_n_1, :]
+                    value = value + (
+                        x - value
+                        )/(i + 1)
+                    sum_square_2 += (x-value)*(x-oldvalue)
+            else:
+                for i in range(self.n_ave):
+                    oldvalue = value
+                    step_inloop = int(step - (self.n_ave-1)*self.d_step/2 + i*self.d_step)
+                    n_line_0 = int(int(step_inloop - self.step_first_in_file)/self.d_step)*(self.n_line_in_a_step+1) + 4
+                    n_line_1 = int(n_line_0 + self.n_line_in_a_step)
+                    ## select data
+                    data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
+                    data = np.asarray(data, dtype=np.float64, order='F')
+                    x = data[:, self.header.index(variable_name)].reshape(1, n_2)[index_n_1, index_n_2]
+                    value = value + (
+                        x - value
+                        )/(i + 1)
+                    sum_square_2 += (x-value)*(x-oldvalue)
+
+        if (ddof == 1 and self.n_ave == 1):
+            std = 0
+        else:
+            std = (
+                sum_square_2/(self.n_ave-ddof)
+            )**0.5
+        return (value, std)
+class chunkbottomwallforce(chunkwallforce):
+    call_header_by_bettername = {
+            "F_zbottom_0": "v_zbottom_per_atom_1", 
+            "F_zbottom_1": "v_zbottom_per_atom_2", 
+            "F_zbottom_2": "v_zbottom_per_atom_3",
+            }
+
+    def __init__(self, n_ave, lmp_path):
+        super().__init__(n_ave, lmp_path, "output/wall/chunk/zbottomforcefile", 1, 2, 0)
+        # x-y coordinate in chunk
+        if chunk_method == "rz":
+            self.chunk_x_array = firstdatareshapen1n2(self.n_line_in_a_step, self.lines, "v_r", self.header, n_1, 1)
+            self.chunk_y_array = firstdatareshapen1n2(self.n_line_in_a_step, self.lines, "v_z", self.header, n_1, 1)
+            self.chunk_x_array_label = "r"
+            self.chunk_y_array_label = "z"
+        elif chunk_method == "yz":
+            self.chunk_x_array = firstdatareshapen1n2(self.n_line_in_a_step, self.lines, "Coord1", self.header, n_1, 1)
+            self.chunk_y_array = firstdatareshapen1n2(self.n_line_in_a_step, self.lines, "Coord2", self.header, n_1, 1)
+            self.chunk_x_array_label = "y"
+            self.chunk_y_array_label = "z"
+        else:
+            sys.exit("chunk_method wrong")
+
+    def value_in_a_step_ave(self, step, variable_name, index_n_1=None, index_n_2=None, ddof=1):
+        # mean value
+        value = 0
+        # sum_square_2 = sum of (xi-x_ave)**2
+        sum_square_2 = 0
+
+        if index_n_1 == None:
+            if index_n_2 == None:
+                for i in range(self.n_ave):
+                    oldvalue = value
+                    step_inloop = int(step - (self.n_ave-1)*self.d_step/2 + i*self.d_step)
+                    n_line_0 = int(int(step_inloop - self.step_first_in_file)/self.d_step)*(self.n_line_in_a_step+1) + 4
+                    n_line_1 = int(n_line_0 + self.n_line_in_a_step)
+                    ## select data
+                    data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
+                    data = np.asarray(data, dtype=np.float64, order='F')
+                    x = data[:, self.header.index(variable_name)].reshape(n_1, 1)
+                    value = value + (
+                        x - value
+                        )/(i + 1)
+                    sum_square_2 += (x-value)*(x-oldvalue)
+            else:
+                for i in range(self.n_ave):
+                    oldvalue = value
+                    step_inloop = int(step - (self.n_ave-1)*self.d_step/2 + i*self.d_step)
+                    n_line_0 = int(int(step_inloop - self.step_first_in_file)/self.d_step)*(self.n_line_in_a_step+1) + 4
+                    n_line_1 = int(n_line_0 + self.n_line_in_a_step)
+                    ## select data
+                    data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
+                    data = np.asarray(data, dtype=np.float64, order='F')
+                    x = data[:, self.header.index(variable_name)].reshape(n_1, 1)[:, index_n_2]
+                    value = value + (
+                        x - value
+                        )/(i + 1)
+                    sum_square_2 += (x-value)*(x-oldvalue)
+                    
+        else:
+            if index_n_2 == None:
+                for i in range(self.n_ave):
+                    oldvalue = value
+                    step_inloop = int(step - (self.n_ave-1)*self.d_step/2 + i*self.d_step)
+                    n_line_0 = int(int(step_inloop - self.step_first_in_file)/self.d_step)*(self.n_line_in_a_step+1) + 4
+                    n_line_1 = int(n_line_0 + self.n_line_in_a_step)
+                    ## select data
+                    data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
+                    data = np.asarray(data, dtype=np.float64, order='F')
+                    x = data[:, self.header.index(variable_name)].reshape(n_1, 1)[index_n_1, :]
+                    value = value + (
+                        x - value
+                        )/(i + 1)
+                    sum_square_2 += (x-value)*(x-oldvalue)
+            else:
+                for i in range(self.n_ave):
+                    oldvalue = value
+                    step_inloop = int(step - (self.n_ave-1)*self.d_step/2 + i*self.d_step)
+                    n_line_0 = int(int(step_inloop - self.step_first_in_file)/self.d_step)*(self.n_line_in_a_step+1) + 4
+                    n_line_1 = int(n_line_0 + self.n_line_in_a_step)
+                    ## select data
+                    data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
+                    data = np.asarray(data, dtype=np.float64, order='F')
+                    x = data[:, self.header.index(variable_name)].reshape(n_1, 1)[index_n_1, index_n_2]
+                    value = value + (
+                        x - value
+                        )/(i + 1)
+                    sum_square_2 += (x-value)*(x-oldvalue)
+
+        if (ddof == 1 and self.n_ave == 1):
+            std = 0
+        else:
+            std = (
+                sum_square_2/(self.n_ave-ddof)
+            )**0.5
+        return (value, std)
 # chunk from many simu
 
 
 # main exclusive
 if __name__ == "__main__":
+    
     # execute only if run as a script
+    
     stress_scale = float(rr.logfile['den'])*float(rr.logfile['g'])*float(rr.logfile['zhi_chunk_dp_unit'])*float(rr.logfile['dp'])
     
 

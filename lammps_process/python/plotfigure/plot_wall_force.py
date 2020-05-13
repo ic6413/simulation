@@ -101,7 +101,7 @@ def plot_wall_force(if_plot_to_last, step1, step2, figformat="png", ifpickle=Fal
             for variable2 in header:
                 fig = plt.figure()
                 ax = fig.add_subplot(111)
-                x_array = df["v_t"].values - rr.rotate_start_time
+                x_array = df["v_t"].values - rr.logfile["rotate_start_time"]
                 y_array = df[variable2].values
                 if "force" in variable2:
                     y_array /= force_scale
@@ -175,7 +175,7 @@ def plot_wall_force_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", i
             for variable2 in header:
                 fig = plt.figure()
                 ax = fig.add_subplot(111)
-                x_array = df["v_t"].values - rr.rotate_start_time
+                x_array = df["v_t"].values - rr.logfile["rotate_start_time"]
                 y_array = df[variable2].values
                 if "force" in variable2:
                     y_array /= force_scale
