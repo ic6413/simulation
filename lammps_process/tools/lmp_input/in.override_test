@@ -80,9 +80,4 @@ variable  	freq_check_condition_exit      	index -1
 variable    ke_per_atom_check index 1.0e-17
 # get simulation path
 variable    home_path     getenv HOME
-if "${boundary_geometry}==cylinder" then &
-"include ${home_path}/simulation/lammps_process/tools/lmp_input/in.lmpscript_cylinder" &
-elif "${boundary_geometry}==block" &
-"include ${home_path}/simulation/lammps_process/tools/lmp_input/in.lmpscript_periodic_block" &
-else &
-"quit 1"
+include ${home_path}/simulation/lammps_process/tools/lmp_input/in.lmpscript
