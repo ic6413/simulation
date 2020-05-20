@@ -130,6 +130,8 @@ class chunk(object):
         self.d_step = self.step_second_in_file - self.step_first_in_file
         self.step_first_in_file_change_by_n_ave = self.step_first_in_file + int((self.n_ave)/2*self.d_step)
         self.step_last_in_file_change_by_n_ave = self.step_last_in_file - int((self.n_ave)/2*self.d_step)
+        if self.step_first_in_file_change_by_n_ave > self.step_last_in_file_change_by_n_ave:
+            sys.exit("error: step_first_in_file_change_by_n_ave > step_last_in_file_change_by_n_ave, n_ave too large") 
         self.middle_step = int(
             int((self.step_last_in_file_change_by_n_ave - self.step_first_in_file_change_by_n_ave)/2/self.d_step)*self.d_step + self.step_first_in_file_change_by_n_ave
             )
@@ -167,9 +169,9 @@ class chunk(object):
         self.periodlength = rr.logfile["x_period_dp_unit"]
         self.labelstring_size_walltype = self.ybottomwalltype + "\n" + "L " + self.periodlength + "\n" + "W " + self.width + "\n" + "H " + self.height
         self.labelstring_size_walltype_one_line = self.ybottomwalltype + ", " + "L " + self.periodlength + ", " + "W " + self.width + ", " + "H " + self.height
-
-        
-
+    
+    def get_coord(self, variable_name):
+        pass
     def firstdata(self, variable_name):
         pass
     def value_in_a_step_ave(self, step, variable_name, index_n_1=None, index_n_2=None, ddof=1):
@@ -184,7 +186,6 @@ class chunk(object):
             os.mkdir(folder)
         if not os.path.isdir(self.path_nve_subfolder_in_folder(folder)): 
             os.mkdir(self.path_nve_subfolder_in_folder(folder))
-
 
     @staticmethod
     def save_one_plot(fig, ax, savepath, f_name, figformat="png", ifpickle=False, bbox_inches = None):
@@ -209,17 +210,33 @@ class chunk(object):
         return (fig, ax)
 
 class chunk1D(chunk):
-    def __init__(self, n_ave, lmp_path, f_path_rela_lmpfolder):
+    def __init__(self, n_ave, lmp_path, f_path_rela_lmpfolder, coodfilepath_rela_lmpfolder):
         super().__init__(n_ave, lmp_path, f_path_rela_lmpfolder)
+        self.coodfilepath_rela_lmpfolder = coodfilepath_rela_lmpfolder
         # coordinate in chunk
-        if rr.logfile["shearwall"] == "zcylinder":
-            self.chunk_coor_array = self.firstdata("v_z")
-            self.chunk_coor_array_label = "z"
-        elif rr.logfile["shearwall"] == "yplane":
-            self.chunk_coor_array = self.firstdata("Coord2")
-            self.chunk_coor_array_label = "z"
+        try:
+            self.chunk_coor_array = self.get_coord("Coord2")
+        except:
+            # old version chunk
+            if rr.logfile["shearwall"] == "zcylinder":
+                self.chunk_coor_array = self.firstdata("v_z")
+            else:
+                sys.exit("chunk_method wrong")
+        self.chunk_coor_array_label = "z"
+        
+    def get_coord(self, variable_name):
+        if variable_name in self.header:
+            coordanswer = self.firstdata(variable_name)
         else:
-            sys.exit("chunk_method wrong")
+            with open(self.lmp_path + self.coodfilepath_rela_lmpfolder) as f:
+                lines = f.read().strip().split('\n')
+            n_line_0 = 4
+            n_line_1 = n_line_0 + self.n_line_in_a_step
+            header = lines[2].split()[1:]
+            ## select data
+            data = [lines[t].split() for t in range(n_line_0, n_line_1)]
+            coordanswer = np.asarray(data, dtype=np.float64, order='F')[:, header.index(variable_name)]
+        return coordanswer
 
     def firstdata(self, variable_name):
         n_line_0 = 4
@@ -233,45 +250,96 @@ class chunk1D(chunk):
     def value_in_a_step_ave(self, step, variable_name, index_n=None, ddof=1):
         # mean value
         value = 0
-        # sum_square_2 = sum of (xi-x_ave)**2
-        sum_square_2 = 0
+        # if lmp output std
+        sq_variable_name = variable_name + "_sq"
+        if sq_variable_name in self.header:
+            ave_square_2 = 0
+            if index_n == None:
+                for i in range(self.n_ave):
+                    oldvalue = value
+                    step_inloop = int(step - (self.n_ave-1)*self.d_step/2 + i*self.d_step)
+                    n_line_0 = int(int(step_inloop - self.step_first_in_file)/self.d_step)*(self.n_line_in_a_step+1) + 4
+                    n_line_1 = int(n_line_0 + self.n_line_in_a_step)
+                    ## select data
+                    data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
+                    data = np.asarray(data, dtype=np.float64, order='F')
+                    x = data[:, self.header.index(variable_name)]
+                    value = value + x
+                    # get std from lmp output
+                    ave_square_2_plus = data[:, self.header.index(sq_variable_name)]
+                    
+                    ave_square_2 = ave_square_2 + ave_square_2_plus
 
-        if index_n == None:
-            for i in range(self.n_ave):
-                oldvalue = value
-                step_inloop = int(step - (self.n_ave-1)*self.d_step/2 + i*self.d_step)
-                n_line_0 = int(int(step_inloop - self.step_first_in_file)/self.d_step)*(self.n_line_in_a_step+1) + 4
-                n_line_1 = int(n_line_0 + self.n_line_in_a_step)
-                ## select data
-                data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
-                data = np.asarray(data, dtype=np.float64, order='F')
-                x = data[:, self.header.index(variable_name)]
-                value = value + (
-                    x - value
-                    )/(i + 1)
-                sum_square_2 += (x-value)*(x-oldvalue)
+            else:
+                for i in range(self.n_ave):
+                    oldvalue = value
+                    step_inloop = int(step - (self.n_ave-1)*self.d_step/2 + i*self.d_step)
+                    n_line_0 = int(int(step_inloop - self.step_first_in_file)/self.d_step)*(self.n_line_in_a_step+1) + 4
+                    n_line_1 = int(n_line_0 + self.n_line_in_a_step)
+                    ## select data
+                    data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
+                    data = np.asarray(data, dtype=np.float64, order='F')
+                    x = data[:, self.header.index(variable_name)][index_n]
+                    value = value + x
+                    # get std from lmp output
+                    ave_square_2_plus = data[:, self.header.index(sq_variable_name)]
+                    
+                    ave_square_2 = ave_square_2 + ave_square_2_plus[index_n]
+            value = value/self.n_ave
+            ave_square_2 = ave_square_2/self.n_ave
+            # calculate std
+            totaln = self.n_ave*int(rr.logfile["repeat_ave_chunk_wallforce"])
+            if (ddof == 1 and totaln == 1):
+                std = 0
+            else:
+                std2 = (ave_square_2 - value**2)*totaln/(totaln-ddof)
+                if type(std2) is np.ndarray:
+                    std2[np.logical_and(std2 < 0, std2 > -10**-45)] = 0
+                else:
+                    if std2 < 0 and std2 > -10**-45:
+                        std2 = 0
+                
+                std = std2**0.5
+            
+        else:
+            # sum_diff_square_2 = sum of (xi-x_ave)**2
+            sum_diff_square_2 = 0
+            if index_n == None:
+                for i in range(self.n_ave):
+                    oldvalue = value
+                    step_inloop = int(step - (self.n_ave-1)*self.d_step/2 + i*self.d_step)
+                    n_line_0 = int(int(step_inloop - self.step_first_in_file)/self.d_step)*(self.n_line_in_a_step+1) + 4
+                    n_line_1 = int(n_line_0 + self.n_line_in_a_step)
+                    ## select data
+                    data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
+                    data = np.asarray(data, dtype=np.float64, order='F')
+                    x = data[:, self.header.index(variable_name)]
+                    value = value + (
+                        x - value
+                        )/(i + 1)
+                    sum_diff_square_2 += (x-value)*(x-oldvalue)
 
-        else:
-            for i in range(self.n_ave):
-                oldvalue = value
-                step_inloop = int(step - (self.n_ave-1)*self.d_step/2 + i*self.d_step)
-                n_line_0 = int(int(step_inloop - self.step_first_in_file)/self.d_step)*(self.n_line_in_a_step+1) + 4
-                n_line_1 = int(n_line_0 + self.n_line_in_a_step)
-                ## select data
-                data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
-                data = np.asarray(data, dtype=np.float64, order='F')
-                x = data[:, self.header.index(variable_name)][index_n]
-                value = value + (
-                    x - value
-                    )/(i + 1)
-                sum_square_2 += (x-value)*(x-oldvalue)
-        
-        if (ddof == 1 and self.n_ave == 1):
-            std = 0
-        else:
-            std = (
-                sum_square_2/(self.n_ave-ddof)
-            )**0.5
+            else:
+                for i in range(self.n_ave):
+                    oldvalue = value
+                    step_inloop = int(step - (self.n_ave-1)*self.d_step/2 + i*self.d_step)
+                    n_line_0 = int(int(step_inloop - self.step_first_in_file)/self.d_step)*(self.n_line_in_a_step+1) + 4
+                    n_line_1 = int(n_line_0 + self.n_line_in_a_step)
+                    ## select data
+                    data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
+                    data = np.asarray(data, dtype=np.float64, order='F')
+                    x = data[:, self.header.index(variable_name)][index_n]
+                    value = value + (
+                        x - value
+                        )/(i + 1)
+                    sum_diff_square_2 += (x-value)*(x-oldvalue)
+            # calculate std
+            if (ddof == 1 and self.n_ave == 1):
+                std = 0
+            else:
+                std = (
+                    sum_diff_square_2/(self.n_ave-ddof)
+                )**0.5
         return (value, std)
     # data 1D-1D
     def datachunk_ave_one_step_XY(
@@ -457,54 +525,53 @@ class chunkinwallforce(chunk1D):
             "F_inwall_0": "v_inwall_per_atom_1", 
             "F_inwall_1": "v_inwall_per_atom_2", 
             "F_inwall_2": "v_inwall_per_atom_3",
+            "F_inwall_0_sq": "v_inwall_per_atom_1_sq", 
+            "F_inwall_1_sq": "v_inwall_per_atom_2_sq", 
+            "F_inwall_2_sq": "v_inwall_per_atom_3_sq",
             }
 
     def __init__(self, n_ave, lmp_path):
-        super().__init__(n_ave, lmp_path, "output/wall/chunk/inwallforcefile")
-        # coordinate in chunk
-        if rr.logfile["shearwall"] == "zcylinder":
-            self.chunk_coor_array = super().firstdata("v_z")
-            self.chunk_coor_array_label = "z"
-        elif rr.logfile["shearwall"] == "yplane":
-            self.chunk_coor_array = super().firstdata("Coord2")
-            self.chunk_coor_array_label = "z"
-        else:
-            sys.exit("chunk_method wrong")
+        super().__init__(n_ave, lmp_path, "output/wall/chunk/inwallforcefile", "output/wall/chunk/coord_inwall")
 
 class chunkoutwallforce(chunk1D):
     call_header_by_bettername = {
             "F_outwall_0": "v_outwall_per_atom_1", 
             "F_outwall_1": "v_outwall_per_atom_2", 
             "F_outwall_2": "v_outwall_per_atom_3",
+            "F_outwall_0_sq": "v_outwall_per_atom_1_sq", 
+            "F_outwall_1_sq": "v_outwall_per_atom_2_sq", 
+            "F_outwall_2_sq": "v_outwall_per_atom_3_sq",
             }
 
     def __init__(self, n_ave, lmp_path):
-        super().__init__(n_ave, lmp_path, "output/wall/chunk/outwallforcefile")
-        # coordinate in chunk
-        if rr.logfile["shearwall"] == "zcylinder":
-            self.chunk_coor_array = super().firstdata("v_z")
-            self.chunk_coor_array_label = "z"
-        elif rr.logfile["shearwall"] == "yplane":
-            self.chunk_coor_array = super().firstdata("Coord2")
-            self.chunk_coor_array_label = "z"
-        else:
-            sys.exit("chunk_method wrong")
-        
+        super().__init__(n_ave, lmp_path, "output/wall/chunk/outwallforcefile", "output/wall/chunk/coord_outwall")
+ 
 class chunkzbottomwallforce(chunk1D):
     call_header_by_bettername = {
             "F_zbottom_0": "v_zbottom_per_atom_1", 
             "F_zbottom_1": "v_zbottom_per_atom_2", 
             "F_zbottom_2": "v_zbottom_per_atom_3",
+            "F_zbottom_0_sq": "v_zbottom_per_atom_1_sq",
+            "F_zbottom_1_sq": "v_zbottom_per_atom_2_sq",
+            "F_zbottom_2_sq": "v_zbottom_per_atom_3_sq",
             }
 
     def __init__(self, n_ave, lmp_path):
-        super().__init__(n_ave, lmp_path, "output/wall/chunk/zbottomforcefile")
+        super().__init__(n_ave, lmp_path, "output/wall/chunk/zbottomforcefile", "output/wall/chunk/coord_zbottom")
         # coordinate in chunk
+        try:
+            self.chunk_coor_array = self.get_coord("Coord1")
+        except:
+            # old version chunk
+            if rr.logfile["shearwall"] == "zcylinder":
+                self.chunk_coor_array = self.firstdata("v_r")
+            else:
+                sys.exit("chunk_method wrong")
+        
+        # chunk_coor_array_label
         if rr.logfile["shearwall"] == "zcylinder":
-            self.chunk_coor_array = super().firstdata("v_r")
             self.chunk_coor_array_label = "r"
         elif rr.logfile["shearwall"] == "yplane":
-            self.chunk_coor_array = super().firstdata("Coord1")
             self.chunk_coor_array_label = "y"
         else:
             sys.exit("chunk_method wrong")
@@ -514,19 +581,42 @@ class chunk2D(chunk):
 
     def __init__(self, n_ave, lmp_path, f_path_rela_lmpfolder):
         super().__init__(n_ave, lmp_path, f_path_rela_lmpfolder)
+        self.coodfilepath_rela_lmpfolder = "output/wall/chunk/coord_chunk_2_3"
+        # coordinate in chunk
+        try:
+            self.chunk_x_array = self.get_coord("Coord1")
+            self.chunk_y_array = self.get_coord("Coord2")
+        except:
+            # old version chunk
+            if rr.logfile["shearwall"] == "zcylinder":
+                self.chunk_x_array = self.firstdata("v_r")
+                self.chunk_y_array = self.firstdata("v_z")
+            else:
+                sys.exit("chunk_method wrong")
         # x-y coordinate in chunk
         if rr.logfile["shearwall"] == "zcylinder":
-            self.chunk_x_array = self.firstdata("v_r")
-            self.chunk_y_array = self.firstdata("v_z")
             self.chunk_x_array_label = "r"
             self.chunk_y_array_label = "z"
         elif rr.logfile["shearwall"] == "yplane":
-            self.chunk_x_array = self.firstdata("Coord1")
-            self.chunk_y_array = self.firstdata("Coord2")
             self.chunk_x_array_label = "y"
             self.chunk_y_array_label = "z"
         else:
             sys.exit("chunk_method wrong")
+
+    def get_coord(self, variable_name):
+        if variable_name in self.header:
+            coordanswer = self.firstdata(variable_name)
+        else:
+            with open(self.lmp_path + self.coodfilepath_rela_lmpfolder) as f:
+                
+                lines = f.read().strip().split('\n')
+                n_line_0 = 4
+                n_line_1 = n_line_0 + self.n_line_in_a_step
+                header = lines[2].split()[1:]
+                ## select data
+                data = [lines[t].split() for t in range(n_line_0, n_line_1)]
+                coordanswer = np.asarray(data, dtype=np.float64, order='F')[:, header.index(variable_name)].reshape(n_1, n_2)
+        return coordanswer
 
     def firstdata(self, variable_name):
         n_line_0 = 4
@@ -540,75 +630,156 @@ class chunk2D(chunk):
     def value_in_a_step_ave(self, step, variable_name, index_n_1=None, index_n_2=None, ddof=1):
         # mean value
         value = 0
-        # sum_square_2 = sum of (xi-x_ave)**2
-        sum_square_2 = 0
+        # if lmp output std
+        sq_variable_name = variable_name + "_sq"
+        if sq_variable_name in self.header:
+            ave_square_2 = 0
 
-        if index_n_1 == None:
-            if index_n_2 == None:
-                for i in range(self.n_ave):
-                    oldvalue = value
-                    step_inloop = int(step - (self.n_ave-1)*self.d_step/2 + i*self.d_step)
-                    n_line_0 = int(int(step_inloop - self.step_first_in_file)/self.d_step)*(self.n_line_in_a_step+1) + 4
-                    n_line_1 = int(n_line_0 + self.n_line_in_a_step)
-                    ## select data
-                    data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
-                    data = np.asarray(data, dtype=np.float64, order='F')
-                    x = data[:, self.header.index(variable_name)].reshape(n_1, n_2)
-                    value = value + (
-                        x - value
-                        )/(i + 1)
-                    sum_square_2 += (x-value)*(x-oldvalue)
+            if index_n_1 == None:
+                if index_n_2 == None:
+                    for i in range(self.n_ave):
+                        oldvalue = value
+                        step_inloop = int(step - (self.n_ave-1)*self.d_step/2 + i*self.d_step)
+                        n_line_0 = int(int(step_inloop - self.step_first_in_file)/self.d_step)*(self.n_line_in_a_step+1) + 4
+                        n_line_1 = int(n_line_0 + self.n_line_in_a_step)
+                        ## select data
+                        data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
+                        data = np.asarray(data, dtype=np.float64, order='F')
+                        x = data[:, self.header.index(variable_name)].reshape(n_1, n_2)
+                        value = value + x
+                        ave_square_2_plus = data[:, self.header.index(sq_variable_name)]
+                        
+                        ave_square_2 = ave_square_2 + ave_square_2_plus.reshape(n_1, n_2)
+                            
+                else:
+                    for i in range(self.n_ave):
+                        oldvalue = value
+                        step_inloop = int(step - (self.n_ave-1)*self.d_step/2 + i*self.d_step)
+                        n_line_0 = int(int(step_inloop - self.step_first_in_file)/self.d_step)*(self.n_line_in_a_step+1) + 4
+                        n_line_1 = int(n_line_0 + self.n_line_in_a_step)
+                        ## select data
+                        data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
+                        data = np.asarray(data, dtype=np.float64, order='F')
+                        x = data[:, self.header.index(variable_name)].reshape(n_1, n_2)[:, index_n_2]
+                        value = value + x
+                        ave_square_2_plus = data[:, self.header.index(sq_variable_name)]
+                        
+                        ave_square_2 = ave_square_2 + ave_square_2_plus.reshape(n_1, n_2)[:, index_n_2]
             else:
-                for i in range(self.n_ave):
-                    oldvalue = value
-                    step_inloop = int(step - (self.n_ave-1)*self.d_step/2 + i*self.d_step)
-                    n_line_0 = int(int(step_inloop - self.step_first_in_file)/self.d_step)*(self.n_line_in_a_step+1) + 4
-                    n_line_1 = int(n_line_0 + self.n_line_in_a_step)
-                    ## select data
-                    data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
-                    data = np.asarray(data, dtype=np.float64, order='F')
-                    x = data[:, self.header.index(variable_name)].reshape(n_1, n_2)[:, index_n_2]
-                    value = value + (
-                        x - value
-                        )/(i + 1)
-                    sum_square_2 += (x-value)*(x-oldvalue)
-                    
-        else:
-            if index_n_2 == None:
-                for i in range(self.n_ave):
-                    oldvalue = value
-                    step_inloop = int(step - (self.n_ave-1)*self.d_step/2 + i*self.d_step)
-                    n_line_0 = int(int(step_inloop - self.step_first_in_file)/self.d_step)*(self.n_line_in_a_step+1) + 4
-                    n_line_1 = int(n_line_0 + self.n_line_in_a_step)
-                    ## select data
-                    data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
-                    data = np.asarray(data, dtype=np.float64, order='F')
-                    x = data[:, self.header.index(variable_name)].reshape(n_1, n_2)[index_n_1, :]
-                    value = value + (
-                        x - value
-                        )/(i + 1)
-                    sum_square_2 += (x-value)*(x-oldvalue)
+                if index_n_2 == None:
+                    for i in range(self.n_ave):
+                        oldvalue = value
+                        step_inloop = int(step - (self.n_ave-1)*self.d_step/2 + i*self.d_step)
+                        n_line_0 = int(int(step_inloop - self.step_first_in_file)/self.d_step)*(self.n_line_in_a_step+1) + 4
+                        n_line_1 = int(n_line_0 + self.n_line_in_a_step)
+                        ## select data
+                        data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
+                        data = np.asarray(data, dtype=np.float64, order='F')
+                        x = data[:, self.header.index(variable_name)].reshape(n_1, n_2)[index_n_1, :]
+                        value = value + x
+                        ave_square_2_plus = data[:, self.header.index(sq_variable_name)]
+                        
+                        ave_square_2 = ave_square_2 + ave_square_2_plus.reshape(n_1, n_2)[index_n_1, :]
+                else:
+                    for i in range(self.n_ave):
+                        oldvalue = value
+                        step_inloop = int(step - (self.n_ave-1)*self.d_step/2 + i*self.d_step)
+                        n_line_0 = int(int(step_inloop - self.step_first_in_file)/self.d_step)*(self.n_line_in_a_step+1) + 4
+                        n_line_1 = int(n_line_0 + self.n_line_in_a_step)
+                        ## select data
+                        data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
+                        data = np.asarray(data, dtype=np.float64, order='F')
+                        x = data[:, self.header.index(variable_name)].reshape(n_1, n_2)[index_n_1, index_n_2]
+                        value = value + x
+                        ave_square_2_plus = data[:, self.header.index(sq_variable_name)]
+                        
+                        ave_square_2 = ave_square_2 + ave_square_2_plus.reshape(n_1, n_2)[index_n_1, index_n_2]
+            # calculate std
+            value = value/self.n_ave
+            ave_square_2 = ave_square_2/self.n_ave
+            totaln = self.n_ave*int(rr.logfile["repeat_ave_chunk_momentum_mass_field"])
+            if (ddof == 1 and totaln == 1):
+                std = 0
             else:
-                for i in range(self.n_ave):
-                    oldvalue = value
-                    step_inloop = int(step - (self.n_ave-1)*self.d_step/2 + i*self.d_step)
-                    n_line_0 = int(int(step_inloop - self.step_first_in_file)/self.d_step)*(self.n_line_in_a_step+1) + 4
-                    n_line_1 = int(n_line_0 + self.n_line_in_a_step)
-                    ## select data
-                    data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
-                    data = np.asarray(data, dtype=np.float64, order='F')
-                    x = data[:, self.header.index(variable_name)].reshape(n_1, n_2)[index_n_1, index_n_2]
-                    value = value + (
-                        x - value
-                        )/(i + 1)
-                    sum_square_2 += (x-value)*(x-oldvalue)
+                std2 = (ave_square_2 - value**2)*totaln/(totaln-ddof)
+                if type(std2) is np.ndarray:
+                    std2[np.logical_and(std2 < 0, std2 > -10**-45)] = 0
+                else:
+                    if std2 < 0 and std2 > -10**-45:
+                        std2 = 0
+                
+                std = std2**0.5
+        
+        else:    
+            # sum_diff_square_2 = sum of (xi-x_ave)**2
+            sum_diff_square_2 = 0
 
-        if (ddof == 1 and self.n_ave == 1):
-            std = 0
-        else:
-            std = (
-                sum_square_2/(self.n_ave-ddof)
-            )**0.5
+            if index_n_1 == None:
+                if index_n_2 == None:
+                    for i in range(self.n_ave):
+                        oldvalue = value
+                        step_inloop = int(step - (self.n_ave-1)*self.d_step/2 + i*self.d_step)
+                        n_line_0 = int(int(step_inloop - self.step_first_in_file)/self.d_step)*(self.n_line_in_a_step+1) + 4
+                        n_line_1 = int(n_line_0 + self.n_line_in_a_step)
+                        ## select data
+                        data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
+                        data = np.asarray(data, dtype=np.float64, order='F')
+                        x = data[:, self.header.index(variable_name)].reshape(n_1, n_2)
+                        value = value + (
+                            x - value
+                            )/(i + 1)
+                        sum_diff_square_2 += (x-value)*(x-oldvalue)
+                else:
+                    for i in range(self.n_ave):
+                        oldvalue = value
+                        step_inloop = int(step - (self.n_ave-1)*self.d_step/2 + i*self.d_step)
+                        n_line_0 = int(int(step_inloop - self.step_first_in_file)/self.d_step)*(self.n_line_in_a_step+1) + 4
+                        n_line_1 = int(n_line_0 + self.n_line_in_a_step)
+                        ## select data
+                        data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
+                        data = np.asarray(data, dtype=np.float64, order='F')
+                        x = data[:, self.header.index(variable_name)].reshape(n_1, n_2)[:, index_n_2]
+                        value = value + (
+                            x - value
+                            )/(i + 1)
+                        sum_diff_square_2 += (x-value)*(x-oldvalue)
+                        
+            else:
+                if index_n_2 == None:
+                    for i in range(self.n_ave):
+                        oldvalue = value
+                        step_inloop = int(step - (self.n_ave-1)*self.d_step/2 + i*self.d_step)
+                        n_line_0 = int(int(step_inloop - self.step_first_in_file)/self.d_step)*(self.n_line_in_a_step+1) + 4
+                        n_line_1 = int(n_line_0 + self.n_line_in_a_step)
+                        ## select data
+                        data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
+                        data = np.asarray(data, dtype=np.float64, order='F')
+                        x = data[:, self.header.index(variable_name)].reshape(n_1, n_2)[index_n_1, :]
+                        value = value + (
+                            x - value
+                            )/(i + 1)
+                        sum_diff_square_2 += (x-value)*(x-oldvalue)
+                else:
+                    for i in range(self.n_ave):
+                        oldvalue = value
+                        step_inloop = int(step - (self.n_ave-1)*self.d_step/2 + i*self.d_step)
+                        n_line_0 = int(int(step_inloop - self.step_first_in_file)/self.d_step)*(self.n_line_in_a_step+1) + 4
+                        n_line_1 = int(n_line_0 + self.n_line_in_a_step)
+                        ## select data
+                        data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
+                        data = np.asarray(data, dtype=np.float64, order='F')
+                        x = data[:, self.header.index(variable_name)].reshape(n_1, n_2)[index_n_1, index_n_2]
+                        value = value + (
+                            x - value
+                            )/(i + 1)
+                        sum_diff_square_2 += (x-value)*(x-oldvalue)
+
+            if (ddof == 1 and self.n_ave == 1):
+                std = 0
+            else:
+                std = (
+                    sum_diff_square_2/(self.n_ave-ddof)
+                )**0.5
         return (value, std)
 
     # data quiver 2D 2D
@@ -706,7 +877,6 @@ class chunk2D(chunk):
             X_vector = self.chunk_y_array[k_index, :]
             X_label = self.chunk_y_array_label
             Y_vector, Y_std_vector = self.value_in_a_step_ave(step, Y_name, index_n_1=k_index, index_n_2=None)
-            
         elif position_index_to_array_dim_index[k] == 1:
             X_vector = self.chunk_x_array[:, k_index]
             X_label = self.chunk_x_array_label
@@ -747,10 +917,10 @@ class chunk2D(chunk):
                 
                 # k_value
                 if position_index_to_array_dim_index[k] == 0:
-                    k_value = self.value_in_a_step_ave(step, xyztoCoor[map_dim_index_to_coordinate[k]], index_n_1=k_index, index_n_2=0)[0]
+                    k_value = self.chunk_x_array[k_index, 0]
                     
                 elif position_index_to_array_dim_index[k] == 1:
-                    k_value = self.value_in_a_step_ave(step, xyztoCoor[map_dim_index_to_coordinate[k]], index_n_1=0, index_n_2=k_index)[0]
+                    k_value = self.chunk_y_array[0, k_index]
 
                 k_value = k_value/float(rr.logfile['dp'])
                 # plot
@@ -905,15 +1075,12 @@ class chunkstress(chunk2D):
             "stress_01": "c_stress[4]",
             "stress_02": "c_stress[5]",
             "stress_12": "c_stress[6]",
-            "F_inwall_0": "v_inwall_per_atom_1", 
-            "F_inwall_1": "v_inwall_per_atom_2", 
-            "F_inwall_2": "v_inwall_per_atom_3", 
-            "F_outwall_0": "v_outwall_per_atom_1", 
-            "F_outwall_1": "v_outwall_per_atom_2", 
-            "F_outwall_2": "v_outwall_per_atom_3", 
-            "F_zbottom_0": "v_zbottom_per_atom_1", 
-            "F_zbottom_1": "v_zbottom_per_atom_2", 
-            "F_zbottom_2": "v_zbottom_per_atom_3",
+            "stress_00_sq": "c_stress[1]_sq",
+            "stress_11_sq": "c_stress[2]_sq",
+            "stress_22_sq": "c_stress[3]_sq",
+            "stress_01_sq": "c_stress[4]_sq",
+            "stress_02_sq": "c_stress[5]_sq",
+            "stress_12_sq": "c_stress[6]_sq",
             }
 
     def __init__(self, n_ave, lmp_path):
@@ -924,10 +1091,52 @@ class chunkstress(chunk2D):
 # chunk momentum
 class chunkmomentum(chunk2D):
 
+    call_header_by_bettername = {
+            "mv_1": "v_mv2",
+            "mv_0": "v_mv1",
+            "mv_2": "v_mv3",
+            "mass": "c_m1",
+            "mv_1_sq": "v_mv2_sq",
+            "mv_0_sq": "v_mv1_sq",
+            "mv_2_sq": "v_mv3_sq",
+            "mass_sq": "c_m1_sq",
+            }
+
     def __init__(self, n_ave, lmp_path, f_path_rela_lmpfolder):
         super().__init__(n_ave, lmp_path, "output/momentum_mass_field/fix.momentum_mass_field.all")
 
-    
+# chunk kinetic energy
+class chunkKE(chunk2D):
+
+    call_header_by_bettername = {
+            "Ek_0": "v_Ek1",
+            "Ek_1": "v_Ek2",
+            "Ek_2": "v_Ek3",
+            "mass": "c_m1",
+            "Ek_0_sq": "v_Ek1_sq",
+            "Ek_1_sq": "v_Ek2_sq",
+            "Ek_2_sq": "v_Ek3_sq",
+            "mass_sq": "c_m1_sq",
+            }
+
+    def __init__(self, n_ave, lmp_path, f_path_rela_lmpfolder):
+        super().__init__(n_ave, lmp_path, "output/momentum_mass_field/fix.momentum_mass_field.all")
+
+# chunk omega
+class chunkomega(chunk2D):
+
+    call_header_by_bettername = {
+            "omega_0": "c_omega[1]",
+            "omega_1": "c_omega[2]",
+            "omega_2": "c_omega[3]",
+            "omega_0_sq": "c_omega[1]_sq",
+            "omega_1_sq": "c_omega[2]_sq",
+            "omega_2_sq": "c_omega[3]_sq",
+            }
+
+    def __init__(self, n_ave, lmp_path):
+        super().__init__(n_ave, lmp_path, "output/momentum_mass_field/fix.omega.all")
+        # stress_variable_name dictionary    
 # chunk from many simu
 
 
@@ -937,11 +1146,9 @@ def run_main(number_average):
     
     stress_scale = float(rr.logfile['den'])*float(rr.logfile['g'])*float(rr.logfile['zhi_chunk_dp_unit'])*float(rr.logfile['dp'])
     
-
-    
     ob1 = chunkstress(number_average, rr.lammps_directory)
-    for key in chunkstress.call_header_by_bettername.keys():
 
+    for key in [key for key in chunkstress.call_header_by_bettername.keys() if "_sq" not in key]:
         toppath = dp.f_stress_field_samescale_path + key + "/"
         os.makedirs(toppath, exist_ok=True)
         ob1.add_nve_subfolder_in_folder(toppath)
@@ -960,7 +1167,7 @@ def run_main(number_average):
     for index_n_1 in [0, -1]:
         for index_n_2 in range(n_2-3):
             ob2 = chunkstress(1, rr.lammps_directory)
-            for key in chunkstress.call_header_by_bettername.keys():
+            for key in [key for key in chunkstress.call_header_by_bettername.keys() if "_sq" not in key]:
                 toppath = dp.f_stress_field_samescale_path + key + "_time/"
                 os.makedirs(toppath, exist_ok=True)
                 ob2.add_nve_subfolder_in_folder(toppath)
@@ -982,7 +1189,7 @@ def run_main(number_average):
         chunkinwallforce(number_average, rr.lammps_directory),
         chunkoutwallforce(number_average, rr.lammps_directory),
     ]:
-        for key in ob1.call_header_by_bettername.keys():
+        for key in [key for key in ob1.call_header_by_bettername.keys() if "_sq" not in key]:
             toppath = dp.diagram_path + "wallforce/" + key + "/"
             os.makedirs(toppath, exist_ok=True)
             ob1.add_nve_subfolder_in_folder(toppath)
@@ -1006,7 +1213,7 @@ def run_main(number_average):
         del ob1
 
     ob2 = chunkzbottomwallforce(number_average, rr.lammps_directory)
-    for key in ob2.call_header_by_bettername.keys():
+    for key in [key for key in ob2.call_header_by_bettername.keys() if "_sq" not in key]:
         toppath = dp.diagram_path + "wallforce/" + key + "/"
         os.makedirs(toppath, exist_ok=True)
         ob2.add_nve_subfolder_in_folder(toppath)
@@ -1030,4 +1237,4 @@ def run_main(number_average):
 # main exclusive
 if __name__ == "__main__":
     
-    run_main(5000)
+    run_main(50)

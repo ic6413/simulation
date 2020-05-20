@@ -35,12 +35,12 @@ variable	freq_thermo		index 100 #stagger(1e3,2e2)       #
 # freq print trace
 variable	freq_print_trace	index 10
 # freq print velocity field
-variable	freq_ave_chunk_momentum_mass_field		index 1  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
-variable	repeat_ave_chunk_momentum_mass_field	index 1
+variable	freq_ave_chunk_momentum_mass_field		index 100  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
+variable	repeat_ave_chunk_momentum_mass_field	index 100
 variable	every_ave_chunk_momentum_mass_field		index 1
 # freq print wall chunk
-variable    freq_ave_chunk_wallforce                index 1
-variable	repeat_ave_chunk_wallforce          	index 1
+variable    freq_ave_chunk_wallforce                index 100
+variable	repeat_ave_chunk_wallforce          	index 100
 variable	every_ave_chunk_wallforce               index 1
 # freq print wall
 variable	freq_ave_wall		index 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
@@ -135,9 +135,9 @@ variable	freq_ave_chunk_momentum_mass_field		index 10000  #Nevery=2, Nrepeat=6, 
 variable	repeat_ave_chunk_momentum_mass_field	index 1000
 variable	every_ave_chunk_momentum_mass_field		index 10
 # freq print wall chunk
-variable    freq_ave_chunk_wallforce                index 1
-variable	repeat_ave_chunk_wallforce          	index 1
-variable	every_ave_chunk_wallforce               index 1
+variable    freq_ave_chunk_wallforce                index 10000
+variable	repeat_ave_chunk_wallforce          	index 1000
+variable	every_ave_chunk_wallforce               index 10
 # freq print wall
 variable	freq_ave_wall		index 10000  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
 variable	repeat_ave_wall		index 1000

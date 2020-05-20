@@ -978,21 +978,96 @@ else &
 # compute mass for output in fix chunk
 compute		m1 all property/atom mass
 # file, output momentum energy mass temp m*y m*z omega by fix ave/chunk, pre column: Coord1 Coord2 Ncount
-fix		avspatial ${storeforcegroup} ave/chunk ${every_ave_chunk_momentum_mass_field} ${repeat_ave_chunk_momentum_mass_field} ${freq_ave_chunk_momentum_mass_field} chunk_2_3 &
+fix		avspatial ${storeforcegroup} ave/chunk 1 1 1 chunk_2_3 &
 v_mv2 v_mv1 v_mv3 v_Ek1 v_Ek2 v_Ek3 c_m1 &
-norm none file output/momentum_mass_field/fix.momentum_mass_field.all
+norm none #file output/momentum_mass_field/fix.momentum_mass_field.all
+# output coord
+variable coord1_chunk_2_3 vector f_avspatial[1]
+variable coord2_chunk_2_3 vector f_avspatial[2]
+fix coord1and2_chunk_2_3 ${storeforcegroup} ave/time 1000000 1 1000000 &
+v_coord1_chunk_2_3 v_coord2_chunk_2_3 &
+file output/wall/chunk/coord_chunk_2_3 &
+mode vector ave window 1 title3 "# Chunk Coord1 Coord2"
+# avspatial time ave
+variable avspatial_Ncount vector f_avspatial[3]
+variable avspatial_1 vector f_avspatial[4]
+variable avspatial_1_sq vector "f_avspatial[4]^2"
+variable avspatial_2 vector f_avspatial[5]
+variable avspatial_2_sq vector "f_avspatial[5]^2"
+variable avspatial_3 vector f_avspatial[6]
+variable avspatial_3_sq vector "f_avspatial[6]^2"
+variable avspatial_4 vector f_avspatial[7]
+variable avspatial_5 vector f_avspatial[8]
+variable avspatial_6 vector f_avspatial[9]
+variable avspatial_7 vector f_avspatial[10]
+variable avspatial_8 vector "f_avspatial[10]^2"
+fix avspatial_ave ${storeforcegroup} ave/time ${every_ave_chunk_momentum_mass_field} ${repeat_ave_chunk_momentum_mass_field} ${freq_ave_chunk_momentum_mass_field} &
+v_avspatial_Ncount &
+v_avspatial_1 v_avspatial_1_sq &
+v_avspatial_2 v_avspatial_2_sq &
+v_avspatial_3 v_avspatial_3_sq &
+v_avspatial_4 &
+v_avspatial_5 &
+v_avspatial_6 &
+v_avspatial_7 &
+v_avspatial_8 &
+file output/momentum_mass_field/fix.momentum_mass_field.all &
+mode vector ave window 1 title3 "# Chunk Ncount v_mv2 v_mv2_sq v_mv1 v_mv1_sq v_mv3 v_mv3_sq v_Ek1 v_Ek2 v_Ek3 c_m1 c_m1_sq"
+
 # compute mass and omega for output in fix chunk
 compute		omega all property/atom omegax omegay omegaz
-fix		avspatial_omega ${storeforcegroup} ave/chunk ${every_ave_chunk_momentum_mass_field} ${repeat_ave_chunk_momentum_mass_field} ${freq_ave_chunk_momentum_mass_field} chunk_2_3 &
+fix		avspatial_omega ${storeforcegroup} ave/chunk 1 1 1 chunk_2_3 &
 c_omega[*] &
-norm none file output/momentum_mass_field/fix.omega.all
+norm none #file output/momentum_mass_field/fix.omega.all
+# avspatial_omega time ave
+variable avspatial_omega_Ncount vector f_avspatial_omega[3]
+variable avspatial_omega_1 vector f_avspatial_omega[4]
+variable avspatial_omega_1_sq vector "f_avspatial_omega[4]^2"
+variable avspatial_omega_2 vector f_avspatial_omega[5]
+variable avspatial_omega_2_sq vector "f_avspatial_omega[5]^2"
+variable avspatial_omega_3 vector f_avspatial_omega[6]
+variable avspatial_omega_3_sq vector "f_avspatial_omega[6]^2"
+fix avspatial_omega_ave ${storeforcegroup} ave/time ${every_ave_chunk_momentum_mass_field} ${repeat_ave_chunk_momentum_mass_field} ${freq_ave_chunk_momentum_mass_field} &
+v_avspatial_omega_Ncount &
+v_avspatial_omega_1 v_avspatial_omega_1_sq &
+v_avspatial_omega_2 v_avspatial_omega_2_sq &
+v_avspatial_omega_3 v_avspatial_omega_3_sq &
+file output/momentum_mass_field/fix.omega.all &
+mode vector ave window 1 title3 "# Chunk Ncount c_omega[1] c_omega[1]_sq c_omega[2] c_omega[2]_sq c_omega[3] c_omega[3]_sq"
+
 # compute per-atom stress for output in fix chunk
 # compute 6-element vector in the following order: xx, yy, zz, xy, xz, yz
 compute stress ${storeforcegroup} stress/atom NULL ke pair
 # file, output stress, wall force by fix ave/chunk, pre column: Coord1 Coord2 Ncount
-fix		avspatialstress ${storeforcegroup} ave/chunk ${every_ave_chunk_momentum_mass_field} ${repeat_ave_chunk_momentum_mass_field} ${freq_ave_chunk_momentum_mass_field} chunk_2_3 &
+fix		avspatialstress ${storeforcegroup} ave/chunk 1 1 1 chunk_2_3 &
 c_stress[*] &
-norm none file output/stress/fix.stress.all
+norm none #file output/stress/fix.stress.all
+# avspatialstress time ave
+variable avspatialstress_Ncount vector f_avspatialstress[3]
+variable avspatialstress_1 vector f_avspatialstress[4]
+variable avspatialstress_1_sq vector "f_avspatialstress[4]^2"
+variable avspatialstress_2 vector f_avspatialstress[5]
+variable avspatialstress_2_sq vector "f_avspatialstress[5]^2"
+variable avspatialstress_3 vector f_avspatialstress[6]
+variable avspatialstress_3_sq vector "f_avspatialstress[6]^2"
+variable avspatialstress_4 vector f_avspatialstress[7]
+variable avspatialstress_4_sq vector "f_avspatialstress[7]^2"
+variable avspatialstress_5 vector f_avspatialstress[8]
+variable avspatialstress_5_sq vector "f_avspatialstress[8]^2"
+variable avspatialstress_6 vector f_avspatialstress[9]
+variable avspatialstress_6_sq vector "f_avspatialstress[9]^2"
+fix avspatialstress_ave ${storeforcegroup} ave/time ${every_ave_chunk_momentum_mass_field} ${repeat_ave_chunk_momentum_mass_field} ${freq_ave_chunk_momentum_mass_field} &
+v_avspatialstress_Ncount &
+v_avspatialstress_1 v_avspatialstress_1_sq &
+v_avspatialstress_2 v_avspatialstress_2_sq &
+v_avspatialstress_3 v_avspatialstress_3_sq &
+v_avspatialstress_4 v_avspatialstress_4_sq &
+v_avspatialstress_5 v_avspatialstress_5_sq &
+v_avspatialstress_6 v_avspatialstress_6_sq &
+file output/stress/fix.stress.all &
+mode vector ave window 1 &
+title3 "# Chunk Ncount c_stress[1] c_stress[1]_sq c_stress[2] c_stress[2]_sq c_stress[3] c_stress[3]_sq c_stress[4] c_stress[4]_sq c_stress[5] c_stress[5]_sq c_stress[6] c_stress[6]_sq"
+
 # test
 jump SELF skip_ave_chunk_2_3
 
@@ -1065,34 +1140,34 @@ label skip_ave_chunk_2_3
 
 # compute chunk wall
 if "${freq_ave_chunk_wallforce} == 0" then "jump SELF skip_ave_chunk_wall"
-# chunk z chunk_z_near_inwall
+# chunk z chunk_near_inwall
 if "${boundary_geometry} == block" then &
-  "compute              chunk_z_near_inwall ${storeforcegroup} chunk/atom bin/2d y $(v_ylo_chunk) $(v_ylo_chunk+1.01*v_dp_big) z $(v_zlo_chunk) $((v_zhi_chunk-v_zlo_chunk)/v_N_bin_z) &
+  "compute              chunk_near_inwall ${storeforcegroup} chunk/atom bin/2d y $(v_ylo_chunk) $(v_ylo_chunk+1.01*v_dp_big) z $(v_zlo_chunk) $((v_zhi_chunk-v_zlo_chunk)/v_N_bin_z) &
   limit ${N_bin_z} exact units box bound y $(v_ylo_chunk) $(v_ylo_chunk+1.01*v_dp_big) bound z $(v_zlo_chunk) $(v_zhi_chunk) discard yes nchunk once" &
 elif "${boundary_geometry} == cylinder" &
-  "compute              chunk_z_near_inwall ${storeforcegroup} chunk/atom bin/cylinder z $(v_zlo_chunk) $((v_zhi_chunk-v_zlo_chunk)/v_N_bin_z) &
+  "compute              chunk_near_inwall ${storeforcegroup} chunk/atom bin/cylinder z $(v_zlo_chunk) $((v_zhi_chunk-v_zlo_chunk)/v_N_bin_z) &
   x y $(v_rlo_chunk) $(v_rlo_chunk + 1.01*v_dp_big) 1 &
   limit ${N_bin_z} exact units box bound z $(v_zlo_chunk) $(v_zhi_chunk) discard yes nchunk once" &
 else &
   "print 'boundary_geometry not block not cylinder'" &
   "quit 1"
-# chunk z chunk_z_near_outwall
+# chunk z chunk_near_outwall
 if "${boundary_geometry} == block" then &
-  "compute              chunk_z_near_outwall ${storeforcegroup} chunk/atom bin/2d y $(v_yhi_chunk-1.01*v_dp_big) $(v_yhi_chunk) z $(v_zlo_chunk) $((v_zhi_chunk-v_zlo_chunk)/v_N_bin_z) &
+  "compute              chunk_near_outwall ${storeforcegroup} chunk/atom bin/2d y $(v_yhi_chunk-1.01*v_dp_big) $(v_yhi_chunk) z $(v_zlo_chunk) $((v_zhi_chunk-v_zlo_chunk)/v_N_bin_z) &
   limit ${N_bin_z} exact units box bound y $(v_yhi_chunk-1.01*v_dp_big) $(v_yhi_chunk) bound z $(v_zlo_chunk) $(v_zhi_chunk) discard yes nchunk once" &
 elif "${boundary_geometry} == cylinder" &
-  "compute              chunk_z_near_outwall ${storeforcegroup} chunk/atom bin/cylinder z $(v_zlo_chunk) $((v_zhi_chunk-v_zlo_chunk)/v_N_bin_z) &
+  "compute              chunk_near_outwall ${storeforcegroup} chunk/atom bin/cylinder z $(v_zlo_chunk) $((v_zhi_chunk-v_zlo_chunk)/v_N_bin_z) &
   x y $(v_rhi_chunk - 1.01*v_dp_big) $(v_rhi_chunk) 1 &
   limit ${N_bin_z} exact units box bound z $(v_zlo_chunk) $(v_zhi_chunk) discard yes nchunk once" &
 else &
   "print 'boundary_geometry not block not cylinder'" &
   "quit 1"
-# chunk 2 chunk_2_near_bottom
+# chunk 2 chunk_near_zbottom
 if "${boundary_geometry} == block" then &
-  "compute              chunk_2_near_bottom ${storeforcegroup} chunk/atom bin/2d y $(v_ylo_chunk) $((v_yhi_chunk-v_ylo_chunk)/v_N_bin_y) z $(v_zlo_chunk) $(v_zlo_chunk+1.01*v_dp_big)&
+  "compute              chunk_near_zbottom ${storeforcegroup} chunk/atom bin/2d y $(v_ylo_chunk) $((v_yhi_chunk-v_ylo_chunk)/v_N_bin_y) z $(v_zlo_chunk) $(v_zlo_chunk+1.01*v_dp_big)&
   limit ${N_bin_y} exact units box bound z $(v_zlo_chunk) $(v_zlo_chunk+1.01*v_dp_big) bound y $(v_ylo_chunk) $(v_yhi_chunk) discard yes nchunk once" &
 elif "${boundary_geometry} == cylinder" &
-  "compute              chunk_2_near_bottom ${storeforcegroup} chunk/atom bin/cylinder z $(v_zlo_chunk) $((v_zhi_chunk-v_zlo_chunk)/v_N_bin_z) &
+  "compute              chunk_near_zbottom ${storeforcegroup} chunk/atom bin/cylinder z $(v_zlo_chunk) $((v_zhi_chunk-v_zlo_chunk)/v_N_bin_z) &
   x y $(v_rlo_chunk) $(v_rhi_chunk) $(v_N_bin_r) &
   limit ${N_bin_r} exact units box bound z $(v_zlo_chunk) $(v_zlo_chunk+1.01*v_dp_big) discard yes nchunk once" &
 else &
@@ -1100,17 +1175,85 @@ else &
   "quit 1"
 
 # compute wall force in chunk
-fix             inwallforceprint ${storeforcegroup} ave/chunk ${every_ave_chunk_wallforce} ${repeat_ave_chunk_wallforce} ${freq_ave_chunk_wallforce} chunk_z_near_inwall &
+fix             inwallforceprint ${storeforcegroup} ave/chunk 1 1 1 chunk_near_inwall &
 v_inwall_per_atom_1 v_inwall_per_atom_2 v_inwall_per_atom_3 &
-norm none file output/wall/chunk/inwallforcefile
+norm none #file output/wall/chunk/inwallforcefile #ave window 1
 
-fix             outallforceprint ${storeforcegroup} ave/chunk ${every_ave_chunk_wallforce} ${repeat_ave_chunk_wallforce} ${freq_ave_chunk_wallforce} chunk_z_near_outwall &
+fix             outwallforceprint ${storeforcegroup} ave/chunk 1 1 1 chunk_near_outwall &
 v_outwall_per_atom_1 v_outwall_per_atom_2 v_outwall_per_atom_3 &
-norm none file output/wall/chunk/outwallforcefile
+norm none #file output/wall/chunk/outwallforcefile #ave window 1
 
-fix             zbottomforceprint ${storeforcegroup} ave/chunk ${every_ave_chunk_wallforce} ${repeat_ave_chunk_wallforce} ${freq_ave_chunk_wallforce} chunk_2_near_bottom &
+fix             zbottomforceprint ${storeforcegroup} ave/chunk 1 1 1 chunk_near_zbottom &
 v_zbottom_per_atom_1 v_zbottom_per_atom_2 v_zbottom_per_atom_3 &
-norm none file output/wall/chunk/zbottomforcefile
+norm none #file output/wall/chunk/zbottomforcefile #ave window 1
+# output coord
+variable coord1_chunk_near_inwall vector f_inwallforceprint[1]
+variable coord2_chunk_near_inwall vector f_inwallforceprint[2]
+fix coord1and2_chunk_near_inwall ${storeforcegroup} ave/time 1000000 1 1000000 &
+v_coord1_chunk_near_inwall v_coord2_chunk_near_inwall &
+file output/wall/chunk/coord_inwall &
+mode vector ave window 1 title3 "# Chunk Coord1 Coord2"
+variable coord1_chunk_near_outwall vector f_outwallforceprint[1]
+variable coord2_chunk_near_outwall vector f_outwallforceprint[2]
+fix coord1and2_chunk_near_outwall ${storeforcegroup} ave/time 1000000 1 1000000 &
+v_coord1_chunk_near_outwall v_coord2_chunk_near_outwall &
+file output/wall/chunk/coord_outwall &
+mode vector ave window 1 title3 "# Chunk Coord1 Coord2"
+variable coord1_chunk_near_zbottom vector f_zbottomforceprint[1]
+variable coord2_chunk_near_zbottom vector f_zbottomforceprint[2]
+fix coord1and2_chunk_near_zbottom ${storeforcegroup} ave/time 1000000 1 1000000 &
+v_coord1_chunk_near_zbottom v_coord2_chunk_near_zbottom &
+file output/wall/chunk/coord_zbottom &
+mode vector ave window 1 title3 "# Chunk Coord1 Coord2"
+# inwall time ave
+variable inwallforceprint_Ncount vector f_inwallforceprint[3]
+variable inwallforceprint_1 vector f_inwallforceprint[4]
+variable inwallforceprint_1_sq vector "f_inwallforceprint[4]^2"
+variable inwallforceprint_2 vector f_inwallforceprint[5]
+variable inwallforceprint_2_sq vector "f_inwallforceprint[5]^2"
+variable inwallforceprint_3 vector f_inwallforceprint[6]
+variable inwallforceprint_3_sq vector "f_inwallforceprint[6]^2"
+fix ave_std_inwall ${storeforcegroup} ave/time ${every_ave_chunk_wallforce} ${repeat_ave_chunk_wallforce} ${freq_ave_chunk_wallforce} &
+v_inwallforceprint_Ncount &
+v_inwallforceprint_1 v_inwallforceprint_1_sq &
+v_inwallforceprint_2 v_inwallforceprint_2_sq &
+v_inwallforceprint_3 v_inwallforceprint_3_sq &
+file output/wall/chunk/inwallforcefile &
+mode vector ave window 1 &
+title3 "# Chunk Ncount v_inwall_per_atom_1 v_inwall_per_atom_1_sq v_inwall_per_atom_2 v_inwall_per_atom_2_sq v_inwall_per_atom_3 v_inwall_per_atom_3_sq"
+# outwall time ave
+variable outwallforceprint_Ncount vector f_outwallforceprint[3]
+variable outwallforceprint_1 vector f_outwallforceprint[4]
+variable outwallforceprint_1_sq vector "f_outwallforceprint[4]^2"
+variable outwallforceprint_2 vector f_outwallforceprint[5]
+variable outwallforceprint_2_sq vector "f_outwallforceprint[5]^2"
+variable outwallforceprint_3 vector f_outwallforceprint[6]
+variable outwallforceprint_3_sq vector "f_outwallforceprint[6]^2"
+fix ave_std_outwall ${storeforcegroup} ave/time ${every_ave_chunk_wallforce} ${repeat_ave_chunk_wallforce} ${freq_ave_chunk_wallforce} &
+v_outwallforceprint_Ncount &
+v_outwallforceprint_1 v_outwallforceprint_1_sq &
+v_outwallforceprint_2 v_outwallforceprint_2_sq &
+v_outwallforceprint_3 v_outwallforceprint_3_sq &
+file output/wall/chunk/outwallforcefile &
+mode vector ave window 1 &
+title3 "# Chunk Ncount v_outwall_per_atom_1 v_outwall_per_atom_1_sq v_outwall_per_atom_2 v_outwall_per_atom_2_sq v_outwall_per_atom_3 v_outwall_per_atom_3_sq"
+# zbottom time ave
+variable zbottomforceprint_Ncount vector f_zbottomforceprint[3]
+variable zbottomforceprint_1 vector f_zbottomforceprint[4]
+variable zbottomforceprint_1_sq vector "f_zbottomforceprint[4]^2"
+variable zbottomforceprint_2 vector f_zbottomforceprint[5]
+variable zbottomforceprint_2_sq vector "f_zbottomforceprint[5]^2"
+variable zbottomforceprint_3 vector f_zbottomforceprint[6]
+variable zbottomforceprint_3_sq vector "f_zbottomforceprint[6]^2"
+fix ave_std_zbottom ${storeforcegroup} ave/time ${every_ave_chunk_wallforce} ${repeat_ave_chunk_wallforce} ${freq_ave_chunk_wallforce} &
+v_zbottomforceprint_Ncount &
+v_zbottomforceprint_1 v_zbottomforceprint_1_sq &
+v_zbottomforceprint_2 v_zbottomforceprint_2_sq &
+v_zbottomforceprint_3 v_zbottomforceprint_3_sq &
+file output/wall/chunk/zbottomforcefile &
+mode vector ave window 1 &
+title3 "# Chunk Ncount v_zbottom_per_atom_1 v_zbottom_per_atom_1_sq v_zbottom_per_atom_2 v_zbottom_per_atom_2_sq v_zbottom_per_atom_3 v_zbottom_per_atom_3_sq"
+# wall force end skip label
 label skip_ave_chunk_wall
 
 ### wall force
@@ -1352,7 +1495,8 @@ if "${freq_fixvector} == 0" then "jump SELF skip_fixvector"
 fix		vector_manytime ${storeforcegroup} vector ${every_fixvector} v_trace_id #z[${trace_id}] vz[${trace_id}] fz[${trace_id}] c_n_contact[${trace_id}]
 variable	fixvector vector f_vector_manytime
 if "${freq_fixvector} == 0" then "jump SELF skip_fixvector"
-fix		manytime ${storeforcegroup} ave/time 1 1 ${freq_fixvector} v_fixvector mode vector file output/trace/fix.trace.allstep
+fix		manytime ${storeforcegroup} ave/time 1 1 ${freq_fixvector} v_fixvector &
+mode vector file output/trace/fix.trace.allstep
 label skip_fixvector
 
 # compute for output
