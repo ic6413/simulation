@@ -987,20 +987,20 @@ variable coord2_chunk_2_3 vector f_avspatial[2]
 fix coord1and2_chunk_2_3 ${storeforcegroup} ave/time 1000000 1 1000000 &
 v_coord1_chunk_2_3 v_coord2_chunk_2_3 &
 file output/wall/chunk/coord_chunk_2_3 &
-mode vector ave window 1 title3 "# Chunk Coord1 Coord2"
+mode vector format %.8g ave window 1 title3 "# Chunk Coord1 Coord2"
 # avspatial time ave
 variable avspatial_Ncount vector f_avspatial[3]
 variable avspatial_1 vector f_avspatial[4]
-variable avspatial_1_sq vector "f_avspatial[4]^2"
+variable avspatial_1_sq vector "f_avspatial[4]*f_avspatial[4]"
 variable avspatial_2 vector f_avspatial[5]
-variable avspatial_2_sq vector "f_avspatial[5]^2"
+variable avspatial_2_sq vector "f_avspatial[5]*f_avspatial[5]"
 variable avspatial_3 vector f_avspatial[6]
-variable avspatial_3_sq vector "f_avspatial[6]^2"
+variable avspatial_3_sq vector "f_avspatial[6]*f_avspatial[6]"
 variable avspatial_4 vector f_avspatial[7]
 variable avspatial_5 vector f_avspatial[8]
 variable avspatial_6 vector f_avspatial[9]
 variable avspatial_7 vector f_avspatial[10]
-variable avspatial_8 vector "f_avspatial[10]^2"
+variable avspatial_8 vector "f_avspatial[10]*f_avspatial[10]"
 fix avspatial_ave ${storeforcegroup} ave/time ${every_ave_chunk_momentum_mass_field} ${repeat_ave_chunk_momentum_mass_field} ${freq_ave_chunk_momentum_mass_field} &
 v_avspatial_Ncount &
 v_avspatial_1 v_avspatial_1_sq &
@@ -1012,7 +1012,7 @@ v_avspatial_6 &
 v_avspatial_7 &
 v_avspatial_8 &
 file output/momentum_mass_field/fix.momentum_mass_field.all &
-mode vector ave window 1 title3 "# Chunk Ncount v_mv2 v_mv2_sq v_mv1 v_mv1_sq v_mv3 v_mv3_sq v_Ek1 v_Ek2 v_Ek3 c_m1 c_m1_sq"
+mode vector format %.8g ave window 1 title3 "# Chunk Ncount v_mv2 v_mv2_sq v_mv1 v_mv1_sq v_mv3 v_mv3_sq v_Ek1 v_Ek2 v_Ek3 c_m1 c_m1_sq"
 
 # compute mass and omega for output in fix chunk
 compute		omega all property/atom omegax omegay omegaz
@@ -1022,18 +1022,18 @@ norm none #file output/momentum_mass_field/fix.omega.all
 # avspatial_omega time ave
 variable avspatial_omega_Ncount vector f_avspatial_omega[3]
 variable avspatial_omega_1 vector f_avspatial_omega[4]
-variable avspatial_omega_1_sq vector "f_avspatial_omega[4]^2"
+variable avspatial_omega_1_sq vector "f_avspatial_omega[4]*f_avspatial_omega[4]"
 variable avspatial_omega_2 vector f_avspatial_omega[5]
-variable avspatial_omega_2_sq vector "f_avspatial_omega[5]^2"
+variable avspatial_omega_2_sq vector "f_avspatial_omega[5]*f_avspatial_omega[5]"
 variable avspatial_omega_3 vector f_avspatial_omega[6]
-variable avspatial_omega_3_sq vector "f_avspatial_omega[6]^2"
+variable avspatial_omega_3_sq vector "f_avspatial_omega[6]*f_avspatial_omega[6]"
 fix avspatial_omega_ave ${storeforcegroup} ave/time ${every_ave_chunk_momentum_mass_field} ${repeat_ave_chunk_momentum_mass_field} ${freq_ave_chunk_momentum_mass_field} &
 v_avspatial_omega_Ncount &
 v_avspatial_omega_1 v_avspatial_omega_1_sq &
 v_avspatial_omega_2 v_avspatial_omega_2_sq &
 v_avspatial_omega_3 v_avspatial_omega_3_sq &
 file output/momentum_mass_field/fix.omega.all &
-mode vector ave window 1 title3 "# Chunk Ncount c_omega[1] c_omega[1]_sq c_omega[2] c_omega[2]_sq c_omega[3] c_omega[3]_sq"
+mode vector format %.8g ave window 1 title3 "# Chunk Ncount c_omega[1] c_omega[1]_sq c_omega[2] c_omega[2]_sq c_omega[3] c_omega[3]_sq"
 
 # compute per-atom stress for output in fix chunk
 # compute 6-element vector in the following order: xx, yy, zz, xy, xz, yz
@@ -1045,17 +1045,17 @@ norm none #file output/stress/fix.stress.all
 # avspatialstress time ave
 variable avspatialstress_Ncount vector f_avspatialstress[3]
 variable avspatialstress_1 vector f_avspatialstress[4]
-variable avspatialstress_1_sq vector "f_avspatialstress[4]^2"
+variable avspatialstress_1_sq vector "f_avspatialstress[4]*f_avspatialstress[4]"
 variable avspatialstress_2 vector f_avspatialstress[5]
-variable avspatialstress_2_sq vector "f_avspatialstress[5]^2"
+variable avspatialstress_2_sq vector "f_avspatialstress[5]*f_avspatialstress[5]"
 variable avspatialstress_3 vector f_avspatialstress[6]
-variable avspatialstress_3_sq vector "f_avspatialstress[6]^2"
+variable avspatialstress_3_sq vector "f_avspatialstress[6]*f_avspatialstress[6]"
 variable avspatialstress_4 vector f_avspatialstress[7]
-variable avspatialstress_4_sq vector "f_avspatialstress[7]^2"
+variable avspatialstress_4_sq vector "f_avspatialstress[7]*f_avspatialstress[7]"
 variable avspatialstress_5 vector f_avspatialstress[8]
-variable avspatialstress_5_sq vector "f_avspatialstress[8]^2"
+variable avspatialstress_5_sq vector "f_avspatialstress[8]*f_avspatialstress[8]"
 variable avspatialstress_6 vector f_avspatialstress[9]
-variable avspatialstress_6_sq vector "f_avspatialstress[9]^2"
+variable avspatialstress_6_sq vector "f_avspatialstress[9]*f_avspatialstress[9]"
 fix avspatialstress_ave ${storeforcegroup} ave/time ${every_ave_chunk_momentum_mass_field} ${repeat_ave_chunk_momentum_mass_field} ${freq_ave_chunk_momentum_mass_field} &
 v_avspatialstress_Ncount &
 v_avspatialstress_1 v_avspatialstress_1_sq &
@@ -1065,7 +1065,7 @@ v_avspatialstress_4 v_avspatialstress_4_sq &
 v_avspatialstress_5 v_avspatialstress_5_sq &
 v_avspatialstress_6 v_avspatialstress_6_sq &
 file output/stress/fix.stress.all &
-mode vector ave window 1 &
+mode vector format %.8g ave window 1 &
 title3 "# Chunk Ncount c_stress[1] c_stress[1]_sq c_stress[2] c_stress[2]_sq c_stress[3] c_stress[3]_sq c_stress[4] c_stress[4]_sq c_stress[5] c_stress[5]_sq c_stress[6] c_stress[6]_sq"
 
 # test
@@ -1074,66 +1074,66 @@ jump SELF skip_ave_chunk_2_3
 # fix ave stress 
 #variable stress11    vector f_avspatialstress[4]
 #variable stress11_sq vector v_stress11^2
-#fix stress11 ${storeforcegroup} ave/time 1 1 1 v_stress11 mode vector file output/stress/chunkfixtimeave/stress11 ave window 10
-#fix stress11_sq ${storeforcegroup} ave/time 1 1 1 v_stress11_sq mode vector file output/stress/chunkfixtimeave/stress11_sq ave window 10
+#fix stress11 ${storeforcegroup} ave/time 1 1 1 v_stress11 mode vector format %.8g file output/stress/chunkfixtimeave/stress11 ave window 10
+#fix stress11_sq ${storeforcegroup} ave/time 1 1 1 v_stress11_sq mode vector format %.8g file output/stress/chunkfixtimeave/stress11_sq ave window 10
 #variable stress22    vector f_avspatialstress[5]
 #variable stress22_sq vector v_stress22^2
-#fix stress22 ${storeforcegroup} ave/time 1 1 1 v_stress22 mode vector file output/stress/chunkfixtimeave/stress22 ave window 10
-#fix stress22_sq ${storeforcegroup} ave/time 1 1 1 v_stress22_sq mode vector file output/stress/chunkfixtimeave/stress22_sq ave window 10
+#fix stress22 ${storeforcegroup} ave/time 1 1 1 v_stress22 mode vector format %.8g file output/stress/chunkfixtimeave/stress22 ave window 10
+#fix stress22_sq ${storeforcegroup} ave/time 1 1 1 v_stress22_sq mode vector format %.8g file output/stress/chunkfixtimeave/stress22_sq ave window 10
 #variable stress33    vector f_avspatialstress[6]
 #variable stress33_sq vector v_stress33^2
-#fix stress33 ${storeforcegroup} ave/time 1 1 1 v_stress33 mode vector file output/stress/chunkfixtimeave/stress33 ave window 10
-#fix stress33_sq ${storeforcegroup} ave/time 1 1 1 v_stress33_sq mode vector file output/stress/chunkfixtimeave/stress33_sq ave window 10
+#fix stress33 ${storeforcegroup} ave/time 1 1 1 v_stress33 mode vector format %.8g file output/stress/chunkfixtimeave/stress33 ave window 10
+#fix stress33_sq ${storeforcegroup} ave/time 1 1 1 v_stress33_sq mode vector format %.8g file output/stress/chunkfixtimeave/stress33_sq ave window 10
 #variable stress12    vector f_avspatialstress[7]
 #variable stress12_sq vector v_stress12^2
-#fix stress12 ${storeforcegroup} ave/time 1 1 1 v_stress12 mode vector file output/stress/chunkfixtimeave/stress12 ave window 10
-#fix stress12_sq ${storeforcegroup} ave/time 1 1 1 v_stress12_sq mode vector file output/stress/chunkfixtimeave/stress12_sq ave window 10
+#fix stress12 ${storeforcegroup} ave/time 1 1 1 v_stress12 mode vector format %.8g file output/stress/chunkfixtimeave/stress12 ave window 10
+#fix stress12_sq ${storeforcegroup} ave/time 1 1 1 v_stress12_sq mode vector format %.8g file output/stress/chunkfixtimeave/stress12_sq ave window 10
 #variable stress23    vector f_avspatialstress[8]
 #variable stress23_sq vector v_stress23^2
-#fix stress23 ${storeforcegroup} ave/time 1 1 1 v_stress23 mode vector file output/stress/chunkfixtimeave/stress23 ave window 10
-#fix stress23_sq ${storeforcegroup} ave/time 1 1 1 v_stress23_sq mode vector file output/stress/chunkfixtimeave/stress23_sq ave window 10
+#fix stress23 ${storeforcegroup} ave/time 1 1 1 v_stress23 mode vector format %.8g file output/stress/chunkfixtimeave/stress23 ave window 10
+#fix stress23_sq ${storeforcegroup} ave/time 1 1 1 v_stress23_sq mode vector format %.8g file output/stress/chunkfixtimeave/stress23_sq ave window 10
 #variable stress13    vector f_avspatialstress[9]
 #variable stress13_sq vector v_stress13^2
-#fix stress13 ${storeforcegroup} ave/time 1 1 1 v_stress13 mode vector file output/stress/chunkfixtimeave/stress13 ave window 10
-#fix stress13_sq ${storeforcegroup} ave/time 1 1 1 v_stress13_sq mode vector file output/stress/chunkfixtimeave/stress13_sq ave window 10
+#fix stress13 ${storeforcegroup} ave/time 1 1 1 v_stress13 mode vector format %.8g file output/stress/chunkfixtimeave/stress13 ave window 10
+#fix stress13_sq ${storeforcegroup} ave/time 1 1 1 v_stress13_sq mode vector format %.8g file output/stress/chunkfixtimeave/stress13_sq ave window 10
 
 ## fix ave wall
 #variable inwall_1    vector f_avspatialstress[10]
 #variable inwall_1_sq vector v_inwall_1^2
-#fix inwall_1 ${storeforcegroup} ave/time 1 1 1 v_inwall_1 mode vector file output/wall/chunkfixtimeave/inwall_1 ave window 10
-#fix inwall_1_sq ${storeforcegroup} ave/time 1 1 1 v_inwall_1_sq mode vector file output/wall/chunkfixtimeave/inwall_1_sq ave window 10
+#fix inwall_1 ${storeforcegroup} ave/time 1 1 1 v_inwall_1 mode vector format %.8g file output/wall/chunkfixtimeave/inwall_1 ave window 10
+#fix inwall_1_sq ${storeforcegroup} ave/time 1 1 1 v_inwall_1_sq mode vector format %.8g file output/wall/chunkfixtimeave/inwall_1_sq ave window 10
 #variable inwall_2    vector f_avspatialstress[11]
 #variable inwall_2_sq vector v_inwall_2^2
-#fix inwall_2 ${storeforcegroup} ave/time 1 1 1 v_inwall_2 mode vector file output/wall/chunkfixtimeave/inwall_2 ave window 10
-#fix inwall_2_sq ${storeforcegroup} ave/time 1 1 1 v_inwall_2_sq mode vector file output/wall/chunkfixtimeave/inwall_2_sq ave window 10
+#fix inwall_2 ${storeforcegroup} ave/time 1 1 1 v_inwall_2 mode vector format %.8g file output/wall/chunkfixtimeave/inwall_2 ave window 10
+#fix inwall_2_sq ${storeforcegroup} ave/time 1 1 1 v_inwall_2_sq mode vector format %.8g file output/wall/chunkfixtimeave/inwall_2_sq ave window 10
 #variable inwall_3    vector f_avspatialstress[12]
 #variable inwall_3_sq vector v_inwall_3^2
-#fix inwall_3 ${storeforcegroup} ave/time 1 1 1 v_inwall_3 mode vector file output/wall/chunkfixtimeave/inwall_3 ave window 10
-#fix inwall_3_sq ${storeforcegroup} ave/time 1 1 1 v_inwall_3_sq mode vector file output/wall/chunkfixtimeave/inwall_3_sq ave window 10
+#fix inwall_3 ${storeforcegroup} ave/time 1 1 1 v_inwall_3 mode vector format %.8g file output/wall/chunkfixtimeave/inwall_3 ave window 10
+#fix inwall_3_sq ${storeforcegroup} ave/time 1 1 1 v_inwall_3_sq mode vector format %.8g file output/wall/chunkfixtimeave/inwall_3_sq ave window 10
 #variable outwall_1    vector f_avspatialstress[13]
 #variable outwall_1_sq vector v_outwall_1^2
-#fix outwall_1 ${storeforcegroup} ave/time 1 1 1 v_outwall_1 mode vector file output/wall/chunkfixtimeave/outwall_1 ave window 10
-#fix outwall_1_sq ${storeforcegroup} ave/time 1 1 1 v_outwall_1_sq mode vector file output/wall/chunkfixtimeave/outwall_1_sq ave window 10
+#fix outwall_1 ${storeforcegroup} ave/time 1 1 1 v_outwall_1 mode vector format %.8g file output/wall/chunkfixtimeave/outwall_1 ave window 10
+#fix outwall_1_sq ${storeforcegroup} ave/time 1 1 1 v_outwall_1_sq mode vector format %.8g file output/wall/chunkfixtimeave/outwall_1_sq ave window 10
 #variable outwall_2    vector f_avspatialstress[14]
 #variable outwall_2_sq vector v_outwall_2^2
-#fix outwall_2 ${storeforcegroup} ave/time 1 1 1 v_outwall_2 mode vector file output/wall/chunkfixtimeave/outwall_2 ave window 10
-#fix outwall_2_sq ${storeforcegroup} ave/time 1 1 1 v_outwall_2_sq mode vector file output/wall/chunkfixtimeave/outwall_2_sq ave window 10
+#fix outwall_2 ${storeforcegroup} ave/time 1 1 1 v_outwall_2 mode vector format %.8g file output/wall/chunkfixtimeave/outwall_2 ave window 10
+#fix outwall_2_sq ${storeforcegroup} ave/time 1 1 1 v_outwall_2_sq mode vector format %.8g file output/wall/chunkfixtimeave/outwall_2_sq ave window 10
 #variable outwall_3    vector f_avspatialstress[15]
 #variable outwall_3_sq vector v_outwall_3^2
-#fix outwall_3 ${storeforcegroup} ave/time 1 1 1 v_outwall_3 mode vector file output/wall/chunkfixtimeave/outwall_3 ave window 10
-#fix outwall_3_sq ${storeforcegroup} ave/time 1 1 1 v_outwall_3_sq mode vector file output/wall/chunkfixtimeave/outwall_3_sq ave window 10
+#fix outwall_3 ${storeforcegroup} ave/time 1 1 1 v_outwall_3 mode vector format %.8g file output/wall/chunkfixtimeave/outwall_3 ave window 10
+#fix outwall_3_sq ${storeforcegroup} ave/time 1 1 1 v_outwall_3_sq mode vector format %.8g file output/wall/chunkfixtimeave/outwall_3_sq ave window 10
 #variable zbottom_1    vector f_avspatialstress[16]
 #variable zbottom_1_sq vector v_zbottom_1^2
-#fix zbottom_1 ${storeforcegroup} ave/time 1 1 1 v_zbottom_1 mode vector file output/wall/chunkfixtimeave/zbottom_1 ave window 10
-#fix zbottom_1_sq ${storeforcegroup} ave/time 1 1 1 v_zbottom_1_sq mode vector file output/wall/chunkfixtimeave/zbottom_1_sq ave window 10
+#fix zbottom_1 ${storeforcegroup} ave/time 1 1 1 v_zbottom_1 mode vector format %.8g file output/wall/chunkfixtimeave/zbottom_1 ave window 10
+#fix zbottom_1_sq ${storeforcegroup} ave/time 1 1 1 v_zbottom_1_sq mode vector format %.8g file output/wall/chunkfixtimeave/zbottom_1_sq ave window 10
 #variable zbottom_2    vector f_avspatialstress[17]
 #variable zbottom_2_sq vector v_zbottom_2^2
-#fix zbottom_2 ${storeforcegroup} ave/time 1 1 1 v_zbottom_2 mode vector file output/wall/chunkfixtimeave/zbottom_2 ave window 10
-#fix zbottom_2_sq ${storeforcegroup} ave/time 1 1 1 v_zbottom_2_sq mode vector file output/wall/chunkfixtimeave/zbottom_2_sq ave window 10
+#fix zbottom_2 ${storeforcegroup} ave/time 1 1 1 v_zbottom_2 mode vector format %.8g file output/wall/chunkfixtimeave/zbottom_2 ave window 10
+#fix zbottom_2_sq ${storeforcegroup} ave/time 1 1 1 v_zbottom_2_sq mode vector format %.8g file output/wall/chunkfixtimeave/zbottom_2_sq ave window 10
 #variable zbottom_3    vector f_avspatialstress[18]
 #variable zbottom_3_sq vector v_zbottom_3^2
-#fix zbottom_3 ${storeforcegroup} ave/time 1 1 1 v_zbottom_3 mode vector file output/wall/chunkfixtimeave/zbottom_3 ave window 10
-#fix zbottom_3_sq ${storeforcegroup} ave/time 1 1 1 v_zbottom_3_sq mode vector file output/wall/chunkfixtimeave/zbottom_3_sq ave window 10
+#fix zbottom_3 ${storeforcegroup} ave/time 1 1 1 v_zbottom_3 mode vector format %.8g file output/wall/chunkfixtimeave/zbottom_3 ave window 10
+#fix zbottom_3_sq ${storeforcegroup} ave/time 1 1 1 v_zbottom_3_sq mode vector format %.8g file output/wall/chunkfixtimeave/zbottom_3_sq ave window 10
 ## end chunk_2_3
 
 label skip_ave_chunk_2_3
@@ -1192,66 +1192,66 @@ variable coord2_chunk_near_inwall vector f_inwallforceprint[2]
 fix coord1and2_chunk_near_inwall ${storeforcegroup} ave/time 1000000 1 1000000 &
 v_coord1_chunk_near_inwall v_coord2_chunk_near_inwall &
 file output/wall/chunk/coord_inwall &
-mode vector ave window 1 title3 "# Chunk Coord1 Coord2"
+mode vector format %.8g ave window 1 title3 "# Chunk Coord1 Coord2"
 variable coord1_chunk_near_outwall vector f_outwallforceprint[1]
 variable coord2_chunk_near_outwall vector f_outwallforceprint[2]
 fix coord1and2_chunk_near_outwall ${storeforcegroup} ave/time 1000000 1 1000000 &
 v_coord1_chunk_near_outwall v_coord2_chunk_near_outwall &
 file output/wall/chunk/coord_outwall &
-mode vector ave window 1 title3 "# Chunk Coord1 Coord2"
+mode vector format %.8g ave window 1 title3 "# Chunk Coord1 Coord2"
 variable coord1_chunk_near_zbottom vector f_zbottomforceprint[1]
 variable coord2_chunk_near_zbottom vector f_zbottomforceprint[2]
 fix coord1and2_chunk_near_zbottom ${storeforcegroup} ave/time 1000000 1 1000000 &
 v_coord1_chunk_near_zbottom v_coord2_chunk_near_zbottom &
 file output/wall/chunk/coord_zbottom &
-mode vector ave window 1 title3 "# Chunk Coord1 Coord2"
+mode vector format %.8g ave window 1 title3 "# Chunk Coord1 Coord2"
 # inwall time ave
 variable inwallforceprint_Ncount vector f_inwallforceprint[3]
 variable inwallforceprint_1 vector f_inwallforceprint[4]
-variable inwallforceprint_1_sq vector "f_inwallforceprint[4]^2"
+variable inwallforceprint_1_sq vector "f_inwallforceprint[4]*f_inwallforceprint[4]"
 variable inwallforceprint_2 vector f_inwallforceprint[5]
-variable inwallforceprint_2_sq vector "f_inwallforceprint[5]^2"
+variable inwallforceprint_2_sq vector "f_inwallforceprint[5]*f_inwallforceprint[5]"
 variable inwallforceprint_3 vector f_inwallforceprint[6]
-variable inwallforceprint_3_sq vector "f_inwallforceprint[6]^2"
+variable inwallforceprint_3_sq vector "f_inwallforceprint[6]*f_inwallforceprint[6]"
 fix ave_std_inwall ${storeforcegroup} ave/time ${every_ave_chunk_wallforce} ${repeat_ave_chunk_wallforce} ${freq_ave_chunk_wallforce} &
 v_inwallforceprint_Ncount &
 v_inwallforceprint_1 v_inwallforceprint_1_sq &
 v_inwallforceprint_2 v_inwallforceprint_2_sq &
 v_inwallforceprint_3 v_inwallforceprint_3_sq &
 file output/wall/chunk/inwallforcefile &
-mode vector ave window 1 &
+mode vector format %.8g ave window 1 &
 title3 "# Chunk Ncount v_inwall_per_atom_1 v_inwall_per_atom_1_sq v_inwall_per_atom_2 v_inwall_per_atom_2_sq v_inwall_per_atom_3 v_inwall_per_atom_3_sq"
 # outwall time ave
 variable outwallforceprint_Ncount vector f_outwallforceprint[3]
 variable outwallforceprint_1 vector f_outwallforceprint[4]
-variable outwallforceprint_1_sq vector "f_outwallforceprint[4]^2"
+variable outwallforceprint_1_sq vector "f_outwallforceprint[4]*f_outwallforceprint[4]"
 variable outwallforceprint_2 vector f_outwallforceprint[5]
-variable outwallforceprint_2_sq vector "f_outwallforceprint[5]^2"
+variable outwallforceprint_2_sq vector "f_outwallforceprint[5]*f_outwallforceprint[5]"
 variable outwallforceprint_3 vector f_outwallforceprint[6]
-variable outwallforceprint_3_sq vector "f_outwallforceprint[6]^2"
+variable outwallforceprint_3_sq vector "f_outwallforceprint[6]*f_outwallforceprint[6]"
 fix ave_std_outwall ${storeforcegroup} ave/time ${every_ave_chunk_wallforce} ${repeat_ave_chunk_wallforce} ${freq_ave_chunk_wallforce} &
 v_outwallforceprint_Ncount &
 v_outwallforceprint_1 v_outwallforceprint_1_sq &
 v_outwallforceprint_2 v_outwallforceprint_2_sq &
 v_outwallforceprint_3 v_outwallforceprint_3_sq &
 file output/wall/chunk/outwallforcefile &
-mode vector ave window 1 &
+mode vector format %.8g ave window 1 &
 title3 "# Chunk Ncount v_outwall_per_atom_1 v_outwall_per_atom_1_sq v_outwall_per_atom_2 v_outwall_per_atom_2_sq v_outwall_per_atom_3 v_outwall_per_atom_3_sq"
 # zbottom time ave
 variable zbottomforceprint_Ncount vector f_zbottomforceprint[3]
 variable zbottomforceprint_1 vector f_zbottomforceprint[4]
-variable zbottomforceprint_1_sq vector "f_zbottomforceprint[4]^2"
+variable zbottomforceprint_1_sq vector "f_zbottomforceprint[4]*f_zbottomforceprint[4]"
 variable zbottomforceprint_2 vector f_zbottomforceprint[5]
-variable zbottomforceprint_2_sq vector "f_zbottomforceprint[5]^2"
+variable zbottomforceprint_2_sq vector "f_zbottomforceprint[5]*f_zbottomforceprint[5]"
 variable zbottomforceprint_3 vector f_zbottomforceprint[6]
-variable zbottomforceprint_3_sq vector "f_zbottomforceprint[6]^2"
+variable zbottomforceprint_3_sq vector "f_zbottomforceprint[6]*f_zbottomforceprint[6]"
 fix ave_std_zbottom ${storeforcegroup} ave/time ${every_ave_chunk_wallforce} ${repeat_ave_chunk_wallforce} ${freq_ave_chunk_wallforce} &
 v_zbottomforceprint_Ncount &
 v_zbottomforceprint_1 v_zbottomforceprint_1_sq &
 v_zbottomforceprint_2 v_zbottomforceprint_2_sq &
 v_zbottomforceprint_3 v_zbottomforceprint_3_sq &
 file output/wall/chunk/zbottomforcefile &
-mode vector ave window 1 &
+mode vector format %.8g ave window 1 &
 title3 "# Chunk Ncount v_zbottom_per_atom_1 v_zbottom_per_atom_1_sq v_zbottom_per_atom_2 v_zbottom_per_atom_2_sq v_zbottom_per_atom_3 v_zbottom_per_atom_3_sq"
 # wall force end skip label
 label skip_ave_chunk_wall
@@ -1496,7 +1496,7 @@ fix		vector_manytime ${storeforcegroup} vector ${every_fixvector} v_trace_id #z[
 variable	fixvector vector f_vector_manytime
 if "${freq_fixvector} == 0" then "jump SELF skip_fixvector"
 fix		manytime ${storeforcegroup} ave/time 1 1 ${freq_fixvector} v_fixvector &
-mode vector file output/trace/fix.trace.allstep
+mode vector format %.8g file output/trace/fix.trace.allstep
 label skip_fixvector
 
 # compute for output

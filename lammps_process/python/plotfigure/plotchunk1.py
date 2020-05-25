@@ -128,8 +128,8 @@ class chunk(object):
         self.step_second_in_file = int(self.lines[3 + self.n_line_in_a_step + 1].split()[0])
         self.step_last_in_file = int(self.lines[-1 - self.n_line_in_a_step].split()[0])
         self.d_step = self.step_second_in_file - self.step_first_in_file
-        self.step_first_in_file_change_by_n_ave = self.step_first_in_file + int((self.n_ave)/2*self.d_step)
-        self.step_last_in_file_change_by_n_ave = self.step_last_in_file - int((self.n_ave)/2*self.d_step)
+        self.step_first_in_file_change_by_n_ave = self.step_first_in_file + (self.n_ave-1)/2*self.d_step
+        self.step_last_in_file_change_by_n_ave = self.step_last_in_file - (self.n_ave-1)/2*self.d_step
         if self.step_first_in_file_change_by_n_ave > self.step_last_in_file_change_by_n_ave:
             sys.exit("error: step_first_in_file_change_by_n_ave > step_last_in_file_change_by_n_ave, n_ave too large") 
         self.middle_step = int(
@@ -263,12 +263,12 @@ class chunk1D(chunk):
                     ## select data
                     data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
                     data = np.asarray(data, dtype=np.float64, order='F')
+                    realchunk = (data[:, self.header.index('Ncount')] > 10**-9)
                     x = data[:, self.header.index(variable_name)]
-                    value = value + x
+                    value = value + x*realchunk
                     # get std from lmp output
                     ave_square_2_plus = data[:, self.header.index(sq_variable_name)]
-                    
-                    ave_square_2 = ave_square_2 + ave_square_2_plus
+                    ave_square_2 = ave_square_2 + ave_square_2_plus*realchunk
 
             else:
                 for i in range(self.n_ave):
@@ -279,12 +279,12 @@ class chunk1D(chunk):
                     ## select data
                     data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
                     data = np.asarray(data, dtype=np.float64, order='F')
+                    realchunk = (data[:, self.header.index('Ncount')] > 10**-9)[index_n]
                     x = data[:, self.header.index(variable_name)][index_n]
-                    value = value + x
+                    value = value + x*realchunk
                     # get std from lmp output
-                    ave_square_2_plus = data[:, self.header.index(sq_variable_name)]
-                    
-                    ave_square_2 = ave_square_2 + ave_square_2_plus[index_n]
+                    ave_square_2_plus = data[:, self.header.index(sq_variable_name)][index_n]
+                    ave_square_2 = ave_square_2 + ave_square_2_plus*realchunk
             value = value/self.n_ave
             ave_square_2 = ave_square_2/self.n_ave
             # calculate std
@@ -294,13 +294,19 @@ class chunk1D(chunk):
             else:
                 std2 = (ave_square_2 - value**2)*totaln/(totaln-ddof)
                 if type(std2) is np.ndarray:
-                    std2[np.logical_and(std2 < 0, std2 > -10**-45)] = 0
+                    std2[
+                        np.logical_and(
+                            std2 < 0, np.logical_or(std2 > -10**-45, std2 >= -10**-5*value**2)
+                        )
+                        ] = 0
+                    if any(std2<0):
+                        breakpoint()
                 else:
-                    if std2 < 0 and std2 > -10**-45:
+                    if std2 < 0 and (std2 > -10**-45 or std2 >= -10**-5*value**2):
                         std2 = 0
-                
+                    if std2<0:
+                        breakpoint()
                 std = std2**0.5
-            
         else:
             # sum_diff_square_2 = sum of (xi-x_ave)**2
             sum_diff_square_2 = 0
@@ -645,11 +651,11 @@ class chunk2D(chunk):
                         ## select data
                         data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
                         data = np.asarray(data, dtype=np.float64, order='F')
+                        realchunk = (data[:, self.header.index('Ncount')] > 10**-9).reshape(n_1, n_2)
                         x = data[:, self.header.index(variable_name)].reshape(n_1, n_2)
-                        value = value + x
-                        ave_square_2_plus = data[:, self.header.index(sq_variable_name)]
-                        
-                        ave_square_2 = ave_square_2 + ave_square_2_plus.reshape(n_1, n_2)
+                        value = value + x*realchunk
+                        ave_square_2_plus = data[:, self.header.index(sq_variable_name)].reshape(n_1, n_2)
+                        ave_square_2 = ave_square_2 + ave_square_2_plus*realchunk
                             
                 else:
                     for i in range(self.n_ave):
@@ -660,11 +666,11 @@ class chunk2D(chunk):
                         ## select data
                         data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
                         data = np.asarray(data, dtype=np.float64, order='F')
+                        realchunk = (data[:, self.header.index('Ncount')] > 10**-9).reshape(n_1, n_2)[:, index_n_2]
                         x = data[:, self.header.index(variable_name)].reshape(n_1, n_2)[:, index_n_2]
-                        value = value + x
-                        ave_square_2_plus = data[:, self.header.index(sq_variable_name)]
-                        
-                        ave_square_2 = ave_square_2 + ave_square_2_plus.reshape(n_1, n_2)[:, index_n_2]
+                        value = value + x*realchunk
+                        ave_square_2_plus = data[:, self.header.index(sq_variable_name)].reshape(n_1, n_2)[:, index_n_2]
+                        ave_square_2 = ave_square_2 + ave_square_2_plus*realchunk
             else:
                 if index_n_2 == None:
                     for i in range(self.n_ave):
@@ -675,11 +681,11 @@ class chunk2D(chunk):
                         ## select data
                         data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
                         data = np.asarray(data, dtype=np.float64, order='F')
+                        realchunk = (data[:, self.header.index('Ncount')] > 10**-9).reshape(n_1, n_2)[index_n_1, :]
                         x = data[:, self.header.index(variable_name)].reshape(n_1, n_2)[index_n_1, :]
-                        value = value + x
-                        ave_square_2_plus = data[:, self.header.index(sq_variable_name)]
-                        
-                        ave_square_2 = ave_square_2 + ave_square_2_plus.reshape(n_1, n_2)[index_n_1, :]
+                        value = value + x*realchunk
+                        ave_square_2_plus = data[:, self.header.index(sq_variable_name)].reshape(n_1, n_2)[index_n_1, :]
+                        ave_square_2 = ave_square_2 + ave_square_2_plus*realchunk
                 else:
                     for i in range(self.n_ave):
                         oldvalue = value
@@ -689,11 +695,11 @@ class chunk2D(chunk):
                         ## select data
                         data = [self.lines[t].split() for t in range(n_line_0, n_line_1)]
                         data = np.asarray(data, dtype=np.float64, order='F')
+                        realchunk = (data[:, self.header.index('Ncount')] > 10**-9).reshape(n_1, n_2)[index_n_1, index_n_2]
                         x = data[:, self.header.index(variable_name)].reshape(n_1, n_2)[index_n_1, index_n_2]
-                        value = value + x
-                        ave_square_2_plus = data[:, self.header.index(sq_variable_name)]
-                        
-                        ave_square_2 = ave_square_2 + ave_square_2_plus.reshape(n_1, n_2)[index_n_1, index_n_2]
+                        value = value + x*realchunk
+                        ave_square_2_plus = data[:, self.header.index(sq_variable_name)].reshape(n_1, n_2)[index_n_1, index_n_2]
+                        ave_square_2 = ave_square_2 + ave_square_2_plus*realchunk
             # calculate std
             value = value/self.n_ave
             ave_square_2 = ave_square_2/self.n_ave
@@ -703,11 +709,19 @@ class chunk2D(chunk):
             else:
                 std2 = (ave_square_2 - value**2)*totaln/(totaln-ddof)
                 if type(std2) is np.ndarray:
-                    std2[np.logical_and(std2 < 0, std2 > -10**-45)] = 0
+                    std2[
+                        np.logical_and(
+                            std2 < 0, np.logical_or(std2 > -10**-45, std2 >= -10**-5*value**2)
+                        )
+                        ] = 0
+                    if any(std2<0):
+                        breakpoint()
                 else:
-                    if std2 < 0 and std2 > -10**-45:
+                    if std2 < 0 and (std2 > -10**-45 or std2 >= -10**-5*value**2):
                         std2 = 0
-                
+                    if std2<0:
+                        breakpoint()
+                #print(std2)
                 std = std2**0.5
         
         else:    
@@ -1139,47 +1153,66 @@ class chunkomega(chunk2D):
         # stress_variable_name dictionary    
 # chunk from many simu
 
-
+def checkNchunkint():
+    if int(rr.logfile["freq_ave_chunk_momentum_mass_field"]) != 0:
+        ob1 = chunkstress(1, rr.lammps_directory)
+        for step_inloop in ob1.allsteps:
+            n_line_0 = int(int(step_inloop - ob1.step_first_in_file)/ob1.d_step)*(ob1.n_line_in_a_step+1) + 4
+            n_line_1 = int(n_line_0 + ob1.n_line_in_a_step)
+            ## select data
+            Nchunklist = [ob1.lines[t].split()[ob1.header.index('Ncount')] for t in range(n_line_0, n_line_1)]
+            for x in Nchunklist:
+                try: 
+                    int(x)
+                except ValueError:
+                    print("one of chunk in step {step_inloop} contain {number} Ncount".format(step_inloop=step_inloop, number=x))
+                    if float(x) < 0.1:
+                        breakpoint()
+                        Nchunkarray = np.asarray(Nchunklist, dtype=np.float64, order='F')
+                        totalNchunk = np.sum(Nchunkarray)
+                        print(totalNchunk)
+                        sys.exit("Ncount (number of atom in chunk) not int")
+        print("all chunk has integer number of atoms")
 
 def run_main(number_average):
     # execute only if run as a script
     
     stress_scale = float(rr.logfile['den'])*float(rr.logfile['g'])*float(rr.logfile['zhi_chunk_dp_unit'])*float(rr.logfile['dp'])
+    if int(rr.logfile["freq_ave_chunk_momentum_mass_field"]) != 0:
+        ob1 = chunkstress(number_average, rr.lammps_directory)
+
+        for key in [key for key in chunkstress.call_header_by_bettername.keys() if "_sq" not in key]:
+            toppath = dp.f_stress_field_samescale_path + key + "/"
+            os.makedirs(toppath, exist_ok=True)
+            ob1.add_nve_subfolder_in_folder(toppath)
+            savepath = ob1.path_nve_subfolder_in_folder(toppath)
+            ob1.save_XY_fix_k(
+                ob1.first_middle_last_steps,
+                2, chunkstress.call_header_by_bettername[key],
+                stress_scale,
+                1, [0,-1],
+                key,
+                savepath,
+            )
+
     
-    ob1 = chunkstress(number_average, rr.lammps_directory)
 
-    for key in [key for key in chunkstress.call_header_by_bettername.keys() if "_sq" not in key]:
-        toppath = dp.f_stress_field_samescale_path + key + "/"
-        os.makedirs(toppath, exist_ok=True)
-        ob1.add_nve_subfolder_in_folder(toppath)
-        savepath = ob1.path_nve_subfolder_in_folder(toppath)
-        ob1.save_XY_fix_k(
-            ob1.first_middle_last_steps,
-            2, chunkstress.call_header_by_bettername[key],
-            stress_scale,
-            1, [0,-1],
-            key,
-            savepath,
-        )
+        for index_n_1 in [0, -1]:
+            for index_n_2 in range(n_2-3):
+                ob2 = chunkstress(1, rr.lammps_directory)
+                for key in [key for key in chunkstress.call_header_by_bettername.keys() if "_sq" not in key]:
+                    toppath = dp.f_stress_field_samescale_path + key + "_time/"
+                    os.makedirs(toppath, exist_ok=True)
+                    ob2.add_nve_subfolder_in_folder(toppath)
+                    savepath = ob2.path_nve_subfolder_in_folder(toppath)
 
-    
-
-    for index_n_1 in [0, -1]:
-        for index_n_2 in range(n_2-3):
-            ob2 = chunkstress(1, rr.lammps_directory)
-            for key in [key for key in chunkstress.call_header_by_bettername.keys() if "_sq" not in key]:
-                toppath = dp.f_stress_field_samescale_path + key + "_time/"
-                os.makedirs(toppath, exist_ok=True)
-                ob2.add_nve_subfolder_in_folder(toppath)
-                savepath = ob2.path_nve_subfolder_in_folder(toppath)
-
-                ob2.save_time_variable(
-                    ob2.allsteps, chunkstress.call_header_by_bettername[key],
-                    stress_scale,
-                    key,
-                    index_n_1, index_n_2,
-                    savepath
-                )
+                    ob2.save_time_variable(
+                        ob2.allsteps, chunkstress.call_header_by_bettername[key],
+                        stress_scale,
+                        key,
+                        index_n_1, index_n_2,
+                        savepath
+                    )
 
     # execute only if run as a script
     stress_scale = float(rr.logfile['den'])*float(rr.logfile['g'])*float(rr.logfile['zhi_chunk_dp_unit'])*float(rr.logfile['dp'])
@@ -1227,7 +1260,7 @@ def run_main(number_average):
         )
         stepsarray = np.arange(ob2.first_middle_last_steps[0], ob2.first_middle_last_steps[0] + 5*number_average, number_average)
         ob2.save_time_variable(
-                            stepsarray, 
+                            stepsarray,
                             ob2.call_header_by_bettername[key],
                             real_scale,
                             key,
@@ -1237,4 +1270,4 @@ def run_main(number_average):
 # main exclusive
 if __name__ == "__main__":
     
-    run_main(50)
+    run_main(10)
