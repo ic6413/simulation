@@ -296,13 +296,13 @@ class chunk1D(chunk):
                 if type(std2) is np.ndarray:
                     std2[
                         np.logical_and(
-                            std2 < 0, np.logical_or(std2 > -10**-45, std2 >= -10**-5*value**2)
+                            std2 < 0, np.logical_or(std2 > -10**-45, std2 >= -10**-1*value**2)
                         )
                         ] = 0
                     if any(std2<0):
                         breakpoint()
                 else:
-                    if std2 < 0 and (std2 > -10**-45 or std2 >= -10**-5*value**2):
+                    if std2 < 0 and (std2 > -10**-45 or std2 >= -10**-1*value**2):
                         std2 = 0
                     if std2<0:
                         breakpoint()
@@ -397,8 +397,8 @@ class chunk1D(chunk):
                     markersize=12,
                     )
         
-        ax.set_xlabel(Xlabel)
-        ax.set_ylabel(Ylabel)
+        ax.set_xlabel(Xlabel + " ({:3g})".format(X_scale))
+        ax.set_ylabel(Ylabel + " ({:3g})".format(Y_scale))
         # Shrink current axis by 20%
         box = ax.get_position()
         ax.set_position([box.x0, box.y0, box.width * 0.6, box.height])
@@ -493,7 +493,7 @@ class chunk1D(chunk):
                 )
         
         ax.set_xlabel("time")
-        ax.set_ylabel(Ylabel)
+        ax.set_ylabel(Ylabel + " ({:3g})".format(Y_scale))
         # Shrink current axis by 20%
         box = ax.get_position()
         ax.set_position([box.x0, box.y0, box.width * 0.6, box.height])
@@ -711,13 +711,13 @@ class chunk2D(chunk):
                 if type(std2) is np.ndarray:
                     std2[
                         np.logical_and(
-                            std2 < 0, np.logical_or(std2 > -10**-45, std2 >= -10**-5*value**2)
+                            std2 < 0, np.logical_or(std2 > -10**-45, std2 >= -10**-1*value**2)
                         )
                         ] = 0
                     if any(std2<0):
                         breakpoint()
                 else:
-                    if std2 < 0 and (std2 > -10**-45 or std2 >= -10**-5*value**2):
+                    if std2 < 0 and (std2 > -10**-45 or std2 >= -10**-1*value**2):
                         std2 = 0
                     if std2<0:
                         breakpoint()
@@ -850,6 +850,8 @@ class chunk2D(chunk):
                     label = "equal stress = {:.2e}".format(label_scale) + ". At {:.2e} s".format(time),
                     labelpos='E',
                     coordinates='figure', angle=90)
+        ax1.set_xlabel(map_dim_index_to_coordinate[1] + " ({:3g})".format(x_scale))
+        ax1.set_ylabel(map_dim_index_to_coordinate[2] + " ({:3g})".format(y_scale))
         return (fig1, ax1)
     
     # save quiver
@@ -944,9 +946,8 @@ class chunk2D(chunk):
                         linestyle = 'None',
                         markersize=12,
                         )
-        
-        ax.set_xlabel(Xlabel)
-        ax.set_ylabel(Ylabel)
+        ax.set_xlabel(Xlabel + " ({:3g})".format(X_scale))
+        ax.set_ylabel(Ylabel + " ({:3g})".format(Y_scale))
         # Shrink current axis by 20%
         box = ax.get_position()
         ax.set_position([box.x0, box.y0, box.width * 0.6, box.height])
@@ -1046,7 +1047,8 @@ class chunk2D(chunk):
                 )
         
         ax.set_xlabel("time")
-        ax.set_ylabel(Ylabel)
+        ax.set_ylabel(Ylabel + " ({:3g})".format(Y_scale))
+        
         # Shrink current axis by 20%
         box = ax.get_position()
         ax.set_position([box.x0, box.y0, box.width * 0.6, box.height])
