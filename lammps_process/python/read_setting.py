@@ -51,8 +51,6 @@ else:
         # find rst_from
         # read variable from log file
         lines_start_variable = [line for line in lines if line.startswith("variable")]
-        
-        
         variable_names = [line.split()[1] for line in lines_start_variable]
         logfile = dict.fromkeys(variable_names)
         # get variable
@@ -62,8 +60,13 @@ else:
             if len(satisfy_lines) != 0:
                 first_line_words = satisfy_lines[0].split()
             
-                if first_line_words[2] == "index":
+                if first_line_words[2] == "index" and first_line_words[3][0] != '$':
                     variable_value = first_line_words[3]
+
+                elif first_line_words[2] == "index" and first_line_words[3][0] == '$':
+                    second_satisfy_line = satisfy_lines[1]
+                    second_line_words = second_satisfy_line.split()
+                    variable_value = second_line_words[3]
 
                 elif first_line_words[2] == "equal" or first_line_words[2] == "string":
                     last_satisfy_line = satisfy_lines[-1]

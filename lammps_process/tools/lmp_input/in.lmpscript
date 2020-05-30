@@ -320,7 +320,7 @@ print "N_bin_z ${N_bin_z}" screen no append output/setting/attribute.lammps
 print "N_bin_r ${N_bin_r}" screen no append output/setting/attribute.lammps
 print "N_bin_theta ${N_bin_theta}" screen no append output/setting/attribute.lammps
 # salvage number
-variable	Sa 		index 0.00000002
+variable	Sa 		index 0.000002
 
 # calculate container size
 variable  xlo_box     equal $(v_xlo_box_dp_unit*v_dp)
@@ -411,32 +411,55 @@ variable	z_fraction_of_lattice_ybottom_wall	equal $(v_zlo_wall/v_edge_lattice_yb
 variable	y_fraction_of_lattice_ybottom_wall	equal $(v_ylo_wall/v_edge_lattice_ybottom_wall-floor(v_ylo_wall/v_edge_lattice_ybottom_wall))
 variable	x_fraction_of_lattice_ybottom_wall	equal $(v_xlo_box/v_edge_lattice_ybottom_wall-floor(v_xlo_box/v_edge_lattice_ybottom_wall))
 # define cylinder coordinate position velocity
+if "${boundary_geometry} != cylinder" then &
+  "jump		SELF end_cy_coord"
+label     begin_cy_coord
 variable	d_z_axis	atom sqrt(x*x+y*y)
 variable	theta 		atom atan2(y,x)
 variable	vr 		atom (vx*x+vy*y)/sqrt(x*x+y*y)
 variable	vt 		atom (vx*(-y)+vy*x)/sqrt(x*x+y*y)
+label     end_cy_coord
 # momentum
-variable  mv3     atom mass*vz
+if "${boundary_geometry} == block" then &
+  "jump		SELF begin_variable_momentum_block" &
+elif "${boundary_geometry} == cylinder" &
+  "jump   SELF begin_variable_momentum_cy" &
+else &
+  "print 'boundary_geometry not block not cylinder'" &
+  "quit 1"
+label     begin_variable_momentum_block
 variable	mv1 		atom mass*vx
 variable	mv2 		atom mass*vy
-variable	mv2 		atom mass*v_vr
-variable	mv1 		atom mass*v_vt
-variable	Ek2 		atom 0.5*mass*vy*vy
+variable  mv3     atom mass*vz
 variable	Ek1 		atom 0.5*mass*vx*vx
+variable	Ek2 		atom 0.5*mass*vy*vy
 variable	Ek3 		atom 0.5*mass*vz*vz
-variable	Ek2 		atom 0.5*mass*v_vr*v_vr
-variable	Ek1 		atom 0.5*mass*v_vt*v_vt
 variable	my 		atom mass*y
+variable	mz 		atom mass*z
+jump   SELF end_variable_momentum
+label     begin_variable_momentum_cy
+variable	mv1 		atom mass*v_vt
+variable	mv2 		atom mass*v_vr
+variable  mv3     atom mass*vz
+variable	Ek1 		atom 0.5*mass*v_vt*v_vt
+variable	Ek2 		atom 0.5*mass*v_vr*v_vr
+variable	Ek3 		atom 0.5*mass*vz*vz
 variable	mr 		atom mass*v_vr
 variable	mz 		atom mass*z
 variable	check_vrvtvxvy 	atom v_vt*v_vt+v_vr*v_vr-vx*vx-vy*vy
+jump   SELF end_variable_momentum
+label     end_variable_momentum
+
 # calculate chunk id for chunk rz
+if "${boundary_geometry} != cylinder" then &
+  "jump		SELF end_cy_chunk"
 variable	ybin		atom "floor((y-v_ylo_chunk)/ (v_yhi_chunk-v_ylo_chunk)* v_N_bin_y )"
 variable	rbin		atom "floor( (v_d_z_axis-v_rlo_chunk)/ (v_rhi_chunk-v_rlo_chunk)* v_N_bin_r )"
 variable	zbin		atom "floor((z-v_zlo_chunk)/ (v_zhi_chunk-v_zlo_chunk)* v_N_bin_z)"
 variable        chunk_id_r_z	atom 1+v_N_bin_r*v_zbin+v_rbin
 # calculate chunk id for chunk r
 variable        chunk_id_r	atom 1+v_rbin
+label     end_cy_chunk
 ##### define variable end ######
 
 # processors cut

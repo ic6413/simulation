@@ -296,13 +296,13 @@ class chunk1D(chunk):
                 if type(std2) is np.ndarray:
                     std2[
                         np.logical_and(
-                            std2 < 0, np.logical_or(std2 > -10**-45, std2 >= -10**-1*value**2)
+                            std2 < 0, np.logical_or(std2 > -10**-20, std2 >= -10**-1*value**2)
                         )
                         ] = 0
-                    if any(std2<0):
+                    if np.any(std2<0):
                         breakpoint()
                 else:
-                    if std2 < 0 and (std2 > -10**-45 or std2 >= -10**-1*value**2):
+                    if std2 < 0 and (std2 > -10**-20 or std2 >= -10**-1*value**2):
                         std2 = 0
                     if std2<0:
                         breakpoint()
@@ -711,13 +711,13 @@ class chunk2D(chunk):
                 if type(std2) is np.ndarray:
                     std2[
                         np.logical_and(
-                            std2 < 0, np.logical_or(std2 > -10**-45, std2 >= -10**-1*value**2)
+                            std2 < 0, np.logical_or(std2 > -10**-20, std2 >= -10**-1*value**2)
                         )
                         ] = 0
-                    if any(std2<0):
+                    if np.any(std2<0):
                         breakpoint()
                 else:
-                    if std2 < 0 and (std2 > -10**-45 or std2 >= -10**-1*value**2):
+                    if std2 < 0 and (std2 > -10**-20 or std2 >= -10**-1*value**2):
                         std2 = 0
                     if std2<0:
                         breakpoint()
@@ -847,7 +847,7 @@ class chunk2D(chunk):
                     )
 
         ax1.quiverkey(Q, 0.2, 0.95, label_scale,
-                    label = "equal stress = {:.2e}".format(label_scale) + ". At {:.2e} s".format(time),
+                    label = "equal (" + Q_name + ", " + V_name + ") = {:.2e}".format(label_scale) + ". At {:.2e} s".format(time),
                     labelpos='E',
                     coordinates='figure', angle=90)
         ax1.set_xlabel(map_dim_index_to_coordinate[1] + " ({:3g})".format(x_scale))
@@ -869,6 +869,96 @@ class chunk2D(chunk):
             fig1, ax1 = (
                 self.plotquiver_x23(
                     step, Q_name, V_name, Q_scale, V_scale,
+                    quiver_scale, label_scale,
+                    x_scale, y_scale,
+                )
+            )
+            chunk.save_one_plot(fig1, ax1, savepath, str(int(step)), figformat, ifpickle)
+
+    # data diff quiver 2D 2D
+    def datachunk_ave_one_step_quiver_diff_x23(
+        self,
+        step, Q_name, V_name, Q_scale, V_scale,
+        diff_position_index,
+        x_scale=float(rr.logfile['dp']), y_scale=float(rr.logfile['dp']),
+        ):
+        
+        [time, x_array, y_array, Q_array, V_array] = self.datachunk_ave_one_step_quiver_x23(
+                                                                                            step, Q_name, V_name, Q_scale, V_scale,
+                                                                                            x_scale=float(rr.logfile['dp']), y_scale=float(rr.logfile['dp']),
+                                                                                            )
+        diff_along_array_dim = position_index_to_array_dim_index[diff_position_index]
+        Ncount_array = self.value_in_a_step_ave(step, 'Ncount', index_n_1=None, index_n_2=None)[0]
+        mask_Ncount_small_larger_1_array = (Ncount_array>=1)
+        if diff_along_array_dim == 0:
+            middle_point_x_array = (x_array[:-1,:] + x_array[1:,:])/2
+            middle_point_y_array = (y_array[:-1,:] + y_array[1:,:])/2
+            vector_diffQ = np.diff(Q_array, axis=diff_along_array_dim)/np.diff(x_array, axis=diff_along_array_dim)
+            vector_diffV = np.diff(V_array, axis=diff_along_array_dim)/np.diff(x_array, axis=diff_along_array_dim)
+            mask_array = np.logical_and(mask_Ncount_small_larger_1_array[:-1,:],mask_Ncount_small_larger_1_array[1:,:])
+        elif diff_along_array_dim == 1:
+            middle_point_x_array = (x_array[:,:-1] + x_array[:,1:])/2
+            middle_point_y_array = (y_array[:,:-1] + y_array[:,1:])/2
+            vector_diffQ = np.diff(Q_array, axis=diff_along_array_dim)/np.diff(y_array, axis=diff_along_array_dim)
+            vector_diffV = np.diff(V_array, axis=diff_along_array_dim)/np.diff(y_array, axis=diff_along_array_dim)
+            mask_array = np.logical_and(mask_Ncount_small_larger_1_array[:,:-1],mask_Ncount_small_larger_1_array[:,1:])
+
+        middle_point_x_array = mask_array*middle_point_x_array
+        middle_point_y_array = mask_array*middle_point_y_array
+        vector_diffQ = mask_array*vector_diffQ
+        vector_diffV = mask_array*vector_diffV
+
+        return [time, middle_point_x_array, middle_point_y_array, vector_diffQ, vector_diffV]
+
+    # plot quiver diff quiver 2D 2D
+    def plotquiver_diff_x23(
+        self,
+        step, Q_name, V_name, Q_scale, V_scale,
+        diff_position_index,
+        quiver_scale=0.1, label_scale=0.2,
+        x_scale=float(rr.logfile['dp']), y_scale=float(rr.logfile['dp']),
+        ):
+
+        [time, x_array, y_array, Q_array, V_array] = (
+            self.datachunk_ave_one_step_quiver_diff_x23(
+            step, Q_name, V_name, Q_scale, V_scale,
+            diff_position_index,
+            x_scale, y_scale,
+            )
+        )
+
+        fig1, ax1 = plt.subplots()
+        #fig1.figsize = [12.8, 9.6]
+        chunk.plot_quiver_position_label(fig1, ax1)
+        #ax1.set_title('velocity field r-z direction (average over theta)')
+        Q = ax1.quiver(x_array, y_array, Q_array, V_array,
+                    units='width',angles='xy', scale_units='xy', scale=quiver_scale,
+                    )
+
+        ax1.quiverkey(Q, 0.2, 0.95, label_scale,
+                    label = "equal (diff_" + Q_name + ", diff_" + V_name + ") = {:.2e}".format(label_scale) + ". At {:.2e} s".format(time),
+                    labelpos='E',
+                    coordinates='figure', angle=90)
+        ax1.set_xlabel(map_dim_index_to_coordinate[1] + " ({:3g})".format(x_scale))
+        ax1.set_ylabel(map_dim_index_to_coordinate[2] + " ({:3g})".format(y_scale))
+        return (fig1, ax1)
+    # save quiver diff quiver 2D 2D
+    def savequiver_diff_x23(
+        self,
+        stepsarray,
+        Q_name, V_name, Q_scale, V_scale,
+        diff_position_index,
+        savepath,
+        x_scale=float(rr.logfile['dp']), y_scale=float(rr.logfile['dp']),
+        figformat="png", ifpickle=False,
+        quiver_scale=0.1, label_scale=0.2,
+        ):
+        
+        for step in stepsarray:
+            fig1, ax1 = (
+                self.plotquiver_diff_x23(
+                    step, Q_name, V_name, Q_scale, V_scale,
+                    diff_position_index,
                     quiver_scale, label_scale,
                     x_scale, y_scale,
                 )
@@ -1118,7 +1208,7 @@ class chunkmomentum(chunk2D):
             "mass_sq": "c_m1_sq",
             }
 
-    def __init__(self, n_ave, lmp_path, f_path_rela_lmpfolder):
+    def __init__(self, n_ave, lmp_path):
         super().__init__(n_ave, lmp_path, "output/momentum_mass_field/fix.momentum_mass_field.all")
 
 # chunk kinetic energy
@@ -1135,7 +1225,7 @@ class chunkKE(chunk2D):
             "mass_sq": "c_m1_sq",
             }
 
-    def __init__(self, n_ave, lmp_path, f_path_rela_lmpfolder):
+    def __init__(self, n_ave, lmp_path):
         super().__init__(n_ave, lmp_path, "output/momentum_mass_field/fix.momentum_mass_field.all")
 
 # chunk omega
@@ -1153,7 +1243,12 @@ class chunkomega(chunk2D):
     def __init__(self, n_ave, lmp_path):
         super().__init__(n_ave, lmp_path, "output/momentum_mass_field/fix.omega.all")
         # stress_variable_name dictionary    
+
+
+
 # chunk from many simu
+
+# check 
 
 def checkNchunkint():
     if int(rr.logfile["freq_ave_chunk_momentum_mass_field"]) != 0:
@@ -1176,10 +1271,27 @@ def checkNchunkint():
                         sys.exit("Ncount (number of atom in chunk) not int")
         print("all chunk has integer number of atoms")
 
+def test_mv0():
+    # chunkmomentum
+    ob3 = chunkmomentum(1, rr.lammps_directory)
+    velocity_scale = float(rr.logfile['in_velocity'])
+    if velocity_scale < 0:
+        velocity_scale = -velocity_scale
+    
+    def test_mv0_step(step):
+        output = ob3.datachunk_ave_one_step_quiver_x23(
+        step, None, ob3.call_header_by_bettername["mv_0"], 1, 1,
+        x_scale=float(rr.logfile['dp']), y_scale=float(rr.logfile['dp']),
+        )
+        return output
+    #test_mv0_step(5100000)
+
 def run_main(number_average):
     # execute only if run as a script
     
+    # stress
     stress_scale = float(rr.logfile['den'])*float(rr.logfile['g'])*float(rr.logfile['zhi_chunk_dp_unit'])*float(rr.logfile['dp'])
+    stress_volume_scale = stress_scale*float(rr.logfile['dp'])**3
     if int(rr.logfile["freq_ave_chunk_momentum_mass_field"]) != 0:
         ob1 = chunkstress(number_average, rr.lammps_directory)
 
@@ -1191,7 +1303,7 @@ def run_main(number_average):
             ob1.save_XY_fix_k(
                 ob1.first_middle_last_steps,
                 2, chunkstress.call_header_by_bettername[key],
-                stress_scale,
+                stress_volume_scale,
                 1, [0,-1],
                 key,
                 savepath,
@@ -1213,12 +1325,11 @@ def run_main(number_average):
                         stress_scale,
                         key,
                         index_n_1, index_n_2,
-                        savepath
+                        savepath,
                     )
 
     # execute only if run as a script
-    stress_scale = float(rr.logfile['den'])*float(rr.logfile['g'])*float(rr.logfile['zhi_chunk_dp_unit'])*float(rr.logfile['dp'])
-    real_scale = stress_scale*float(rr.logfile['x_period_dp_unit'])*float(rr.logfile['bin_z_dp_unit_approximate'])*float(rr.logfile['dp'])**2
+    wallforce_scale = stress_scale*float(rr.logfile['x_period_dp_unit'])*float(rr.logfile['bin_z_dp_unit_approximate'])*float(rr.logfile['dp'])**2
 
     for ob1 in [
         chunkinwallforce(number_average, rr.lammps_directory),
@@ -1232,7 +1343,7 @@ def run_main(number_average):
             ob1.save_XY_fix_k(
                 ob1.first_middle_last_steps,
                 ob1.call_header_by_bettername[key],
-                real_scale,
+                wallforce_scale,
                 key,
                 savepath,
             )
@@ -1240,7 +1351,7 @@ def run_main(number_average):
             ob1.save_time_variable(
                                 stepsarray, 
                                 ob1.call_header_by_bettername[key],
-                                real_scale,
+                                wallforce_scale,
                                 key,
                                 0,
                                 savepath,
@@ -1256,7 +1367,7 @@ def run_main(number_average):
         ob2.save_XY_fix_k(
             ob2.first_middle_last_steps,
             ob2.call_header_by_bettername[key],
-            real_scale,
+            wallforce_scale,
             key,
             savepath,
         )
@@ -1264,12 +1375,46 @@ def run_main(number_average):
         ob2.save_time_variable(
                             stepsarray,
                             ob2.call_header_by_bettername[key],
-                            real_scale,
+                            wallforce_scale,
                             key,
                             0,
                             savepath,
                             )
+    
+    # chunkmomentum
+    ob3 = chunkmomentum(number_average, rr.lammps_directory)
+    velocity_scale = float(rr.logfile['in_velocity'])
+    if velocity_scale < 0:
+        velocity_scale = -velocity_scale
+    for key in ["mv_0", "mv_1", "mv_2"]:
+        toppath = dp.diagram_path + "velocity/" + key + "/"
+        os.makedirs(toppath, exist_ok=True)
+        ob3.add_nve_subfolder_in_folder(toppath)
+        savepath = ob3.path_nve_subfolder_in_folder(toppath)
+        ob3.save_XY_fix_k(
+            ob3.first_middle_last_steps,
+            2,
+            ob3.call_header_by_bettername[key],
+            velocity_scale,
+            1, [0,-1],
+            key,
+            savepath,
+        )
+        stepsarray = np.arange(ob3.first_middle_last_steps[0], ob3.first_middle_last_steps[0] + 5*number_average, number_average)
+        for index_n_1 in [0, -1]:
+            for index_n_2 in range(n_2-3):
+                ob3.save_time_variable(
+                                    stepsarray,
+                                    ob3.call_header_by_bettername[key],
+                                    velocity_scale,
+                                    key,
+                                    index_n_1, index_n_2,
+                                    savepath,
+                                    )
+
+    
+
 # main exclusive
 if __name__ == "__main__":
-    
-    run_main(10)
+    test_mv0()
+    run_main(1)

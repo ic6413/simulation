@@ -7,8 +7,9 @@ if "${test_for_simple_run} == no" then &
 label test_for_simple_run_yes_begin_1
 # test mode region height width
 variable	runstep			index 1000
+variable    runstepdivide10 equal "floor(v_runstep/10)"
 variable	ifrotate		index yes
-variable	Sa 			index 0.00000002
+variable	Sa 			index 0.000002
 variable	z_length_create_dp_unit	index 10
 variable	width_wall_dp_unit		index 10
 variable	x_period_dp_unit		index 10	#only for block geometry
@@ -17,37 +18,37 @@ variable	trace_id1		index 1  # 0 means no trace
 variable	iftrace_maxKEt		index yes
 # frequency output
 # freq restart
-variable	freq_restart_big	index 100
+variable	freq_restart_big	index ${runstepdivide10}
 variable	freq_restart_small	index 0
 # freq dump
-variable	freq_dump_single_trace	index 100
-variable	freq_dump_single_all	index 100
-variable	freq_dump_pair_trace	index 100
-variable	freq_dump_pair_all	index 100
+variable	freq_dump_single_trace	index ${runstepdivide10}
+variable	freq_dump_single_all	index ${runstepdivide10}
+variable	freq_dump_pair_trace	index ${runstepdivide10}
+variable	freq_dump_pair_all	index ${runstepdivide10}
 # freq image 
 # get env variable USER
 variable    struser         getenv  USER
 if "${struser} == ic6413" then &
-    "variable	freq_dump_trace_image	index 100" &
-    "variable	freq_dump_all_image	index 100"
+    "variable	freq_dump_trace_image	index ${runstepdivide10}" &
+    "variable	freq_dump_all_image	index ${runstepdivide10}"
 # freq thermo
-variable	freq_thermo		index 100 #stagger(1e3,2e2)       #
+variable	freq_thermo		index ${runstepdivide10} #stagger(1e3,2e2)       #
 # freq print trace
-variable	freq_print_trace	index 10
+variable	freq_print_trace	index ${runstepdivide10}
 # freq print velocity field
-variable	freq_ave_chunk_momentum_mass_field		index 100  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
-variable	repeat_ave_chunk_momentum_mass_field	index 100
+variable	freq_ave_chunk_momentum_mass_field		index ${runstepdivide10}  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
+variable	repeat_ave_chunk_momentum_mass_field	index ${runstepdivide10}
 variable	every_ave_chunk_momentum_mass_field		index 1
 # freq print wall chunk
-variable    freq_ave_chunk_wallforce                index 100
-variable	repeat_ave_chunk_wallforce          	index 100
+variable    freq_ave_chunk_wallforce                index ${runstepdivide10}
+variable	repeat_ave_chunk_wallforce          	index ${runstepdivide10}
 variable	every_ave_chunk_wallforce               index 1
 # freq print wall
 variable	freq_ave_wall		index 0  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
 variable	repeat_ave_wall		index 0
 variable	every_ave_wall		index 0
 # freq rebalance
-variable  	freq_balance      	index 100
+variable  	freq_balance      	index ${runstepdivide10}
 label test_for_simple_run_yes_end_1
 # get simulation path
 variable    home_path     getenv HOME
