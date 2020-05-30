@@ -6,6 +6,7 @@ if "${test_for_simple_run} == no" then &
 # test mode begin
 label test_for_simple_run_yes_begin_1
 # test mode region height width
+variable    rst_from        index 0
 variable	runstep			index 1000
 variable    runstepdivide10 equal "floor(v_runstep/10)"
 variable	ifrotate		index yes
