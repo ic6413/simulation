@@ -293,19 +293,6 @@ class chunk1D(chunk):
                 std = 0
             else:
                 std2 = (ave_square_2 - value**2)*totaln/(totaln-ddof)
-                if type(std2) is np.ndarray:
-                    std2[
-                        np.logical_and(
-                            std2 < 0, np.logical_or(std2 > -10**-20, std2 >= -10**-1*value**2)
-                        )
-                        ] = 0
-                    if np.any(std2<0):
-                        breakpoint()
-                else:
-                    if std2 < 0 and (std2 > -10**-20 or std2 >= -10**-1*value**2):
-                        std2 = 0
-                    if std2<0:
-                        breakpoint()
                 std = std2**0.5
         else:
             # sum_diff_square_2 = sum of (xi-x_ave)**2
@@ -708,20 +695,6 @@ class chunk2D(chunk):
                 std = 0
             else:
                 std2 = (ave_square_2 - value**2)*totaln/(totaln-ddof)
-                if type(std2) is np.ndarray:
-                    std2[
-                        np.logical_and(
-                            std2 < 0, np.logical_or(std2 > -10**-20, std2 >= -10**-1*value**2)
-                        )
-                        ] = 0
-                    if np.any(std2<0):
-                        breakpoint()
-                else:
-                    if std2 < 0 and (std2 > -10**-20 or std2 >= -10**-1*value**2):
-                        std2 = 0
-                    if std2<0:
-                        breakpoint()
-                #print(std2)
                 std = std2**0.5
         
         else:    
@@ -964,6 +937,173 @@ class chunk2D(chunk):
                 )
             )
             chunk.save_one_plot(fig1, ax1, savepath, str(int(step)), figformat, ifpickle)
+
+    # data 1D-1D diff
+    def datachunk_ave_one_step_XY_diff_fix_k(
+        self,
+        step, coord_index_horizental_in_plot, Y_name,
+        Y_scale,
+        k, k_index,
+        diff_coord_index,
+        X_scale=float(rr.logfile['dp']),
+        ):
+        
+        # coord_index_horizental_in_plot should not equal k
+        if coord_index_horizental_in_plot == k:
+            sys.exit("coord_index_horizental_in_plot should not equal k")
+
+        Y_array, Y_std_array = self.value_in_a_step_ave(step, Y_name, index_n_1=None, index_n_2=None)
+
+        if position_index_to_array_dim_index[coord_index_horizental_in_plot] == 0:
+            X_array = self.chunk_x_array
+            X_label = self.chunk_x_array_label
+        elif position_index_to_array_dim_index[coord_index_horizental_in_plot] == 1:
+            X_array = self.chunk_y_array
+            X_label = self.chunk_y_array_label
+        
+        if position_index_to_array_dim_index[diff_coord_index] == 0:
+            diff_label = self.chunk_x_array_label
+            diff_coord_array = self.chunk_x_array
+            middle_X_array = (X_array[:-1,:] + X_array[1:,:])/2
+            d_diff_coord_array = diff_coord_array[:-1,:] - diff_coord_array[1:,:]
+            d_Y_array = Y_array[:-1,:] - Y_array[1:,:]
+
+            d_Y_std_array = (
+                (Y_std_array[:-1,:])**2 + (Y_std_array[1:,:])**2
+                )**0.5
+            
+        elif position_index_to_array_dim_index[diff_coord_index] == 1:
+            diff_label = self.chunk_y_array_label
+            diff_coord_array = self.chunk_y_array
+            middle_X_array = (X_array[:, :-1] + X_array[:, 1:])/2
+            d_diff_coord_array = diff_coord_array[:, :-1] - diff_coord_array[:, 1:]
+            d_Y_array = Y_array[:, :-1] - Y_array[:, 1:]
+            d_Y_std_array = (
+                (Y_std_array[:,:-1])**2 + (Y_std_array[:,1:])**2
+                )**0.5
+            
+        if position_index_to_array_dim_index[k] == 0:
+            middle_X_vector = middle_X_array[k_index, :]
+            d_Y_vector = d_Y_array[k_index, :]
+            d_diff_coord_vector = d_diff_coord_array[k_index, :]
+            d_Y_std_vector = d_Y_std_array[k_index, :]
+        elif position_index_to_array_dim_index[k] == 1:
+            middle_X_vector = middle_X_array[:, k_index]
+            d_Y_vector = d_Y_array[:, k_index]
+            d_diff_coord_vector = d_diff_coord_array[:, k_index]
+            d_Y_std_vector = d_Y_std_array[:, k_index]
+        if np.any(d_diff_coord_vector==0):
+            breakpoint()
+        d_Y_d_diff_coord_vector = d_Y_vector/d_diff_coord_vector
+        d_Y_d_diff_coord_std_vector = d_Y_std_vector/d_diff_coord_vector
+
+        # rescale
+        middle_X_vector = middle_X_vector/X_scale
+        (d_Y_d_diff_coord_vector, d_Y_d_diff_coord_std_vector) = (d_Y_d_diff_coord_vector/Y_scale*X_scale, d_Y_d_diff_coord_std_vector/Y_scale*X_scale)
+
+        # time from rotate
+        time = time_from_start_rotate(step)
+
+        return (time, middle_X_vector, X_label, d_Y_d_diff_coord_vector, d_Y_d_diff_coord_std_vector, diff_label)
+    # plot 1D-1D diff
+    def plot_XY_diff_fix_k(
+        self,
+        stepsarray,
+        coord_index_horizental_in_plot, Y_name,
+        Y_scale,
+        k, k_index_array,
+        Ylabel,
+        diff_coord_index,
+        X_scale=float(rr.logfile['dp']),
+        ):
+        
+        fig, ax = plt.subplots()
+        for k_index in k_index_array:
+            for step in stepsarray:
+                (time, X_vector, Xlabel, Y_vector, Y_std_vector, diff_label) = (
+                    self.datachunk_ave_one_step_XY_diff_fix_k(
+                        step, coord_index_horizental_in_plot, Y_name,
+                        Y_scale,
+                        k, k_index,
+                        diff_coord_index,
+                        X_scale=float(rr.logfile['dp']),
+                    )
+                )
+                
+                # k_value
+                if position_index_to_array_dim_index[k] == 0:
+                    k_value = self.chunk_x_array[k_index, 0]
+                    
+                elif position_index_to_array_dim_index[k] == 1:
+                    k_value = self.chunk_y_array[0, k_index]
+
+                k_value = k_value/float(rr.logfile['dp'])
+                # plot
+                ax.errorbar(X_vector, Y_vector, yerr=Y_std_vector,
+                        label="t={:.2e} s".format(time) + ", " + map_dim_index_to_coordinate[k] + "=" + "{:.2f}".format(k_value),
+                        marker = ".",
+                        linestyle = 'None',
+                        markersize=12,
+                        )
+
+        ax.set_xlabel(Xlabel + " ({:3g})".format(X_scale))
+        ax.set_ylabel("d(" + Ylabel + ")/d(" + diff_label + ")" + " ({:3g})".format(Y_scale/X_scale))
+        # Shrink current axis by 20%
+        box = ax.get_position()
+        ax.set_position([box.x0, box.y0, box.width * 0.6, box.height])
+
+        ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
+
+        # title
+        ax.set_title("# of snapshot {:g}".format(self.n_ave))
+
+        return (fig, ax)
+    # save X-Y diff
+    def save_XY_diff_fix_k(
+        self,
+        stepsarray,
+        coord_index_horizental_in_plot, Y_name,
+        Y_scale,
+        k, k_index_array,
+        Ylabel,
+        diff_coord_index,
+        savepath,
+        X_scale=float(rr.logfile['dp']),
+        figformat="png", ifpickle=False, bbox_inches="tight", onefigure=True
+        ):
+
+        if onefigure:
+            fig, ax = self.plot_XY_diff_fix_k(
+                                        stepsarray,
+                                        coord_index_horizental_in_plot, Y_name,
+                                        Y_scale,
+                                        k, k_index_array,
+                                        Ylabel,
+                                        diff_coord_index,
+                                        X_scale,
+                                        )
+            chunk.save_one_plot(
+                fig, ax, savepath,
+                "step_" + "-".join([str(number) for number in stepsarray]) + map_dim_index_to_coordinate[k] + "_" + "-".join([str(number) for number in k_index_array]),
+                figformat, ifpickle, bbox_inches,
+                )
+        else:
+            for k_index in k_index_array:
+                for step in stepsarray:
+                    fig, ax = self.plot_XY_diff_fix_k(
+                                                [step],
+                                                coord_index_horizental_in_plot, Y_name,
+                                                Y_scale,
+                                                k, [k_index],
+                                                Ylabel,
+                                                diff_coord_index,
+                                                X_scale,
+                                                )
+            chunk.save_one_plot(
+                fig, ax, savepath,
+                "step_" + str(int(step)) + map_dim_index_to_coordinate[k] + "_" + str(k_index),
+                figformat, ifpickle, bbox_inches,
+                )
 
     # data 1D-1D
     def datachunk_ave_one_step_XY_fix_k(
@@ -1264,53 +1404,42 @@ def checkNchunkint():
                 except ValueError:
                     print("one of chunk in step {step_inloop} contain {number} Ncount".format(step_inloop=step_inloop, number=x))
                     if float(x) < 0.1:
-                        breakpoint()
                         Nchunkarray = np.asarray(Nchunklist, dtype=np.float64, order='F')
                         totalNchunk = np.sum(Nchunkarray)
                         print(totalNchunk)
                         sys.exit("Ncount (number of atom in chunk) not int")
         print("all chunk has integer number of atoms")
 
-def test_mv0():
-    # chunkmomentum
-    ob3 = chunkmomentum(1, rr.lammps_directory)
-    velocity_scale = float(rr.logfile['in_velocity'])
-    if velocity_scale < 0:
-        velocity_scale = -velocity_scale
-    
-    def test_mv0_step(step):
-        output = ob3.datachunk_ave_one_step_quiver_x23(
-        step, None, ob3.call_header_by_bettername["mv_0"], 1, 1,
-        x_scale=float(rr.logfile['dp']), y_scale=float(rr.logfile['dp']),
-        )
-        return output
-    #test_mv0_step(5100000)
 
 def run_main(number_average):
     # execute only if run as a script
     
     # stress
-    stress_scale = float(rr.logfile['den'])*float(rr.logfile['g'])*float(rr.logfile['zhi_chunk_dp_unit'])*float(rr.logfile['dp'])
-    stress_volume_scale = stress_scale*float(rr.logfile['dp'])**3
+    stress_scale = float(rr.logfile['den'])*float(rr.logfile['g'])*float(rr.logfile['width_wall_dp_unit'])*float(rr.logfile['dp'])
+    bin_volume = float(rr.logfile['width_wall_dp_unit'])*float(rr.logfile['bin_y_dp_unit_approximate'])*float(rr.logfile['bin_z_dp_unit_approximate'])*float(rr.logfile['dp'])**3
+    stress_volume_scale = stress_scale*bin_volume
     if int(rr.logfile["freq_ave_chunk_momentum_mass_field"]) != 0:
         ob1 = chunkstress(number_average, rr.lammps_directory)
-
-        for key in [key for key in chunkstress.call_header_by_bettername.keys() if "_sq" not in key]:
-            toppath = dp.f_stress_field_samescale_path + key + "/"
-            os.makedirs(toppath, exist_ok=True)
-            ob1.add_nve_subfolder_in_folder(toppath)
-            savepath = ob1.path_nve_subfolder_in_folder(toppath)
-            ob1.save_XY_fix_k(
-                ob1.first_middle_last_steps,
-                2, chunkstress.call_header_by_bettername[key],
-                stress_volume_scale,
-                1, [0,-1],
-                key,
-                savepath,
-            )
-
-    
-
+        # plot near vertical wall and bottom
+        for (coord_index_horizental_in_plot, k, index_of_k) in [
+            (2, 1, 0),
+            (2, 1, -1),
+            (1, 2, 0),
+            ]:
+            for key in [key for key in chunkstress.call_header_by_bettername.keys() if "_sq" not in key]:
+                toppath = dp.f_stress_field_samescale_path + key + "/"
+                os.makedirs(toppath, exist_ok=True)
+                ob1.add_nve_subfolder_in_folder(toppath)
+                savepath = ob1.path_nve_subfolder_in_folder(toppath)
+                ob1.save_XY_fix_k(
+                    ob1.first_middle_last_steps,
+                    coord_index_horizental_in_plot, chunkstress.call_header_by_bettername[key],
+                    stress_volume_scale,
+                    k, [index_of_k],
+                    key,
+                    savepath,
+                )
+        """
         for index_n_1 in [0, -1]:
             for index_n_2 in range(n_2-3):
                 ob2 = chunkstress(1, rr.lammps_directory)
@@ -1327,9 +1456,14 @@ def run_main(number_average):
                         index_n_1, index_n_2,
                         savepath,
                     )
-
+        """
     # execute only if run as a script
-    wallforce_scale = stress_scale*float(rr.logfile['x_period_dp_unit'])*float(rr.logfile['bin_z_dp_unit_approximate'])*float(rr.logfile['dp'])**2
+    # chunk wall force
+    eachbin2D_on_vertical_area = float(rr.logfile['width_wall_dp_unit'])*float(rr.logfile['bin_z_dp_unit_approximate'])*float(rr.logfile['dp'])**2
+    eachbin2D_on_bottom_area = float(rr.logfile['width_wall_dp_unit'])*float(rr.logfile['bin_y_dp_unit_approximate'])*float(rr.logfile['dp'])**2
+    
+    vertical_wallforce_scale = stress_scale*eachbin2D_on_vertical_area
+    horizental_wallforce_scale = stress_scale*eachbin2D_on_bottom_area
 
     for ob1 in [
         chunkinwallforce(number_average, rr.lammps_directory),
@@ -1343,21 +1477,21 @@ def run_main(number_average):
             ob1.save_XY_fix_k(
                 ob1.first_middle_last_steps,
                 ob1.call_header_by_bettername[key],
-                wallforce_scale,
-                key,
+                vertical_wallforce_scale,
+                key + "/(bin_area_on_wall)/(stress_scale)",
                 savepath,
             )
             stepsarray = np.arange(ob1.first_middle_last_steps[0], ob1.first_middle_last_steps[0] + 5*number_average, number_average)
             ob1.save_time_variable(
                                 stepsarray, 
                                 ob1.call_header_by_bettername[key],
-                                wallforce_scale,
-                                key,
+                                vertical_wallforce_scale,
+                                key + "/(bin_area_on_wall)/(stress_scale)",
                                 0,
                                 savepath,
                                 )
         del ob1
-
+    
     ob2 = chunkzbottomwallforce(number_average, rr.lammps_directory)
     for key in [key for key in ob2.call_header_by_bettername.keys() if "_sq" not in key]:
         toppath = dp.diagram_path + "wallforce/" + key + "/"
@@ -1367,16 +1501,16 @@ def run_main(number_average):
         ob2.save_XY_fix_k(
             ob2.first_middle_last_steps,
             ob2.call_header_by_bettername[key],
-            wallforce_scale,
-            key,
+            horizental_wallforce_scale,
+            key + "/(bin_area_on_wall)/(stress_scale)",
             savepath,
         )
         stepsarray = np.arange(ob2.first_middle_last_steps[0], ob2.first_middle_last_steps[0] + 5*number_average, number_average)
         ob2.save_time_variable(
                             stepsarray,
                             ob2.call_header_by_bettername[key],
-                            wallforce_scale,
-                            key,
+                            horizental_wallforce_scale,
+                            key + "/(bin_area_on_wall)/(stress_scale)",
                             0,
                             savepath,
                             )
@@ -1400,6 +1534,7 @@ def run_main(number_average):
             key,
             savepath,
         )
+        
         stepsarray = np.arange(ob3.first_middle_last_steps[0], ob3.first_middle_last_steps[0] + 5*number_average, number_average)
         for index_n_1 in [0, -1]:
             for index_n_2 in range(n_2-3):
@@ -1412,9 +1547,22 @@ def run_main(number_average):
                                     savepath,
                                     )
 
-    
+        for diff_index in [1,2]:
+            toppath = dp.diagram_path + "velocity_diff/" + key + "_d" + str(diff_index) + "/"
+            os.makedirs(toppath, exist_ok=True)
+            ob3.add_nve_subfolder_in_folder(toppath)
+            savepath = ob3.path_nve_subfolder_in_folder(toppath)
 
+            ob3.save_XY_diff_fix_k(
+                ob3.first_middle_last_steps,
+                2,
+                ob3.call_header_by_bettername[key],
+                velocity_scale,
+                1, [0,-1],
+                key,
+                diff_index,
+                savepath,
+            )
 # main exclusive
 if __name__ == "__main__":
-    test_mv0()
     run_main(1)

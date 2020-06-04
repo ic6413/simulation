@@ -304,7 +304,10 @@ else:
             break
         else:
             logdiclist[i]["rotate_start_time"] = None # have not rotate
-    
+
+    for i in range(n_simu_total):    
+        logdiclist[i]["rotate_start_time"] = rotate_start_time
+        
     # logfile
     logfile = logdiclist[-1]
     # save all global variable get from logfile to pickle
