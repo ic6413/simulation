@@ -211,6 +211,9 @@ os.makedirs(f_momentum_mass_field_path, exist_ok=True)
 # stress
 f_stress_field_path = diagram_path + "stress/"
 os.makedirs(f_stress_field_path, exist_ok=True)
+# mu I
+f_mu_I_path = diagram_path + "mu_I/"
+os.makedirs(f_mu_I_path, exist_ok=True)
 # same scale for each plot
 f_momentum_mass_field_samescale_path = f_momentum_mass_field_path + "same_scale/"
 os.makedirs(f_momentum_mass_field_samescale_path, exist_ok=True)

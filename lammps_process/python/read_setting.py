@@ -8,7 +8,7 @@ lammps_directory = os.getcwd() + '/'
 # read from pickle if exist
 if os.path.isfile(lammps_directory + 'python_global.pckl'):
     f = open(lammps_directory + 'python_global.pckl', 'rb')
-    [logdiclist, n_simu_total, line_log_list, logfile] = pickle.load(f)
+    [logdiclist, n_simu_total, line_log_list, logfile, folder_path_list_initial_to_last] = pickle.load(f)
     f.close()
 # if global pickle not exist
 else: 
@@ -312,5 +312,5 @@ else:
     logfile = logdiclist[-1]
     # save all global variable get from logfile to pickle
     f = open(lammps_directory + 'python_global.pckl', 'wb')
-    pickle.dump([logdiclist, n_simu_total, line_log_list, logfile], f)
+    pickle.dump([logdiclist, n_simu_total, line_log_list, logfile, folder_path_list_initial_to_last], f)
     f.close()

@@ -74,13 +74,13 @@ d_step = int(rr.logfile['freq_ave_wall'])
 force_scale = 0.6*float(rr.logfile['den'])*g*float(height)**2*float(periodlength)/2*diameter**3
 
 
-def plot_wall_force(if_plot_to_last, step1, step2, figformat="png", ifpickle=False, ifplotfrominitial=False, ifplotfromrotate=True):
-    f_wall_force_plot_path = dp.f_wall_force_plot_path
+def plot_wall_force(if_plot_to_last, step1, step2, fob1.call_header_by_bettername[key]ormat="png", ifpickle=False, ifplotfrominitial=False, ifplotfromrotate=True):
+    f_wall_force_plot_path = dp.f_wall_force_plot_paob1.call_header_by_bettername[key]
     os.makedirs(f_wall_force_plot_path, exist_ok=True)
     for wallfile in wallfiles:
         if ifplotfrominitial or ifplotfromrotate:
-            with open(rr.lammps_directory + "output/wall/" + wallfile) as f:
-                lines = f.read().strip().split('\n')
+            with open(rr.lammps_directory + "output/ob1.call_header_by_bettername[key]l/" + wallfile) as f:
+                lines = f.read().strip().split('\n')ob1.call_header_by_bettername[key]
             header = lines[1].split()[1:]
             df_full = cc.combine_previous_wall_data(wallfile, ifplotfrominitial, ifplotfromrotate)
         else:

@@ -1,25 +1,105 @@
-# v20: add pair none for removing history
-#      change fix id of wall/gran to contact eleminate history
-# v19: add ifallcustom in one file or separate
-# v18: add ifairviscous to determine air viscous
-# v17: add option for print only max atom or trackid atom to a file
-# v16: put all irrelevent command to other file
-# v15: use immediate variable as much as possible. i.e. use immediate variable $() if the variable only define before run
-# v14: fix pour
-# v13: add maxKEt in thermo file. 
-#      restart file path changed
-# v12: create atom method added. can choose create manually but not to use lattice
-# v11: delete "then" in elif, put mp before kn
-# v10: separate compute pair group for all and trace
-# v9:  move timestep command to after unit defined
-# v8:  compute pair group change from only tracegroup to all
-# v7:  add runstep
-# v6:  if append-->yes. simulation box extend, no delete when using createbox, 
-#      correct unit of freeze region to box. set no output if freq_* =0
-# v5:  rounding number
-# v4:  store force before fix (after pair). so get pair force
+# get simulation path
+variable    home_path     getenv HOME
+variable    lmp_input_dir     string "${home_path}/simulation/lammps_process/tools/lmp_input"
+variable    contact_model_dir     string "${lmp_input_dir}/contact_model"
+variable    contact_model_file_name     string in.nott
+# override variables
+variable    ifsoft   index no
+# geometry
+variable    boundary_geometry   index block  # cylinder block
+# only for block
+variable    ifzbottomshear      index no
+# only for create_atom_method latt
+variable    ifsetinitialvelocity      index no
+variable    ifinitialvelocity_same_as_in_velocity      index no
+# ztop
+variable    ifztop                  index yes
+# ybottom gran or flat
+variable    if_inwall_wall_gran    index no
+variable    wall_gran_type       index 2
+# run step
+variable	rst_from		index 0
+# if rst_from = N, then copy restart file from parent folder
+if "${rst_from} != 0" then &
+    "shell cp ../output/rst/restart.mpiio.${rst_from} ./"
+variable ifset_velocity_after_rst index no
+variable ifset_angular_velocity_after_rst index no
+variable	runstep			index 3000000
+variable	runstep_loop		index 0
+# timestep
+variable	ts_scale		index 1
+# reset dt
+variable	ifresetdt		index no
 
-##### define variable begin ######
+# region height width
+variable	z_length_create_dp_unit	index 31
+variable	width_wall_dp_unit		index 17
+variable	x_period_dp_unit		index 36	#only for block geometry
+variable	ri_wall_dp_unit		    index 36	#inner radius only for cylinder geometry
+
+# include diameter, density, contact model parameter (kn kt gammma_n gamma_t xmu)
+include     ${contact_model_dir}/${contact_model_file_name}
+
+# air
+variable	ifairviscous		index no 
+variable	gamma_air		index 0
+# inner wall
+variable	ifrotate		index yes
+variable	Sa 			index 0.000002
+# trace
+variable	trace_id1		index 0  # 0 means no trace
+variable	trace_id2		index 0  # 0 means no trace
+variable	trace_id3		index 0  # 0 means no trace
+variable	iftrace_maxKEt		index no
+variable	iftrace_maxKEr		index no
+variable	iftrace_maxKEtr		index no
+
+# frequency output
+# freq restart
+variable	freq_restart_big	index 100000
+variable	freq_restart_small	index 0
+# freq image
+variable	freq_dump_trace_image	index 0
+variable	freq_dump_all_image	index 0
+# freq dump
+variable	freq_dump_single_trace	index 0
+variable	freq_dump_single_all	index 100000
+variable    n_maxfile_single_all    index -1
+variable	freq_dump_pair_trace	index 0
+variable	freq_dump_pair_all	index 0
+variable	freq_dump_vtk		index 0
+variable	freq_dump_stl		index 0
+variable	freq_dump_movie		index 0
+# freq thermo
+variable	freq_thermo		index 10000 #stagger(1e3,2e2)       #
+variable  thermo_lost_error_or_warn index error
+# freq print trace
+variable	freq_print_trace	index 0
+# freq fix vector
+variable	freq_fixvector		index 0
+variable	every_fixvector		index 0
+# freq print velocity field
+variable	freq_ave_chunk_momentum_mass_field		index 10000  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
+variable	repeat_ave_chunk_momentum_mass_field	index 1000
+variable	every_ave_chunk_momentum_mass_field		index 10
+# freq print wall chunk
+variable    freq_ave_chunk_wallforce                index 10000
+variable	repeat_ave_chunk_wallforce          	index 1000
+variable	every_ave_chunk_wallforce               index 10
+# freq print wall
+variable	freq_ave_wall		index 10000  #Nevery=2, Nrepeat=6, and Nfreq=100, then 90,92,94,96,98,100 count for average
+variable	repeat_ave_wall		index 1000
+variable	every_ave_wall		index 10
+# freq rebalance
+variable  	freq_balance      	index 50000
+# freq test
+variable  	freq_test1      	index 0
+variable  	freq_test2      	index 0
+variable  	freq_test3      	index 0
+# freq check_condition_exit
+variable  	freq_check_condition_exit      	index -1
+variable    ke_per_atom_check index 1.0e-17
+
 # only for block
 variable    ifzbottomshear      index no
 # only for create_atom_method latt
@@ -51,7 +131,6 @@ shell	'mkdir -p' output/momentum_mass_field output/vtk output/stl output/movie o
 shell	'mkdir -p' output/stress output/stress/chunkfixtimeave
 shell	'mkdir -p' output/pair_trace output/single_trace output/pair_all output/single_all
 shell	'mkdir -p' output/wall output/wall/chunk output/wall/chunkfixtimeave
-shell	'mkdir -p' output/contact
 shell	'mkdir -p' output/test
 # print start step
 print "startstep ${rst_from}" screen no append output/setting/attribute.lammps
@@ -1092,20 +1171,6 @@ file output/stress/fix.stress.all &
 mode vector format %.8g ave window 1 &
 title3 "# Chunk Ncount c_stress[1] c_stress[1]_sq c_stress[2] c_stress[2]_sq c_stress[3] c_stress[3]_sq c_stress[4] c_stress[4]_sq c_stress[5] c_stress[5]_sq c_stress[6] c_stress[6]_sq"
 
-# contact number
-compute		n_contact all contact/atom
-# file, output contact number by fix ave/chunk, pre column: Coord1 Coord2 Ncount
-fix		contactnumber ${storeforcegroup} ave/chunk 1 1 1 chunk_2_3 &
-c_n_contact &
-norm none file output/contact/chunk_fix.contact_number.all
-# avspatial time ave
-variable contactnumber_1 vector f_contactnumber[4]
-variable contactnumber_1_sq vector "f_contactnumber[4]*f_contactnumber[4]"
-fix contact_ave ${storeforcegroup} ave/time ${every_ave_chunk_momentum_mass_field} ${repeat_ave_chunk_momentum_mass_field} ${freq_ave_chunk_momentum_mass_field} &
-v_contactnumber_1 v_contactnumber_1_sq &
-file output/contact/fix.contact_number.all &
-mode vector format %.8g ave window 1 title3 "# Chunk n_contact n_contact_sq"
-
 # test
 jump SELF skip_ave_chunk_2_3
 
@@ -1462,6 +1527,7 @@ compute		KEr ${storeforcegroup} erotate/sphere
 variable	KEtr equal "ke + c_KEr"
 variable	EKP equal "ke + c_KEr + pe"
 # compute
+compute		n_contact all contact/atom
 compute		KEt_atom ${storeforcegroup} ke/atom
 compute		KEr_atom ${storeforcegroup} erotate/sphere/atom
 variable	KEtr_atom atom "c_KEt_atom + c_KEr_atom"
