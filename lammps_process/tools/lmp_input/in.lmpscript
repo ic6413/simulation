@@ -1097,7 +1097,7 @@ compute		n_contact all contact/atom
 # file, output contact number by fix ave/chunk, pre column: Coord1 Coord2 Ncount
 fix		contactnumber ${storeforcegroup} ave/chunk 1 1 1 chunk_2_3 &
 c_n_contact &
-norm none file output/contact/chunk_fix.contact_number.all
+norm none #file output/contact/chunk_fix.contact_number.all
 # avspatial time ave
 variable contactnumber_1 vector f_contactnumber[4]
 variable contactnumber_1_sq vector "f_contactnumber[4]*f_contactnumber[4]"
