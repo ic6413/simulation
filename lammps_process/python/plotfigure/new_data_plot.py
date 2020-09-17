@@ -2070,8 +2070,9 @@ def plot_auto(n_ave, lmp_path):
     #plot_quiver
     ifloglength = True
     # mv
+    stepsarray = np.arange(6000000, 10000000, 1000000)
     plot_quiver_from_chunk2D(
-        n_ave, "mv_2", "mv_3", np.arange(10000000, 100000000, 10000000),
+        n_ave, "mv_2", "mv_3", stepsarray,
         spaceave=None,
         x_scale_factor=1, x_scale_str=None, y_scale_factor=1, y_scale_str=None,
         quiver_scale=5*10**-9, label_scale=5*10**-9,
@@ -2081,7 +2082,7 @@ def plot_auto(n_ave, lmp_path):
         quiver_scale_down=5*10**-9, label_scale_down=5*10**-9,
     )
     plot_quiver_from_chunk2D(
-        n_ave, "velocity_2", "velocity_3", np.arange(10000000, 100000000, 10000000),
+        n_ave, "velocity_2", "velocity_3", stepsarray,
         spaceave=None,
         x_scale_factor=1, x_scale_str=None, y_scale_factor=1, y_scale_str=None,
         quiver_scale=0.0001, label_scale=0.0001,
@@ -2092,7 +2093,7 @@ def plot_auto(n_ave, lmp_path):
     )
 
     plot_quiver_from_chunk2D(
-        n_ave, "velocity_1", "velocity_1", np.arange(10000000, 100000000, 10000000),
+        n_ave, "velocity_1", "velocity_1", stepsarray,
         spaceave=None,
         x_scale_factor=1, x_scale_str=None, y_scale_factor=1, y_scale_str=None,
         quiver_scale=0.002, label_scale=0.002,
@@ -2100,7 +2101,7 @@ def plot_auto(n_ave, lmp_path):
     )
 
     plot_quiver_from_chunk2D(
-        n_ave, "fraction", "fraction", np.arange(10000000, 100000000, 10000000),
+        n_ave, "fraction", "fraction", stepsarray,
         spaceave=None,
         x_scale_factor=1, x_scale_str=None, y_scale_factor=1, y_scale_str=None,
         quiver_scale=0.2, label_scale=1,
@@ -2110,7 +2111,7 @@ def plot_auto(n_ave, lmp_path):
     ifloglength = False
     # mv
     plot_quiver_from_chunk2D(
-        n_ave, "mv_2", "mv_3", np.arange(10000000, 100000000, 10000000),
+        n_ave, "mv_2", "mv_3", stepsarray,
         spaceave=None,
         x_scale_factor=1, x_scale_str=None, y_scale_factor=1, y_scale_str=None,
         quiver_scale=5*10**-9, label_scale=5*10**-9,
@@ -2120,7 +2121,7 @@ def plot_auto(n_ave, lmp_path):
         quiver_scale_down=5*10**-9, label_scale_down=5*10**-9,
     )
     plot_quiver_from_chunk2D(
-        n_ave, "velocity_2", "velocity_3", np.arange(10000000, 100000000, 10000000),
+        n_ave, "velocity_2", "velocity_3", stepsarray,
         spaceave=None,
         x_scale_factor=1, x_scale_str=None, y_scale_factor=1, y_scale_str=None,
         quiver_scale=0.0001, label_scale=0.0001,
@@ -2131,7 +2132,7 @@ def plot_auto(n_ave, lmp_path):
     )
 
     plot_quiver_from_chunk2D(
-        n_ave, "velocity_1", "velocity_1", np.arange(10000000, 100000000, 10000000),
+        n_ave, "velocity_1", "velocity_1", stepsarray,
         spaceave=None,
         x_scale_factor=1, x_scale_str=None, y_scale_factor=1, y_scale_str=None,
         quiver_scale=0.001, label_scale=0.001,
@@ -2139,7 +2140,7 @@ def plot_auto(n_ave, lmp_path):
     )
 
     plot_quiver_from_chunk2D(
-        n_ave, "fraction", "fraction", np.arange(10000000, 100000000, 10000000),
+        n_ave, "fraction", "fraction", stepsarray,
         spaceave=None,
         x_scale_factor=1, x_scale_str=None, y_scale_factor=1, y_scale_str=None,
         quiver_scale=0.2, label_scale=1,
@@ -2155,7 +2156,7 @@ def main():
     
     #data_auto(lmp_path = "/home/ic6413/lmp_run/test/20200511/f_5e6/f_15e6/f_45e6/f_75e6/")
     
-    plot_auto(501, lmp_path = "/home/ic6413/lmp_run/test/20200511/f_5e6/f_15e6/f_45e6/f_75e6/")
+    plot_auto(51, lmp_path = "/home/ic6413/lmp_run/test/20200511/f_5e6/f_15e6/f_45e6/f_75e6/")
 
 # main exclusive
 if __name__ == "__main__":
