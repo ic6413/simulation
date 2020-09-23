@@ -70,7 +70,7 @@ plt.rc('mathtext', fontset="stix")
 # valuefile -- id filepath header
 # realname -- names
 
-lmp_path = "/home/ic6413/lmp_run/test/20200511/f_5e6/f_15e6/f_45e6/f_75e6/"
+lmp_path = "/home/ic6413/lmp_run/20200921_nott_H_60_W_16_L_50/f_5e6/"
 
 inwall_coord_filepath_header = (
         "output/wall/chunk/coord_inwall",
@@ -493,8 +493,21 @@ elif rr.logfile["shearwall"] == "yplane":
 else:
     sys.exit("chunk_method wrong")
 
-n_1 = 16
-n_2 = 12
+def count_n_2():
+    # python read line
+    with open(lmp_path + "output/momentum_mass_field/fix.momentum_mass_field.all") as f:
+        # line list
+        lines = f.read().strip().split('\n')
+    n_line_in_file = len(lines)
+    first_4_lines = lines[0: 4]
+    # header
+    header = first_4_lines[2].split()[1:]
+    # stepsarray
+    n_line_in_a_step = int(first_4_lines[3].split()[1])
+    n_2 = int(n_line_in_a_step/n_1)
+    return n_2
+
+n_2 = count_n_2()
 def chunk_coord_data_transfer_text_to_npy(lmp_path, filepath_rela_lmp_path, outputfolder_rela_lmp_path):
    
         # python read line
@@ -684,14 +697,16 @@ def variablesteps(lmp_path, npyfilefolderpath_rela_lmp_path, npyfilename, n_ave,
 
 def calculate_std_by_ave_and_sq_ave(n_sample, ave, ave_sq):
     if np.any(ave_sq<0):
-        breakpoint()
+        pass
+        #breakpoint()
     std_sq = ave_sq - ave**2
     std_sq[np.logical_and(-10**-20 < ave_sq, ave_sq < 0)] = 0
     std_sq[(ave_sq==0)]=0
     ratio = np.divide(std_sq, ave_sq, out=np.zeros_like(std_sq), where=ave_sq!=0)
     filter_condition_to_zero = np.logical_and(-10**-6 < ratio, ratio < 0)
     if np.any(ratio[np.logical_not(filter_condition_to_zero)]<0):
-        breakpoint()
+        pass
+        #breakpoint()
     std_sq[filter_condition_to_zero]=0
     std = (
         std_sq
@@ -699,7 +714,7 @@ def calculate_std_by_ave_and_sq_ave(n_sample, ave, ave_sq):
     if np.any(std_sq < 0):
         A = ave_sq[std_sq<0]
         print(A)
-        breakpoint()
+        #breakpoint()
     return std
 
 def calculate_std_and_save(chunk_tuple, variable_name):
@@ -708,17 +723,22 @@ def calculate_std_and_save(chunk_tuple, variable_name):
     ave = np.load(lmp_path + chunk_tuple[3] + variable_name + ".npy", mmap_mode='r')
     ave_sq = np.load(lmp_path + chunk_tuple[3] + variable_name + "_sq" + ".npy", mmap_mode='r')
     
-    if np.any(ave_sq<0):
-        A = ave_sq[np.logical_and(-10**-20 < ave_sq, ave_sq < 0)]
+    maskto0 = np.logical_and(
+        ave_sq > -10**-50, ave_sq < 0,
+    )
+    ave_sq_revised = np.copy(ave_sq)
+    ave_sq_revised[maskto0] = 0
+    if np.any(ave_sq_revised<0):
+        A = ave_sq_revised[np.logical_and(-10**-20 < ave_sq_revised, ave_sq_revised < 0)]
         print(A)
-        B = ave_sq[np.logical_and(-10**-6 < ave_sq, ave_sq < 0)]
+        B = ave_sq_revised[np.logical_and(-10**-6 < ave_sq_revised, ave_sq_revised < 0)]
         print(B)
-        breakpoint()
+        #breakpoint()
     
     #breakpoint()
     n_sample_keyword = chunk_tuple[4]
     n_sample = int(rr.logfile[n_sample_keyword])
-    std = calculate_std_by_ave_and_sq_ave(n_sample, ave, ave_sq)
+    std = calculate_std_by_ave_and_sq_ave(n_sample, ave, ave_sq_revised)
     np.save(lmp_path + chunk_tuple[3] + variable_name + "_std" + ".npy", std)
 
 def calculate_std_and_save_input_v_list(chunk_tuple, variable_name_list):
@@ -1999,9 +2019,9 @@ def plot_auto(n_ave, lmp_path):
             plt.close('all')
         
 
-    """
+    
     for input_stepsarray in [
-        np.arange(76000000, 100000000, 1000000),
+        np.arange(6000000, 14000000, 1000000),
         ]:
         for (x_name, y_name, x_scale_factor, x_scale_str, y_scale_factor, y_scale_str, x_scale) in [
             ("I_12", "mu_12_middle", I_scale, I_scale_str, mu_scale, mu_scale_str, 'log'),
@@ -2066,11 +2086,11 @@ def plot_auto(n_ave, lmp_path):
                         x_scale=x_scale,
                         useerrorbar=useerrorbar,
                     )
-    """
+    
     #plot_quiver
     ifloglength = True
     # mv
-    stepsarray = np.arange(6000000, 10000000, 1000000)
+    stepsarray = np.arange(6000000, 14000000, 1000000)
     plot_quiver_from_chunk2D(
         n_ave, "mv_2", "mv_3", stepsarray,
         spaceave=None,
@@ -2154,9 +2174,9 @@ def plot_auto(n_ave, lmp_path):
 # main exclusive
 def main():
     
-    #data_auto(lmp_path = "/home/ic6413/lmp_run/test/20200511/f_5e6/f_15e6/f_45e6/f_75e6/")
+    data_auto(lmp_path = "/home/ic6413/lmp_run/20200921_nott_H_60_W_16_L_50/f_5e6/")
     
-    plot_auto(51, lmp_path = "/home/ic6413/lmp_run/test/20200511/f_5e6/f_15e6/f_45e6/f_75e6/")
+    plot_auto(11, lmp_path = "/home/ic6413/lmp_run/20200921_nott_H_60_W_16_L_50/f_5e6/")
 
 # main exclusive
 if __name__ == "__main__":
