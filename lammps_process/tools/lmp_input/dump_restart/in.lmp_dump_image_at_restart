@@ -1,6 +1,6 @@
 # image all restart
 # create output folders
-shell	mkdir output/image/ output/image/rst_all
+shell	mkdir output/image/output/image/rst_all
 
 # set step
 read_restart ${restartfile}
