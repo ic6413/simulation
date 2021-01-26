@@ -48,53 +48,80 @@ def main():
         doc.append("\nPeriodic length in shear direction = " + str(rr.logfile["x_period_dp_unit"]) + " diameter")
         doc.append("\nSavage_number = " + str(rr.logfile["Sa"]))
         doc.append("\nV_wall = " + str(float(rr.logfile["in_velocity"])/float(rr.logfile["dp"])) + " diameter/second")
-
-        for (x_name, y_name) in [
+        list_plot_no_errorbar = [
+            ("Coord1", "mv_1"),
+        ]
+        list_plot_errorbar = [
             ("I_12", "mu_12_middle"),
             ("I_tensor", "mu_tensor_12"),
-            ("time", "I_12"),
-            ("time", "mu_12_middle"),
-            ("time", "I_tensor"),
-            ("time", "mu_tensor_12"),
-            ("time", "fraction"),
-            ("time", "velocity_1"),
-            ("time", "velocity_2"),
-            ("time", "velocity_3"),
-            ("time", "strain_rate_21_middle"),
-            ("time", "strain_rate_31_middle"),
-            ("time", "strain_rate_22_middle"),
-            ("time", "strain_rate_32_middle"),
-            ("time", "strain_rate_23_middle"),
-            ("time", "strain_rate_33_middle"),
-            ("time", "stress_11"),
-            ("time", "stress_22"),
-            ("time", "stress_33"),
-            ("time", "stress_12"),
-            ("time", "stress_13"),
-            ("time", "stress_23"),
+            ("strain", "I_12"),
+            ("strain", "mu_12_middle"),
+            ("strain", "I_tensor"),
+            ("strain", "mu_tensor_12"),
+            ("strain", "fraction"),
+            ("strain", "velocity_1"),
+            ("strain", "velocity_2"),
+            ("strain", "velocity_3"),
+            ("strain", "strain_rate_21_middle"),
+            ("strain", "strain_rate_31_middle"),
+            ("strain", "strain_rate_22_middle"),
+            ("strain", "strain_rate_32_middle"),
+            ("strain", "strain_rate_23_middle"),
+            ("strain", "strain_rate_33_middle"),
+            ("strain", "stress_11"),
+            ("strain", "stress_22"),
+            ("strain", "stress_33"),
+            ("strain", "stress_12"),
+            ("strain", "stress_13"),
+            ("strain", "stress_23"),
             ("fraction", "mu_12_middle"),
             ("fraction", "I_12"),
             ("fraction", "mu_tensor_12"),
             ("fraction", "I_tensor"),
-            ("time", "fraction"),
-            ("time", "inwall_stress_1"),
-            ("time", "inwall_stress_2"),
-            ("time", "inwall_stress_3"),
-            ("time", "outwall_stress_1"),
-            ("time", "outwall_stress_2"),
-            ("time", "outwall_stress_3"),
-            ("time", "zbottom_stress_1"),
-            ("time", "zbottom_stress_2"),
-            ("time", "zbottom_stress_3"),
-        ]:
+            ("strain", "fraction"),
+            ("strain", "inwall_stress_1"),
+            ("strain", "inwall_stress_2"),
+            ("strain", "inwall_stress_3"),
+            ("strain", "outwall_stress_1"),
+            ("strain", "outwall_stress_2"),
+            ("strain", "outwall_stress_3"),
+            ("strain", "zbottom_stress_1"),
+            ("strain", "zbottom_stress_2"),
+            ("strain", "zbottom_stress_3"),
+        ]
+        for (x_name, y_name) in list_plot_no_errorbar:
             folder_name =  y_name + "_" + x_name + "/"
-            folder_path = dp.latex_pics_path + "diagram/" + folder_name
+            folder_path = dp.latex_pics_path + "diagram/n_ave_51/" + folder_name
             onlyfilepaths = [
                 os.path.join(folder_path, f) for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))
             ]
             pic_path_list = natural_sort(onlyfilepaths)
 
-            folder_path = dp.latex_pics_path + "diagram/" + folder_name + "errorbar/"
+            subsection_title = y_name + " vs. " + x_name
+            #breakpoint()
+            with doc.create(
+                Subsection(
+                    subsection_title.replace('_middle', '')
+                )
+            ):
+                for pic_path in pic_path_list:
+                    with doc.create(Figure(position='h!')) as pic:
+                        #breakpoint()
+                        pic.add_image(pic_path)
+                        pic.add_caption(NoEscape("\label{fig:epsart}"))
+                
+            doc.append(NoEscape("\\FloatBarrier"))
+        
+
+        for (x_name, y_name) in list_plot_errorbar:
+            folder_name =  y_name + "_" + x_name + "/"
+            folder_path = dp.latex_pics_path + "diagram/n_ave_51/" + folder_name
+            onlyfilepaths = [
+                os.path.join(folder_path, f) for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))
+            ]
+            pic_path_list = natural_sort(onlyfilepaths)
+
+            folder_path = dp.latex_pics_path + "diagram/n_ave_51/" + folder_name + "errorbar/"
             onlyfilepaths = [
                 os.path.join(folder_path, f) for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))
             ]

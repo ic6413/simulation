@@ -46,7 +46,7 @@ plt.ticklabel_format(style='sci', axis='both')
 
 plt.rc('font', size=8, weight='normal', family='sans-serif', serif=['Helvetica', 'Arial'])
 
-plt.rc('axes', labelsize=8, titlesize=8, labelweight='normal')
+plt.rc('axes', labelsize=10, titlesize=8, labelweight='normal')
 
 # http://aeturrell.com/2018/01/31/publication-quality-plots-in-python/
 #plt.rc('xtick', labelsize=10)
@@ -70,7 +70,7 @@ plt.rc('mathtext', fontset="stix")
 # valuefile -- id filepath header
 # realname -- names
 
-lmp_path = rr.folder_path_list_initial_to_last[-1]
+
 
 inwall_coord_filepath_header = (
         "output/wall/chunk/coord_inwall",
@@ -333,6 +333,8 @@ c_npyfilepath_coord_char = {
     "stress_13_std": {'npyfilepath': "postprocess/npy/calculate/stress_13_std.npy", 'coordinate_characteristic': 'original_2D', "map_chunkfile": "mv_Ek_mass"},
     "stress_23": {'npyfilepath': "postprocess/npy/calculate/stress_23.npy", 'coordinate_characteristic': 'original_2D', "map_chunkfile": "mv_Ek_mass"},
     "stress_23_std": {'npyfilepath': "postprocess/npy/calculate/stress_23_std.npy", 'coordinate_characteristic': 'original_2D', "map_chunkfile": "mv_Ek_mass"},
+    "pressure": {'npyfilepath': "postprocess/npy/calculate/pressure.npy", 'coordinate_characteristic': 'original_2D', "map_chunkfile": "mv_Ek_mass"},
+    "pressure_std": {'npyfilepath': "postprocess/npy/calculate/pressure_std.npy", 'coordinate_characteristic': 'original_2D', "map_chunkfile": "mv_Ek_mass"},
     "mu_12": {'npyfilepath': "postprocess/npy/calculate/mu_12.npy", 'coordinate_characteristic': 'original_2D', "map_chunkfile": "mv_Ek_mass"},
     "mu_12_std": {'npyfilepath': "postprocess/npy/calculate/mu_12_std.npy", 'coordinate_characteristic': 'original_2D', "map_chunkfile": "mv_Ek_mass"},
     "mu_13": {'npyfilepath': "postprocess/npy/calculate/mu_13.npy", 'coordinate_characteristic': 'original_2D', "map_chunkfile": "mv_Ek_mass"},
@@ -422,19 +424,19 @@ for k, dic_for_specific_char_coord in c_r_coord_npyfilepath.items():
     for folder in set_folder:
         os.makedirs(folder, exist_ok=True)
 
-def save_v_array_to_disk(name, value):
+def save_v_array_to_disk(lmp_path, name, value):
     path = lmp_path + c_r_npyfilepath_coord_char[name]['npyfilepath']
     np.save(path, value)
 
-def save_coord_to_disk(char, name, value):
+def save_coord_to_disk(lmp_path, char, name, value):
     path = lmp_path + c_r_coord_npyfilepath[char][name]['npyfilepath']
     np.save(path, value)
 
-def load_v_array(name):
+def load_v_array(lmp_path, name):
     path = lmp_path + c_r_npyfilepath_coord_char[name]['npyfilepath']
     return np.load(path, mmap_mode='r')
 
-def load_coord(char, name):
+def load_coord(lmp_path, char, name):
     path = lmp_path + c_r_coord_npyfilepath[char][name]['npyfilepath']
     return np.load(path, mmap_mode='r')
 
@@ -506,7 +508,7 @@ elif rr.logfile["shearwall"] == "yplane":
 else:
     sys.exit("chunk_method wrong")
 
-def count_n_2():
+def count_n_2(lmp_path):
     # python read line
     with open(lmp_path + "output/momentum_mass_field/fix.momentum_mass_field.all") as f:
         # line list
@@ -520,7 +522,7 @@ def count_n_2():
     n_2 = int(n_line_in_a_step/n_1)
     return n_2
 
-n_2 = count_n_2()
+n_2 = count_n_2(rr.folder_path_list_initial_to_last[-1])
 dx = 1/n_1*int(rr.logfile['width_wall_dp_unit'])
 dy = 1/n_2*float(rr.logfile['zhi_chunk_dp_unit'])
 vol_in_chunks = float(rr.logfile['dp'])*int(rr.logfile['x_period_dp_unit'])*dx*dy*float(rr.logfile['dp'])**2
@@ -905,33 +907,33 @@ def data_auto(lmp_path):
             ("zbottom", eachbin2D_on_bottom_area),
         ]:
             v_name = wallstr + "_force_" + str(index_component_i)
-            wallforce = load_v_array(v_name)
-            wallforce_std = load_v_array(v_name + "_std")
+            wallforce = load_v_array(lmp_path, v_name)
+            wallforce_std = load_v_array(lmp_path, v_name + "_std")
             wallstress = wallforce/bin2D_area_nearwall
             wallstress_std = wallforce_std/bin2D_area_nearwall
        
             #os.makedirs(lmp_path + "postprocess/npy/calculate/", exist_ok=True)
-            save_v_array_to_disk(wallstr + "_stress_" + str(index_component_i), wallstress)
-            save_v_array_to_disk(wallstr + "_stress_" + str(index_component_i) + "_std", wallstress_std)
+            save_v_array_to_disk(lmp_path, wallstr + "_stress_" + str(index_component_i), wallstress)
+            save_v_array_to_disk(lmp_path, wallstr + "_stress_" + str(index_component_i) + "_std", wallstress_std)
 
     # calculate velocity and save
     for index_component_i in [1,2,3]:
-        mv_i = load_v_array("mv_" + str(index_component_i))
-        mv_i_std = load_v_array("mv_" + str(index_component_i) + "_std")
-        mass = load_v_array("mass")
-        mass_std = load_v_array("mass_std")
+        mv_i = load_v_array(lmp_path, "mv_" + str(index_component_i))
+        mv_i_std = load_v_array(lmp_path, "mv_" + str(index_component_i) + "_std")
+        mass = load_v_array(lmp_path, "mass")
+        mass_std = load_v_array(lmp_path, "mass_std")
         velocity_i = mv_i/mass
         velocity_i_std = propagation_of_std_divide(mv_i, mv_i_std, mass, mass_std)
         #os.makedirs(lmp_path + "postprocess/npy/calculate/", exist_ok=True)
-        save_v_array_to_disk("velocity_" + str(index_component_i), velocity_i)
-        save_v_array_to_disk("velocity_" + str(index_component_i) + "_std", velocity_i_std)
+        save_v_array_to_disk(lmp_path, "velocity_" + str(index_component_i), velocity_i)
+        save_v_array_to_disk(lmp_path, "velocity_" + str(index_component_i) + "_std", velocity_i_std)
         
     # calculate shear rate and save, revise shear rate and the grid by average
     for index_component_i in [1,2,3]:
-        velocity_i = load_v_array("velocity_" + str(index_component_i))
-        velocity_i_std = load_v_array("velocity_" + str(index_component_i) + "_std")
-        Coord1 = load_coord('original_2D', "Coord1")
-        Coord2 = load_coord('original_2D', "Coord2")
+        velocity_i = load_v_array(lmp_path, "velocity_" + str(index_component_i))
+        velocity_i_std = load_v_array(lmp_path, "velocity_" + str(index_component_i) + "_std")
+        Coord1 = load_coord(lmp_path, 'original_2D', "Coord1")
+        Coord2 = load_coord(lmp_path, 'original_2D', "Coord2")
         # i_1
         strain_rate_2i = (velocity_i[:, :-1, :] - velocity_i[:, 1:, :])/(Coord1[:-1, :] - Coord1[ 1:, :])
         strain_rate_2i_std = propagation_of_std_plus_or_minus(
@@ -946,10 +948,10 @@ def data_auto(lmp_path):
         Coord2_new = (Coord2[:-1, :] + Coord2[ 1:, :])/2
         save_folder_rela_lmp = "postprocess/npy/calculate/" + "strain_rate_" + "2" + str(index_component_i) + "/"
         #os.makedirs(lmp_path + save_folder_rela_lmp, exist_ok=True)
-        save_v_array_to_disk("strain_rate_2" + str(index_component_i), strain_rate_2i)
-        save_v_array_to_disk("strain_rate_2" + str(index_component_i) + "_std", strain_rate_2i_std)
-        save_coord_to_disk(c_r_npyfilepath_coord_char["strain_rate_2" + str(index_component_i)]["coordinate_characteristic"], "Coord1", Coord1_new)
-        save_coord_to_disk(c_r_npyfilepath_coord_char["strain_rate_2" + str(index_component_i)]["coordinate_characteristic"], "Coord2", Coord2_new)
+        save_v_array_to_disk(lmp_path, "strain_rate_2" + str(index_component_i), strain_rate_2i)
+        save_v_array_to_disk(lmp_path, "strain_rate_2" + str(index_component_i) + "_std", strain_rate_2i_std)
+        save_coord_to_disk(lmp_path, c_r_npyfilepath_coord_char["strain_rate_2" + str(index_component_i)]["coordinate_characteristic"], "Coord1", Coord1_new)
+        save_coord_to_disk(lmp_path, c_r_npyfilepath_coord_char["strain_rate_2" + str(index_component_i)]["coordinate_characteristic"], "Coord2", Coord2_new)
         
         # average to middle point
         strain_rate_2i_middle = (strain_rate_2i[:, :, :-1] + strain_rate_2i[:, :, 1:])/2
@@ -963,14 +965,14 @@ def data_auto(lmp_path):
         Coord2_new_middle = (Coord2_new[:, :-1] + Coord2_new[:, 1:])/2
         save_folder_rela_lmp = "postprocess/npy/calculate/" + "middle_strain_rate/"
         #os.makedirs(lmp_path + save_folder_rela_lmp, exist_ok=True)
-        save_v_array_to_disk("strain_rate_2" + str(index_component_i) + "_middle", strain_rate_2i_middle)
-        save_v_array_to_disk("strain_rate_2" + str(index_component_i) + "_middle" + "_std", strain_rate_2i_middle_std)
-        save_coord_to_disk(
+        save_v_array_to_disk(lmp_path, "strain_rate_2" + str(index_component_i) + "_middle", strain_rate_2i_middle)
+        save_v_array_to_disk(lmp_path, "strain_rate_2" + str(index_component_i) + "_middle" + "_std", strain_rate_2i_middle_std)
+        save_coord_to_disk(lmp_path, 
             c_r_npyfilepath_coord_char["strain_rate_2" + str(index_component_i) + "_middle"]["coordinate_characteristic"],
             "Coord1",
             Coord1_new_middle,
         )
-        save_coord_to_disk(
+        save_coord_to_disk(lmp_path, 
             c_r_npyfilepath_coord_char["strain_rate_2" + str(index_component_i) + "_middle"]["coordinate_characteristic"],
             "Coord2",
             Coord2_new_middle,
@@ -989,10 +991,10 @@ def data_auto(lmp_path):
         Coord2_new = (Coord2[:, :-1] + Coord2[:, 1:])/2
         save_folder_rela_lmp = "postprocess/npy/calculate/" + "strain_rate_" + "3" + str(index_component_i) + "/"
         #os.makedirs(lmp_path + save_folder_rela_lmp, exist_ok=True)
-        save_v_array_to_disk("strain_rate_3" + str(index_component_i), strain_rate_3i)
-        save_v_array_to_disk("strain_rate_3" + str(index_component_i) + "_std", strain_rate_3i_std)
-        save_coord_to_disk(c_r_npyfilepath_coord_char["strain_rate_3" + str(index_component_i)]["coordinate_characteristic"], "Coord1", Coord1_new)
-        save_coord_to_disk(c_r_npyfilepath_coord_char["strain_rate_3" + str(index_component_i)]["coordinate_characteristic"], "Coord2", Coord2_new)
+        save_v_array_to_disk(lmp_path, "strain_rate_3" + str(index_component_i), strain_rate_3i)
+        save_v_array_to_disk(lmp_path, "strain_rate_3" + str(index_component_i) + "_std", strain_rate_3i_std)
+        save_coord_to_disk(lmp_path, c_r_npyfilepath_coord_char["strain_rate_3" + str(index_component_i)]["coordinate_characteristic"], "Coord1", Coord1_new)
+        save_coord_to_disk(lmp_path, c_r_npyfilepath_coord_char["strain_rate_3" + str(index_component_i)]["coordinate_characteristic"], "Coord2", Coord2_new)
         # average to middle point
         # average to middle point
         strain_rate_3i_middle = (strain_rate_3i[:, :-1, :] + strain_rate_3i[:, 1:, :])/2
@@ -1004,8 +1006,8 @@ def data_auto(lmp_path):
             )/2
         save_folder_rela_lmp = "postprocess/npy/calculate/" + "middle_strain_rate/"
         #os.makedirs(lmp_path + save_folder_rela_lmp, exist_ok=True)
-        save_v_array_to_disk("strain_rate_3" + str(index_component_i) + "_middle", strain_rate_3i_middle)
-        save_v_array_to_disk("strain_rate_3" + str(index_component_i) + "_middle" + "_std", strain_rate_3i_middle_std)
+        save_v_array_to_disk(lmp_path, "strain_rate_3" + str(index_component_i) + "_middle", strain_rate_3i_middle)
+        save_v_array_to_disk(lmp_path, "strain_rate_3" + str(index_component_i) + "_middle" + "_std", strain_rate_3i_middle_std)
         
         # check if same coord
         Coord1_new_middle_again = (Coord1_new[:-1, :] + Coord1_new[1:, :])/2
@@ -1021,30 +1023,30 @@ def data_auto(lmp_path):
         *float(rr.logfile['bin_z_dp_unit_approximate'])
         *float(rr.logfile['dp'])**3
     )
-    stress_11 = load_v_array("stress_multiply_binvolume_11")/bin_volume
-    stress_22 = load_v_array("stress_multiply_binvolume_22")/bin_volume
-    stress_33 = load_v_array("stress_multiply_binvolume_33")/bin_volume
-    stress_11_std = load_v_array("stress_multiply_binvolume_11" + "_std")/bin_volume
-    stress_22_std = load_v_array("stress_multiply_binvolume_22" + "_std")/bin_volume
-    stress_33_std = load_v_array("stress_multiply_binvolume_33" + "_std")/bin_volume
-    save_v_array_to_disk("stress_11", stress_11)
-    save_v_array_to_disk("stress_11" + "_std", stress_11_std)
-    save_v_array_to_disk("stress_22", stress_22)
-    save_v_array_to_disk("stress_22" + "_std", stress_22_std)
-    save_v_array_to_disk("stress_33", stress_33)
-    save_v_array_to_disk("stress_33" + "_std", stress_33_std)
+    stress_11 = load_v_array(lmp_path, "stress_multiply_binvolume_11")/bin_volume
+    stress_22 = load_v_array(lmp_path, "stress_multiply_binvolume_22")/bin_volume
+    stress_33 = load_v_array(lmp_path, "stress_multiply_binvolume_33")/bin_volume
+    stress_11_std = load_v_array(lmp_path, "stress_multiply_binvolume_11" + "_std")/bin_volume
+    stress_22_std = load_v_array(lmp_path, "stress_multiply_binvolume_22" + "_std")/bin_volume
+    stress_33_std = load_v_array(lmp_path, "stress_multiply_binvolume_33" + "_std")/bin_volume
+    save_v_array_to_disk(lmp_path, "stress_11", stress_11)
+    save_v_array_to_disk(lmp_path, "stress_11" + "_std", stress_11_std)
+    save_v_array_to_disk(lmp_path, "stress_22", stress_22)
+    save_v_array_to_disk(lmp_path, "stress_22" + "_std", stress_22_std)
+    save_v_array_to_disk(lmp_path, "stress_33", stress_33)
+    save_v_array_to_disk(lmp_path, "stress_33" + "_std", stress_33_std)
     pressure = -1/3*(stress_11 + stress_22 + stress_33)
     pressure_std = 1/3*(stress_11_std**2 + stress_22_std**2 + stress_33_std**2)**0.5
     #os.makedirs(lmp_path + "postprocess/npy/calculate/", exist_ok=True)
-    np.save(lmp_path + "postprocess/npy/calculate/" + "pressure_" + str(index_component_i) + ".npy", pressure)
-    np.save(lmp_path + "postprocess/npy/calculate/" + "pressure_" + str(index_component_i) + "_std" + ".npy", pressure_std)
+    np.save(lmp_path + "postprocess/npy/calculate/" + "pressure" + ".npy", pressure)
+    np.save(lmp_path + "postprocess/npy/calculate/" + "pressure" + "_std" + ".npy", pressure_std)
     # stress 12 13 23
-    stress_12 = load_v_array("stress_multiply_binvolume_12")/bin_volume
-    stress_13 = load_v_array("stress_multiply_binvolume_13")/bin_volume
-    stress_23 = load_v_array("stress_multiply_binvolume_23")/bin_volume
-    stress_12_std = load_v_array("stress_multiply_binvolume_12" + "_std")/bin_volume
-    stress_13_std = load_v_array("stress_multiply_binvolume_13" + "_std")/bin_volume
-    stress_23_std = load_v_array("stress_multiply_binvolume_23" + "_std")/bin_volume
+    stress_12 = load_v_array(lmp_path, "stress_multiply_binvolume_12")/bin_volume
+    stress_13 = load_v_array(lmp_path, "stress_multiply_binvolume_13")/bin_volume
+    stress_23 = load_v_array(lmp_path, "stress_multiply_binvolume_23")/bin_volume
+    stress_12_std = load_v_array(lmp_path, "stress_multiply_binvolume_12" + "_std")/bin_volume
+    stress_13_std = load_v_array(lmp_path, "stress_multiply_binvolume_13" + "_std")/bin_volume
+    stress_23_std = load_v_array(lmp_path, "stress_multiply_binvolume_23" + "_std")/bin_volume
     np.save(lmp_path + "postprocess/npy/calculate/" + "stress_12" + ".npy", stress_12)
     np.save(lmp_path + "postprocess/npy/calculate/" + "stress_12_std" + ".npy", stress_12_std)
     np.save(lmp_path + "postprocess/npy/calculate/" + "stress_13" + ".npy", stress_13)
@@ -1058,18 +1060,18 @@ def data_auto(lmp_path):
     strain_rate_12_middle_std = 0
     strain_rate_13_middle_std = 0
 
-    strain_rate_21_middle = load_v_array("strain_rate_21_middle")
-    strain_rate_21_middle_std = load_v_array("strain_rate_21_middle_std") 
-    strain_rate_22_middle = load_v_array("strain_rate_22_middle")
-    strain_rate_22_middle_std = load_v_array("strain_rate_22_middle_std") 
-    strain_rate_23_middle = load_v_array("strain_rate_23_middle")
-    strain_rate_23_middle_std = load_v_array("strain_rate_23_middle_std") 
-    strain_rate_31_middle = load_v_array("strain_rate_31_middle")
-    strain_rate_31_middle_std = load_v_array("strain_rate_31_middle_std") 
-    strain_rate_32_middle = load_v_array("strain_rate_32_middle")
-    strain_rate_32_middle_std = load_v_array("strain_rate_32_middle_std") 
-    strain_rate_33_middle = load_v_array("strain_rate_33_middle")
-    strain_rate_33_middle_std = load_v_array("strain_rate_33_middle_std") 
+    strain_rate_21_middle = load_v_array(lmp_path, "strain_rate_21_middle")
+    strain_rate_21_middle_std = load_v_array(lmp_path, "strain_rate_21_middle_std") 
+    strain_rate_22_middle = load_v_array(lmp_path, "strain_rate_22_middle")
+    strain_rate_22_middle_std = load_v_array(lmp_path, "strain_rate_22_middle_std") 
+    strain_rate_23_middle = load_v_array(lmp_path, "strain_rate_23_middle")
+    strain_rate_23_middle_std = load_v_array(lmp_path, "strain_rate_23_middle_std") 
+    strain_rate_31_middle = load_v_array(lmp_path, "strain_rate_31_middle")
+    strain_rate_31_middle_std = load_v_array(lmp_path, "strain_rate_31_middle_std") 
+    strain_rate_32_middle = load_v_array(lmp_path, "strain_rate_32_middle")
+    strain_rate_32_middle_std = load_v_array(lmp_path, "strain_rate_32_middle_std") 
+    strain_rate_33_middle = load_v_array(lmp_path, "strain_rate_33_middle")
+    strain_rate_33_middle_std = load_v_array(lmp_path, "strain_rate_33_middle_std") 
 
     symmetry_strain_rate_12 = strain_rate_12_middle + strain_rate_21_middle
     symmetry_strain_rate_12_std = propagation_of_std_plus_or_minus(strain_rate_12_middle, strain_rate_12_middle_std, strain_rate_21_middle, strain_rate_21_middle_std)
@@ -1116,7 +1118,12 @@ def data_auto(lmp_path):
     # mu = stress ratio (/ shear rate ratio)
     [mu_12, mu_13, mu_23] = [stress_ratio_12, stress_ratio_13, stress_ratio_23]
     [mu_12_std, mu_13_std, mu_23_std] = [stress_ratio_12_std, stress_ratio_13_std, stress_ratio_23_std]
-
+    save_v_array_to_disk(lmp_path, "mu_12", mu_12)
+    save_v_array_to_disk(lmp_path, "mu_12_std", mu_12_std)
+    save_v_array_to_disk(lmp_path, "mu_13", mu_13)
+    save_v_array_to_disk(lmp_path, "mu_13_std", mu_13_std)
+    save_v_array_to_disk(lmp_path, "mu_23", mu_23)
+    save_v_array_to_disk(lmp_path, "mu_23_std", mu_23_std)
     def ave_4_grid_for_the_last_axis(value_array):
         value_array_middle = (value_array[:, :-1, :-1] + value_array[:, 1:, :-1] + value_array[:, :-1, 1:] + value_array[:, 1:, 1:])/4
         return value_array_middle
@@ -1137,12 +1144,12 @@ def data_auto(lmp_path):
     ]
     save_folder_rela_lmp = "postprocess/npy/calculate/" + "middle_mu_tensor/"
     #os.makedirs(lmp_path + save_folder_rela_lmp, exist_ok=True)
-    save_v_array_to_disk("mu_12_middle", mu_12_middle)
-    save_v_array_to_disk("mu_12_middle_std", mu_12_middle_std)
-    save_v_array_to_disk("mu_13_middle", mu_13_middle)
-    save_v_array_to_disk("mu_13_middle_std", mu_13_middle_std)
-    save_v_array_to_disk("mu_23_middle", mu_23_middle)
-    save_v_array_to_disk("mu_23_middle_std", mu_23_middle_std)
+    save_v_array_to_disk(lmp_path, "mu_12_middle", mu_12_middle)
+    save_v_array_to_disk(lmp_path, "mu_12_middle_std", mu_12_middle_std)
+    save_v_array_to_disk(lmp_path, "mu_13_middle", mu_13_middle)
+    save_v_array_to_disk(lmp_path, "mu_13_middle_std", mu_13_middle_std)
+    save_v_array_to_disk(lmp_path, "mu_23_middle", mu_23_middle)
+    save_v_array_to_disk(lmp_path, "mu_23_middle_std", mu_23_middle_std)
     
     mu_tensor_12 = mu_12_middle/symmetry_strain_rate_ratio_12
     mu_tensor_13 = mu_13_middle/symmetry_strain_rate_ratio_13
@@ -1151,12 +1158,12 @@ def data_auto(lmp_path):
     mu_tensor_13_std = propagation_of_std_divide(mu_13_middle, mu_13_middle_std, symmetry_strain_rate_ratio_13, symmetry_strain_rate_ratio_13_std)
     mu_tensor_23_std = propagation_of_std_divide(mu_23_middle, mu_23_middle_std, symmetry_strain_rate_ratio_23, symmetry_strain_rate_ratio_23_std)
 
-    save_v_array_to_disk("mu_tensor_12", mu_tensor_12)
-    save_v_array_to_disk("mu_tensor_12_std", mu_tensor_12_std)
-    save_v_array_to_disk("mu_tensor_13", mu_tensor_13)
-    save_v_array_to_disk("mu_tensor_13_std", mu_tensor_13_std)
-    save_v_array_to_disk("mu_tensor_23", mu_tensor_23)
-    save_v_array_to_disk("mu_tensor_23_std", mu_tensor_23_std)
+    save_v_array_to_disk(lmp_path, "mu_tensor_12", mu_tensor_12)
+    save_v_array_to_disk(lmp_path, "mu_tensor_12_std", mu_tensor_12_std)
+    save_v_array_to_disk(lmp_path, "mu_tensor_13", mu_tensor_13)
+    save_v_array_to_disk(lmp_path, "mu_tensor_13_std", mu_tensor_13_std)
+    save_v_array_to_disk(lmp_path, "mu_tensor_23", mu_tensor_23)
+    save_v_array_to_disk(lmp_path, "mu_tensor_23_std", mu_tensor_23_std)
     # I = symmetry strain_rate(second_invariant) d / sqrt(P/density of particle)
     diameter = float(rr.logfile["dp"])
     density = float(rr.logfile['den'])
@@ -1171,275 +1178,245 @@ def data_auto(lmp_path):
     I_23_std = propagation_of_std_divide(symmetry_strain_rate_23, symmetry_strain_rate_23_std, pressure_middle**0.5, pressure_sqrt_middle_std)*diameter*density**0.5
     I_tensor = strain_rate_second_invariant*diameter/(pressure_middle/density)**0.5
     I_tensor_std = propagation_of_std_divide(strain_rate_second_invariant, strain_rate_second_invariant_std, pressure_middle**0.5, pressure_sqrt_middle_std)*diameter*density**0.5
-    save_v_array_to_disk("I_12", I_12)
-    save_v_array_to_disk("I_12_std", I_12_std)
-    save_v_array_to_disk("I_13", I_13)
-    save_v_array_to_disk("I_13_std", I_13_std)
-    save_v_array_to_disk("I_23", I_23)
-    save_v_array_to_disk("I_23_std", I_23_std)
-    save_v_array_to_disk("I_tensor", I_tensor)
-    save_v_array_to_disk("I_tensor_std", I_tensor_std)
+    save_v_array_to_disk(lmp_path, "I_12", I_12)
+    save_v_array_to_disk(lmp_path, "I_12_std", I_12_std)
+    save_v_array_to_disk(lmp_path, "I_13", I_13)
+    save_v_array_to_disk(lmp_path, "I_13_std", I_13_std)
+    save_v_array_to_disk(lmp_path, "I_23", I_23)
+    save_v_array_to_disk(lmp_path, "I_23_std", I_23_std)
+    save_v_array_to_disk(lmp_path, "I_tensor", I_tensor)
+    save_v_array_to_disk(lmp_path, "I_tensor_std", I_tensor_std)
     #breakpoint()
     # calculate fraction and save
-    mass = load_v_array("mass")
-    mass_std = load_v_array("mass_std")
+    mass = load_v_array(lmp_path, "mass")
+    mass_std = load_v_array(lmp_path, "mass_std")
     fraction = mass/float(rr.logfile['den'])/vol_in_chunks
     fraction_std = mass_std/float(rr.logfile['den'])/vol_in_chunks
     np.save(lmp_path + "postprocess/npy/calculate/" + "fraction" + ".npy", fraction)
     np.save(lmp_path + "postprocess/npy/calculate/" + "fraction_std" + ".npy", fraction_std)
 
-def plot_auto(n_ave, lmp_path, stepsarraylist_for_1Dplot, stepsarraylist_for_2Dplot, stepsarraylist_for_velocity_profile):
-    # check if all timestep the same for chunk
-    for key in map_chunkfile_char_save_folderpath.keys():
-        path = lmp_path + map_chunkfile_char_save_folderpath[key]["timestep_path"]
-        if np.any(
-            np.load(path, mmap_mode='r') != np.load(lmp_path + map_chunkfile_char_save_folderpath["mv_Ek_mass"]["timestep_path"], mmap_mode='r')
-        ):
-            print("timestep file not match for all chunk file")
-            breakpoint()
+lmp_path = rr.folder_path_list_initial_to_last[-1]
 
-    # scale
-    stress_scale = float(rr.logfile['den'])*float(rr.logfile['g'])*float(rr.logfile['width_wall_dp_unit'])*float(rr.logfile['dp'])
-    stress_scale_str = r'$\rho_s g h $'
-    velocity_scale = float(rr.logfile['in_velocity'])
-    if velocity_scale < 0:
-        velocity_scale = -velocity_scale
-    velocity_scale_str = r'$V_{inwall}$'
-    strain_rate_scale = velocity_scale/(float(rr.logfile['width_wall_dp_unit'])*float(rr.logfile['dp']))
-    strain_rate_scale_str = r'$V_{inwall}/Width$'
-    coord_scale = float(rr.logfile['dp'])
-    coord_scale_str = r'$d_p$'
-    mu_scale = -1
-    mu_scale_str = r'$-1$'
-    I_scale = -1
-    I_scale_str = r'$-1$'
-    mu_tensor_scale = 1
-    mu_tensor_scale_str = None
-    I_tensor_scale = 1
-    I_tensor_scale_str = None
-    coord_scale = float(rr.logfile["dp"])
-    coord_scale_str = r'$d_p$'
-    # variable_name to string in pic label or legend
-    v_name_to_labal_str = {
-        "strain": r'$\gamma$',
-        "inwall_force_1": r'$F_x$',
-        "inwall_force_2": r'$F_y$',
-        "inwall_force_3": r'$F_z$',
-        "outwall_force_1": r'$F_x$',
-        "outwall_force_2": r'$F_y$',
-        "outwall_force_3": r'$F_z$',
-        "zbottom_force_1": r'$F_x$',
-        "zbottom_force_2": r'$F_y$',
-        "zbottom_force_3": r'$F_z$',
-        "strain_rate_21": r'$\dot{\gamma_{21}}$',
-        "strain_rate_22": r'$\dot{\gamma_{22}}$',
-        "strain_rate_23": r'$\dot{\gamma_{23}}$',
-        "strain_rate_31": r'$\dot{\gamma_{31}}$',
-        "strain_rate_32": r'$\dot{\gamma_{32}}$',
-        "strain_rate_33": r'$\dot{\gamma_{33}}$',
-        "strain_rate_21_middle": r'$\dot{\gamma_{21}}$',
-        "strain_rate_22_middle": r'$\dot{\gamma_{22}}$',
-        "strain_rate_23_middle": r'$\dot{\gamma_{23}}$',
-        "strain_rate_31_middle": r'$\dot{\gamma_{31}}$',
-        "strain_rate_32_middle": r'$\dot{\gamma_{32}}$',
-        "strain_rate_33_middle": r'$\dot{\gamma_{33}}$',
-        "stress_11": r'$\sigma_{11}$',
-        "stress_22": r'$\sigma_{22}$',
-        "stress_33": r'$\sigma_{33}$',
-        "stress_12": r'$\sigma_{12}$',
-        "stress_13": r'$\sigma_{13}$',
-        "stress_23": r'$\sigma_{23}$',
-        "mu_12": r'$\mu_{12}$',
-        "mu_13": r'$\mu_{13}$',
-        "mu_23": r'$\mu_{23}$',
-        "mu_12_middle": r'$\mu_{12}$',
-        "mu_13_middle": r'$\mu_{13}$',
-        "mu_23_middle": r'$\mu_{23}$',
-        "mu_tensor_12": r'$\mu_{12}$',
-        "mu_tensor_13": r'$\mu_{13}$',
-        "mu_tensor_23": r'$\mu_{23}$',
-        "I_12": r'$I_{12}$',
-        "I_13": r'$I_{13}$',
-        "I_23": r'$I_{23}$',
-        "I_tensor": r'$I$',
-        "fraction": r'$\phi$',
-        "inwall_stress_1": r'$\sigma_{21}$',
-        "inwall_stress_2": r'$\sigma_{22}$',
-        "inwall_stress_3": r'$\sigma_{23}$',
-        "outwall_stress_1": r'$\sigma_{21}$',
-        "outwall_stress_2": r'$\sigma_{22}$',
-        "outwall_stress_3": r'$\sigma_{23}$',
-        "zbottom_stress_1": r'$\sigma_{31}$',
-        "zbottom_stress_2": r'$\sigma_{32}$',
-        "zbottom_stress_3": r'$\sigma_{33}$',
-        "Coord1": r'y',
-        "Coord2": r'z',
-    }
+# check if all timestep the same for chunk
+for key in map_chunkfile_char_save_folderpath.keys():
+    path = lmp_path + map_chunkfile_char_save_folderpath[key]["timestep_path"]
+    if np.any(
+        np.load(path, mmap_mode='r') != np.load(lmp_path + map_chunkfile_char_save_folderpath["mv_Ek_mass"]["timestep_path"], mmap_mode='r')
+    ):
+        print("timestep file not match for all chunk file")
+        breakpoint()
 
-    def transfer_v_name_to_label_str_in_figure(v_name):
-        if v_name in v_name_to_labal_str.keys():
-            v_name_label_in_figure = v_name_to_labal_str[v_name]
-        else:
-            v_name_label_in_figure = v_name
-        return v_name_label_in_figure
+# scale
+stress_scale = float(rr.logfile['den'])*float(rr.logfile['g'])*float(rr.logfile['width_wall_dp_unit'])*float(rr.logfile['dp'])
+stress_scale_str = r'$\rho_s g h $'
+velocity_scale = float(rr.logfile['in_velocity'])
+if velocity_scale < 0:
+    velocity_scale = -velocity_scale
+velocity_scale_str = r'$V_{inwall}$'
+strain_rate_scale = velocity_scale/(float(rr.logfile['width_wall_dp_unit'])*float(rr.logfile['dp']))
+strain_rate_scale_str = r'$V_{inwall}/Width$'
+coord_scale = float(rr.logfile['dp'])
+coord_scale_str = r'$d_p$'
+mu_scale = -1
+mu_scale_str = None #r'$-1$'
+I_scale = -1
+I_scale_str = r'$-1$'
+mu_tensor_scale = 1
+mu_tensor_scale_str = None
+I_tensor_scale = 1
+I_tensor_scale_str = None
+coord_scale = float(rr.logfile["dp"])
+coord_scale_str = r'$d_p$'
+# variable_name to string in pic label or legend
+v_name_to_labal_str = {
+    "pressure":"P",
+    "n_contact":"Z",
+    "velocity_1": "V",
+    "velocity_2": "V",
+    "velocity_3": "V",
+    "strain": r'$\gamma$',
+    "inwall_force_1": r'$F_x$',
+    "inwall_force_2": r'$F_y$',
+    "inwall_force_3": r'$F_z$',
+    "outwall_force_1": r'$F_x$',
+    "outwall_force_2": r'$F_y$',
+    "outwall_force_3": r'$F_z$',
+    "zbottom_force_1": r'$F_x$',
+    "zbottom_force_2": r'$F_y$',
+    "zbottom_force_3": r'$F_z$',
+    "strain_rate_21": r'$\dot{\gamma_{21}}$',
+    "strain_rate_22": r'$\dot{\gamma_{22}}$',
+    "strain_rate_23": r'$\dot{\gamma_{23}}$',
+    "strain_rate_31": r'$\dot{\gamma_{31}}$',
+    "strain_rate_32": r'$\dot{\gamma_{32}}$',
+    "strain_rate_33": r'$\dot{\gamma_{33}}$',
+    "strain_rate_21_middle": r'$\dot{\gamma_{21}}$',
+    "strain_rate_22_middle": r'$\dot{\gamma_{22}}$',
+    "strain_rate_23_middle": r'$\dot{\gamma_{23}}$',
+    "strain_rate_31_middle": r'$\dot{\gamma_{31}}$',
+    "strain_rate_32_middle": r'$\dot{\gamma_{32}}$',
+    "strain_rate_33_middle": r'$\dot{\gamma_{33}}$',
+    "stress_11": r'$\sigma_{11}$',
+    "stress_22": r'$\sigma_{22}$',
+    "stress_33": r'$\sigma_{33}$',
+    "stress_12": r'$\sigma_{12}$',
+    "stress_13": r'$\sigma_{13}$',
+    "stress_23": r'$\sigma_{23}$',
+    "mu_12": r'$\mu_{12}$',
+    "mu_13": r'$\mu_{13}$',
+    "mu_23": r'$\mu_{23}$',
+    "mu_12_middle": r'$\mu_{12}$',
+    "mu_13_middle": r'$\mu_{13}$',
+    "mu_23_middle": r'$\mu_{23}$',
+    "mu_tensor_12": r'$\mu_{12}$',
+    "mu_tensor_13": r'$\mu_{13}$',
+    "mu_tensor_23": r'$\mu_{23}$',
+    "I_12": r'$I_{12}$',
+    "I_13": r'$I_{13}$',
+    "I_23": r'$I_{23}$',
+    "I_tensor": r'$I$',
+    "fraction": r'$\phi$',
+    "inwall_stress_1": r'$\sigma_{21}$',
+    "inwall_stress_2": r'$\sigma_{22}$',
+    "inwall_stress_3": r'$\sigma_{23}$',
+    "outwall_stress_1": r'$\sigma_{21}$',
+    "outwall_stress_2": r'$\sigma_{22}$',
+    "outwall_stress_3": r'$\sigma_{23}$',
+    "zbottom_stress_1": r'$\sigma_{31}$',
+    "zbottom_stress_2": r'$\sigma_{32}$',
+    "zbottom_stress_3": r'$\sigma_{33}$',
+    "Coord1": r'y',
+    "Coord2": r'z',
+}
+
+def transfer_v_name_to_label_str_in_figure(v_name):
+    if v_name in v_name_to_labal_str.keys():
+        v_name_label_in_figure = v_name_to_labal_str[v_name]
+    else:
+        v_name_label_in_figure = v_name
+    return v_name_label_in_figure
+
+# sum mean select (plus minus multiply divide) operation for variable coord1 coord2 time
+def sum_variable(variable):
+
+    return variable
+
+def plot_1D_from_chunk2D(
+        lmp_path,
+        n_ave, x_name, y_name, inputstepsarray, coord1_index_array, coord2_index_array,
+        ave_over_coord1=False, ave_over_coord2=False,
+        figure_class=None, legend_class=None, spaceave=None,
+        x_scale_factor=1, x_scale_str=None, y_scale_factor=1, y_scale_str=None,
+        x_scale = 'linear', y_scale = 'linear',
+        useerrorbar = True,
+        ifdivideNcount = False,
+        maskstatic=None,
+        masknonstatic=None,
+    ):
+    diagram_path_add_nve = dp.diagram_path + "n_ave_" + str(n_ave) + "/"
+    # str for variable used in figure label legend
     
-    # sum mean select (plus minus multiply divide) operation for variable coord1 coord2 time
-    def sum_variable(variable):
+    x_name_label_in_figure = transfer_v_name_to_label_str_in_figure(x_name).replace('_middle', '')
+    y_name_label_in_figure = transfer_v_name_to_label_str_in_figure(y_name).replace('_middle', '')
 
-        return variable
+    if coord2_index_array=="sumdividemass" and y_name=="mv_1":
+        y_name_label_in_figure = "V"
+    # legend_class: time, coord1, coord2
+    # spaceave: coord1, coord2
+    char = c_r_npyfilepath_coord_char[y_name]["coordinate_characteristic"]
+    Coord1 = load_coord(lmp_path, char, "Coord1")
+    Coord2 = load_coord(lmp_path, char, "Coord2")
+
+    time_array = time_from_start_rotate(inputstepsarray)
+    if x_name == "timestep":
+        x_value = inputstepsarray
+        x_value_std = 0
+    elif x_name == "time":
+        x_value = time_array
+        x_value_std = 0
+    elif x_name == "strain":
+        x_value = strain_from_rotate_start(inputstepsarray)
+        x_value_std = 0
+    elif x_name == "Coord1":
+        x_value = Coord1
+        x_value_std = 0
+    else:
+        x_value = get_value(lmp_path, x_name, n_ave, inputstepsarray)
+        x_value_std = get_value(lmp_path, x_name + "_std", n_ave, inputstepsarray)
+
+    if y_name == "timestep":
+        y_value = inputstepsarray
+        y_value_std = 0
+    elif y_name == "time":
+        y_value = time_array
+        y_value_std = 0
+    else:
+        y_value = get_value(lmp_path, y_name, n_ave, inputstepsarray)
+        y_value_std = get_value(lmp_path, y_name + "_std", n_ave, inputstepsarray)
+    if ifdivideNcount:
+        Ncount_value = get_value(lmp_path, 'Ncount', n_ave, inputstepsarray)
+    if coord2_index_array=="sumdividemass":
+        mass_value = get_value(lmp_path, 'mass', n_ave, inputstepsarray)
+    # scale factor
+    x_value = x_value/x_scale_factor
+    x_value_std = x_value_std/x_scale_factor
+    y_value = y_value/y_scale_factor
+    y_value_std = y_value_std/y_scale_factor
+
+    # subfolder name
+    subfoldername = y_name + "_" + x_name + "/"
+    if ifdivideNcount:
+        subfoldername = y_name + "_divideN_" + x_name + "/"
+    os.makedirs(diagram_path_add_nve + subfoldername, exist_ok=True)
+    if useerrorbar:
+        os.makedirs(diagram_path_add_nve + subfoldername + "errorbar/", exist_ok=True)
+
+    # plot ave_z velocity across y
+    fig, ax = plt.subplots()
+    # title
+
+    if x_scale_str is None:
+        x_label_str = x_name_label_in_figure
+    else:
+        x_label_str = x_name_label_in_figure + " (" + x_scale_str + ")"
+    ax.set_xlabel(x_label_str)
     
-    def plot_1D_from_chunk2D(
-            n_ave, x_name, y_name, inputstepsarray, coord1_index_array, coord2_index_array,
-            ave_over_coord1=False, ave_over_coord2=False,
-            figure_class=None, legend_class=None, spaceave=None,
-            x_scale_factor=1, x_scale_str=None, y_scale_factor=1, y_scale_str=None,
-            x_scale = 'linear', y_scale = 'linear',
-            useerrorbar = True,
-            ifdivideNcount = False,
-            maskstatic=None,
-            masknonstatic=None,
-        ):
-        # str for variable used in figure label legend
-        
-        x_name_label_in_figure = transfer_v_name_to_label_str_in_figure(x_name).replace('_middle', '')
-        y_name_label_in_figure = transfer_v_name_to_label_str_in_figure(y_name).replace('_middle', '')
-
-        if coord2_index_array=="sumdividemass" and y_name=="mv_1":
-            y_name_label_in_figure = "V"
-        # legend_class: time, coord1, coord2
-        # spaceave: coord1, coord2
-        char = c_r_npyfilepath_coord_char[y_name]["coordinate_characteristic"]
-        Coord1 = load_coord(char, "Coord1")
-        Coord2 = load_coord(char, "Coord2")
-
-        time_array = time_from_start_rotate(inputstepsarray)
-        if x_name == "timestep":
-            x_value = inputstepsarray
-            x_value_std = 0
-        elif x_name == "time":
-            x_value = time_array
-            x_value_std = 0
-        elif x_name == "strain":
-            x_value = strain_from_rotate_start(inputstepsarray)
-            x_value_std = 0
-        elif x_name == "Coord1":
-            x_value = Coord1
-            x_value_std = 0
-        else:
-            x_value = get_value(lmp_path, x_name, n_ave, inputstepsarray)
-            x_value_std = get_value(lmp_path, x_name + "_std", n_ave, inputstepsarray)
-
-        if y_name == "timestep":
-            y_value = inputstepsarray
-            y_value_std = 0
-        elif y_name == "time":
-            y_value = time_array
-            y_value_std = 0
-        else:
-            y_value = get_value(lmp_path, y_name, n_ave, inputstepsarray)
-            y_value_std = get_value(lmp_path, y_name + "_std", n_ave, inputstepsarray)
-        if ifdivideNcount:
-            Ncount_value = get_value(lmp_path, 'Ncount', n_ave, inputstepsarray)
-        if coord2_index_array=="sumdividemass":
-            mass_value = get_value(lmp_path, 'mass', n_ave, inputstepsarray)
-        # scale factor
-        x_value = x_value/x_scale_factor
-        x_value_std = x_value_std/x_scale_factor
-        y_value = y_value/y_scale_factor
-        y_value_std = y_value_std/y_scale_factor
-
-        # subfolder name
-        subfoldername = y_name + "_" + x_name + "/"
-        os.makedirs(dp.diagram_path + subfoldername, exist_ok=True)
-        if useerrorbar:
-            os.makedirs(dp.diagram_path + subfoldername + "errorbar/", exist_ok=True)
-
-        # plot ave_z velocity across y
-        fig, ax = plt.subplots()
-        # title
-
-        if x_scale_str is None:
-            x_label_str = x_name_label_in_figure
-        else:
-            x_label_str = x_name_label_in_figure + " (" + x_scale_str + ")"
-        ax.set_xlabel(x_label_str)
-        
-        if y_scale_str is None:
-            y_label_str = y_name_label_in_figure
-        else:
-            y_label_str = y_name_label_in_figure + " (" + y_scale_str + ")"
-        ax.set_ylabel(y_label_str)
-        if ifdivideNcount:
-            ax.set_ylabel(y_label_str + '/N')
-        
-        
-        ax.set_xscale(x_scale)
-        ax.set_yscale(y_scale)
-        
-        # legend_class: time, coord1, coord2
-        if legend_class == 'tc1c2':
-            for indexstep, step in enumerate(inputstepsarray):
-                for coord1_index in coord1_index_array:
-                    for coord2_index in coord2_index_array:
-                        time = time_from_start_rotate(step)
-                        strain = strain_from_rotate_start(step)
-                        label = ", ".join([
-                            r'$\gamma$' + "={:.2f} s".format(strain),
-                            "y={:.1f} ({})".format(Coord1[coord1_index, coord2_index]/coord_scale, coord_scale_str),
-                            "z={:.1f} ({})".format(Coord2[coord1_index, coord2_index]/coord_scale, coord_scale_str),
-                        ])
-
-                        if x_name == "timestep" or x_name == "time" or x_name == "strain":
-                            x_value_plot = x_value[indexstep]
-                            x_value_std_plot = 0
-                        else:
-                            x_value_plot = x_value[indexstep, coord1_index, coord2_index]
-                            x_value_std_plot = x_value_std[indexstep, coord1_index, coord2_index]
-                        
-                        y_value_plot = y_value[indexstep, coord1_index, coord2_index]
-                        y_value_std_plot = y_value_std[indexstep, coord1_index, coord2_index]
-                        if ifdivideNcount:
-                            Ncount_value_plot = Ncount_value[indexstep, coord1_index, coord2_index]
-                            y_value_plot = y_value_plot/Ncount_value_plot
-                            y_value_std_plot = y_value_std_plot/Ncount_value_plot
-                        if useerrorbar:
-                            ax.errorbar(
-                                x_value_plot, y_value_plot, xerr=x_value_std_plot, yerr=y_value_std_plot,
-                                label=label,
-                                marker = ".",
-                                linestyle = 'None',
-                                markersize=12,
-                            )
-                        else:
-                            ax.plot(
-                                x_value_plot, y_value_plot,
-                                label=label,
-                                marker = ".",
-                                linestyle = 'None',
-                                markersize=12,
-                            )
-        elif legend_class == 'c1c2':
+    if y_scale_str is None:
+        y_label_str = y_name_label_in_figure
+    else:
+        y_label_str = y_name_label_in_figure + " (" + y_scale_str + ")"
+    ax.set_ylabel(y_label_str)
+    if ifdivideNcount and y_label_str=="n_contact":
+        ax.set_ylabel("<Z>")
+    
+    
+    ax.set_xscale(x_scale)
+    ax.set_yscale(y_scale)
+    
+    # legend_class: time, coord1, coord2
+    if legend_class == 'tc1c2':
+        for indexstep, step in enumerate(inputstepsarray):
             for coord1_index in coord1_index_array:
                 for coord2_index in coord2_index_array:
-                    strain1 = strain_from_rotate_start(time_array[0])
-                    strain2 = strain_from_rotate_start(time_array[-1])
-                    label=", ".join([
-                        r'$\gamma$' + "={:.2f} to {:.2f} s".format(strain1, strain2),
+                    time = time_from_start_rotate(step)
+                    strain = strain_from_rotate_start(step)
+                    label = ", ".join([
+                        r'$\gamma$' + "={:.2f}".format(strain),
                         "y={:.1f} ({})".format(Coord1[coord1_index, coord2_index]/coord_scale, coord_scale_str),
                         "z={:.1f} ({})".format(Coord2[coord1_index, coord2_index]/coord_scale, coord_scale_str),
                     ])
 
                     if x_name == "timestep" or x_name == "time" or x_name == "strain":
-                        x_value_plot = x_value[:]
+                        x_value_plot = x_value[indexstep]
                         x_value_std_plot = 0
                     else:
-                        x_value_plot = x_value[:, coord1_index, coord2_index]
-                        x_value_std_plot = x_value_std[:, coord1_index, coord2_index]
+                        x_value_plot = x_value[indexstep, coord1_index, coord2_index]
+                        x_value_std_plot = x_value_std[indexstep, coord1_index, coord2_index]
                     
-                    y_value_plot = y_value[:, coord1_index, coord2_index]
-                    y_value_std_plot = y_value_std[:, coord1_index, coord2_index]
+                    y_value_plot = y_value[indexstep, coord1_index, coord2_index]
+                    y_value_std_plot = y_value_std[indexstep, coord1_index, coord2_index]
                     if ifdivideNcount:
-                        Ncount_value_plot = Ncount_value[:, coord1_index, coord2_index]
+                        Ncount_value_plot = Ncount_value[indexstep, coord1_index, coord2_index]
                         y_value_plot = y_value_plot/Ncount_value_plot
                         y_value_std_plot = y_value_std_plot/Ncount_value_plot
                     if useerrorbar:
@@ -1458,291 +1435,344 @@ def plot_auto(n_ave, lmp_path, stepsarraylist_for_1Dplot, stepsarraylist_for_2Dp
                             linestyle = 'None',
                             markersize=12,
                         )
-        elif legend_class == 'c1':
-            if coord2_index_array=='ave':
-                if ave_over_coord1:
-                    if x_name == "timestep" or x_name == "time" or x_name == "strain":
-                        x_value_plot = x_value[:]
-                        x_value_std_plot = 0
-                    else:
-                        x_value_plot = x_value[:, coord1_index_array, :]
-                        x_value_std_plot = x_value_std[:, coord1_index_array, :]
-                        x_value_plot = np.nanmean(x_value_plot, axis=(1,2))
-                        x_value_std_plot = np.nanmean(x_value_std_plot, axis=(1,2))
-                    y_value_plot = y_value[:, coord1_index_array, :]
-                    y_value_std_plot = y_value_std[:, coord1_index_array, :]
-                    y_value_plot = np.nanmean(y_value_plot, axis=(1,2))
-                    y_value_std_plot = np.nanmean(y_value_std_plot, axis=(1,2))
-                    if ifdivideNcount:
-                        Ncount_value_plot = Ncount_value[:, coord1_index_array, :]
-                        Ncount_value_plot = np.nanmean(Ncount_value_plot, axis=(1,2))
-                        y_value_plot = y_value_plot/Ncount_value_plot
-                        y_value_std_plot = y_value_std_plot/Ncount_value_plot
-                    ystring = "_".join(
-                        ["{:.1f}".format(Coord1[coord1_index, 0]/coord_scale) for coord1_index in coord1_index_array]
-                    )
-                    strain1 = strain_from_rotate_start(time_array[0])
-                    strain2 = strain_from_rotate_start(time_array[-1])
-                    label=", ".join([
-                        r'$\gamma$' + "={:.2f} to {:.2f} s".format(strain1, strain2),
-                        "average y=",
-                        ystring,
-                        "({})".format(coord_scale_str),
-                        "z=average",
-                    ])
-                    if useerrorbar:
-                        ax.errorbar(
-                            x_value_plot, y_value_plot, xerr=x_value_std_plot, yerr=y_value_std_plot,
-                            label=label,
-                            marker = ".",
-                            linestyle = 'None',
-                            markersize=12,
-                        )
-                    else:
-                        ax.plot(
-                            x_value_plot, y_value_plot,
-                            label=label,
-                            marker = ".",
-                            linestyle = 'None',
-                            markersize=12,
-                        )
-                else:
-                    for coord1_index in coord1_index_array:
-                        strain1 = strain_from_rotate_start(time_array[0])
-                        strain2 = strain_from_rotate_start(time_array[-1])
-                        label=", ".join([
-                            r'$\gamma$' + "={:.2f} to {:.2f} s".format(strain1, strain2),
-                            "y={:.1f} ({})".format(Coord1[coord1_index, 0]/coord_scale, coord_scale_str),
-                            "z=average",
-                        ])
+    elif legend_class == 'c1c2':
+        for coord1_index in coord1_index_array:
+            for coord2_index in coord2_index_array:
+                strain1 = strain_from_rotate_start(inputstepsarray[0])
+                strain2 = strain_from_rotate_start(inputstepsarray[-1])
+                label=", ".join([
+                    r'$\gamma$' + "={:.2f} to {:.2f}".format(strain1, strain2),
+                    "y={:.1f} ({})".format(Coord1[coord1_index, coord2_index]/coord_scale, coord_scale_str),
+                    "z={:.1f} ({})".format(Coord2[coord1_index, coord2_index]/coord_scale, coord_scale_str),
+                ])
 
-                        if x_name == "timestep" or x_name == "time" or x_name == "strain":
-                            x_value_plot = x_value[:]
-                            x_value_std_plot = 0
-                        else:
-                            x_value_plot = x_value[:, coord1_index, :]
-                            x_value_std_plot = x_value_std[:, coord1_index, :]
-                            #breakpoint()
-                            x_value_plot = np.nanmean(x_value_plot, axis=1)
-                            x_value_std_plot = np.nanmean(x_value_std_plot, axis=1)
-                        y_value_plot = y_value[:, coord1_index, :]
-                        y_value_std_plot = y_value_std[:, coord1_index, :]
-                        y_value_plot = np.nanmean(y_value_plot, axis=1)
-                        y_value_std_plot = np.nanmean(y_value_std_plot, axis=1)
-                        if ifdivideNcount:
-                            Ncount_value_plot = Ncount_value[:, coord1_index, :]
-                            Ncount_value_plot = np.nanmean(Ncount_value_plot, axis=1)
-                            y_value_plot = y_value_plot/Ncount_value_plot
-                            y_value_std_plot = y_value_std_plot/Ncount_value_plot
-                        if useerrorbar:
-                            ax.errorbar(
-                                x_value_plot, y_value_plot, xerr=x_value_std_plot, yerr=y_value_std_plot,
-                                label=label,
-                                marker = ".",
-                                linestyle = 'None',
-                                markersize=12,
-                            )
-                        else:
-                            ax.plot(
-                                x_value_plot, y_value_plot,
-                                label=label,
-                                marker = ".",
-                                linestyle = 'None',
-                                markersize=12,
-                            )
-        elif legend_class == 'c2':
-            if coord1_index_array=='ave':
-                if ave_over_coord2:
-                    if x_name == "timestep" or x_name == "time" or x_name == "strain":
-                        x_value_plot = x_value[:]
-                        x_value_std_plot = 0
-                    else:
-                        x_value_plot = x_value[:, :, coord2_index_array]
-                        x_value_std_plot = x_value_std[:, :, coord2_index_array]
-                        x_value_plot = np.nanmean(x_value_plot, axis=(1,2))
-                        x_value_std_plot = np.nanmean(x_value_std_plot, axis=(1,2))
-                    y_value_plot = y_value[:, :, coord2_index_array]
-                    y_value_std_plot = y_value_std[:, :, coord2_index_array]
-                    y_value_plot = np.nanmean(y_value_plot, axis=(1,2))
-                    y_value_std_plot = np.nanmean(y_value_std_plot, axis=(1,2))
-                    if ifdivideNcount:
-                        Ncount_value_plot = Ncount_value[:, :, coord2_index_array]
-                        Ncount_value_plot = np.nanmean(Ncount_value_plot, axis=(1,2))
-                        y_value_plot = y_value_plot/Ncount_value_plot
-                        y_value_std_plot = y_value_std_plot/Ncount_value_plot
-                    zstring = "_".join(
-                        ["{:.1f}".format(Coord2[0, coord2_index]/coord_scale) for coord2_index in coord2_index_array]
-                    )
-                    strain1 = strain_from_rotate_start(time_array[0])
-                    strain2 = strain_from_rotate_start(time_array[-1])
-                    label=", ".join([
-                        r'$\gamma$' + "={:.2f} to {:.2f} s".format(strain1, strain2),"y=average",
-                        "average z=",
-                        zstring,
-                        "({})".format(coord_scale_str),
-                    ])
-                    if useerrorbar:
-                        ax.errorbar(
-                            x_value_plot, y_value_plot, xerr=x_value_std_plot, yerr=y_value_std_plot,
-                            label=label,
-                            marker = ".",
-                            linestyle = 'None',
-                            markersize=12,
-                        )
-                    else:
-                        ax.plot(
-                            x_value_plot, y_value_plot,
-                            label=label,
-                            marker = ".",
-                            linestyle = 'None',
-                            markersize=12,
-                        )
+                if x_name == "timestep" or x_name == "time" or x_name == "strain":
+                    x_value_plot = x_value[:]
+                    x_value_std_plot = 0
                 else:
-                    for coord2_index in coord2_index_array:
-                        
-                        strain1 = strain_from_rotate_start(time_array[0])
-                        strain2 = strain_from_rotate_start(time_array[-1])
-                        label=", ".join([
-                            r'$\gamma$' + "={:.2f} to {:.2f} s".format(strain1, strain2),
-                            "y=average",
-                            "z={:.1f} ({})".format(Coord2[0, coord2_index]/coord_scale, coord_scale_str),
-                        ])
-
-                        if x_name == "timestep" or x_name == "time" or x_name == "strain":
-                            x_value_plot = x_value[:]
-                            x_value_std_plot = 0
-                        else:
-                            x_value_plot = x_value[:, :, coord2_index]
-                            x_value_std_plot = x_value_std[:, :, coord2_index]
-                            x_value_plot = np.nanmean(x_value_plot, axis=1)
-                            x_value_std_plot = np.nanmean(x_value_std_plot, axis=1)
-                        y_value_plot = y_value[:, :, coord2_index]
-                        y_value_std_plot = y_value_std[:, :, coord2_index]
-                        y_value_plot = np.nanmean(y_value_plot, axis=1)
-                        y_value_std_plot = np.nanmean(y_value_std_plot, axis=1)
-                        if ifdivideNcount:
-                            Ncount_value_plot = Ncount_value[:, :, coord2_index]
-                            Ncount_value_plot = np.nanmean(Ncount_value_plot, axis=1)
-                            y_value_plot = y_value_plot/Ncount_value_plot
-                            y_value_std_plot = y_value_std_plot/Ncount_value_plot
-                        if useerrorbar:
-                            ax.errorbar(
-                                x_value_plot, y_value_plot, xerr=x_value_std_plot, yerr=y_value_std_plot,
-                                label=label,
-                                marker = ".",
-                                linestyle = 'None',
-                                markersize=12,
-                            )
-                        else:
-                            ax.plot(
-                                x_value_plot, y_value_plot,
-                                label=label,
-                                marker = ".",
-                                linestyle = 'None',
-                                markersize=12,
-                            )
-        elif legend_class == 't':
-            if coord2_index_array=="sumdividemass":
-                if x_name == "Coord1":
-                    for index_step, step in enumerate(inputstepsarray):
-                        strain = strain_from_rotate_start(step)
-                        label=", ".join([
-                            r'$\gamma$' + "={:.2f}".format(strain),
-                        ])
-                        x_value_plot = x_value[coord1_index_array, 0]
-                        x_value_std_plot = 0
-                        y_value_plot = y_value[index_step, coord1_index_array, :]
-                        y_value_std_plot = y_value_std[index_step, coord1_index_array, :]
-                        mass_value_plot = mass_value[index_step, coord1_index_array, :]
-                        
-                        y_value_plot = np.nanmean(y_value_plot, axis=1)
-                        y_value_std_plot = np.nanmean(y_value_std_plot, axis=1)
-                        mass_value_plot = np.nanmean(mass_value_plot, axis=1)
-                        y_value_plot = y_value_plot/mass_value_plot
-                        y_value_std_plot = y_value_std_plot/mass_value_plot
-                        
-                        if useerrorbar:
-                            ax.errorbar(
-                                x_value_plot, y_value_plot, xerr=x_value_std_plot, yerr=y_value_std_plot,
-                                label=label,
-                                marker = ".",
-                                linestyle = 'None',
-                                markersize=6,
-                            )
-                        else:
-                            ax.plot(
-                                x_value_plot, y_value_plot,
-                                label=label,
-                                marker = ".",
-                                linestyle = 'None',
-                                markersize=6,
-                            )
-    
-        elif legend_class == None:
-            if ave_over_coord1:
-                if ave_over_coord2:
-                    if x_name == "timestep" or x_name == "time" or x_name == "strain":
-                        x_value_plot = x_value[:]
-                        x_value_std_plot = 0
-                    else:
-                        x_value_plot = x_value[:, coord1_index_array, :][:, :, coord2_index_array]
-                        x_value_std_plot = x_value_std[:, coord1_index_array, :][:, :, coord2_index_array]
-                        x_value_plot = np.nanmean(x_value_plot, axis=(1,2))
-                        x_value_std_plot = np.nanmean(x_value_std_plot, axis=(1,2))
-                    y_value_plot = y_value[:, coord1_index_array, :][:, :, coord2_index_array]
-                    y_value_std_plot = y_value_std[:, coord1_index_array, :][:, :, coord2_index_array]
-                    y_value_plot = np.nanmean(y_value_plot, axis=(1,2))
-                    y_value_std_plot = np.nanmean(y_value_std_plot, axis=(1,2))
-                    if ifdivideNcount:
-                        Ncount_value_plot = Ncount_value[:, coord1_index_array, :][:, :, coord2_index_array]
-                        Ncount_value_plot = np.nanmean(Ncount_value_plot, axis=(1,2))
-                        y_value_plot = y_value_plot/Ncount_value_plot
-                        y_value_std_plot = y_value_std_plot/Ncount_value_plot
-                    zstring = "_".join(
-                        ["{:.1f}".format(Coord2[0, coord2_index]/coord_scale) for coord2_index in coord2_index_array]
-                    )
-                    ystring = "_".join(
-                        ["{:.1f}".format(Coord1[coord1_index, 0]/coord_scale) for coord1_index in coord1_index_array]
-                    )
-                    strain1 = strain_from_rotate_start(time_array[0])
-                    strain2 = strain_from_rotate_start(time_array[-1])
-                    label=", ".join([
-                        r'$\gamma$' + "={:.2f} to {:.2f} s".format(strain1, strain2),
-                        "average y=",
-                        ystring,
-                        "average z=",
-                        zstring,
-                        "({})".format(coord_scale_str),
-                    ])
-                    
-                    if useerrorbar:
-                        ax.errorbar(
-                            x_value_plot, y_value_plot, xerr=x_value_std_plot, yerr=y_value_std_plot,
-                            label=label,
-                            marker = ".",
-                            linestyle = 'None',
-                            markersize=12,
-                        )
-                    else:
-                        ax.plot(
-                            x_value_plot, y_value_plot,
-                            label=label,
-                            marker = ".",
-                            linestyle = 'None',
-                            markersize=12,
-                        )
+                    x_value_plot = x_value[:, coord1_index, coord2_index]
+                    x_value_std_plot = x_value_std[:, coord1_index, coord2_index]
                 
-        # Shrink current axis by 20%
-        box = ax.get_position()
-        ax.set_position([box.x0, box.y0, box.width * 0.6, box.height])
+                y_value_plot = y_value[:, coord1_index, coord2_index]
+                y_value_std_plot = y_value_std[:, coord1_index, coord2_index]
+                if ifdivideNcount:
+                    Ncount_value_plot = Ncount_value[:, coord1_index, coord2_index]
+                    y_value_plot = y_value_plot/Ncount_value_plot
+                    y_value_std_plot = y_value_std_plot/Ncount_value_plot
+                if useerrorbar:
+                    ax.errorbar(
+                        x_value_plot, y_value_plot, xerr=x_value_std_plot, yerr=y_value_std_plot,
+                        label=label,
+                        marker = ".",
+                        linestyle = 'None',
+                        markersize=12,
+                    )
+                else:
+                    ax.plot(
+                        x_value_plot, y_value_plot,
+                        label=label,
+                        marker = ".",
+                        linestyle = 'None',
+                        markersize=12,
+                    )
+    elif legend_class == 'c1':
+        if coord2_index_array=='ave':
+            if ave_over_coord1:
+                if x_name == "timestep" or x_name == "time" or x_name == "strain":
+                    x_value_plot = x_value[:]
+                    x_value_std_plot = 0
+                else:
+                    x_value_plot = x_value[:, coord1_index_array, :]
+                    x_value_std_plot = x_value_std[:, coord1_index_array, :]
+                    x_value_plot = np.nanmean(x_value_plot, axis=(1,2))
+                    x_value_std_plot = np.nanmean(x_value_std_plot, axis=(1,2))
+                y_value_plot = y_value[:, coord1_index_array, :]
+                y_value_std_plot = y_value_std[:, coord1_index_array, :]
+                y_value_plot = np.nanmean(y_value_plot, axis=(1,2))
+                y_value_std_plot = np.nanmean(y_value_std_plot, axis=(1,2))
+                if ifdivideNcount:
+                    Ncount_value_plot = Ncount_value[:, coord1_index_array, :]
+                    Ncount_value_plot = np.nanmean(Ncount_value_plot, axis=(1,2))
+                    y_value_plot = y_value_plot/Ncount_value_plot
+                    y_value_std_plot = y_value_std_plot/Ncount_value_plot
+                ystring = "_".join(
+                    ["{:.1f}".format(Coord1[coord1_index, 0]/coord_scale) for coord1_index in coord1_index_array]
+                )
+                strain1 = strain_from_rotate_start(inputstepsarray[0])
+                strain2 = strain_from_rotate_start(inputstepsarray[-1])
+                label=", ".join([
+                    r'$\gamma$' + "={:.2f} to {:.2f}".format(strain1, strain2),
+                    "average y=",
+                    ystring,
+                    "({})".format(coord_scale_str),
+                    "z=average",
+                ])
+                if useerrorbar:
+                    ax.errorbar(
+                        x_value_plot, y_value_plot, xerr=x_value_std_plot, yerr=y_value_std_plot,
+                        label=label,
+                        marker = ".",
+                        linestyle = 'None',
+                        markersize=12,
+                    )
+                else:
+                    ax.plot(
+                        x_value_plot, y_value_plot,
+                        label=label,
+                        marker = ".",
+                        linestyle = 'None',
+                        markersize=12,
+                    )
+            else:
+                for coord1_index in coord1_index_array:
+                    strain1 = strain_from_rotate_start(inputstepsarray[0])
+                    strain2 = strain_from_rotate_start(inputstepsarray[-1])
+                    label=", ".join([
+                        r'$\gamma$' + "={:.2f} to {:.2f}".format(strain1, strain2),
+                        "y={:.1f} ({})".format(Coord1[coord1_index, 0]/coord_scale, coord_scale_str),
+                        "z=average",
+                    ])
 
-        ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
-        plt.setp(ax.xaxis.get_minorticklabels(), rotation=30)
-        plt.setp(ax.get_xticklabels(), rotation=30)
-        if useerrorbar:
-            fig.savefig(
+                    if x_name == "timestep" or x_name == "time" or x_name == "strain":
+                        x_value_plot = x_value[:]
+                        x_value_std_plot = 0
+                    else:
+                        x_value_plot = x_value[:, coord1_index, :]
+                        x_value_std_plot = x_value_std[:, coord1_index, :]
+                        #breakpoint()
+                        x_value_plot = np.nanmean(x_value_plot, axis=1)
+                        x_value_std_plot = np.nanmean(x_value_std_plot, axis=1)
+                    y_value_plot = y_value[:, coord1_index, :]
+                    y_value_std_plot = y_value_std[:, coord1_index, :]
+                    y_value_plot = np.nanmean(y_value_plot, axis=1)
+                    y_value_std_plot = np.nanmean(y_value_std_plot, axis=1)
+                    if ifdivideNcount:
+                        Ncount_value_plot = Ncount_value[:, coord1_index, :]
+                        Ncount_value_plot = np.nanmean(Ncount_value_plot, axis=1)
+                        y_value_plot = y_value_plot/Ncount_value_plot
+                        y_value_std_plot = y_value_std_plot/Ncount_value_plot
+                    if useerrorbar:
+                        ax.errorbar(
+                            x_value_plot, y_value_plot, xerr=x_value_std_plot, yerr=y_value_std_plot,
+                            label=label,
+                            marker = ".",
+                            linestyle = 'None',
+                            markersize=12,
+                        )
+                    else:
+                        ax.plot(
+                            x_value_plot, y_value_plot,
+                            label=label,
+                            marker = ".",
+                            linestyle = 'None',
+                            markersize=12,
+                        )
+    elif legend_class == 'c2':
+        if coord1_index_array=='ave':
+            if ave_over_coord2:
+                if x_name == "timestep" or x_name == "time" or x_name == "strain":
+                    x_value_plot = x_value[:]
+                    x_value_std_plot = 0
+                else:
+                    x_value_plot = x_value[:, :, coord2_index_array]
+                    x_value_std_plot = x_value_std[:, :, coord2_index_array]
+                    x_value_plot = np.nanmean(x_value_plot, axis=(1,2))
+                    x_value_std_plot = np.nanmean(x_value_std_plot, axis=(1,2))
+                y_value_plot = y_value[:, :, coord2_index_array]
+                y_value_std_plot = y_value_std[:, :, coord2_index_array]
+                y_value_plot = np.nanmean(y_value_plot, axis=(1,2))
+                y_value_std_plot = np.nanmean(y_value_std_plot, axis=(1,2))
+                if ifdivideNcount:
+                    Ncount_value_plot = Ncount_value[:, :, coord2_index_array]
+                    Ncount_value_plot = np.nanmean(Ncount_value_plot, axis=(1,2))
+                    y_value_plot = y_value_plot/Ncount_value_plot
+                    y_value_std_plot = y_value_std_plot/Ncount_value_plot
+                zstring = "_".join(
+                    ["{:.1f}".format(Coord2[0, coord2_index]/coord_scale) for coord2_index in coord2_index_array]
+                )
+                strain1 = strain_from_rotate_start(inputstepsarray[0])
+                strain2 = strain_from_rotate_start(inputstepsarray[-1])
+                label=", ".join([
+                    r'$\gamma$' + "={:.2f} to {:.2f}".format(strain1, strain2),"y=average",
+                    "average z=",
+                    zstring,
+                    "({})".format(coord_scale_str),
+                ])
+                if useerrorbar:
+                    ax.errorbar(
+                        x_value_plot, y_value_plot, xerr=x_value_std_plot, yerr=y_value_std_plot,
+                        label=label,
+                        marker = ".",
+                        linestyle = 'None',
+                        markersize=12,
+                    )
+                else:
+                    ax.plot(
+                        x_value_plot, y_value_plot,
+                        label=label,
+                        marker = ".",
+                        linestyle = 'None',
+                        markersize=12,
+                    )
+            else:
+                for coord2_index in coord2_index_array:
+                    
+                    strain1 = strain_from_rotate_start(inputstepsarray[0])
+                    strain2 = strain_from_rotate_start(inputstepsarray[-1])
+                    label=", ".join([
+                        r'$\gamma$' + "={:.2f} to {:.2f}".format(strain1, strain2),
+                        "y=average",
+                        "z={:.1f} ({})".format(Coord2[0, coord2_index]/coord_scale, coord_scale_str),
+                    ])
+
+                    if x_name == "timestep" or x_name == "time" or x_name == "strain":
+                        x_value_plot = x_value[:]
+                        x_value_std_plot = 0
+                    else:
+                        x_value_plot = x_value[:, :, coord2_index]
+                        x_value_std_plot = x_value_std[:, :, coord2_index]
+                        x_value_plot = np.nanmean(x_value_plot, axis=1)
+                        x_value_std_plot = np.nanmean(x_value_std_plot, axis=1)
+                    y_value_plot = y_value[:, :, coord2_index]
+                    y_value_std_plot = y_value_std[:, :, coord2_index]
+                    y_value_plot = np.nanmean(y_value_plot, axis=1)
+                    y_value_std_plot = np.nanmean(y_value_std_plot, axis=1)
+                    if ifdivideNcount:
+                        Ncount_value_plot = Ncount_value[:, :, coord2_index]
+                        Ncount_value_plot = np.nanmean(Ncount_value_plot, axis=1)
+                        y_value_plot = y_value_plot/Ncount_value_plot
+                        y_value_std_plot = y_value_std_plot/Ncount_value_plot
+                    if useerrorbar:
+                        ax.errorbar(
+                            x_value_plot, y_value_plot, xerr=x_value_std_plot, yerr=y_value_std_plot,
+                            label=label,
+                            marker = ".",
+                            linestyle = 'None',
+                            markersize=12,
+                        )
+                    else:
+                        ax.plot(
+                            x_value_plot, y_value_plot,
+                            label=label,
+                            marker = ".",
+                            linestyle = 'None',
+                            markersize=12,
+                        )
+    elif legend_class == 't':
+        if coord2_index_array=="sumdividemass":
+            if x_name == "Coord1":
+                for index_step, step in enumerate(inputstepsarray):
+                    strain = strain_from_rotate_start(step)
+                    label=", ".join([
+                        r'$\gamma$' + "={:.2f}".format(strain),
+                    ])
+                    x_value_plot = x_value[coord1_index_array, 0]
+                    x_value_std_plot = 0
+                    y_value_plot = y_value[index_step, coord1_index_array, :]
+                    y_value_std_plot = y_value_std[index_step, coord1_index_array, :]
+                    mass_value_plot = mass_value[index_step, coord1_index_array, :]
+                    
+                    y_value_plot = np.nanmean(y_value_plot, axis=1)
+                    y_value_std_plot = np.nanmean(y_value_std_plot, axis=1)
+                    mass_value_plot = np.nanmean(mass_value_plot, axis=1)
+                    y_value_plot = y_value_plot/mass_value_plot
+                    y_value_std_plot = y_value_std_plot/mass_value_plot
+                    
+                    if useerrorbar:
+                        ax.errorbar(
+                            x_value_plot, y_value_plot, xerr=x_value_std_plot, yerr=y_value_std_plot,
+                            label=label,
+                            marker = ".",
+                            linestyle = 'None',
+                            markersize=6,
+                        )
+                    else:
+                        ax.plot(
+                            x_value_plot, y_value_plot,
+                            label=label,
+                            marker = ".",
+                            linestyle = 'None',
+                            markersize=6,
+                        )
+
+    elif legend_class == None:
+        if ave_over_coord1:
+            if ave_over_coord2:
+                if x_name == "timestep" or x_name == "time" or x_name == "strain":
+                    x_value_plot = x_value[:]
+                    x_value_std_plot = 0
+                else:
+                    x_value_plot = x_value[:, coord1_index_array, :][:, :, coord2_index_array]
+                    x_value_std_plot = x_value_std[:, coord1_index_array, :][:, :, coord2_index_array]
+                    x_value_plot = np.nanmean(x_value_plot, axis=(1,2))
+                    x_value_std_plot = np.nanmean(x_value_std_plot, axis=(1,2))
+                y_value_plot = y_value[:, coord1_index_array, :][:, :, coord2_index_array]
+                y_value_std_plot = y_value_std[:, coord1_index_array, :][:, :, coord2_index_array]
+                y_value_plot = np.nanmean(y_value_plot, axis=(1,2))
+                y_value_std_plot = np.nanmean(y_value_std_plot, axis=(1,2))
+                if ifdivideNcount:
+                    Ncount_value_plot = Ncount_value[:, coord1_index_array, :][:, :, coord2_index_array]
+                    Ncount_value_plot = np.nanmean(Ncount_value_plot, axis=(1,2))
+                    y_value_plot = y_value_plot/Ncount_value_plot
+                    y_value_std_plot = y_value_std_plot/Ncount_value_plot
+                zstring = "_".join(
+                    ["{:.1f}".format(Coord2[0, coord2_index]/coord_scale) for coord2_index in coord2_index_array]
+                )
+                ystring = "_".join(
+                    ["{:.1f}".format(Coord1[coord1_index, 0]/coord_scale) for coord1_index in coord1_index_array]
+                )
+                strain1 = strain_from_rotate_start(inputstepsarray[0])
+                strain2 = strain_from_rotate_start(inputstepsarray[-1])
+                label=", ".join([
+                    r'$\gamma$' + "={:.2f} to {:.2f}".format(strain1, strain2),
+                    "average y=",
+                    ystring,
+                    "average z=",
+                    zstring,
+                    "({})".format(coord_scale_str),
+                ])
+                
+                if useerrorbar:
+                    ax.errorbar(
+                        x_value_plot, y_value_plot, xerr=x_value_std_plot, yerr=y_value_std_plot,
+                        label=label,
+                        marker = ".",
+                        linestyle = 'None',
+                        markersize=12,
+                    )
+                else:
+                    ax.plot(
+                        x_value_plot, y_value_plot,
+                        label=label,
+                        marker = ".",
+                        linestyle = 'None',
+                        markersize=12,
+                    )
+            
+    # Shrink current axis by 20%
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0, box.width * 0.6, box.height])
+
+    ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
+    plt.setp(ax.xaxis.get_minorticklabels(), rotation=30)
+    plt.setp(ax.get_xticklabels(), rotation=30)
+    if useerrorbar:
+        fig.savefig(
+        "_".join([
+            diagram_path_add_nve + subfoldername + "errorbar/" + 'step',
+            transfer_time_to_str(inputstepsarray),
+            'coord1',
+            transfer_coor_to_str(coord1_index_array, ave_over_coord1),
+            'coord2',
+            transfer_coor_to_str(coord2_index_array, ave_over_coord2),
+            ".png",
+        ]),
+        format="png",
+        )
+    else:
+        fig.savefig(
             "_".join([
-                dp.diagram_path + subfoldername + "errorbar/" + 'step',
+                diagram_path_add_nve + subfoldername + 'step',
                 transfer_time_to_str(inputstepsarray),
                 'coord1',
                 transfer_coor_to_str(coord1_index_array, ave_over_coord1),
@@ -1751,171 +1781,122 @@ def plot_auto(n_ave, lmp_path, stepsarraylist_for_1Dplot, stepsarraylist_for_2Dp
                 ".png",
             ]),
             format="png",
-            )
-        else:
-            fig.savefig(
-                "_".join([
-                    dp.diagram_path + subfoldername + 'step',
-                    transfer_time_to_str(inputstepsarray),
-                    'coord1',
-                    transfer_coor_to_str(coord1_index_array, ave_over_coord1),
-                    'coord2',
-                    transfer_coor_to_str(coord2_index_array, ave_over_coord2),
-                    ".png",
-                ]),
-                format="png",
-            )
-        # close figure after save
-        plt.close('all')
+        )
+    # close figure after save
+    plt.close('all')
 
-    def plot_1D_from_chunk2D_mask(
-            n_ave, x_name, y_name, inputstepsarray, coord1_index_array, coord2_index_array,
-            ave_over_coord1=False, ave_over_coord2=False,
-            figure_class=None, legend_class=None, spaceave=None,
-            x_scale_factor=1, x_scale_str=None, y_scale_factor=1, y_scale_str=None,
-            x_scale = 'linear', y_scale = 'linear',
-            useerrorbar = True,
-            ifdivideNcount = False,
-            ifmaskstatic=False,
-            ifmasknonstatic=True,
-        ):  
-        # str for variable used in figure label legend
-        x_name_label_in_figure = transfer_v_name_to_label_str_in_figure(x_name).replace('_middle', '')
-        y_name_label_in_figure = transfer_v_name_to_label_str_in_figure(y_name).replace('_middle', '')
-        # legend_class: time, coord1, coord2
-        # spaceave: coord1, coord2
-        
-        time_array = time_from_start_rotate(inputstepsarray)
-        if x_name == "timestep":
-            x_value = inputstepsarray
-            x_value_std = 0
-        elif x_name == "time":
-            x_value = time_array
-            x_value_std = 0
-        elif x_name == "strain":
-            x_value = strain_from_rotate_start(inputstepsarray)
-            x_value_std = 0
-        else:
-            x_value = get_value(lmp_path, x_name, n_ave, inputstepsarray)
-            x_value_std = get_value(lmp_path, x_name + "_std", n_ave, inputstepsarray)
+def plot_1D_from_chunk2D_mask(
+        lmp_path,
+        n_ave, x_name, y_name, inputstepsarray, coord1_index_array, coord2_index_array,
+        ave_over_coord1=False, ave_over_coord2=False,
+        figure_class=None, legend_class=None, spaceave=None,
+        x_scale_factor=1, x_scale_str=None, y_scale_factor=1, y_scale_str=None,
+        x_scale = 'linear', y_scale = 'linear',
+        useerrorbar = True,
+        ifdivideNcount = False,
+        ifmaskstatic=False,
+        ifmasknonstatic=True,
+    ):
+    diagram_path_add_nve = dp.diagram_path + "n_ave_" + str(n_ave) + "/"
+    # str for variable used in figure label legend
+    x_name_label_in_figure = transfer_v_name_to_label_str_in_figure(x_name).replace('_middle', '')
+    y_name_label_in_figure = transfer_v_name_to_label_str_in_figure(y_name).replace('_middle', '')
+    # legend_class: time, coord1, coord2
+    # spaceave: coord1, coord2
+    
+    time_array = time_from_start_rotate(inputstepsarray)
+    if x_name == "timestep":
+        x_value = inputstepsarray
+        x_value_std = 0
+    elif x_name == "time":
+        x_value = time_array
+        x_value_std = 0
+    elif x_name == "strain":
+        x_value = strain_from_rotate_start(inputstepsarray)
+        x_value_std = 0
+    else:
+        x_value = get_value(lmp_path, x_name, n_ave, inputstepsarray)
+        x_value_std = get_value(lmp_path, x_name + "_std", n_ave, inputstepsarray)
 
-        if y_name == "timestep":
-            y_value = inputstepsarray
-            y_value_std = 0
-        elif y_name == "time":
-            y_value = time_array
-            y_value_std = 0
-        else:
-            y_value = get_value(lmp_path, y_name, n_ave, inputstepsarray)
-            y_value_std = get_value(lmp_path, y_name + "_std", n_ave, inputstepsarray)
-        if ifdivideNcount:
-            Ncount_value = get_value(lmp_path, 'Ncount', n_ave, inputstepsarray)
-        # scale factor
-        x_value = x_value/x_scale_factor
-        x_value_std = x_value_std/x_scale_factor
-        y_value = y_value/y_scale_factor
-        y_value_std = y_value_std/y_scale_factor
+    if y_name == "timestep":
+        y_value = inputstepsarray
+        y_value_std = 0
+    elif y_name == "time":
+        y_value = time_array
+        y_value_std = 0
+    else:
+        y_value = get_value(lmp_path, y_name, n_ave, inputstepsarray)
+        y_value_std = get_value(lmp_path, y_name + "_std", n_ave, inputstepsarray)
+    if ifdivideNcount:
+        Ncount_value = get_value(lmp_path, 'Ncount', n_ave, inputstepsarray)
+    # scale factor
+    x_value = x_value/x_scale_factor
+    x_value_std = x_value_std/x_scale_factor
+    y_value = y_value/y_scale_factor
+    y_value_std = y_value_std/y_scale_factor
 
-        # subfolder name
-        subfoldername = y_name + "_" + x_name + "/"
-        os.makedirs(dp.diagram_path + subfoldername, exist_ok=True)
-        if useerrorbar:
-            os.makedirs(dp.diagram_path + subfoldername + "errorbar/", exist_ok=True)
+    # subfolder name
+    subfoldername = y_name + "_" + x_name + "/"
+    if ifdivideNcount:
+        subfoldername = y_name + "_divideN_" + x_name + "/"
+    os.makedirs(diagram_path_add_nve + subfoldername, exist_ok=True)
+    if useerrorbar:
+        os.makedirs(diagram_path_add_nve + subfoldername + "errorbar/", exist_ok=True)
 
-        # plot ave_z velocity across y
-        fig, ax = plt.subplots()
-        # title
+    # plot ave_z velocity across y
+    fig, ax = plt.subplots()
+    # title
 
-        if x_scale_str is None:
-            x_label_str = x_name_label_in_figure
-        else:
-            x_label_str = x_name_label_in_figure + " (" + x_scale_str + ")"
-        ax.set_xlabel(x_label_str)
-        
-        if y_scale_str is None:
-            y_label_str = y_name_label_in_figure
-        else:
-            y_label_str = y_name_label_in_figure + " (" + y_scale_str + ")"
-        ax.set_ylabel(y_label_str)
-        if ifdivideNcount:
-            ax.set_ylabel(y_label_str + '/N')
-        
-        ax.set_xscale(x_scale)
-        ax.set_yscale(y_scale)
-        char = c_r_npyfilepath_coord_char[y_name]["coordinate_characteristic"]
-        Coord1 = load_coord(char, "Coord1")
-        Coord2 = load_coord(char, "Coord2")
-        x = Coord1/float(rr.logfile["dp"])
-        y = Coord2/float(rr.logfile["dp"])
-        maskstatic = (y-9) - (9-0.5)/(15.5-10.5)*(x-15.5) < 0
-        masknonstatic = (y-25) - (25-0.5)/(15.5-5)*(x-5) > 0
-        if ifmaskstatic:
-            maskstaticornot = maskstatic
-        if ifmasknonstatic:
-            maskstaticornot = masknonstatic
-        # legend_class: time, coord1, coord2
-        if legend_class == 'tc1c2':
-            for indexstep, step in enumerate(inputstepsarray):
-                for coord1_index in coord1_index_array:
-                    for coord2_index in coord2_index_array:
-                        strain = strain_from_rotate_start(step)
-                        label = ", ".join([
-                            r'$\gamma$' + "={:.2f}".format(strain),
-                            "y={:.1f} ({})".format(Coord1[coord1_index, coord2_index]/coord_scale, coord_scale_str),
-                            "z={:.1f} ({})".format(Coord2[coord1_index, coord2_index]/coord_scale, coord_scale_str),
-                        ])
-
-                        if x_name == "timestep" or x_name == "time" or x_name == "strain":
-                            x_value_plot = x_value[indexstep]
-                            x_value_std_plot = 0
-                        else:
-                            x_value_plot = x_value[indexstep, coord1_index, coord2_index]
-                            x_value_std_plot = x_value_std[indexstep, coord1_index, coord2_index]
-                        
-                        y_value_plot = y_value[indexstep, coord1_index, coord2_index]
-                        y_value_std_plot = y_value_std[indexstep, coord1_index, coord2_index]
-                        if ifdivideNcount:
-                            Ncount_value_plot = Ncount_value[indexstep, coord1_index, coord2_index]
-                            y_value_plot = y_value_plot/Ncount_value_plot
-                            y_value_std_plot = y_value_std_plot/Ncount_value_plot
-                        if useerrorbar:
-                            ax.errorbar(
-                                x_value_plot, y_value_plot, xerr=x_value_std_plot, yerr=y_value_std_plot,
-                                label=label,
-                                marker = ".",
-                                linestyle = 'None',
-                                markersize=12,
-                            )
-                        else:
-                            ax.plot(
-                                x_value_plot, y_value_plot,
-                                label=label,
-                                marker = ".",
-                                linestyle = 'None',
-                                markersize=12,
-                            )
-        elif legend_class == 'c1c2':
+    if x_scale_str is None:
+        x_label_str = x_name_label_in_figure
+    else:
+        x_label_str = x_name_label_in_figure + " (" + x_scale_str + ")"
+    ax.set_xlabel(x_label_str)
+    
+    if y_scale_str is None:
+        y_label_str = y_name_label_in_figure
+    else:
+        y_label_str = y_name_label_in_figure + " (" + y_scale_str + ")"
+    ax.set_ylabel(y_label_str)
+    if ifdivideNcount and y_label_str=="n_contact":
+        ax.set_ylabel("<Z>")
+    
+    ax.set_xscale(x_scale)
+    ax.set_yscale(y_scale)
+    char = c_r_npyfilepath_coord_char[y_name]["coordinate_characteristic"]
+    Coord1 = load_coord(lmp_path, char, "Coord1")
+    Coord2 = load_coord(lmp_path, char, "Coord2")
+    x = Coord1/float(rr.logfile["dp"])
+    y = Coord2/float(rr.logfile["dp"])
+    maskstatic = (y-9) - (9-0.5)/(15.5-10.5)*(x-15.5) < 0
+    masknonstatic = (y-25) - (25-0.5)/(15.5-5)*(x-5) > 0
+    if ifmaskstatic:
+        maskstaticornot = maskstatic
+    if ifmasknonstatic:
+        maskstaticornot = masknonstatic
+    # legend_class: time, coord1, coord2
+    if legend_class == 'tc1c2':
+        for indexstep, step in enumerate(inputstepsarray):
             for coord1_index in coord1_index_array:
                 for coord2_index in coord2_index_array:
-                    
-                    label=", ".join([
-                        "t={:.2f} to {:.2f} s".format(time_array[0], time_array[-1]),
+                    strain = strain_from_rotate_start(step)
+                    label = ", ".join([
+                        r'$\gamma$' + "={:.2f}".format(strain),
                         "y={:.1f} ({})".format(Coord1[coord1_index, coord2_index]/coord_scale, coord_scale_str),
                         "z={:.1f} ({})".format(Coord2[coord1_index, coord2_index]/coord_scale, coord_scale_str),
                     ])
 
                     if x_name == "timestep" or x_name == "time" or x_name == "strain":
-                        x_value_plot = x_value[:]
+                        x_value_plot = x_value[indexstep]
                         x_value_std_plot = 0
                     else:
-                        x_value_plot = x_value[:, coord1_index, coord2_index]
-                        x_value_std_plot = x_value_std[:, coord1_index, coord2_index]
+                        x_value_plot = x_value[indexstep, coord1_index, coord2_index]
+                        x_value_std_plot = x_value_std[indexstep, coord1_index, coord2_index]
                     
-                    y_value_plot = y_value[:, coord1_index, coord2_index]
-                    y_value_std_plot = y_value_std[:, coord1_index, coord2_index]
-                    
+                    y_value_plot = y_value[indexstep, coord1_index, coord2_index]
+                    y_value_std_plot = y_value_std[indexstep, coord1_index, coord2_index]
                     if ifdivideNcount:
-                        Ncount_value_plot = Ncount_value[:, coord1_index, coord2_index]
+                        Ncount_value_plot = Ncount_value[indexstep, coord1_index, coord2_index]
                         y_value_plot = y_value_plot/Ncount_value_plot
                         y_value_std_plot = y_value_std_plot/Ncount_value_plot
                     if useerrorbar:
@@ -1934,39 +1915,127 @@ def plot_auto(n_ave, lmp_path, stepsarraylist_for_1Dplot, stepsarraylist_for_2Dp
                             linestyle = 'None',
                             markersize=12,
                         )
-        elif legend_class == 'c1':
-            if coord2_index_array=='ave':
-                if ave_over_coord1:
-                    maskstaticornot_plot = maskstaticornot[coord1_index_array, :]
-                    aveNratio = np.sum(maskstaticornot_plot)/np.sum(np.zeros_like(maskstaticornot_plot)+1)
-                    if x_name == "timestep" or x_name == "time" or x_name == "strain":
-                        x_value_plot = x_value[:]
-                        x_value_std_plot = 0
-                    else:
-                        x_value_plot = x_value[:, coord1_index_array, :]
-                        x_value_std_plot = x_value_std[:, coord1_index_array, :]
-                        x_value_plot = np.nanmean(x_value_plot*maskstaticornot_plot, axis=(1,2))/aveNratio
-                        x_value_std_plot = np.nanmean(x_value_std_plot*maskstaticornot_plot, axis=(1,2))/aveNratio
-                    y_value_plot = y_value[:, coord1_index_array, :]
-                    y_value_std_plot = y_value_std[:, coord1_index_array, :]
-                    y_value_plot = np.nanmean(y_value_plot*maskstaticornot_plot, axis=(1,2))/aveNratio
-                    y_value_std_plot = np.nanmean(y_value_std_plot*maskstaticornot_plot, axis=(1,2))/aveNratio
-                    
-                    if ifdivideNcount:
-                        Ncount_value_plot = Ncount_value[:, coord1_index_array, :]
-                        Ncount_value_plot = np.nanmean(Ncount_value_plot*maskstaticornot_plot, axis=(1,2))
-                        y_value_plot = y_value_plot/Ncount_value_plot
-                        y_value_std_plot = y_value_std_plot/Ncount_value_plot
-                    ystring = "_".join(
-                        ["{:.1f}".format(Coord1[coord1_index, 0]/coord_scale) for coord1_index in coord1_index_array]
+    elif legend_class == 'c1c2':
+        for coord1_index in coord1_index_array:
+            for coord2_index in coord2_index_array:
+                strain1 = strain_from_rotate_start(inputstepsarray[0])
+                strain2 = strain_from_rotate_start(inputstepsarray[-1])
+                label=", ".join([
+                    r'$\gamma$' + "={:.2f} to {:.2f}".format(strain1, strain2),
+                    "y={:.1f} ({})".format(Coord1[coord1_index, coord2_index]/coord_scale, coord_scale_str),
+                    "z={:.1f} ({})".format(Coord2[coord1_index, coord2_index]/coord_scale, coord_scale_str),
+                ])
+
+                if x_name == "timestep" or x_name == "time" or x_name == "strain":
+                    x_value_plot = x_value[:]
+                    x_value_std_plot = 0
+                else:
+                    x_value_plot = x_value[:, coord1_index, coord2_index]
+                    x_value_std_plot = x_value_std[:, coord1_index, coord2_index]
+                
+                y_value_plot = y_value[:, coord1_index, coord2_index]
+                y_value_std_plot = y_value_std[:, coord1_index, coord2_index]
+                
+                if ifdivideNcount:
+                    Ncount_value_plot = Ncount_value[:, coord1_index, coord2_index]
+                    y_value_plot = y_value_plot/Ncount_value_plot
+                    y_value_std_plot = y_value_std_plot/Ncount_value_plot
+                if useerrorbar:
+                    ax.errorbar(
+                        x_value_plot, y_value_plot, xerr=x_value_std_plot, yerr=y_value_std_plot,
+                        label=label,
+                        marker = ".",
+                        linestyle = 'None',
+                        markersize=12,
                     )
+                else:
+                    ax.plot(
+                        x_value_plot, y_value_plot,
+                        label=label,
+                        marker = ".",
+                        linestyle = 'None',
+                        markersize=12,
+                    )
+    elif legend_class == 'c1':
+        if coord2_index_array=='ave':
+            if ave_over_coord1:
+                maskstaticornot_plot = maskstaticornot[coord1_index_array, :]
+                aveNratio = np.sum(maskstaticornot_plot)/np.sum(np.zeros_like(maskstaticornot_plot)+1)
+                if x_name == "timestep" or x_name == "time" or x_name == "strain":
+                    x_value_plot = x_value[:]
+                    x_value_std_plot = 0
+                else:
+                    x_value_plot = x_value[:, coord1_index_array, :]
+                    x_value_std_plot = x_value_std[:, coord1_index_array, :]
+                    x_value_plot = np.nanmean(x_value_plot*maskstaticornot_plot, axis=(1,2))/aveNratio
+                    x_value_std_plot = np.nanmean(x_value_std_plot*maskstaticornot_plot, axis=(1,2))/aveNratio
+                y_value_plot = y_value[:, coord1_index_array, :]
+                y_value_std_plot = y_value_std[:, coord1_index_array, :]
+                y_value_plot = np.nanmean(y_value_plot*maskstaticornot_plot, axis=(1,2))/aveNratio
+                y_value_std_plot = np.nanmean(y_value_std_plot*maskstaticornot_plot, axis=(1,2))/aveNratio
+                
+                if ifdivideNcount:
+                    Ncount_value_plot = Ncount_value[:, coord1_index_array, :]
+                    Ncount_value_plot = np.nanmean(Ncount_value_plot*maskstaticornot_plot, axis=(1,2))
+                    y_value_plot = y_value_plot/Ncount_value_plot
+                    y_value_std_plot = y_value_std_plot/Ncount_value_plot
+                ystring = "_".join(
+                    ["{:.1f}".format(Coord1[coord1_index, 0]/coord_scale) for coord1_index in coord1_index_array]
+                )
+                strain1 = strain_from_rotate_start(inputstepsarray[0])
+                strain2 = strain_from_rotate_start(inputstepsarray[-1])
+                label=", ".join([
+                    r'$\gamma$' + "={:.2f} to {:.2f}".format(strain1, strain2),
+                    "average y=",
+                    ystring,
+                    "({})".format(coord_scale_str),
+                    "z=average",
+                ])
+                if useerrorbar:
+                    ax.errorbar(
+                        x_value_plot, y_value_plot, xerr=x_value_std_plot, yerr=y_value_std_plot,
+                        label=label,
+                        marker = ".",
+                        linestyle = 'None',
+                        markersize=12,
+                    )
+                else:
+                    ax.plot(
+                        x_value_plot, y_value_plot,
+                        label=label,
+                        marker = ".",
+                        linestyle = 'None',
+                        markersize=12,
+                    )
+            else:
+                for coord1_index in coord1_index_array:
+                    strain1 = strain_from_rotate_start(inputstepsarray[0])
+                    strain2 = strain_from_rotate_start(inputstepsarray[-1])
                     label=", ".join([
-                        "t={:.2f} to {:.2f} s".format(time_array[0], time_array[-1]),
-                        "average y=",
-                        ystring,
-                        "({})".format(coord_scale_str),
+                        r'$\gamma$' + "={:.2f} to {:.2f}".format(strain1, strain2),
+                        "y={:.1f} ({})".format(Coord1[coord1_index, 0]/coord_scale, coord_scale_str),
                         "z=average",
                     ])
+                    maskstaticornot_plot = maskstaticornot[coord1_index, :]
+                    aveNratio = np.sum(maskstaticornot_plot)/np.sum(np.zeros_like(maskstaticornot_plot)+1)
+                    if x_name == "timestep" or x_name == "time" or x_name == "strain":
+                        x_value_plot = x_value[:]
+                        x_value_std_plot = 0
+                    else:
+                        x_value_plot = x_value[:, coord1_index, :]
+                        x_value_std_plot = x_value_std[:, coord1_index, :]
+                        #breakpoint()
+                        x_value_plot = np.nanmean(x_value_plot*maskstaticornot_plot, axis=1)/aveNratio
+                        x_value_std_plot = np.nanmean(x_value_std_plot*maskstaticornot_plot, axis=1)/aveNratio
+                    y_value_plot = y_value[:, coord1_index, :]
+                    y_value_std_plot = y_value_std[:, coord1_index, :]
+                    y_value_plot = np.nanmean(y_value_plot*maskstaticornot_plot, axis=1)/aveNratio
+                    y_value_std_plot = np.nanmean(y_value_std_plot*maskstaticornot_plot, axis=1)/aveNratio
+                    if ifdivideNcount:
+                        Ncount_value_plot = Ncount_value[:, coord1_index, :]
+                        Ncount_value_plot = np.nanmean(Ncount_value_plot*maskstaticornot_plot, axis=1)/aveNratio
+                        y_value_plot = y_value_plot/Ncount_value_plot
+                        y_value_std_plot = y_value_std_plot/Ncount_value_plot
                     if useerrorbar:
                         ax.errorbar(
                             x_value_plot, y_value_plot, xerr=x_value_std_plot, yerr=y_value_std_plot,
@@ -1983,177 +2052,84 @@ def plot_auto(n_ave, lmp_path, stepsarraylist_for_1Dplot, stepsarraylist_for_2Dp
                             linestyle = 'None',
                             markersize=12,
                         )
+    elif legend_class == 'c2':
+        if coord1_index_array=='ave':
+            if ave_over_coord2:
+                maskstaticornot_plot = maskstaticornot[:, coord2_index_array]
+                aveNratio = np.sum(maskstaticornot_plot)/np.sum(np.zeros_like(maskstaticornot_plot)+1)
+                if x_name == "timestep" or x_name == "time" or x_name == "strain":
+                    x_value_plot = x_value[:]
+                    x_value_std_plot = 0
                 else:
-                    for coord1_index in coord1_index_array:
-                        label=", ".join([
-                            "t={:.2f} to {:.2f} s".format(time_array[0], time_array[-1]),
-                            "y={:.1f} ({})".format(Coord1[coord1_index, 0]/coord_scale, coord_scale_str),
-                            "z=average",
-                        ])
-                        maskstaticornot_plot = maskstaticornot[coord1_index, :]
-                        aveNratio = np.sum(maskstaticornot_plot)/np.sum(np.zeros_like(maskstaticornot_plot)+1)
-                        if x_name == "timestep" or x_name == "time" or x_name == "strain":
-                            x_value_plot = x_value[:]
-                            x_value_std_plot = 0
-                        else:
-                            x_value_plot = x_value[:, coord1_index, :]
-                            x_value_std_plot = x_value_std[:, coord1_index, :]
-                            #breakpoint()
-                            x_value_plot = np.nanmean(x_value_plot*maskstaticornot_plot, axis=1)/aveNratio
-                            x_value_std_plot = np.nanmean(x_value_std_plot*maskstaticornot_plot, axis=1)/aveNratio
-                        y_value_plot = y_value[:, coord1_index, :]
-                        y_value_std_plot = y_value_std[:, coord1_index, :]
-                        y_value_plot = np.nanmean(y_value_plot*maskstaticornot_plot, axis=1)/aveNratio
-                        y_value_std_plot = np.nanmean(y_value_std_plot*maskstaticornot_plot, axis=1)/aveNratio
-                        if ifdivideNcount:
-                            Ncount_value_plot = Ncount_value[:, coord1_index, :]
-                            Ncount_value_plot = np.nanmean(Ncount_value_plot*maskstaticornot_plot, axis=1)/aveNratio
-                            y_value_plot = y_value_plot/Ncount_value_plot
-                            y_value_std_plot = y_value_std_plot/Ncount_value_plot
-                        if useerrorbar:
-                            ax.errorbar(
-                                x_value_plot, y_value_plot, xerr=x_value_std_plot, yerr=y_value_std_plot,
-                                label=label,
-                                marker = ".",
-                                linestyle = 'None',
-                                markersize=12,
-                            )
-                        else:
-                            ax.plot(
-                                x_value_plot, y_value_plot,
-                                label=label,
-                                marker = ".",
-                                linestyle = 'None',
-                                markersize=12,
-                            )
-        elif legend_class == 'c2':
-            if coord1_index_array=='ave':
-                if ave_over_coord2:
-                    maskstaticornot_plot = maskstaticornot[:, coord2_index_array]
-                    aveNratio = np.sum(maskstaticornot_plot)/np.sum(np.zeros_like(maskstaticornot_plot)+1)
-                    if x_name == "timestep" or x_name == "time" or x_name == "strain":
-                        x_value_plot = x_value[:]
-                        x_value_std_plot = 0
-                    else:
-                        x_value_plot = x_value[:, :, coord2_index_array]
-                        x_value_std_plot = x_value_std[:, :, coord2_index_array]
-                        x_value_plot = np.nanmean(x_value_plot*maskstaticornot_plot, axis=(1,2))/aveNratio
-                        x_value_std_plot = np.nanmean(x_value_std_plot*maskstaticornot_plot, axis=(1,2))/aveNratio
-                    y_value_plot = y_value[:, :, coord2_index_array]
-                    y_value_std_plot = y_value_std[:, :, coord2_index_array]
-                    y_value_plot = np.nanmean(y_value_plot*maskstaticornot_plot, axis=(1,2))/aveNratio
-                    y_value_std_plot = np.nanmean(y_value_std_plot*maskstaticornot_plot, axis=(1,2))/aveNratio
-                    if ifdivideNcount:
-                        Ncount_value_plot = Ncount_value[:, :, coord2_index_array]
-                        Ncount_value_plot = np.nanmean(Ncount_value_plot*maskstaticornot_plot, axis=(1,2))/aveNratio
-                        y_value_plot = y_value_plot/Ncount_value_plot
-                        y_value_std_plot = y_value_std_plot/Ncount_value_plot
-                    zstring = "_".join(
-                        ["{:.1f}".format(Coord2[0, coord2_index]/coord_scale) for coord2_index in coord2_index_array]
+                    x_value_plot = x_value[:, :, coord2_index_array]
+                    x_value_std_plot = x_value_std[:, :, coord2_index_array]
+                    x_value_plot = np.nanmean(x_value_plot*maskstaticornot_plot, axis=(1,2))/aveNratio
+                    x_value_std_plot = np.nanmean(x_value_std_plot*maskstaticornot_plot, axis=(1,2))/aveNratio
+                y_value_plot = y_value[:, :, coord2_index_array]
+                y_value_std_plot = y_value_std[:, :, coord2_index_array]
+                y_value_plot = np.nanmean(y_value_plot*maskstaticornot_plot, axis=(1,2))/aveNratio
+                y_value_std_plot = np.nanmean(y_value_std_plot*maskstaticornot_plot, axis=(1,2))/aveNratio
+                if ifdivideNcount:
+                    Ncount_value_plot = Ncount_value[:, :, coord2_index_array]
+                    Ncount_value_plot = np.nanmean(Ncount_value_plot*maskstaticornot_plot, axis=(1,2))/aveNratio
+                    y_value_plot = y_value_plot/Ncount_value_plot
+                    y_value_std_plot = y_value_std_plot/Ncount_value_plot
+                zstring = "_".join(
+                    ["{:.1f}".format(Coord2[0, coord2_index]/coord_scale) for coord2_index in coord2_index_array]
+                )
+                strain1 = strain_from_rotate_start(inputstepsarray[0])
+                strain2 = strain_from_rotate_start(inputstepsarray[-1])
+                label=", ".join([
+                    r'$\gamma$' + "={:.2f} to {:.2f}".format(strain1, strain2),
+                    "y=average",
+                    "average z=",
+                    zstring,
+                    "({})".format(coord_scale_str),
+                ])
+                if useerrorbar:
+                    ax.errorbar(
+                        x_value_plot, y_value_plot, xerr=x_value_std_plot, yerr=y_value_std_plot,
+                        label=label,
+                        marker = ".",
+                        linestyle = 'None',
+                        markersize=12,
                     )
+                else:
+                    ax.plot(
+                        x_value_plot, y_value_plot,
+                        label=label,
+                        marker = ".",
+                        linestyle = 'None',
+                        markersize=12,
+                    )
+            else:
+                for coord2_index in coord2_index_array:
+                    strain1 = strain_from_rotate_start(inputstepsarray[0])
+                    strain2 = strain_from_rotate_start(inputstepsarray[-1])
                     label=", ".join([
-                        "t={:.2f} to {:.2f} s".format(time_array[0], time_array[-1]),
+                        r'$\gamma$' + "={:.2f} to {:.2f}".format(strain1, strain2),
                         "y=average",
-                        "average z=",
-                        zstring,
-                        "({})".format(coord_scale_str),
+                        "z={:.1f} ({})".format(Coord2[0, coord2_index]/coord_scale, coord_scale_str),
                     ])
-                    if useerrorbar:
-                        ax.errorbar(
-                            x_value_plot, y_value_plot, xerr=x_value_std_plot, yerr=y_value_std_plot,
-                            label=label,
-                            marker = ".",
-                            linestyle = 'None',
-                            markersize=12,
-                        )
-                    else:
-                        ax.plot(
-                            x_value_plot, y_value_plot,
-                            label=label,
-                            marker = ".",
-                            linestyle = 'None',
-                            markersize=12,
-                        )
-                else:
-                    for coord2_index in coord2_index_array:
-                        
-                        label=", ".join([
-                            "t={:.2f} to {:.2f} s".format(time_array[0], time_array[-1]),
-                            "y=average",
-                            "z={:.1f} ({})".format(Coord2[0, coord2_index]/coord_scale, coord_scale_str),
-                        ])
-                        maskstaticornot_plot = maskstaticornot[:, coord2_index]
-                        aveNratio = np.sum(maskstaticornot_plot)/np.sum(np.zeros_like(maskstaticornot_plot)+1)
-                        if x_name == "timestep" or x_name == "time" or x_name == "strain":
-                            x_value_plot = x_value[:]
-                            x_value_std_plot = 0
-                        else:
-                            x_value_plot = x_value[:, :, coord2_index]
-                            x_value_std_plot = x_value_std[:, :, coord2_index]
-                            x_value_plot = np.nanmean(x_value_plot*maskstaticornot_plot, axis=1)/aveNratio
-                            x_value_std_plot = np.nanmean(x_value_std_plot*maskstaticornot_plot, axis=1)/aveNratio
-                        y_value_plot = y_value[:, :, coord2_index]
-                        y_value_std_plot = y_value_std[:, :, coord2_index]
-                        y_value_plot = np.nanmean(y_value_plot*maskstaticornot_plot, axis=1)/aveNratio
-                        y_value_std_plot = np.nanmean(y_value_std_plot*maskstaticornot_plot, axis=1)/aveNratio
-                        if ifdivideNcount:
-                            Ncount_value_plot = Ncount_value[:, :, coord2_index]
-                            Ncount_value_plot = np.nanmean(Ncount_value_plot*maskstaticornot_plot, axis=1)/aveNratio
-                            y_value_plot = y_value_plot/Ncount_value_plot
-                            y_value_std_plot = y_value_std_plot/Ncount_value_plot
-                        if useerrorbar:
-                            ax.errorbar(
-                                x_value_plot, y_value_plot, xerr=x_value_std_plot, yerr=y_value_std_plot,
-                                label=label,
-                                marker = ".",
-                                linestyle = 'None',
-                                markersize=12,
-                            )
-                        else:
-                            ax.plot(
-                                x_value_plot, y_value_plot,
-                                label=label,
-                                marker = ".",
-                                linestyle = 'None',
-                                markersize=12,
-                            )
-        elif legend_class == None:
-            if ave_over_coord1:
-                if ave_over_coord2:
-                    maskstaticornot_plot = maskstaticornot[coord1_index_array, :][:, coord2_index_array]
+                    maskstaticornot_plot = maskstaticornot[:, coord2_index]
                     aveNratio = np.sum(maskstaticornot_plot)/np.sum(np.zeros_like(maskstaticornot_plot)+1)
                     if x_name == "timestep" or x_name == "time" or x_name == "strain":
                         x_value_plot = x_value[:]
                         x_value_std_plot = 0
                     else:
-                        x_value_plot = x_value[:, coord1_index_array, :][:, :, coord2_index_array]
-                        x_value_std_plot = x_value_std[:, coord1_index_array, :][:, :, coord2_index_array]
-                        x_value_plot = np.nanmean(x_value_plot*maskstaticornot_plot, axis=(1,2))/aveNratio
-                        x_value_std_plot = np.nanmean(x_value_std_plot*maskstaticornot_plot, axis=(1,2))/aveNratio
-                    y_value_plot = y_value[:, coord1_index_array, :][:, :, coord2_index_array]
-                    y_value_std_plot = y_value_std[:, coord1_index_array, :][:, :, coord2_index_array]
-                    y_value_plot = np.nanmean(y_value_plot*maskstaticornot_plot, axis=(1,2))/aveNratio
-                    y_value_std_plot = np.nanmean(y_value_std_plot*maskstaticornot_plot, axis=(1,2))/aveNratio
+                        x_value_plot = x_value[:, :, coord2_index]
+                        x_value_std_plot = x_value_std[:, :, coord2_index]
+                        x_value_plot = np.nanmean(x_value_plot*maskstaticornot_plot, axis=1)/aveNratio
+                        x_value_std_plot = np.nanmean(x_value_std_plot*maskstaticornot_plot, axis=1)/aveNratio
+                    y_value_plot = y_value[:, :, coord2_index]
+                    y_value_std_plot = y_value_std[:, :, coord2_index]
+                    y_value_plot = np.nanmean(y_value_plot*maskstaticornot_plot, axis=1)/aveNratio
+                    y_value_std_plot = np.nanmean(y_value_std_plot*maskstaticornot_plot, axis=1)/aveNratio
                     if ifdivideNcount:
-                        Ncount_value_plot = Ncount_value[:, coord1_index_array, :][:, :, coord2_index_array]
-                        Ncount_value_plot = np.nanmean(Ncount_value_plot*maskstaticornot_plot, axis=(1,2))/aveNratio
+                        Ncount_value_plot = Ncount_value[:, :, coord2_index]
+                        Ncount_value_plot = np.nanmean(Ncount_value_plot*maskstaticornot_plot, axis=1)/aveNratio
                         y_value_plot = y_value_plot/Ncount_value_plot
                         y_value_std_plot = y_value_std_plot/Ncount_value_plot
-                    zstring = "_".join(
-                        ["{:.1f}".format(Coord2[0, coord2_index]/coord_scale) for coord2_index in coord2_index_array]
-                    )
-                    ystring = "_".join(
-                        ["{:.1f}".format(Coord1[coord1_index, 0]/coord_scale) for coord1_index in coord1_index_array]
-                    )
-                    label=", ".join([
-                        "t={:.2f} to {:.2f} s".format(time_array[0], time_array[-1]),
-                        "average y=",
-                        ystring,
-                        "average z=",
-                        zstring,
-                        "({})".format(coord_scale_str),
-                    ])
-                    
                     if useerrorbar:
                         ax.errorbar(
                             x_value_plot, y_value_plot, xerr=x_value_std_plot, yerr=y_value_std_plot,
@@ -2170,17 +2146,85 @@ def plot_auto(n_ave, lmp_path, stepsarraylist_for_1Dplot, stepsarraylist_for_2Dp
                             linestyle = 'None',
                             markersize=12,
                         )
-        # Shrink current axis by 20%
-        box = ax.get_position()
-        ax.set_position([box.x0, box.y0, box.width * 0.6, box.height])
+    elif legend_class == None:
+        if ave_over_coord1:
+            if ave_over_coord2:
+                maskstaticornot_plot = maskstaticornot[coord1_index_array, :][:, coord2_index_array]
+                aveNratio = np.sum(maskstaticornot_plot)/np.sum(np.zeros_like(maskstaticornot_plot)+1)
+                if x_name == "timestep" or x_name == "time" or x_name == "strain":
+                    x_value_plot = x_value[:]
+                    x_value_std_plot = 0
+                else:
+                    x_value_plot = x_value[:, coord1_index_array, :][:, :, coord2_index_array]
+                    x_value_std_plot = x_value_std[:, coord1_index_array, :][:, :, coord2_index_array]
+                    x_value_plot = np.nanmean(x_value_plot*maskstaticornot_plot, axis=(1,2))/aveNratio
+                    x_value_std_plot = np.nanmean(x_value_std_plot*maskstaticornot_plot, axis=(1,2))/aveNratio
+                y_value_plot = y_value[:, coord1_index_array, :][:, :, coord2_index_array]
+                y_value_std_plot = y_value_std[:, coord1_index_array, :][:, :, coord2_index_array]
+                y_value_plot = np.nanmean(y_value_plot*maskstaticornot_plot, axis=(1,2))/aveNratio
+                y_value_std_plot = np.nanmean(y_value_std_plot*maskstaticornot_plot, axis=(1,2))/aveNratio
+                if ifdivideNcount:
+                    Ncount_value_plot = Ncount_value[:, coord1_index_array, :][:, :, coord2_index_array]
+                    Ncount_value_plot = np.nanmean(Ncount_value_plot*maskstaticornot_plot, axis=(1,2))/aveNratio
+                    y_value_plot = y_value_plot/Ncount_value_plot
+                    y_value_std_plot = y_value_std_plot/Ncount_value_plot
+                zstring = "_".join(
+                    ["{:.1f}".format(Coord2[0, coord2_index]/coord_scale) for coord2_index in coord2_index_array]
+                )
+                ystring = "_".join(
+                    ["{:.1f}".format(Coord1[coord1_index, 0]/coord_scale) for coord1_index in coord1_index_array]
+                )
+                strain1 = strain_from_rotate_start(inputstepsarray[0])
+                strain2 = strain_from_rotate_start(inputstepsarray[-1])
+                label=", ".join([
+                    r'$\gamma$' + "={:.2f} to {:.2f}".format(strain1, strain2),
+                    "average y=",
+                    ystring,
+                    "average z=",
+                    zstring,
+                    "({})".format(coord_scale_str),
+                ])
+                
+                if useerrorbar:
+                    ax.errorbar(
+                        x_value_plot, y_value_plot, xerr=x_value_std_plot, yerr=y_value_std_plot,
+                        label=label,
+                        marker = ".",
+                        linestyle = 'None',
+                        markersize=12,
+                    )
+                else:
+                    ax.plot(
+                        x_value_plot, y_value_plot,
+                        label=label,
+                        marker = ".",
+                        linestyle = 'None',
+                        markersize=12,
+                    )
+    # Shrink current axis by 20%
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0, box.width * 0.6, box.height])
 
-        ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
-        plt.setp(ax.xaxis.get_minorticklabels(), rotation=30)
-        plt.setp(ax.get_xticklabels(), rotation=30)
-        if useerrorbar:
-            fig.savefig(
+    ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
+    plt.setp(ax.xaxis.get_minorticklabels(), rotation=30)
+    plt.setp(ax.get_xticklabels(), rotation=30)
+    if useerrorbar:
+        fig.savefig(
+        "_".join([
+            diagram_path_add_nve + subfoldername + "errorbar/" + "mask_" + 'step',
+            transfer_time_to_str(inputstepsarray),
+            'coord1',
+            transfer_coor_to_str(coord1_index_array, ave_over_coord1),
+            'coord2',
+            transfer_coor_to_str(coord2_index_array, ave_over_coord2),
+            ".png",
+        ]),
+        format="png",
+        )
+    else:
+        fig.savefig(
             "_".join([
-                dp.diagram_path + subfoldername + "errorbar/" + "mask_" + 'step',
+                diagram_path_add_nve + subfoldername + "mask_" + 'step',
                 transfer_time_to_str(inputstepsarray),
                 'coord1',
                 transfer_coor_to_str(coord1_index_array, ave_over_coord1),
@@ -2189,161 +2233,120 @@ def plot_auto(n_ave, lmp_path, stepsarraylist_for_1Dplot, stepsarraylist_for_2Dp
                 ".png",
             ]),
             format="png",
-            )
-        else:
-            fig.savefig(
-                "_".join([
-                    dp.diagram_path + subfoldername + "mask_" + 'step',
-                    transfer_time_to_str(inputstepsarray),
-                    'coord1',
-                    transfer_coor_to_str(coord1_index_array, ave_over_coord1),
-                    'coord2',
-                    transfer_coor_to_str(coord2_index_array, ave_over_coord2),
-                    ".png",
-                ]),
-                format="png",
-            )
-        # close figure after save
-        plt.close('all')
+        )
+    # close figure after save
+    plt.close('all')
 
 
 
-    def plot_1D_for_chunk1D_near_wall(
-            n_ave, x_name, y_name, inputstepsarray, coord_index_array,
-            figure_class=None, legend_class=None, spaceave=None,
-            x_scale_factor=1, x_scale_str=None, y_scale_factor=1, y_scale_str=None,
-            x_scale = 'linear', y_scale = 'linear',
-            useerrorbar = True,
-            ifsum = False,
-        ):
-        # str for variable used in figure label legend
-        x_name_label_in_figure = transfer_v_name_to_label_str_in_figure(x_name).replace('_middle', '')
-        y_name_label_in_figure = transfer_v_name_to_label_str_in_figure(y_name).replace('_middle', '')
-        # legend_class: time, coord
-        # spaceave: coord
+def plot_1D_for_chunk1D_near_wall(
+        lmp_path,
+        n_ave, x_name, y_name, inputstepsarray, coord_index_array,
+        figure_class=None, legend_class=None, spaceave=None,
+        x_scale_factor=1, x_scale_str=None, y_scale_factor=1, y_scale_str=None,
+        x_scale = 'linear', y_scale = 'linear',
+        useerrorbar = True,
+        ifsum = False,
+    ):
+    diagram_path_add_nve = dp.diagram_path + "n_ave_" + str(n_ave) + "/"
+    # str for variable used in figure label legend
+    x_name_label_in_figure = transfer_v_name_to_label_str_in_figure(x_name).replace('_middle', '')
+    y_name_label_in_figure = transfer_v_name_to_label_str_in_figure(y_name).replace('_middle', '')
+    # legend_class: time, coord
+    # spaceave: coord
 
-        time_array = time_from_start_rotate(inputstepsarray)
-        if x_name == "timestep":
-            x_value = inputstepsarray
-            x_value_std = 0
-        elif x_name == "time":
-            x_value = time_array
-            x_value_std = 0
-        elif x_name == "strain":
-            x_value = strain_from_rotate_start(inputstepsarray)
-            x_value_std = 0
-        else:
-            x_value = get_value(lmp_path, x_name, n_ave, inputstepsarray)
-            x_value_std = get_value(lmp_path, x_name + "_std", n_ave, inputstepsarray)
+    time_array = time_from_start_rotate(inputstepsarray)
+    if x_name == "timestep":
+        x_value = inputstepsarray
+        x_value_std = 0
+    elif x_name == "time":
+        x_value = time_array
+        x_value_std = 0
+    elif x_name == "strain":
+        x_value = strain_from_rotate_start(inputstepsarray)
+        x_value_std = 0
+    else:
+        x_value = get_value(lmp_path, x_name, n_ave, inputstepsarray)
+        x_value_std = get_value(lmp_path, x_name + "_std", n_ave, inputstepsarray)
 
-        if y_name == "timestep":
-            y_value = inputstepsarray
-            y_value_std = 0
-        elif y_name == "time":
-            y_value = time_array
-            y_value_std = 0
-        else:
-            y_value = get_value(lmp_path, y_name, n_ave, inputstepsarray)
-            y_value_std = get_value(lmp_path, y_name + "_std", n_ave, inputstepsarray)
+    if y_name == "timestep":
+        y_value = inputstepsarray
+        y_value_std = 0
+    elif y_name == "time":
+        y_value = time_array
+        y_value_std = 0
+    else:
+        y_value = get_value(lmp_path, y_name, n_ave, inputstepsarray)
+        y_value_std = get_value(lmp_path, y_name + "_std", n_ave, inputstepsarray)
 
-        # scale factor
-        x_value = x_value/x_scale_factor
-        x_value_std = x_value_std/x_scale_factor
-        y_value = y_value/y_scale_factor
-        y_value_std = y_value_std/y_scale_factor
+    # scale factor
+    x_value = x_value/x_scale_factor
+    x_value_std = x_value_std/x_scale_factor
+    y_value = y_value/y_scale_factor
+    y_value_std = y_value_std/y_scale_factor
 
-        # subfolder name
-        subfoldername = y_name + "_" + x_name + "/"
-        os.makedirs(dp.diagram_path + subfoldername, exist_ok=True)
-        if useerrorbar:
-            os.makedirs(dp.diagram_path + subfoldername + "errorbar/", exist_ok=True)
+    # subfolder name
+    subfoldername = y_name + "_" + x_name + "/"
+    os.makedirs(diagram_path_add_nve + subfoldername, exist_ok=True)
+    if useerrorbar:
+        os.makedirs(diagram_path_add_nve + subfoldername + "errorbar/", exist_ok=True)
 
-        # plot ave_z velocity across y
-        fig, ax = plt.subplots()
-        # title
-        
-        
-        if x_scale_str is None:
-            x_label_str = x_name_label_in_figure
-        else:
-            x_label_str = x_name_label_in_figure + " (" + x_scale_str + ")"
-        ax.set_xlabel(x_label_str)
-        if y_scale_str is None:
-            y_label_str = y_name_label_in_figure
-        else:
-            y_label_str = y_name_label_in_figure + " (" + y_scale_str + ")"
-        ax.set_ylabel(y_label_str)
-        
-        ax.set_xscale(x_scale)
-        ax.set_yscale(y_scale)
-        char = c_r_npyfilepath_coord_char[y_name]["coordinate_characteristic"]
-        # check if only 1 coord
-        if len(c_r_coord_npyfilepath[char].keys()) == 1:
-            pass
-        else:
-            print("the coord near wall is not 1")
-            breakpoint()
-            sys.exit()
-        Coord_str = list(c_r_coord_npyfilepath[char].keys())[0]
-        Coord = load_coord(char, Coord_str)
-        if Coord_str == "Coord1":
-            coord_str_in_plot = "y"
-        elif Coord_str == "Coord2":
-            coord_str_in_plot = "z"
-        else:
-            sys.exit("not y not z")
-        # legend_class: time, coord1, coord2
-        if ifsum==False:
-            if legend_class == 'tc':
-                for indexstep, step in enumerate(inputstepsarray):
-                    for coord_index in coord_index_array:
-                        time = time_from_start_rotate(step)
-                        label = ", ".join([
-                            "t={:.2f} s".format(time),
-                            coord_str_in_plot + "={:.1f} ({})".format(Coord[coord_index]/coord_scale, coord_scale_str),
-                        ])
-
-                        if x_name == "timestep" or x_name == "time" or x_name == "strain":
-                            x_value_plot = x_value[indexstep]
-                            x_value_std_plot = 0
-                        else:
-                            x_value_plot = x_value[indexstep, coord_index]
-                            x_value_std_plot = x_value_std[indexstep, coord_index]
-                        
-                        y_value_plot = y_value[indexstep, coord_index]
-                        y_value_std_plot = y_value_std[indexstep, coord_index]
-                        
-                        if useerrorbar:
-                            ax.errorbar(
-                                x_value_plot, y_value_plot, xerr=x_value_std_plot, yerr=y_value_std_plot,
-                                label=label,
-                                marker = ".",
-                                linestyle = 'None',
-                                markersize=12,
-                            )
-                        else:
-                            ax.plot(
-                                x_value_plot, y_value_plot,
-                                label=label,
-                                marker = ".",
-                                linestyle = 'None',
-                                markersize=12,
-                            )
-            elif legend_class == 'c':
-                for coord_index in coord_index_array:                    
-                    label=", ".join([
-                        "t={:.2f} to {:.2f} s".format(time_array[0], time_array[-1]),
+    # plot ave_z velocity across y
+    fig, ax = plt.subplots()
+    # title
+    
+    
+    if x_scale_str is None:
+        x_label_str = x_name_label_in_figure
+    else:
+        x_label_str = x_name_label_in_figure + " (" + x_scale_str + ")"
+    ax.set_xlabel(x_label_str)
+    if y_scale_str is None:
+        y_label_str = y_name_label_in_figure
+    else:
+        y_label_str = y_name_label_in_figure + " (" + y_scale_str + ")"
+    ax.set_ylabel(y_label_str)
+    
+    ax.set_xscale(x_scale)
+    ax.set_yscale(y_scale)
+    char = c_r_npyfilepath_coord_char[y_name]["coordinate_characteristic"]
+    # check if only 1 coord
+    if len(c_r_coord_npyfilepath[char].keys()) == 1:
+        pass
+    else:
+        print("the coord near wall is not 1")
+        breakpoint()
+        sys.exit()
+    Coord_str = list(c_r_coord_npyfilepath[char].keys())[0]
+    Coord = load_coord(lmp_path, char, Coord_str)
+    if Coord_str == "Coord1":
+        coord_str_in_plot = "y"
+    elif Coord_str == "Coord2":
+        coord_str_in_plot = "z"
+    else:
+        sys.exit("not y not z")
+    # legend_class: time, coord1, coord2
+    if ifsum==False:
+        if legend_class == 'tc':
+            for indexstep, step in enumerate(inputstepsarray):
+                for coord_index in coord_index_array:
+                    time = time_from_start_rotate(step)
+                    strain = strain_from_rotate_start(time)
+                    label = ", ".join([
+                        r'$\gamma$' + "={:.2f}".format(strain),
                         coord_str_in_plot + "={:.1f} ({})".format(Coord[coord_index]/coord_scale, coord_scale_str),
                     ])
+
                     if x_name == "timestep" or x_name == "time" or x_name == "strain":
-                        x_value_plot = x_value[:]
+                        x_value_plot = x_value[indexstep]
                         x_value_std_plot = 0
                     else:
-                        x_value_plot = x_value[:, coord_index]
-                        x_value_std_plot = x_value_std[:, coord_index]
+                        x_value_plot = x_value[indexstep, coord_index]
+                        x_value_std_plot = x_value_std[indexstep, coord_index]
                     
-                    y_value_plot = y_value[:, coord_index]
-                    y_value_std_plot = y_value_std[:, coord_index]
+                    y_value_plot = y_value[indexstep, coord_index]
+                    y_value_std_plot = y_value_std[indexstep, coord_index]
+                    
                     if useerrorbar:
                         ax.errorbar(
                             x_value_plot, y_value_plot, xerr=x_value_std_plot, yerr=y_value_std_plot,
@@ -2360,43 +2363,89 @@ def plot_auto(n_ave, lmp_path, stepsarraylist_for_1Dplot, stepsarraylist_for_2Dp
                             linestyle = 'None',
                             markersize=12,
                         )
+        elif legend_class == 'c':
+            for coord_index in coord_index_array:                    
+                strain1 = strain_from_rotate_start(inputstepsarray[0])
+                strain2 = strain_from_rotate_start(inputstepsarray[-1])
+                label=", ".join([
+                    r'$\gamma$' + "={:.2f} to {:.2f}".format(strain1, strain2),
+                    coord_str_in_plot + "={:.1f} ({})".format(Coord[coord_index]/coord_scale, coord_scale_str),
+                ])
+                if x_name == "timestep" or x_name == "time" or x_name == "strain":
+                    x_value_plot = x_value[:]
+                    x_value_std_plot = 0
+                else:
+                    x_value_plot = x_value[:, coord_index]
+                    x_value_std_plot = x_value_std[:, coord_index]
+                
+                y_value_plot = y_value[:, coord_index]
+                y_value_std_plot = y_value_std[:, coord_index]
+                if useerrorbar:
+                    ax.errorbar(
+                        x_value_plot, y_value_plot, xerr=x_value_std_plot, yerr=y_value_std_plot,
+                        label=label,
+                        marker = ".",
+                        linestyle = 'None',
+                        markersize=12,
+                    )
+                else:
+                    ax.plot(
+                        x_value_plot, y_value_plot,
+                        label=label,
+                        marker = ".",
+                        linestyle = 'None',
+                        markersize=12,
+                    )
+    else:
+        strain1 = strain_from_rotate_start(inputstepsarray[0])
+        strain2 = strain_from_rotate_start(inputstepsarray[-1])
+        label=", ".join([
+            r'$\gamma$' + "={:.2f} to {:.2f}".format(strain1, strain2),
+        ])
+        if x_name == "timestep" or x_name == "time" or x_name == "strain":
+            x_value_plot = x_value[:]
+            x_value_std_plot = 0
         else:
-            label=", ".join([
-                "t={:.2f} to {:.2f} s".format(time_array[0], time_array[-1]),
-            ])
-            if x_name == "timestep" or x_name == "time" or x_name == "strain":
-                x_value_plot = x_value[:]
-                x_value_std_plot = 0
-            else:
-                x_value_plot = x_value[:, :]
-                x_value_std_plot = x_value_std[:, :]
-                x_value_plot = np.average(x_value_plot, axis=1)
-            
-            y_value_plot = y_value[:, :]
-            y_value_std_plot = y_value_std[:, :]
-            
-            y_value_plot = np.average(y_value_plot, axis=1)
-            ax.plot(
-                x_value_plot, y_value_plot,
-                label=label,
-                marker = ".",
-                linestyle = 'None',
-                markersize=12,
-            )
+            x_value_plot = x_value[:, :]
+            x_value_std_plot = x_value_std[:, :]
+            x_value_plot = np.average(x_value_plot, axis=1)
         
-        # Shrink current axis by 20%
-        box = ax.get_position()
-        ax.set_position([box.x0, box.y0, box.width * 0.6, box.height])
+        y_value_plot = y_value[:, :]
+        y_value_std_plot = y_value_std[:, :]
+        
+        y_value_plot = np.average(y_value_plot, axis=1)
+        ax.plot(
+            x_value_plot, y_value_plot,
+            label=label,
+            marker = ".",
+            linestyle = 'None',
+            markersize=12,
+        )
+    
+    # Shrink current axis by 20%
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0, box.width * 0.6, box.height])
 
-        ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
+    ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
 
-        plt.setp(ax.xaxis.get_minorticklabels(), rotation=30)
-        plt.setp(ax.get_xticklabels(), rotation=30)
-        if ifsum==False:
-            if useerrorbar:
-                fig.savefig(
+    plt.setp(ax.xaxis.get_minorticklabels(), rotation=30)
+    plt.setp(ax.get_xticklabels(), rotation=30)
+    if ifsum==False:
+        if useerrorbar:
+            fig.savefig(
+            "_".join([
+                diagram_path_add_nve + subfoldername + "errorbar/step",
+                transfer_time_to_str(inputstepsarray),
+                Coord_str,
+                transfer_coor_to_str(coord_index_array),
+                ".png",
+            ]),
+            format="png",
+            )
+        else:
+            fig.savefig(
                 "_".join([
-                    dp.diagram_path + subfoldername + "errorbar/step",
+                    diagram_path_add_nve + subfoldername + 'step',
                     transfer_time_to_str(inputstepsarray),
                     Coord_str,
                     transfer_coor_to_str(coord_index_array),
@@ -2404,83 +2453,181 @@ def plot_auto(n_ave, lmp_path, stepsarraylist_for_1Dplot, stepsarraylist_for_2Dp
                 ]),
                 format="png",
                 )
-            else:
-                fig.savefig(
-                    "_".join([
-                        dp.diagram_path + subfoldername + 'step',
-                        transfer_time_to_str(inputstepsarray),
-                        Coord_str,
-                        transfer_coor_to_str(coord_index_array),
-                        ".png",
-                    ]),
-                    format="png",
-                    )
+    else:
+        fig.savefig(
+            "_".join([
+                diagram_path_add_nve + subfoldername + 'step',
+                transfer_time_to_str(inputstepsarray),
+                ".png",
+            ]),
+            format="png",
+        )
+    # close figure after save
+    plt.close('all')
+
+def plot_quiver_from_chunk2D(
+        lmp_path,
+        n_ave, x_name, y_name, inputstepsarray,
+        spaceave=None,
+        x_scale_factor=1, x_scale_str=None, y_scale_factor=1, y_scale_str=None,
+        quiver_scale=0.1, label_scale=0.2,
+        ifloglength=False,
+        logvaluemin=10**-4,
+        valueminus=0,
+        ifplotseparateupdown=False,
+        quiver_scale_up=0.1, label_scale_up=0.2,
+        quiver_scale_down=0.1, label_scale_down=0.2,
+        ifstreamplot=True,
+        ifcontour=True,
+        contour_norm="linear",
+        contour_v_min_max="constant", # or "min_to_max",
+        vmin=-10, vmax=10,
+    ):
+    diagram_path_add_nve = dp.diagram_path + "n_ave_" + str(n_ave) + "/"
+    if ifloglength:
+        quiver_scale = np.log10(quiver_scale/logvaluemin)
+        label_scale = np.log10(label_scale/logvaluemin)
+        quiver_scale_up = np.log10(quiver_scale_up/logvaluemin)
+        label_scale_up = np.log10(label_scale_up/logvaluemin)
+        quiver_scale_down = np.log10(quiver_scale_down/logvaluemin)
+        label_scale_down = np.log10(label_scale_down/logvaluemin)
+    # str for variable used in figure label legend
+    x_name_label_in_figure = transfer_v_name_to_label_str_in_figure(x_name).replace('_middle', '')
+    y_name_label_in_figure = transfer_v_name_to_label_str_in_figure(y_name).replace('_middle', '')
+    # spaceave: coord1, coord2
+    time_array = time_from_start_rotate(inputstepsarray)
+    
+    x_value = get_value(lmp_path, x_name, n_ave, inputstepsarray)
+    y_value = get_value(lmp_path, y_name, n_ave, inputstepsarray)
+    mask = x_value>0.1
+    x_value[mask] = x_value[mask] - valueminus
+    mask = y_value>0.1
+    y_value[mask] = y_value[mask] - valueminus
+    # scale factor
+    x_value = x_value/x_scale_factor
+    y_value = y_value/y_scale_factor
+
+    # subfolder name
+    subfoldername = y_name + "_" + x_name + "/"
+    os.makedirs(diagram_path_add_nve + subfoldername, exist_ok=True)
+    os.makedirs(diagram_path_add_nve + subfoldername + "streamplot/", exist_ok=True)
+    if ifplotseparateupdown:
+        os.makedirs(diagram_path_add_nve + subfoldername + "up/", exist_ok=True)
+        os.makedirs(diagram_path_add_nve + subfoldername + "down/", exist_ok=True)
+    if ifloglength:
+        os.makedirs(diagram_path_add_nve + subfoldername + "log/", exist_ok=True)
+        if ifplotseparateupdown:
+            os.makedirs(diagram_path_add_nve + subfoldername + "log/" + "up/", exist_ok=True)
+            os.makedirs(diagram_path_add_nve + subfoldername + "log/" + "down/", exist_ok=True)
+    char = c_r_npyfilepath_coord_char[y_name]["coordinate_characteristic"]
+    Coord1 = load_coord(lmp_path, char, "Coord1")
+    Coord2 = load_coord(lmp_path, char, "Coord2")
+    # plot quiver vector field
+    for indexstep, step in enumerate(inputstepsarray):
+        x_value_plot = x_value[indexstep]
+        y_value_plot = y_value[indexstep]
+        # plot ave_z velocity across y
+        fig, ax = plt.subplots()
+        
+        # title
+
+        if x_scale_str is None:
+            x_label_str = x_name_label_in_figure
         else:
+            x_label_str = x_name_label_in_figure + " (" + x_scale_str + ")"
+        ax.set_xlabel(x_label_str)
+        
+        if y_scale_str is None:
+            y_label_str = y_name_label_in_figure
+        else:
+            y_label_str = y_name_label_in_figure + " (" + y_scale_str + ")"
+        ax.set_ylabel(y_label_str)            
+        # plot
+        if ifloglength:
+            length = (x_value_plot**2 + y_value_plot**2)**0.5
+            masktolog = (length>=logvaluemin)
+            length_log = np.copy(length)
+            length_log[masktolog] = 1+logvaluemin + np.log10(length[masktolog]/logvaluemin)
+            #breakpoint()
+            x_value_plot_log = length_log*x_value_plot/length
+            y_value_plot_log = length_log*y_value_plot/length
+            Q = ax.quiver(
+                Coord1/coord_scale, Coord2/coord_scale, x_value_plot_log, y_value_plot_log,
+                units='width',angles='xy', scale_units='xy', scale=quiver_scale,
+                cmap='hsv',
+            )
+        else:
+            Q = ax.quiver(
+                Coord1/coord_scale, Coord2/coord_scale, x_value_plot, y_value_plot,
+                units='width',angles='xy', scale_units='xy', scale=quiver_scale,
+                cmap='hsv',
+            )
+            
+        
+        ax.set_xlabel(
+            'y ({})'.format(coord_scale_str)
+        )
+        ax.set_ylabel(
+            'z ({})'.format(coord_scale_str)
+        )
+        time = time_from_start_rotate(step)
+        if ifloglength:
+            ax.quiverkey(
+                Q, 0.1, 0.95, label_scale,
+                label = "logscale, : {:.2e} in 45 degree, ".format(label_scale) + "\n " + x_name + ", " + y_name + " at t {:.2f} s".format(time),
+                labelpos='E',
+                coordinates='figure', angle=45,
+            )
+        else:
+            ax.quiverkey(
+                Q, 0.1, 0.95, label_scale,
+                label = " : {:.2e} in 45 degree, ".format(label_scale) + "\n " + x_name + ", " + y_name + " at t {:.2f} s".format(time),
+                labelpos='E',
+                coordinates='figure', angle=45,
+            )
+            
+        plt.xticks(np.arange(0, (max(Coord1[:,0])-min(Coord1[:,0]))/coord_scale+2, 2))
+        plt.yticks(np.arange(0, (max(Coord2[0,:])-min(Coord2[0,:]))/coord_scale+6, 6))
+
+        if ifloglength:
             fig.savefig(
                 "_".join([
-                    dp.diagram_path + subfoldername + 'step',
-                    transfer_time_to_str(inputstepsarray),
+                    diagram_path_add_nve + subfoldername + "log/" + 'step',
+                    str(step),
                     ".png",
                 ]),
                 format="png",
+                bbox_inches=None,
             )
+        else:
+            fig.savefig(
+                "_".join([
+                    diagram_path_add_nve + subfoldername + 'step',
+                    str(step),
+                    ".png",
+                ]),
+                format="png",
+                bbox_inches=None,
+            )
+
         # close figure after save
         plt.close('all')
-
-    def plot_quiver_from_chunk2D(
-            n_ave, x_name, y_name, inputstepsarray,
-            spaceave=None,
-            x_scale_factor=1, x_scale_str=None, y_scale_factor=1, y_scale_str=None,
-            quiver_scale=0.1, label_scale=0.2,
-            ifloglength=False,
-            logvaluemin=10**-4,
-            valueminus=0,
-            ifplotseparateupdown=False,
-            quiver_scale_up=0.1, label_scale_up=0.2,
-            quiver_scale_down=0.1, label_scale_down=0.2,
-        ):
-        if ifloglength:
-            quiver_scale = np.log10(quiver_scale/logvaluemin)
-            label_scale = np.log10(label_scale/logvaluemin)
-            quiver_scale_up = np.log10(quiver_scale_up/logvaluemin)
-            label_scale_up = np.log10(label_scale_up/logvaluemin)
-            quiver_scale_down = np.log10(quiver_scale_down/logvaluemin)
-            label_scale_down = np.log10(label_scale_down/logvaluemin)
-        # str for variable used in figure label legend
-        x_name_label_in_figure = transfer_v_name_to_label_str_in_figure(x_name).replace('_middle', '')
-        y_name_label_in_figure = transfer_v_name_to_label_str_in_figure(y_name).replace('_middle', '')
-        # spaceave: coord1, coord2
-        time_array = time_from_start_rotate(inputstepsarray)
-        
-        x_value = get_value(lmp_path, x_name, n_ave, inputstepsarray)
-        y_value = get_value(lmp_path, y_name, n_ave, inputstepsarray)
-        mask = x_value>0.1
-        x_value[mask] = x_value[mask] - valueminus
-        mask = y_value>0.1
-        y_value[mask] = y_value[mask] - valueminus
-        # scale factor
-        x_value = x_value/x_scale_factor
-        y_value = y_value/y_scale_factor
-
-        # subfolder name
-        subfoldername = y_name + "_" + x_name + "/"
-        os.makedirs(dp.diagram_path + subfoldername, exist_ok=True)
-        os.makedirs(dp.diagram_path + subfoldername + "streamplot/", exist_ok=True)
-        if ifplotseparateupdown:
-            os.makedirs(dp.diagram_path + subfoldername + "up/", exist_ok=True)
-            os.makedirs(dp.diagram_path + subfoldername + "down/", exist_ok=True)
-        if ifloglength:
-            os.makedirs(dp.diagram_path + subfoldername + "log/", exist_ok=True)
-            if ifplotseparateupdown:
-                os.makedirs(dp.diagram_path + subfoldername + "log/" + "up/", exist_ok=True)
-                os.makedirs(dp.diagram_path + subfoldername + "log/" + "down/", exist_ok=True)
-        char = c_r_npyfilepath_coord_char[y_name]["coordinate_characteristic"]
-        Coord1 = load_coord(char, "Coord1")
-        Coord2 = load_coord(char, "Coord2")
-        # plot quiver vector field
+    # plot up and down separate figure
+    if ifplotseparateupdown:
+        maskup = y_value>0
+        maskdown = y_value<0
+        x_value_up = np.zeros_like(x_value)
+        y_value_up = np.zeros_like(y_value)
+        x_value_down = np.zeros_like(x_value)
+        y_value_down = np.zeros_like(y_value)
+        x_value_up[maskup] = x_value[maskup]
+        y_value_up[maskup] = y_value[maskup]
+        x_value_down[maskdown] = x_value[maskdown]
+        y_value_down[maskdown] = y_value[maskdown]
         for indexstep, step in enumerate(inputstepsarray):
-            x_value_plot = x_value[indexstep]
-            y_value_plot = y_value[indexstep]
+            x_value_plot = x_value_up[indexstep]
+            y_value_plot = y_value_up[indexstep]
+            total_up = np.sum(y_value_plot)
             # plot ave_z velocity across y
             fig, ax = plt.subplots()
             
@@ -2508,13 +2655,13 @@ def plot_auto(n_ave, lmp_path, stepsarraylist_for_1Dplot, stepsarraylist_for_2Dp
                 y_value_plot_log = length_log*y_value_plot/length
                 Q = ax.quiver(
                     Coord1/coord_scale, Coord2/coord_scale, x_value_plot_log, y_value_plot_log,
-                    units='width',angles='xy', scale_units='xy', scale=quiver_scale,
+                    units='width',angles='xy', scale_units='xy', scale=quiver_scale_up,
                     cmap='hsv',
                 )
             else:
                 Q = ax.quiver(
                     Coord1/coord_scale, Coord2/coord_scale, x_value_plot, y_value_plot,
-                    units='width',angles='xy', scale_units='xy', scale=quiver_scale,
+                    units='width',angles='xy', scale_units='xy', scale=quiver_scale_up,
                     cmap='hsv',
                 )
                 
@@ -2528,15 +2675,15 @@ def plot_auto(n_ave, lmp_path, stepsarraylist_for_1Dplot, stepsarraylist_for_2Dp
             time = time_from_start_rotate(step)
             if ifloglength:
                 ax.quiverkey(
-                    Q, 0.1, 0.95, label_scale,
-                    label = "logscale, : {:.2e} in 45 degree, ".format(label_scale) + "\n " + x_name + ", " + y_name + " at t {:.2f} s".format(time),
+                    Q, 0.1, 0.95, label_scale_up,
+                    label = "up, logscale, : {:.2e} in 45 degree, ".format(label_scale_up) + "\n " + x_name + ", " + y_name + " at t {:.2f} s".format(time) + ", total up is {:.2e}".format(total_up),
                     labelpos='E',
                     coordinates='figure', angle=45,
                 )
             else:
                 ax.quiverkey(
-                    Q, 0.1, 0.95, label_scale,
-                    label = " : {:.2e} in 45 degree, ".format(label_scale) + "\n " + x_name + ", " + y_name + " at t {:.2f} s".format(time),
+                    Q, 0.1, 0.95, label_scale_up,
+                    label = " : up, {:.2e} in 45 degree, ".format(label_scale_up) + "\n " + x_name + ", " + y_name + " at t {:.2f} s".format(time) + ", total up is {:.2e}".format(total_up),
                     labelpos='E',
                     coordinates='figure', angle=45,
                 )
@@ -2547,7 +2694,7 @@ def plot_auto(n_ave, lmp_path, stepsarraylist_for_1Dplot, stepsarraylist_for_2Dp
             if ifloglength:
                 fig.savefig(
                     "_".join([
-                        dp.diagram_path + subfoldername + "log/" + 'step',
+                        diagram_path_add_nve + subfoldername + "log/" + "up/" + 'step',
                         str(step),
                         ".png",
                     ]),
@@ -2557,7 +2704,7 @@ def plot_auto(n_ave, lmp_path, stepsarraylist_for_1Dplot, stepsarraylist_for_2Dp
             else:
                 fig.savefig(
                     "_".join([
-                        dp.diagram_path + subfoldername + 'step',
+                        diagram_path_add_nve + subfoldername + "up/" + 'step',
                         str(step),
                         ".png",
                     ]),
@@ -2567,203 +2714,11 @@ def plot_auto(n_ave, lmp_path, stepsarraylist_for_1Dplot, stepsarraylist_for_2Dp
 
             # close figure after save
             plt.close('all')
-        # plot up and down separate figure
-        if ifplotseparateupdown:
-            maskup = y_value>0
-            maskdown = y_value<0
-            x_value_up = np.zeros_like(x_value)
-            y_value_up = np.zeros_like(y_value)
-            x_value_down = np.zeros_like(x_value)
-            y_value_down = np.zeros_like(y_value)
-            x_value_up[maskup] = x_value[maskup]
-            y_value_up[maskup] = y_value[maskup]
-            x_value_down[maskdown] = x_value[maskdown]
-            y_value_down[maskdown] = y_value[maskdown]
-            for indexstep, step in enumerate(inputstepsarray):
-                x_value_plot = x_value_up[indexstep]
-                y_value_plot = y_value_up[indexstep]
-                total_up = np.sum(y_value_plot)
-                # plot ave_z velocity across y
-                fig, ax = plt.subplots()
-                
-                # title
 
-                if x_scale_str is None:
-                    x_label_str = x_name_label_in_figure
-                else:
-                    x_label_str = x_name_label_in_figure + " (" + x_scale_str + ")"
-                ax.set_xlabel(x_label_str)
-                
-                if y_scale_str is None:
-                    y_label_str = y_name_label_in_figure
-                else:
-                    y_label_str = y_name_label_in_figure + " (" + y_scale_str + ")"
-                ax.set_ylabel(y_label_str)            
-                # plot
-                if ifloglength:
-                    length = (x_value_plot**2 + y_value_plot**2)**0.5
-                    masktolog = (length>=logvaluemin)
-                    length_log = np.copy(length)
-                    length_log[masktolog] = 1+logvaluemin + np.log10(length[masktolog]/logvaluemin)
-                    #breakpoint()
-                    x_value_plot_log = length_log*x_value_plot/length
-                    y_value_plot_log = length_log*y_value_plot/length
-                    Q = ax.quiver(
-                        Coord1/coord_scale, Coord2/coord_scale, x_value_plot_log, y_value_plot_log,
-                        units='width',angles='xy', scale_units='xy', scale=quiver_scale_up,
-                        cmap='hsv',
-                    )
-                else:
-                    Q = ax.quiver(
-                        Coord1/coord_scale, Coord2/coord_scale, x_value_plot, y_value_plot,
-                        units='width',angles='xy', scale_units='xy', scale=quiver_scale_up,
-                        cmap='hsv',
-                    )
-                    
-                
-                ax.set_xlabel(
-                    'y ({})'.format(coord_scale_str)
-                )
-                ax.set_ylabel(
-                    'z ({})'.format(coord_scale_str)
-                )
-                time = time_from_start_rotate(step)
-                if ifloglength:
-                    ax.quiverkey(
-                        Q, 0.1, 0.95, label_scale_up,
-                        label = "up, logscale, : {:.2e} in 45 degree, ".format(label_scale_up) + "\n " + x_name + ", " + y_name + " at t {:.2f} s".format(time) + ", total up is {:.2e}".format(total_up),
-                        labelpos='E',
-                        coordinates='figure', angle=45,
-                    )
-                else:
-                    ax.quiverkey(
-                        Q, 0.1, 0.95, label_scale_up,
-                        label = " : up, {:.2e} in 45 degree, ".format(label_scale_up) + "\n " + x_name + ", " + y_name + " at t {:.2f} s".format(time) + ", total up is {:.2e}".format(total_up),
-                        labelpos='E',
-                        coordinates='figure', angle=45,
-                    )
-                    
-                plt.xticks(np.arange(0, (max(Coord1[:,0])-min(Coord1[:,0]))/coord_scale+2, 2))
-                plt.yticks(np.arange(0, (max(Coord2[0,:])-min(Coord2[0,:]))/coord_scale+6, 6))
-
-                if ifloglength:
-                    fig.savefig(
-                        "_".join([
-                            dp.diagram_path + subfoldername + "log/" + "up/" + 'step',
-                            str(step),
-                            ".png",
-                        ]),
-                        format="png",
-                        bbox_inches=None,
-                    )
-                else:
-                    fig.savefig(
-                        "_".join([
-                            dp.diagram_path + subfoldername + "up/" + 'step',
-                            str(step),
-                            ".png",
-                        ]),
-                        format="png",
-                        bbox_inches=None,
-                    )
-
-                # close figure after save
-                plt.close('all')
-
-            for indexstep, step in enumerate(inputstepsarray):
-                x_value_plot = x_value_down[indexstep]
-                y_value_plot = y_value_down[indexstep]
-                total_down = np.sum(y_value_plot)
-                # plot ave_z velocity across y
-                fig, ax = plt.subplots()
-                
-                # title
-
-                if x_scale_str is None:
-                    x_label_str = x_name_label_in_figure
-                else:
-                    x_label_str = x_name_label_in_figure + " (" + x_scale_str + ")"
-                ax.set_xlabel(x_label_str)
-                
-                if y_scale_str is None:
-                    y_label_str = y_name_label_in_figure
-                else:
-                    y_label_str = y_name_label_in_figure + " (" + y_scale_str + ")"
-                ax.set_ylabel(y_label_str)            
-                # plot
-                if ifloglength:
-                    length = (x_value_plot**2 + y_value_plot**2)**0.5
-                    masktolog = (length>=logvaluemin)
-                    length_log = np.copy(length)
-                    length_log[masktolog] = 1+logvaluemin + np.log10(length[masktolog]/logvaluemin)
-                    #breakpoint()
-                    x_value_plot_log = length_log*x_value_plot/length
-                    y_value_plot_log = length_log*y_value_plot/length
-                    Q = ax.quiver(
-                        Coord1/coord_scale, Coord2/coord_scale, x_value_plot_log, y_value_plot_log,
-                        units='width',angles='xy', scale_units='xy', scale=quiver_scale_down,
-                        cmap='hsv',
-                    )
-                else:
-                    Q = ax.quiver(
-                        Coord1/coord_scale, Coord2/coord_scale, x_value_plot, y_value_plot,
-                        units='width',angles='xy', scale_units='xy', scale=quiver_scale_down,
-                        cmap='hsv',
-                    )
-                    
-                
-                ax.set_xlabel(
-                    'y ({})'.format(coord_scale_str)
-                )
-                ax.set_ylabel(
-                    'z ({})'.format(coord_scale_str)
-                )
-                time = time_from_start_rotate(step)
-                if ifloglength:
-                    ax.quiverkey(
-                        Q, 0.1, 0.95, label_scale_down,
-                        label = "down, logscale, : {:.2e} in 45 degree, ".format(label_scale_down) + "\n " + x_name + ", " + y_name + " at t {:.2f} s".format(time) + ", total down is {:.2e}".format(total_down),
-                        labelpos='E',
-                        coordinates='figure', angle=45,
-                    )
-                else:
-                    ax.quiverkey(
-                        Q, 0.1, 0.95, label_scale_down,
-                        label = " : down, {:.2e} in 45 degree, ".format(label_scale_down) + "\n " + x_name + ", " + y_name + " at t {:.2f} s".format(time) + ", total down is {:.2e}".format(total_down),
-                        labelpos='E',
-                        coordinates='figure', angle=45,
-                    )
-                    
-                plt.xticks(np.arange(0, (max(Coord1[:,0])-min(Coord1[:,0]))/coord_scale+2, 2))
-                plt.yticks(np.arange(0, (max(Coord2[0,:])-min(Coord2[0,:]))/coord_scale+6, 6))
-
-                if ifloglength:
-                    fig.savefig(
-                        "_".join([
-                            dp.diagram_path + subfoldername + "log/" + "down/" + 'step',
-                            str(step),
-                            ".png",
-                        ]),
-                        format="png",
-                        bbox_inches=None,
-                    )
-                else:
-                    fig.savefig(
-                        "_".join([
-                            dp.diagram_path + subfoldername + "down/" + 'step',
-                            str(step),
-                            ".png",
-                        ]),
-                        format="png",
-                        bbox_inches=None,
-                    )
-
-                # close figure after save
-                plt.close('all')
-        # plot streamplot
         for indexstep, step in enumerate(inputstepsarray):
-            x_value_plot = x_value[indexstep]
-            y_value_plot = y_value[indexstep]
+            x_value_plot = x_value_down[indexstep]
+            y_value_plot = y_value_down[indexstep]
+            total_down = np.sum(y_value_plot)
             # plot ave_z velocity across y
             fig, ax = plt.subplots()
             
@@ -2779,330 +2734,631 @@ def plot_auto(n_ave, lmp_path, stepsarraylist_for_1Dplot, stepsarraylist_for_2Dp
                 y_label_str = y_name_label_in_figure
             else:
                 y_label_str = y_name_label_in_figure + " (" + y_scale_str + ")"
-            ax.set_ylabel(y_label_str)
-            # check if line0
-            
-            speed = np.sqrt(x_value_plot**2 + y_value_plot**2)
-            # rescale speed
-            speed = speed/velocity_scale
+            ax.set_ylabel(y_label_str)            
             # plot
-            strm = ax.streamplot(
-                Coord1[:,0]/coord_scale, Coord2[0,:]/coord_scale, np.transpose(x_value_plot), np.transpose(y_value_plot),
-                linewidth=1, color='k',
-                density=[0.8, 0.8],
-            )
+            if ifloglength:
+                length = (x_value_plot**2 + y_value_plot**2)**0.5
+                masktolog = (length>=logvaluemin)
+                length_log = np.copy(length)
+                length_log[masktolog] = 1+logvaluemin + np.log10(length[masktolog]/logvaluemin)
+                #breakpoint()
+                x_value_plot_log = length_log*x_value_plot/length
+                y_value_plot_log = length_log*y_value_plot/length
+                Q = ax.quiver(
+                    Coord1/coord_scale, Coord2/coord_scale, x_value_plot_log, y_value_plot_log,
+                    units='width',angles='xy', scale_units='xy', scale=quiver_scale_down,
+                    cmap='hsv',
+                )
+            else:
+                Q = ax.quiver(
+                    Coord1/coord_scale, Coord2/coord_scale, x_value_plot, y_value_plot,
+                    units='width',angles='xy', scale_units='xy', scale=quiver_scale_down,
+                    cmap='hsv',
+                )
+                
             
-            speed = np.ma.masked_where(np.logical_not(speed > 0), speed)
-            #breakpoint()
-            d_Coord1 = Coord1[:,0][1]-Coord1[:,0][0]
-            d_Coord2 = Coord2[0,:][1]-Coord2[0,:][0]
-            Coord1_expand = Coord1[:,0] - d_Coord1/2
-            Coord1_expand = np.append(Coord1_expand, (Coord1_expand[-1]+d_Coord1))
-            Coord2_expand = Coord2[0,:] - d_Coord2/2
-            Coord2_expand = np.append(Coord2_expand, (Coord2_expand[-1]+d_Coord2))
-            contour = ax.pcolor(
-                Coord1_expand/coord_scale, Coord2_expand/coord_scale, np.transpose(speed),
-                norm=colors.LogNorm(vmin=10**-5, vmax=1), #norm=colors.LogNorm(vmin=np.transpose(speed).min(), vmax=np.transpose(speed).max()),
-                cmap='coolwarm',
-            )
-            fig.colorbar(contour, ax=ax, extend='max')
-            time = time_from_start_rotate(step)
-            strain = strain_from_rotate_start(step)
-            ax.set_title(
-                "t = {:.2f} s".format(time) + ", strain is {:.2f}".format(strain)
-            )
             ax.set_xlabel(
                 'y ({})'.format(coord_scale_str)
             )
             ax.set_ylabel(
                 'z ({})'.format(coord_scale_str)
             )
-            
+            time = time_from_start_rotate(step)
+            if ifloglength:
+                ax.quiverkey(
+                    Q, 0.1, 0.95, label_scale_down,
+                    label = "down, logscale, : {:.2e} in 45 degree, ".format(label_scale_down) + "\n " + x_name + ", " + y_name + " at t {:.2f} s".format(time) + ", total down is {:.2e}".format(total_down),
+                    labelpos='E',
+                    coordinates='figure', angle=45,
+                )
+            else:
+                ax.quiverkey(
+                    Q, 0.1, 0.95, label_scale_down,
+                    label = " : down, {:.2e} in 45 degree, ".format(label_scale_down) + "\n " + x_name + ", " + y_name + " at t {:.2f} s".format(time) + ", total down is {:.2e}".format(total_down),
+                    labelpos='E',
+                    coordinates='figure', angle=45,
+                )
                 
             plt.xticks(np.arange(0, (max(Coord1[:,0])-min(Coord1[:,0]))/coord_scale+2, 2))
             plt.yticks(np.arange(0, (max(Coord2[0,:])-min(Coord2[0,:]))/coord_scale+6, 6))
-            fig.savefig(
-                "_".join([
-                    dp.diagram_path + subfoldername + 'streamplot/' + 'step',
-                    str(step),
-                    ".png",
-                ]),
-                format="png",
-                bbox_inches=None,
-            )
+
+            if ifloglength:
+                fig.savefig(
+                    "_".join([
+                        diagram_path_add_nve + subfoldername + "log/" + "down/" + 'step',
+                        str(step),
+                        ".png",
+                    ]),
+                    format="png",
+                    bbox_inches=None,
+                )
+            else:
+                fig.savefig(
+                    "_".join([
+                        diagram_path_add_nve + subfoldername + "down/" + 'step',
+                        str(step),
+                        ".png",
+                    ]),
+                    format="png",
+                    bbox_inches=None,
+                )
 
             # close figure after save
             plt.close('all')
-    """
-    for input_stepsarray in stepsarraylist_for_velocity_profile:
-        # 1Dplot from chunk2D
-        list1 = [
-            ("Coord1", "mv_1", coord_scale, coord_scale_str, velocity_scale, velocity_scale_str, 'log'),
-            ("Coord1", "mv_1", coord_scale, coord_scale_str, velocity_scale, velocity_scale_str, 'linear'),
-        ]
-        for (x_name, y_name, x_scale_factor, x_scale_str, y_scale_factor, y_scale_str, x_scale) in list1:
-            coord1_index_array = np.arange(16)
-            plot_1D_from_chunk2D(
-                n_ave, x_name, y_name, input_stepsarray, coord1_index_array, 'sumdividemass', legend_class = 't',
-                x_scale_factor=x_scale_factor, x_scale_str=x_scale_str, y_scale_factor=y_scale_factor, y_scale_str=None,
-                x_scale=x_scale,
-                useerrorbar=False,
-            )
-
-    """
-    for input_stepsarray in stepsarraylist_for_1Dplot:
-
-        # 1Dplot from chunk2D
-        list1 = [
-            ("I_12", "mu_12_middle", I_scale, I_scale_str, mu_scale, mu_scale_str, 'log'),
-            ("I_tensor", "mu_tensor_12", I_tensor_scale, I_tensor_scale_str, mu_tensor_scale, mu_tensor_scale_str, 'linear'),
-            ("strain", "I_12", 1, None, I_scale, I_scale_str, 'linear'),
-            ("strain", "mu_12_middle", 1, None, mu_scale, mu_scale_str, 'linear'),
-            ("strain", "I_tensor", 1, None, I_scale, I_scale_str, 'linear'),
-            ("strain", "mu_tensor_12", 1, None, mu_scale, mu_scale_str, 'linear'),
-            ("strain", "velocity_1", 1, None, velocity_scale, velocity_scale_str, 'linear'),
-            ("strain", "velocity_2", 1, None, velocity_scale, velocity_scale_str, 'linear'),
-            ("strain", "velocity_3", 1, None, velocity_scale, velocity_scale_str, 'linear'),
-            ("strain", "strain_rate_21_middle", 1, None, strain_rate_scale, strain_rate_scale_str, 'linear'),
-            ("strain", "strain_rate_31_middle", 1, None, strain_rate_scale, strain_rate_scale_str, 'linear'),
-            ("strain", "strain_rate_22_middle", 1, None, strain_rate_scale, strain_rate_scale_str, 'linear'),
-            ("strain", "strain_rate_32_middle", 1, None, strain_rate_scale, strain_rate_scale_str, 'linear'),
-            ("strain", "strain_rate_23_middle", 1, None, strain_rate_scale, strain_rate_scale_str, 'linear'),
-            ("strain", "strain_rate_33_middle", 1, None, strain_rate_scale, strain_rate_scale_str, 'linear'),
-            ("strain", "stress_11", 1, None, stress_scale, stress_scale_str, 'linear'),
-            ("strain", "stress_22", 1, None, stress_scale, stress_scale_str, 'linear'),
-            ("strain", "stress_33", 1, None, stress_scale, stress_scale_str, 'linear'),
-            ("strain", "stress_12", 1, None, stress_scale, stress_scale_str, 'linear'),
-            ("strain", "stress_13", 1, None, stress_scale, stress_scale_str, 'linear'),
-            ("strain", "stress_23", 1, None, stress_scale, stress_scale_str, 'linear'),
-            ("fraction", "mu_12_middle", 1, None, mu_scale, mu_scale_str, 'linear'),
-            ("fraction", "I_12", 1, None, I_scale, I_scale_str, 'linear'),
-            ("fraction", "mu_tensor_12", 1, None, mu_tensor_scale, mu_tensor_scale_str, 'linear'),
-            ("fraction", "I_tensor", 1, None, I_tensor_scale, I_tensor_scale_str, 'linear'),
-        ]
-        list2 = [
-            ("time", "fraction", 1, None, 1, None, 'linear'),
-            ("time", "n_contact", 1, None, 1, None, 'linear'),
-            ("strain", "fraction", 1, None, 1, None, 'linear'),
-            ("strain", "n_contact", 1, None, 1, None, 'linear'),
-        ]
-        """
-        for (x_name, y_name, x_scale_factor, x_scale_str, y_scale_factor, y_scale_str, x_scale) in (list2+list1):
-            
-            for (coord1_index_array, coord2_index_array) in [
-                ([0], [0,1,5,7,8]),
-                ([-1], [0,1,5,7,8]),
-                ([0,1,2,3,4,5,6,-2,-1], [0]),
-                ([0,1,2,3,4,5,6,-2,-1], [1]),
-                ]:
-                for useerrorbar in [True, False]:
-                    plot_1D_from_chunk2D(
-                        n_ave, x_name, y_name, input_stepsarray, coord1_index_array, coord2_index_array, legend_class = 'c1c2',
-                        x_scale_factor=x_scale_factor, x_scale_str=x_scale_str, y_scale_factor=y_scale_factor, y_scale_str=None,
-                        x_scale=x_scale,
-                        useerrorbar=useerrorbar,
-                    )
-                    plot_1D_from_chunk2D_mask(
-                        n_ave, x_name, y_name, input_stepsarray, coord1_index_array, coord2_index_array, legend_class = 'c1c2',
-                        x_scale_factor=x_scale_factor, x_scale_str=x_scale_str, y_scale_factor=y_scale_factor, y_scale_str=None,
-                        x_scale=x_scale,
-                        useerrorbar=useerrorbar,
-                        ifmaskstatic=False,
-                        ifmasknonstatic=True,
-                    )
-            for (coord1_index_array, coord2_index_array, legend_class) in [
-                ([0,-1], 'ave', 'c1'),
-                ('ave', [0], 'c2'),
-                ]:
-                for useerrorbar in [True, False]:
-                    plot_1D_from_chunk2D(
-                        n_ave, x_name, y_name, input_stepsarray, coord1_index_array, coord2_index_array, legend_class = legend_class,
-                        x_scale_factor=x_scale_factor, x_scale_str=x_scale_str, y_scale_factor=y_scale_factor, y_scale_str=None,
-                        x_scale=x_scale,
-                        useerrorbar=useerrorbar,
-                    )
-                    #plot_1D_from_chunk2D_mask(
-                    #    n_ave, x_name, y_name, input_stepsarray, coord1_index_array, coord2_index_array, legend_class = legend_class,
-                    #    x_scale_factor=x_scale_factor, x_scale_str=x_scale_str, y_scale_factor=y_scale_factor, y_scale_str=None,
-                    #    x_scale=x_scale,
-                    #    useerrorbar=useerrorbar,
-                    #    ifmaskstatic=False,
-                    #    ifmasknonstatic=True,
-                    #)
+    # plot streamplot
+    for indexstep, step in enumerate(inputstepsarray):
+        x_value_plot = x_value[indexstep]
+        y_value_plot = y_value[indexstep]
+        # plot ave_z velocity across y
+        fig, ax = plt.subplots()
         
-        """
-        """
-        for (x_name, y_name, x_scale_factor, x_scale_str, y_scale_factor, y_scale_str, x_scale, ifdivideNcount) in [
-            ("time", "n_contact", 1, None, 1, None, 'linear', True),
-            ("time", "fraction", 1, None, 1, None, 'linear', False),
-            ("strain", "n_contact", 1, None, 1, None, 'linear', True),
-            ("strain", "fraction", 1, None, 1, None, 'linear', False),
-            ]:
-            for (coord1_index_array, coord2_index_array, legend_class, ave_over_coord1, ave_over_coord2) in [
-                ([0, 1], 'ave', 'c1', True, False),
-                ([-1, -2], 'ave', 'c1', True, False),
-                ([0, 1, 2], 'ave', 'c1', True, False),
-                ([1, 2, 3], 'ave', 'c1', True, False),
-                ([2, 3, 4], 'ave', 'c1', True, False),
-                ([3, 4, 5], 'ave', 'c1', True, False),
-                ([4, 5, 6], 'ave', 'c1', True, False),
-                ([5, 6, 7], 'ave', 'c1', True, False),
-                ([-1, -2, -3], 'ave', 'c1', True, False),
-                ('ave', [0], 'c2', False, False),
-                ([0, 1], [0,1,2,3,4,5,6,7], None, True, True),
-                ([-1, -2], [0,1,2,3,4,5,6,7], None, True, True),
-                ([0, 1, 2], [0,1,2,3,4,5,6,7], None, True, True),
-                ([1, 2, 3], [0,1,2,3,4,5,6,7], None, True, True),
-                ([2, 3, 4], [0,1,2,3,4,5,6,7], None, True, True),
-                ([3, 4, 5], [0,1,2,3,4,5,6,7], None, True, True),
-                ([4, 5, 6], [0,1,2,3,4,5,6,7], None, True, True),
-                ([5, 6, 7], [0,1,2,3,4,5,6,7], None, True, True),
-                ([6, 7, 8], [0,1,2,3,4,5,6,7], None, True, True),
-                ([7, 8, 9], [0,1,2,3,4,5,6,7], None, True, True),
-                ([8, 9, 10], [0,1,2,3,4,5,6,7], None, True, True),
-                ([9, 10, 11], [0,1,2,3,4,5,6,7], None, True, True),
-                ([10, 11, 12], [0,1,2,3,4,5,6,7], None, True, True),
-                ([11, 12, 13], [0,1,2,3,4,5,6,7], None, True, True),
-                ([12, 13, 14], [0,1,2,3,4,5,6,7], None, True, True),
-                ([-1, -2, -3], [0,1,2,3,4,5,6,7], None, True, True),
-                ]:
-                for useerrorbar in [True, False]:
-                    plot_1D_from_chunk2D(
-                        n_ave, x_name, y_name, input_stepsarray, coord1_index_array, coord2_index_array, legend_class = legend_class,
-                        x_scale_factor=x_scale_factor, x_scale_str=x_scale_str, y_scale_factor=y_scale_factor, y_scale_str=None,
-                        x_scale=x_scale,
-                        useerrorbar=useerrorbar,
-                        ave_over_coord1=ave_over_coord1, ave_over_coord2=ave_over_coord2,
-                        ifdivideNcount=ifdivideNcount,
-                    )
-                    plot_1D_from_chunk2D_mask(
-                        n_ave, x_name, y_name, input_stepsarray, coord1_index_array, coord2_index_array, legend_class = legend_class,
-                        x_scale_factor=x_scale_factor, x_scale_str=x_scale_str, y_scale_factor=y_scale_factor, y_scale_str=None,
-                        x_scale=x_scale,
-                        useerrorbar=useerrorbar,
-                        ave_over_coord1=ave_over_coord1, ave_over_coord2=ave_over_coord2,
-                        ifdivideNcount=ifdivideNcount,
-                        ifmaskstatic=False,
-                        ifmasknonstatic=True,
-                    )
-        
-        """
-        # 1Dplot from chunk1D
-        for (x_name, y_name, x_scale_factor, x_scale_str, y_scale_factor, y_scale_str, x_scale) in [
-            ("time", "inwall_stress_1", 1, None, stress_scale, stress_scale_str, 'linear'),
-            ("time", "inwall_stress_2", 1, None, stress_scale, stress_scale_str, 'linear'),
-            ("time", "inwall_stress_3", 1, None, stress_scale, stress_scale_str, 'linear'),
-            ("time", "outwall_stress_1", 1, None, stress_scale, stress_scale_str, 'linear'),
-            ("time", "outwall_stress_2", 1, None, stress_scale, stress_scale_str, 'linear'),
-            ("time", "outwall_stress_3", 1, None, stress_scale, stress_scale_str, 'linear'),
-            ("time", "zbottom_stress_1", 1, None, stress_scale, stress_scale_str, 'linear'),
-            ("time", "zbottom_stress_2", 1, None, stress_scale, stress_scale_str, 'linear'),
-            ("time", "zbottom_stress_3", 1, None, stress_scale, stress_scale_str, 'linear'),
-            ("strain", "inwall_stress_1", 1, None, stress_scale, stress_scale_str, 'linear'),
-            ("strain", "inwall_stress_2", 1, None, stress_scale, stress_scale_str, 'linear'),
-            ("strain", "inwall_stress_3", 1, None, stress_scale, stress_scale_str, 'linear'),
-            ("strain", "outwall_stress_1", 1, None, stress_scale, stress_scale_str, 'linear'),
-            ("strain", "outwall_stress_2", 1, None, stress_scale, stress_scale_str, 'linear'),
-            ("strain", "outwall_stress_3", 1, None, stress_scale, stress_scale_str, 'linear'),
-            ("strain", "zbottom_stress_1", 1, None, stress_scale, stress_scale_str, 'linear'),
-            ("strain", "zbottom_stress_2", 1, None, stress_scale, stress_scale_str, 'linear'),
-            ("strain", "zbottom_stress_3", 1, None, stress_scale, stress_scale_str, 'linear'),
-            ]:
-            for (coord_index_array) in [
-                [0,1,2,3,4,5,-2,-1],
-                ]:
-                for useerrorbar in [True, False]:
-                    plot_1D_for_chunk1D_near_wall(
-                        n_ave, x_name, y_name, input_stepsarray, coord_index_array, legend_class = 'c',
-                        x_scale_factor=x_scale_factor, x_scale_str=x_scale_str, y_scale_factor=y_scale_factor, y_scale_str=None,
-                        x_scale=x_scale,
-                        useerrorbar=useerrorbar,
-                    )
-        
-        coord_index_array=None
-        for (x_name, y_name, x_scale_factor, x_scale_str, y_scale_factor, y_scale_str, x_scale) in [
-            ("time", "inwall_stress_1", 1, None, stress_scale, stress_scale_str, 'linear'),
-            ("time", "inwall_stress_2", 1, None, stress_scale, stress_scale_str, 'linear'),
-            ("time", "inwall_stress_3", 1, None, stress_scale, stress_scale_str, 'linear'),
-            ("strain", "inwall_stress_1", 1, None, stress_scale, stress_scale_str, 'linear'),
-            ("strain", "inwall_stress_2", 1, None, stress_scale, stress_scale_str, 'linear'),
-            ("strain", "inwall_stress_3", 1, None, stress_scale, stress_scale_str, 'linear'),
-        ]:
-            plot_1D_for_chunk1D_near_wall(
-                n_ave, x_name, y_name, input_stepsarray, coord_index_array, legend_class = 'c',
-                x_scale_factor=x_scale_factor, x_scale_str=x_scale_str, y_scale_factor=y_scale_factor, y_scale_str=None,
-                x_scale=x_scale,
-                useerrorbar=False,
-                ifsum=True
-            )
-    
-    # 2D plot (vector field, streamlines, etc)
-    for stepsarray in stepsarraylist_for_2Dplot:
-        #plot_quiver
-        for ifloglength in [True, False]:
-            # mv
-            
-            plot_quiver_from_chunk2D(
-                n_ave, "mv_2", "mv_3", stepsarray,
-                spaceave=None,
-                x_scale_factor=1, x_scale_str=None, y_scale_factor=1, y_scale_str=None,
-                quiver_scale=5*10**-9, label_scale=5*10**-9,
-                ifloglength=ifloglength,
-                ifplotseparateupdown=True,
-                quiver_scale_up=5*10**-9, label_scale_up=5*10**-9,
-                quiver_scale_down=5*10**-9, label_scale_down=5*10**-9,
-            )
-            plot_quiver_from_chunk2D(
-                n_ave, "velocity_2", "velocity_3", stepsarray,
-                spaceave=None,
-                x_scale_factor=1, x_scale_str=None, y_scale_factor=1, y_scale_str=None,
-                quiver_scale=0.0001, label_scale=0.0001,
-                ifloglength=ifloglength,
-                ifplotseparateupdown=True,
-                quiver_scale_up=0.0001, label_scale_up=0.0001,
-                quiver_scale_down=0.0005, label_scale_down=0.0005,
-            )
+        # title
 
-            plot_quiver_from_chunk2D(
-                n_ave, "velocity_1", "velocity_1", stepsarray,
-                spaceave=None,
-                x_scale_factor=1, x_scale_str=None, y_scale_factor=1, y_scale_str=None,
-                quiver_scale=0.002, label_scale=0.002,
-                ifloglength=ifloglength,
+        if x_scale_str is None:
+            x_label_str = x_name_label_in_figure
+        else:
+            x_label_str = x_name_label_in_figure + " (" + x_scale_str + ")"
+        ax.set_xlabel(x_label_str)
+        
+        if y_scale_str is None:
+            y_label_str = y_name_label_in_figure
+        else:
+            y_label_str = y_name_label_in_figure + " (" + y_scale_str + ")"
+        ax.set_ylabel(y_label_str)
+        # check if line0
+        if ifstreamplot:
+            # plot
+            strm = ax.streamplot(
+                Coord1[:,0]/coord_scale, Coord2[0,:]/coord_scale, np.transpose(x_value_plot), np.transpose(y_value_plot),
+                linewidth=1, color='k',
+                density=[0.8, 0.8],
             )
-        # fraction
-        plot_quiver_from_chunk2D(
-            n_ave, "fraction", "fraction", stepsarray,
-            spaceave=None,
-            x_scale_factor=1, x_scale_str=None, y_scale_factor=1, y_scale_str=None,
-            quiver_scale=0.2, label_scale=1,
-            ifloglength=False,
-            valueminus=0.5,
+        vector_length = np.sqrt(x_value_plot**2 + y_value_plot**2)
+        vector_length = np.ma.masked_where(np.logical_not(vector_length > 0), vector_length)
+        #breakpoint()
+        d_Coord1 = Coord1[:,0][1]-Coord1[:,0][0]
+        d_Coord2 = Coord2[0,:][1]-Coord2[0,:][0]
+        Coord1_expand = Coord1[:,0] - d_Coord1/2
+        Coord1_expand = np.append(Coord1_expand, (Coord1_expand[-1]+d_Coord1))
+        Coord2_expand = Coord2[0,:] - d_Coord2/2
+        Coord2_expand = np.append(Coord2_expand, (Coord2_expand[-1]+d_Coord2))
+        if ifcontour:
+            if contour_v_min_max == "constant":
+                if contour_norm == "linear":
+                    contour = ax.pcolor(
+                        Coord1_expand/coord_scale, Coord2_expand/coord_scale, np.transpose(vector_length),
+                        norm=colors.Normalize(vmin=vmin, vmax=vmax), #norm=colors.LogNorm(vmin=10**-1, vmax=10), #norm=colors.LogNorm(vmin=np.transpose(vector_length).min(), vmax=np.transpose(vector_length).max()),
+                        cmap='coolwarm',
+                    )
+                elif contour_norm == "log":
+                    contour = ax.pcolor(
+                    Coord1_expand/coord_scale, Coord2_expand/coord_scale, np.transpose(vector_length),
+                    norm=colors.LogNorm(vmin=vmin, vmax=vmax), #norm=colors.LogNorm(vmin=np.transpose(vector_length).min(), vmax=np.transpose(vector_length).max()),
+                    cmap='coolwarm',
+                )
+                else:
+                    sys.exit("Error: contour_norm not defined")
+            elif contour_v_min_max == "min_to_max":
+                if contour_norm == "linear":
+                    contour = ax.pcolor(
+                        Coord1_expand/coord_scale, Coord2_expand/coord_scale, np.transpose(vector_length),
+                        norm=colors.Normalize(vmin=np.transpose(vector_length).min(), vmax=np.transpose(vector_length).max()),
+                        cmap='coolwarm',
+                    )
+                elif contour_norm == "log":
+                    contour = ax.pcolor(
+                    Coord1_expand/coord_scale, Coord2_expand/coord_scale, np.transpose(vector_length),
+                    norm=colors.LogNorm(vmin=np.transpose(vector_length).min(), vmax=np.transpose(vector_length).max()),
+                    cmap='coolwarm',
+                )
+                else:
+                    sys.exit("Error: contour_norm not defined")
+            else:
+                sys.exit("Error: contour_v_min_max not defined")
+            fig.colorbar(contour, ax=ax, extend='max')
+
+        time = time_from_start_rotate(step)
+        strain = strain_from_rotate_start(step)
+        ax.set_title(
+            "t = {:.2f} s".format(time) + ", strain is {:.2f}".format(strain)
+        )
+        ax.set_xlabel(
+            'y ({})'.format(coord_scale_str)
+        )
+        ax.set_ylabel(
+            'z ({})'.format(coord_scale_str)
         )
         
+            
+        plt.xticks(np.arange(0, (max(Coord1[:,0])-min(Coord1[:,0]))/coord_scale+2, 2))
+        plt.yticks(np.arange(0, (max(Coord2[0,:])-min(Coord2[0,:]))/coord_scale+6, 6))
+        fig.savefig(
+            "_".join([
+                diagram_path_add_nve + subfoldername + 'streamplot/' + 'step',
+                str(step),
+                ".png",
+            ]),
+            format="png",
+            bbox_inches=None,
+        )
 
-        # plot shear rate for compare with quiver
-    
+        # close figure after save
+        plt.close('all')
+
     
 # main exclusive
 def main():
     #data_auto(lmp_path = rr.folder_path_list_initial_to_last[-1])
+    #data_auto(lmp_path = rr.folder_path_list_initial_to_last[-2])
+    #data_auto(lmp_path = rr.folder_path_list_initial_to_last[-3])
+    # set plot path 
+    lmp_path = rr.folder_path_list_initial_to_last[-1]
+    # contour for pressure and stress12 mu_12
+    plot_quiver_from_chunk2D(
+        lmp_path,
+        11, "strain_rate_21_middle", "strain_rate_21_middle", np.arange(5100000,6500000,100000),
+        spaceave=None,
+        x_scale_factor=2**0.5*strain_rate_scale, x_scale_str=None, y_scale_factor=2**0.5*strain_rate_scale, y_scale_str=None,
+        quiver_scale=strain_rate_scale, label_scale=1,
+        ifloglength=False,
+        ifstreamplot=False,
+        ifcontour=True,
+        contour_norm="linear",
+        contour_v_min_max="constant", # or "min_to_max",
+        vmin=0, vmax=5,
+    )
+    plot_quiver_from_chunk2D(
+        lmp_path,
+        11, "mu_12", "mu_12", np.arange(5100000,6500000,100000),
+        spaceave=None,
+        x_scale_factor=2**0.5*1, x_scale_str=None, y_scale_factor=2**0.5*1, y_scale_str=None,
+        quiver_scale=1, label_scale=1,
+        ifloglength=False,
+        ifstreamplot=False,
+        ifcontour=True,
+        contour_norm="linear",
+        contour_v_min_max="constant", # or "min_to_max",
+        vmin=0, vmax=0.8,
+    )
+    plot_quiver_from_chunk2D(
+        lmp_path,
+        11, "pressure", "pressure", np.arange(5100000,6500000,100000),
+        spaceave=None,
+        x_scale_factor=2**0.5*stress_scale, x_scale_str=None, y_scale_factor=2**0.5*stress_scale, y_scale_str=None,
+        quiver_scale=stress_scale, label_scale=1,
+        ifloglength=False,
+        ifstreamplot=False,
+        ifcontour=True,
+        contour_norm="linear",
+        contour_v_min_max="constant", # or "min_to_max",
+        vmin=0, vmax=10,
+    )
+    plot_quiver_from_chunk2D(
+        lmp_path,
+        11, "stress_12", "stress_12", np.arange(5100000,6500000,100000),
+        spaceave=None,
+        x_scale_factor=2**0.5*stress_scale, x_scale_str=None, y_scale_factor=2**0.5*stress_scale, y_scale_str=None,
+        quiver_scale=stress_scale, label_scale=1,
+        ifloglength=False,
+        ifstreamplot=False,
+        ifcontour=True,
+        contour_norm="linear",
+        contour_v_min_max="constant", # or "min_to_max",
+        vmin=0, vmax=3,
+    )
+    plot_quiver_from_chunk2D(
+        lmp_path,
+        11, "fraction", "fraction", np.arange(5100000,6500000,100000),
+        spaceave=None,
+        x_scale_factor=2**0.5*1, x_scale_str=None, y_scale_factor=2**0.5*1, y_scale_str=None,
+        quiver_scale=1, label_scale=1,
+        ifloglength=False,
+        ifstreamplot=False,
+        ifcontour=True,
+        contour_norm="linear",
+        contour_v_min_max="constant", # or "min_to_max",
+        vmin=0.3, vmax=0.7,
+    )
     
-    # list of stepsarray in each figure for 1D plot
-    stepsarraylist_for_1Dplot = [
-        np.arange(1000000,70000000,1000000),
-    ]
-    # list of stepsarray in each figure for 2D plot
-    stepsarraylist_for_2Dplot = [
-        np.arange(1000000,70000000,1000000),
-    ]
-    stepsarraylist_for_velocity_profile = [
-        np.arange(4500000, 70000000,2500000),
-        np.arange(4500000, 7000000,250000),
-    ]
-    plot_auto(51, rr.folder_path_list_initial_to_last[-1], stepsarraylist_for_1Dplot, stepsarraylist_for_2Dplot, stepsarraylist_for_velocity_profile)
 
-    # sound when complete
+    # contour for pressure and stress12 mu_12
+    plot_quiver_from_chunk2D(
+        lmp_path,
+        301, "strain_rate_21_middle", "strain_rate_21_middle", np.arange(7000000,40000000,5000000),
+        spaceave=None,
+        x_scale_factor=2**0.5*strain_rate_scale, x_scale_str=None, y_scale_factor=2**0.5*strain_rate_scale, y_scale_str=None,
+        quiver_scale=strain_rate_scale, label_scale=1,
+        ifloglength=False,
+        ifstreamplot=False,
+        ifcontour=True,
+        contour_norm="linear",
+        contour_v_min_max="constant", # or "min_to_max",
+        vmin=0, vmax=5,
+    )
+    plot_quiver_from_chunk2D(
+        lmp_path,
+        301, "mu_12", "mu_12", np.arange(7000000,40000000,5000000),
+        spaceave=None,
+        x_scale_factor=2**0.5*1, x_scale_str=None, y_scale_factor=2**0.5*1, y_scale_str=None,
+        quiver_scale=1, label_scale=1,
+        ifloglength=False,
+        ifstreamplot=False,
+        ifcontour=True,
+        contour_norm="linear",
+        contour_v_min_max="constant", # or "min_to_max",
+        vmin=0, vmax=0.8,
+    )
+    plot_quiver_from_chunk2D(
+        lmp_path,
+        301, "pressure", "pressure", np.arange(7000000,40000000,5000000),
+        spaceave=None,
+        x_scale_factor=2**0.5*stress_scale, x_scale_str=None, y_scale_factor=2**0.5*stress_scale, y_scale_str=None,
+        quiver_scale=stress_scale, label_scale=1,
+        ifloglength=False,
+        ifstreamplot=False,
+        ifcontour=True,
+        contour_norm="linear",
+        contour_v_min_max="constant", # or "min_to_max",
+        vmin=0, vmax=10,
+    )
+    plot_quiver_from_chunk2D(
+        lmp_path,
+        301, "stress_12", "stress_12", np.arange(7000000,40000000,5000000),
+        spaceave=None,
+        x_scale_factor=2**0.5*stress_scale, x_scale_str=None, y_scale_factor=2**0.5*stress_scale, y_scale_str=None,
+        quiver_scale=stress_scale, label_scale=1,
+        ifloglength=False,
+        ifstreamplot=False,
+        ifcontour=True,
+        contour_norm="linear",
+        contour_v_min_max="constant", # or "min_to_max",
+        vmin=0, vmax=3,
+    )
+    plot_quiver_from_chunk2D(
+        lmp_path,
+        301, "fraction", "fraction", np.arange(7000000,40000000,5000000),
+        spaceave=None,
+        x_scale_factor=2**0.5, x_scale_str=None, y_scale_factor=2**0.5*1, y_scale_str=None,
+        quiver_scale=1, label_scale=1,
+        ifloglength=False,
+        ifstreamplot=False,
+        ifcontour=True,
+        contour_norm="linear",
+        contour_v_min_max="constant", # or "min_to_max",
+        vmin=0.3, vmax=0.7,
+    )
+    
+    # 1Dplot from chunk2D
+    # velocity
+    for (input_stepsarray, x_name, y_name, x_scale_factor, x_scale_str, y_scale_factor, y_scale_str, x_scale) in [
+        (np.append(np.arange(4500000, 7000000, 500000), np.array([40000000])), "Coord1", "mv_1", coord_scale, coord_scale_str, velocity_scale, velocity_scale_str, 'log'),
+        (np.append(np.arange(4500000, 7000000, 500000), np.array([40000000])), "Coord1", "mv_1", coord_scale, coord_scale_str, velocity_scale, velocity_scale_str, 'linear'),
+    ]:
+        coord1_index_array = np.arange(16)
+        plot_1D_from_chunk2D(
+            lmp_path,
+            51, x_name, y_name, input_stepsarray, coord1_index_array, 'sumdividemass', legend_class = 't',
+            x_scale_factor=x_scale_factor, x_scale_str=x_scale_str, y_scale_factor=y_scale_factor, y_scale_str=None,
+            x_scale=x_scale,
+            useerrorbar=False,
+        )
+    
+    # wall stress
+    for (input_stepsarray, x_name, y_name, x_scale_factor, x_scale_str, y_scale_factor, y_scale_str, x_scale) in [
+        (np.arange(5000000,40000000,1000000),"strain", "inwall_stress_1", 1, None, stress_scale, stress_scale_str, 'linear'),
+        (np.arange(5000000,40000000,1000000),"strain", "inwall_stress_2", 1, None, stress_scale, stress_scale_str, 'linear'),
+        (np.arange(5000000,40000000,1000000),"strain", "inwall_stress_3", 1, None, stress_scale, stress_scale_str, 'linear'),
+        (np.arange(5000000,40000000,1000000),"strain", "outwall_stress_1", 1, None, stress_scale, stress_scale_str, 'linear'),
+        (np.arange(5000000,40000000,1000000),"strain", "outwall_stress_2", 1, None, stress_scale, stress_scale_str, 'linear'),
+        (np.arange(5000000,40000000,1000000),"strain", "outwall_stress_3", 1, None, stress_scale, stress_scale_str, 'linear'),
+        (np.arange(5000000,40000000,1000000),"strain", "zbottom_stress_1", 1, None, stress_scale, stress_scale_str, 'linear'),
+        (np.arange(5000000,40000000,1000000),"strain", "zbottom_stress_2", 1, None, stress_scale, stress_scale_str, 'linear'),
+        (np.arange(5000000,40000000,1000000),"strain", "zbottom_stress_3", 1, None, stress_scale, stress_scale_str, 'linear'),
+    ]:
+        plot_1D_for_chunk1D_near_wall(
+            lmp_path,
+            51, x_name, y_name, input_stepsarray, coord_index_array=None, legend_class = 'c',
+            x_scale_factor=x_scale_factor, x_scale_str=x_scale_str, y_scale_factor=y_scale_factor, y_scale_str=None,
+            x_scale=x_scale,
+            useerrorbar=False,
+            ifsum=True
+        )
+    # contact number
+    for (input_stepsarray, x_name, y_name, x_scale_factor, x_scale_str, y_scale_factor, y_scale_str, x_scale, ifdivideNcount) in [
+        (np.arange(1000000,40000000,1000000),"strain", "n_contact", 1, None, 1, None, 'linear', True),
+        (np.arange(1000000,40000000,1000000),"strain", "fraction", 1, None, 1, None, 'linear', False),
+        ]:
+        for (coord1_index_array, coord2_index_array, legend_class, ave_over_coord1, ave_over_coord2) in [
+            ([0, 1, 2], 'ave', 'c1', True, False),
+            ([-1, -2, -3], 'ave', 'c1', True, False),
+            ]:
+            for useerrorbar in [True, False]:
+                plot_1D_from_chunk2D(
+                    lmp_path,
+                    51, x_name, y_name, input_stepsarray, coord1_index_array, coord2_index_array, legend_class = legend_class,
+                    x_scale_factor=x_scale_factor, x_scale_str=x_scale_str, y_scale_factor=y_scale_factor, y_scale_str=None,
+                    x_scale=x_scale,
+                    useerrorbar=useerrorbar,
+                    ave_over_coord1=ave_over_coord1, ave_over_coord2=ave_over_coord2,
+                    ifdivideNcount=ifdivideNcount,
+                )
+                plot_1D_from_chunk2D_mask(
+                    lmp_path,
+                    51, x_name, y_name, input_stepsarray, coord1_index_array, coord2_index_array, legend_class = legend_class,
+                    x_scale_factor=x_scale_factor, x_scale_str=x_scale_str, y_scale_factor=y_scale_factor, y_scale_str=None,
+                    x_scale=x_scale,
+                    useerrorbar=useerrorbar,
+                    ave_over_coord1=ave_over_coord1, ave_over_coord2=ave_over_coord2,
+                    ifdivideNcount=ifdivideNcount,
+                    ifmaskstatic=False,
+                    ifmasknonstatic=True,
+                )
+    # mu I
+    for (input_stepsarray, x_name, y_name, x_scale_factor, x_scale_str, y_scale_factor, y_scale_str, y_scale) in [
+        (np.arange(6000000,40000000,1000000), "mu_12_middle", "I_12", mu_scale, mu_scale_str, I_scale, None, 'log'),
+        (np.array([30000000]), "mu_12_middle", "I_12", mu_scale, mu_scale_str, I_scale, None, 'log'),
+        # strain
+        (np.array([30000000]), "strain", "pressure", 1, None, stress_scale, stress_scale_str, 'linear'),
+        (np.array([30000000]), "strain", "stress_12", 1, None, stress_scale, stress_scale_str, 'linear'),
+        (np.array([30000000]), "strain", "strain_rate_21_middle", 1, None, strain_rate_scale, strain_rate_scale_str, 'linear'),
+    ]:
+        for (coord1_index_array, coord2_index_array) in [
+                ([0], np.arange(0,16,2)),
+                ([-1], np.arange(0,16,2)),
+                (np.arange(0,15,2), [0]),
+                ]:
+            plot_1D_from_chunk2D_mask(
+                lmp_path,
+                51, x_name, y_name, input_stepsarray, coord1_index_array, coord2_index_array, legend_class = 'c1c2',
+                x_scale_factor=x_scale_factor, x_scale_str=x_scale_str, y_scale_factor=y_scale_factor, y_scale_str=None,
+                x_scale=x_scale,
+                y_scale=y_scale,
+                useerrorbar=useerrorbar,
+                ifmaskstatic=False,
+                ifmasknonstatic=True,
+            )
+            plot_1D_from_chunk2D(
+                lmp_path,
+                51, x_name, y_name, input_stepsarray, coord1_index_array, coord2_index_array, legend_class = 'c1c2',
+                x_scale_factor=x_scale_factor, x_scale_str=x_scale_str, y_scale_factor=y_scale_factor, y_scale_str=None,
+                x_scale=x_scale,
+                y_scale=y_scale,
+                useerrorbar=useerrorbar,
+            )
+    
+    
+    """
+    # 1Dplot from chunk2D
+
+    for (input_stepsarray, x_name, y_name, x_scale_factor, x_scale_str, y_scale_factor, y_scale_str, x_scale) in [
+        (np.arange(1000000,40000000,1000000),"strain", "fraction", 1, None, 1, None, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "n_contact", 1, None, 1, None, 'linear'),
+        (np.arange(1000000,40000000,1000000),"I_12", "mu_12_middle", I_scale, None, mu_scale, mu_scale_str, 'log'),
+        (np.arange(1000000,40000000,1000000),"I_tensor", "mu_tensor_12", I_tensor_scale, I_tensor_scale_str, mu_tensor_scale, mu_tensor_scale_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "I_12", 1, None, I_scale, None, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "mu_12_middle", 1, None, mu_scale, mu_scale_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "I_tensor", 1, None, I_scale, None, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "mu_tensor_12", 1, None, mu_scale, mu_scale_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "velocity_1", 1, None, velocity_scale, velocity_scale_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "velocity_2", 1, None, velocity_scale, velocity_scale_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "velocity_3", 1, None, velocity_scale, velocity_scale_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "strain_rate_21_middle", 1, None, strain_rate_scale, strain_rate_scale_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "strain_rate_31_middle", 1, None, strain_rate_scale, strain_rate_scale_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "strain_rate_22_middle", 1, None, strain_rate_scale, strain_rate_scale_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "strain_rate_32_middle", 1, None, strain_rate_scale, strain_rate_scale_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "strain_rate_23_middle", 1, None, strain_rate_scale, strain_rate_scale_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "strain_rate_33_middle", 1, None, strain_rate_scale, strain_rate_scale_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "stress_11", 1, None, stress_scale, stress_scale_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "stress_22", 1, None, stress_scale, stress_scale_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "stress_33", 1, None, stress_scale, stress_scale_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "stress_12", 1, None, stress_scale, stress_scale_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "stress_13", 1, None, stress_scale, stress_scale_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "stress_23", 1, None, stress_scale, stress_scale_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"fraction", "mu_12_middle", 1, None, mu_scale, mu_scale_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"fraction", "I_12", 1, None, I_scale, None, 'linear'),
+        (np.arange(1000000,40000000,1000000),"fraction", "mu_tensor_12", 1, None, mu_tensor_scale, mu_tensor_scale_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"fraction", "I_tensor", 1, None, I_tensor_scale, I_tensor_scale_str, 'linear'),
+    ]:
+        
+        for (coord1_index_array, coord2_index_array) in [
+            ([0], [0,1,5,7,8]),
+            ([-1], [0,1,5,7,8]),
+            ([0,1,2,3,4,5,6,-2,-1], [0]),
+            ([0,1,2,3,4,5,6,-2,-1], [1]),
+            ]:
+            for useerrorbar in [True, False]:
+                plot_1D_from_chunk2D(
+                    lmp_path,
+                    n_ave, x_name, y_name, input_stepsarray, coord1_index_array, coord2_index_array, legend_class = 'c1c2',
+                    x_scale_factor=x_scale_factor, x_scale_str=x_scale_str, y_scale_factor=y_scale_factor, y_scale_str=None,
+                    x_scale=x_scale,
+                    useerrorbar=useerrorbar,
+                )
+                plot_1D_from_chunk2D_mask(
+                    lmp_path,
+                    n_ave, x_name, y_name, input_stepsarray, coord1_index_array, coord2_index_array, legend_class = 'c1c2',
+                    x_scale_factor=x_scale_factor, x_scale_str=x_scale_str, y_scale_factor=y_scale_factor, y_scale_str=None,
+                    x_scale=x_scale,
+                    useerrorbar=useerrorbar,
+                    ifmaskstatic=False,
+                    ifmasknonstatic=True,
+                )
+        for (coord1_index_array, coord2_index_array, legend_class) in [
+            ([0,-1], 'ave', 'c1'),
+            ('ave', [0], 'c2'),
+            ]:
+            for useerrorbar in [True, False]:
+                plot_1D_from_chunk2D(
+                    lmp_path,
+                    n_ave, x_name, y_name, input_stepsarray, coord1_index_array, coord2_index_array, legend_class = legend_class,
+                    x_scale_factor=x_scale_factor, x_scale_str=x_scale_str, y_scale_factor=y_scale_factor, y_scale_str=None,
+                    x_scale=x_scale,
+                    useerrorbar=useerrorbar,
+                )
+                #plot_1D_from_chunk2D_mask(
+                #    lmp_path,
+                #    n_ave, x_name, y_name, input_stepsarray, coord1_index_array, coord2_index_array, legend_class = legend_class,
+                #    x_scale_factor=x_scale_factor, x_scale_str=x_scale_str, y_scale_factor=y_scale_factor, y_scale_str=None,
+                #    x_scale=x_scale,
+                #    useerrorbar=useerrorbar,
+                #    ifmaskstatic=False,
+                #    ifmasknonstatic=True,
+                #)
+    
+    
+    
+    for (input_stepsarray, x_name, y_name, x_scale_factor, x_scale_str, y_scale_factor, y_scale_str, x_scale, ifdivideNcount) in [
+        (np.arange(1000000,40000000,1000000),"strain", "n_contact", 1, None, 1, None, 'linear', True),
+        (np.arange(1000000,40000000,1000000),"strain", "fraction", 1, None, 1, None, 'linear', False),
+        ]:
+        for (coord1_index_array, coord2_index_array, legend_class, ave_over_coord1, ave_over_coord2) in [
+            ([0, 1], 'ave', 'c1', True, False),
+            ([-1, -2], 'ave', 'c1', True, False),
+            ([0, 1, 2], 'ave', 'c1', True, False),
+            ([1, 2, 3], 'ave', 'c1', True, False),
+            ([2, 3, 4], 'ave', 'c1', True, False),
+            ([3, 4, 5], 'ave', 'c1', True, False),
+            ([4, 5, 6], 'ave', 'c1', True, False),
+            ([5, 6, 7], 'ave', 'c1', True, False),
+            ([-1, -2, -3], 'ave', 'c1', True, False),
+            ('ave', [0], 'c2', False, False),
+            ([0, 1], [0,1,2,3,4,5,6,7], None, True, True),
+            ([-1, -2], [0,1,2,3,4,5,6,7], None, True, True),
+            ([0, 1, 2], [0,1,2,3,4,5,6,7], None, True, True),
+            ([1, 2, 3], [0,1,2,3,4,5,6,7], None, True, True),
+            ([2, 3, 4], [0,1,2,3,4,5,6,7], None, True, True),
+            ([3, 4, 5], [0,1,2,3,4,5,6,7], None, True, True),
+            ([4, 5, 6], [0,1,2,3,4,5,6,7], None, True, True),
+            ([5, 6, 7], [0,1,2,3,4,5,6,7], None, True, True),
+            ([6, 7, 8], [0,1,2,3,4,5,6,7], None, True, True),
+            ([7, 8, 9], [0,1,2,3,4,5,6,7], None, True, True),
+            ([8, 9, 10], [0,1,2,3,4,5,6,7], None, True, True),
+            ([9, 10, 11], [0,1,2,3,4,5,6,7], None, True, True),
+            ([10, 11, 12], [0,1,2,3,4,5,6,7], None, True, True),
+            ([11, 12, 13], [0,1,2,3,4,5,6,7], None, True, True),
+            ([12, 13, 14], [0,1,2,3,4,5,6,7], None, True, True),
+            ([-1, -2, -3], [0,1,2,3,4,5,6,7], None, True, True),
+            ]:
+            for useerrorbar in [True, False]:
+                plot_1D_from_chunk2D(
+                    lmp_path,
+                    n_ave, x_name, y_name, input_stepsarray, coord1_index_array, coord2_index_array, legend_class = legend_class,
+                    x_scale_factor=x_scale_factor, x_scale_str=x_scale_str, y_scale_factor=y_scale_factor, y_scale_str=None,
+                    x_scale=x_scale,
+                    useerrorbar=useerrorbar,
+                    ave_over_coord1=ave_over_coord1, ave_over_coord2=ave_over_coord2,
+                    ifdivideNcount=ifdivideNcount,
+                )
+                plot_1D_from_chunk2D_mask(
+                    lmp_path,
+                    n_ave, x_name, y_name, input_stepsarray, coord1_index_array, coord2_index_array, legend_class = legend_class,
+                    x_scale_factor=x_scale_factor, x_scale_str=x_scale_str, y_scale_factor=y_scale_factor, y_scale_str=None,
+                    x_scale=x_scale,
+                    useerrorbar=useerrorbar,
+                    ave_over_coord1=ave_over_coord1, ave_over_coord2=ave_over_coord2,
+                    ifdivideNcount=ifdivideNcount,
+                    ifmaskstatic=False,
+                    ifmasknonstatic=True,
+                )
+    
+    
+    # 1Dplot from chunk1D
+    for (input_stepsarray, x_name, y_name, x_scale_factor, x_scale_str, y_scale_factor, y_scale_str, x_scale) in [
+        (np.arange(1000000,40000000,1000000),"strain", "inwall_stress_1", 1, None, stress_scale, stress_scale_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "inwall_stress_2", 1, None, stress_scale, stress_scale_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "inwall_stress_3", 1, None, stress_scale, stress_scale_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "outwall_stress_1", 1, None, stress_scale, stress_scale_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "outwall_stress_2", 1, None, stress_scale, stress_scale_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "outwall_stress_3", 1, None, stress_scale, stress_scale_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "zbottom_stress_1", 1, None, stress_scale, stress_scale_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "zbottom_stress_2", 1, None, stress_scale, stress_scale_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "zbottom_stress_3", 1, None, stress_scale, stress_scale_str, 'linear'),
+        ]:
+        for (coord_index_array) in [
+            [0,1,2,3,4,5,-2,-1],
+            ]:
+            for useerrorbar in [True, False]:
+                plot_1D_for_chunk1D_near_wall(
+                    lmp_path,
+                    n_ave, x_name, y_name, input_stepsarray, coord_index_array, legend_class = 'c',
+                    x_scale_factor=x_scale_factor, x_scale_str=x_scale_str, y_scale_factor=y_scale_factor, y_scale_str=None,
+                    x_scale=x_scale,
+                    useerrorbar=useerrorbar,
+                )
+    
+    
+
+    # 2D plot (vector field, streamlines, etc)
+    #plot_quiver
+    for ifloglength in [True, False]:
+        # mv
+        
+        plot_quiver_from_chunk2D(
+            lmp_path,
+            n_ave, "mv_2", "mv_3", np.arange(1000000,40000000,1000000),
+            spaceave=None,
+            x_scale_factor=1, x_scale_str=None, y_scale_factor=1, y_scale_str=None,
+            quiver_scale=5*10**-9, label_scale=5*10**-9,
+            ifloglength=ifloglength,
+            ifplotseparateupdown=True,
+            quiver_scale_up=5*10**-9, label_scale_up=5*10**-9,
+            quiver_scale_down=5*10**-9, label_scale_down=5*10**-9,
+        )
+        plot_quiver_from_chunk2D(
+            lmp_path,
+            n_ave, "velocity_2", "velocity_3", np.arange(1000000,40000000,1000000),
+            spaceave=None,
+            x_scale_factor=1, x_scale_str=None, y_scale_factor=1, y_scale_str=None,
+            quiver_scale=0.0001, label_scale=0.0001,
+            ifloglength=ifloglength,
+            ifplotseparateupdown=True,
+            quiver_scale_up=0.0001, label_scale_up=0.0001,
+            quiver_scale_down=0.0005, label_scale_down=0.0005,
+        )
+
+        plot_quiver_from_chunk2D(
+            lmp_path,
+            n_ave, "velocity_1", "velocity_1", np.arange(1000000,40000000,1000000),
+            spaceave=None,
+            x_scale_factor=1, x_scale_str=None, y_scale_factor=1, y_scale_str=None,
+            quiver_scale=0.002, label_scale=0.002,
+            ifloglength=ifloglength,
+        )
+    # fraction
+    plot_quiver_from_chunk2D(
+        lmp_path,
+        n_ave, "fraction", "fraction", np.arange(1000000,40000000,1000000),
+        spaceave=None,
+        x_scale_factor=1, x_scale_str=None, y_scale_factor=1, y_scale_str=None,
+        quiver_scale=0.2, label_scale=1,
+        ifloglength=False,
+        valueminus=0.5,
+    )
+    
+
+    # plot shear rate for compare with quiver
+    """
+    
     print('\a')
 # main exclusive
 if __name__ == "__main__":
