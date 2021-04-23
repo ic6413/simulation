@@ -397,16 +397,46 @@ def load_coord(lmp_path, char, name):
 # no chunk output
 inwall_force = (
     "output/wall/force_y_bottom_to_particle.allstep",
-    "TimeStep v_t v_force_inwall_1 v_force_inwall_2 v_force_inwall_3",
+    "TimeStep v_t v_force_inwall_1 v_force_inwall_2 v_force_inwall_3", #v_force_zbottom_x v_force_zbottom_y v_force_zbottom_z
+    "postprocess/npy/nochunk_wall/",
 )
 outwall_force = (
     "output/wall/force_y_top_to_particle.allstep",
     "TimeStep v_t v_force_outwall_1 v_force_outwall_2 v_force_outwall_3",
+    "postprocess/npy/nochunk_wall/",
 )
 zbottom_force = (
     "output/wall/force_zbottom_to_particle.allstep",
     "TimeStep v_t v_force_zbottom_1 v_force_zbottom_2 v_force_zbottom_3",
+    "postprocess/npy/nochunk_wall/",
 )
+
+nochunk_npyfilepath_coord_char = {
+    "v_force_y_top_1": {'npyfilepath': "postprocess/npy/nochunk_wall/v_force_y_top_1.npy", "timestep_path":"postprocess/npy/nochunk_wall/timestep.npy"},
+    "v_force_outwall_1": {'npyfilepath': "postprocess/npy/nochunk_wall/v_force_outwall_1.npy", "timestep_path":"postprocess/npy/nochunk_wall/timestep.npy"},
+    "v_force_y_top_x": {'npyfilepath': "postprocess/npy/nochunk_wall/v_force_y_top_x.npy", "timestep_path":"postprocess/npy/nochunk_wall/timestep.npy"},
+    "v_force_y_top_2": {'npyfilepath': "postprocess/npy/nochunk_wall/v_force_y_top_2.npy", "timestep_path":"postprocess/npy/nochunk_wall/timestep.npy"},
+    "v_force_outwall_2": {'npyfilepath': "postprocess/npy/nochunk_wall/v_force_outwall_2.npy", "timestep_path":"postprocess/npy/nochunk_wall/timestep.npy"},
+    "v_force_y_top_y": {'npyfilepath': "postprocess/npy/nochunk_wall/v_force_y_top_y.npy", "timestep_path":"postprocess/npy/nochunk_wall/timestep.npy"},
+    "v_force_y_top_3": {'npyfilepath': "postprocess/npy/nochunk_wall/v_force_y_top_3.npy", "timestep_path":"postprocess/npy/nochunk_wall/timestep.npy"},
+    "v_force_outwall_3": {'npyfilepath': "postprocess/npy/nochunk_wall/v_force_outwall_3.npy", "timestep_path":"postprocess/npy/nochunk_wall/timestep.npy"},
+    "v_force_y_top_z": {'npyfilepath': "postprocess/npy/nochunk_wall/v_force_y_top_z.npy", "timestep_path":"postprocess/npy/nochunk_wall/timestep.npy"},
+    "v_force_y_bottom_1": {'npyfilepath': "postprocess/npy/nochunk_wall/v_force_y_bottom_1.npy", "timestep_path":"postprocess/npy/nochunk_wall/timestep.npy"},
+    "v_force_inwall_1": {'npyfilepath': "postprocess/npy/nochunk_wall/v_force_inwall_1.npy", "timestep_path":"postprocess/npy/nochunk_wall/timestep.npy"},
+    "v_force_y_bottom_x": {'npyfilepath': "postprocess/npy/nochunk_wall/v_force_y_bottom_x.npy", "timestep_path":"postprocess/npy/nochunk_wall/timestep.npy"},
+    "v_force_y_bottom_2": {'npyfilepath': "postprocess/npy/nochunk_wall/v_force_y_bottom_2.npy", "timestep_path":"postprocess/npy/nochunk_wall/timestep.npy"},
+    "v_force_inwall_2": {'npyfilepath': "postprocess/npy/nochunk_wall/v_force_inwall_2.npy", "timestep_path":"postprocess/npy/nochunk_wall/timestep.npy"},
+    "v_force_y_bottom_y": {'npyfilepath': "postprocess/npy/nochunk_wall/v_force_y_bottom_y.npy", "timestep_path":"postprocess/npy/nochunk_wall/timestep.npy"},
+    "v_force_y_bottom_3": {'npyfilepath': "postprocess/npy/nochunk_wall/v_force_y_bottom_3.npy", "timestep_path":"postprocess/npy/nochunk_wall/timestep.npy"},
+    "v_force_inwall_3": {'npyfilepath': "postprocess/npy/nochunk_wall/v_force_inwall_3.npy", "timestep_path":"postprocess/npy/nochunk_wall/timestep.npy"},
+    "v_force_y_bottom_z": {'npyfilepath': "postprocess/npy/nochunk_wall/v_force_y_bottom_z.npy", "timestep_path":"postprocess/npy/nochunk_wall/timestep.npy"},
+    "v_force_zbottom_1": {'npyfilepath': "postprocess/npy/nochunk_wall/v_force_zbottom_1.npy", "timestep_path":"postprocess/npy/nochunk_wall/timestep.npy"},
+    "v_force_zbottom_x": {'npyfilepath': "postprocess/npy/nochunk_wall/v_force_zbottom_x.npy", "timestep_path":"postprocess/npy/nochunk_wall/timestep.npy"},
+    "v_force_zbottom_2": {'npyfilepath': "postprocess/npy/nochunk_wall/v_force_zbottom_2.npy", "timestep_path":"postprocess/npy/nochunk_wall/timestep.npy"},
+    "v_force_zbottom_y": {'npyfilepath': "postprocess/npy/nochunk_wall/v_force_zbottom_y.npy", "timestep_path":"postprocess/npy/nochunk_wall/timestep.npy"},
+    "v_force_zbottom_3": {'npyfilepath': "postprocess/npy/nochunk_wall/v_force_zbottom_3.npy", "timestep_path":"postprocess/npy/nochunk_wall/timestep.npy"},
+    "v_force_zbottom_z": {'npyfilepath': "postprocess/npy/nochunk_wall/v_force_zbottom_z.npy", "timestep_path":"postprocess/npy/nochunk_wall/timestep.npy"},
+}
 
 # n_1 n_2 position_index_to_array_dim_index
 if rr.logfile["shearwall"] == "zcylinder":
@@ -503,7 +533,7 @@ def chunk_coord_data_transfer_text_to_npy(lmp_path, filepath_rela_lmp_path, outp
     lines = np.asarray(lines, dtype=np.float64, order='F')
     n_line = lines.shape[0]
     n_header = len(header)
-    os.makedirs(outputfolder_rela_lmp_path, exist_ok=True)
+    os.makedirs(lmp_path + outputfolder_rela_lmp_path, exist_ok=True)
     
     # save all variable in the folder
     for i in range(n_header):
@@ -550,7 +580,7 @@ def chunk_variable_data_transfer_text_to_npy(lmp_path, filepath_rela_lmp_path, o
     else:
         sys.exit("n_step not divisible n_line")
     n_header = len(header)
-    os.makedirs(outputfolder_rela_lmp_path, exist_ok=True)
+    os.makedirs(lmp_path + outputfolder_rela_lmp_path, exist_ok=True)
     
     # if Ncount in header
     if 'Ncount' in header:
@@ -591,7 +621,10 @@ def data_not_chunk_transfer_text_to_npy(lmp_path, filepath_rela_lmp_path, output
     n_line_in_file = len(lines)
     first_4_lines = lines[0: 4]
     # header
-    header = first_4_lines[1].split()[1:]
+    if first_4_lines[1].split()[0] == "#":
+        header = first_4_lines[1].split()[1:]
+    else:
+        header = first_4_lines[1].split()[0:]
     # stepsarray
     step_first_in_file = int(first_4_lines[2].split()[0])
     step_second_in_file = int(first_4_lines[3].split()[0])
@@ -611,7 +644,7 @@ def data_not_chunk_transfer_text_to_npy(lmp_path, filepath_rela_lmp_path, output
     else:
         sys.exit("n_step not divisible n_line")
     n_header = len(header)
-    os.makedirs(outputfolder_rela_lmp_path, exist_ok=True)
+    os.makedirs(lmp_path + outputfolder_rela_lmp_path, exist_ok=True)
     # save all variable in the folder
     for i in range(n_header):
         lines_column = lines[:, i]
@@ -737,8 +770,44 @@ def propagation_of_std_divide(a, std_a, b, std_b):
         (std_a/a)**2 + (std_b/b)**2
     )**0.5
     return value
+
+bin_volume = (
+    float(rr.logfile['width_wall_dp_unit'])
+    *float(rr.logfile['bin_y_dp_unit_approximate'])
+    *float(rr.logfile['bin_z_dp_unit_approximate'])
+    *float(rr.logfile['dp'])**3
+)
+
 # data
+def data_auto_nochunk_wall(lmp_path):
+    # no chunk data
+    for nochunk_wall_tuple in [inwall_force, outwall_force, zbottom_force]:
+        data_not_chunk_transfer_text_to_npy(lmp_path, nochunk_wall_tuple[0], nochunk_wall_tuple[2])
+    #### rename wall data file
+    rename_dic = {
+        "v_force_y_top_x": "v_force_outwall_1",
+        "v_force_y_top_y": "v_force_outwall_2",
+        "v_force_y_top_z": "v_force_outwall_3",
+        "v_force_y_bottom_x": "v_force_inwall_1",
+        "v_force_y_bottom_y": "v_force_inwall_2",
+        "v_force_y_bottom_z": "v_force_inwall_3",
+        "v_force_zbottom_x": "v_force_zbottom_1",
+        "v_force_zbottom_y": "v_force_zbottom_2",
+        "v_force_zbottom_z": "v_force_zbottom_3",
+    }
+    def rename_fun_for_wall(name_in, name_out):
+        if os.path.exists(lmp_path + nochunk_npyfilepath_coord_char[name_in]['npyfilepath']):
+            os.rename(
+                lmp_path + nochunk_npyfilepath_coord_char[name_in]['npyfilepath'],
+                lmp_path + nochunk_npyfilepath_coord_char[name_out]['npyfilepath'],
+            )
+    for key in rename_dic:
+        rename_fun_for_wall(key, rename_dic[key])
+    #### rename wall data file end
+
 def data_auto(lmp_path):
+    
+    # chunk data
     chunk_tuple_list = [
         chunk_contact,
         chunk_mv_Ek_mass,
@@ -1066,6 +1135,9 @@ def data_auto(lmp_path):
 
 # main exclusive
 def main():
+    data_auto_nochunk_wall(lmp_path = rr.folder_path_list_initial_to_last[-1])
+    data_auto_nochunk_wall(lmp_path = rr.folder_path_list_initial_to_last[-2])
+    data_auto_nochunk_wall(lmp_path = rr.folder_path_list_initial_to_last[-3])
     data_auto(lmp_path = rr.folder_path_list_initial_to_last[-1])
     data_auto(lmp_path = rr.folder_path_list_initial_to_last[-2])
     data_auto(lmp_path = rr.folder_path_list_initial_to_last[-3])

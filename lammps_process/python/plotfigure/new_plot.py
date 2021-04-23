@@ -101,28 +101,94 @@ def transfer_coor_to_str(coordarray, ifave=False):
             ])
     return string
 
-# get value for timestep time strain
-def get_value_include_ts_t_st(lmp_path, name, n_ave, inputstepsarray):
+def get_value_nochunk_include_ts_t_st(lmp_path, name, n_ave, inputstepsarray, y_name):
+
     if name == "timestep":
         value = inputstepsarray
     elif name == "time":
         value = time_from_start_rotate(inputstepsarray)
     elif name == "strain":
         value = strain_from_rotate_start(inputstepsarray)
+    elif name == 'Coord1' or name == 'Coord2':
+        char = pn.c_r_npyfilepath_coord_char[y_name]["coordinate_characteristic"]
+        value = pn.load_coord(lmp_path, char, name)
+    else:
+        value = get_value_nochunk(lmp_path, name, n_ave, inputstepsarray)
+    return value
+# get value for timestep time strain
+def get_value_include_ts_t_st(lmp_path, name, n_ave, inputstepsarray, y_name):
+
+    if name == "timestep":
+        value = inputstepsarray
+    elif name == "time":
+        value = time_from_start_rotate(inputstepsarray)
+    elif name == "strain":
+        value = strain_from_rotate_start(inputstepsarray)
+    elif name == 'Coord1' or name == 'Coord2':
+        char = pn.c_r_npyfilepath_coord_char[y_name]["coordinate_characteristic"]
+        value = pn.load_coord(lmp_path, char, name)
     else:
         value = get_value(lmp_path, name, n_ave, inputstepsarray)
     return value
 # get std value for timestep time strain
-def get_std_value_include_ts_t_st(lmp_path, name, n_ave, inputstepsarray):
+def get_std_value_include_ts_t_st(lmp_path, name, n_ave, inputstepsarray, y_name):
     if name == "timestep":
         value_std = 0
     elif name == "time":
         value_std = 0
     elif name == "strain":
         value_std = 0
+    elif name == 'Coord1' or name == 'Coord2':
+        value_std = 0
     else:
         value_std = get_std_value(lmp_path, name, n_ave, inputstepsarray)
     return value_std
+
+def get_value_nochunk(lmp_path, name, n_ave, inputstepsarray):
+    if n_ave % 2 == 1:
+        pass
+    else:
+        sys.exit("n_ave should be odd integer")
+    # combine with previous
+    # pick the smallest step and max step
+    # pick the smallest step and largest step in this simulation
+    
+    def get_step_first_end(lmp_path_folder):
+        timestep_local = np.load(lmp_path_folder + pn.nochunk_npyfilepath_coord_char[name]["timestep_path"], mmap_mode='r')
+        
+        timestep_first = timestep_local[int((n_ave-1)/2)]
+        timestep_last = timestep_local[-1-int((n_ave-1)/2)]
+        return (timestep_first, timestep_last)
+    # input step
+    step_first = inputstepsarray[0]
+    # get all timestep_first timestep_last from all pre simu
+    # calculate how many pre simu we need
+    n_include_pre_simu = 0
+    for i in range(rr.n_simu_total):
+        n_include_pre_simu = n_include_pre_simu + 1
+        if step_first >= get_step_first_end(
+            rr.folder_path_list_initial_to_last[rr.n_simu_total-1-i]
+            )[0]:
+            
+            break
+    timestep = np.load(rr.folder_path_list_initial_to_last[rr.n_simu_total-n_include_pre_simu] + pn.nochunk_npyfilepath_coord_char[name]["timestep_path"], mmap_mode='r')
+    
+    array = np.load(rr.folder_path_list_initial_to_last[rr.n_simu_total-n_include_pre_simu] + pn.nochunk_npyfilepath_coord_char[name]['npyfilepath'], mmap_mode='r')
+    for j in range(n_include_pre_simu-1):
+        timestep_append = np.load(rr.folder_path_list_initial_to_last[rr.n_simu_total - n_include_pre_simu + j + 1] + pn.nochunk_npyfilepath_coord_char[name]["timestep_path"], mmap_mode='r')
+        array_append = np.load(rr.folder_path_list_initial_to_last[rr.n_simu_total - n_include_pre_simu + j + 1] + pn.nochunk_npyfilepath_coord_char[name]['npyfilepath'], mmap_mode='r')
+        timestep = np.append(timestep, timestep_append, axis=0)
+        array = np.append(array, array_append, axis=0)
+    d_step = timestep[1] - timestep[0]
+    indexesarray = (inputstepsarray-timestep[0])/d_step
+    indexesarray = indexesarray.astype(int)
+    # average
+    sum_over_n_array = 0
+    m = int((n_ave-1)/2)
+    for k in range(-m, m+1):
+        sum_over_n_array = sum_over_n_array + array[indexesarray + k]
+    ave_array = sum_over_n_array/n_ave
+    return ave_array
 
 def get_value(lmp_path, name, n_ave, inputstepsarray):
     if n_ave % 2 == 1:
@@ -164,7 +230,8 @@ def get_value(lmp_path, name, n_ave, inputstepsarray):
     indexesarray = indexesarray.astype(int)
     # average
     sum_over_n_array = 0
-    for k in range(-(n_ave-1)/2, (n_ave-1)/2+1):
+    m = int((n_ave-1)/2)
+    for k in range(-m, m+1):
         sum_over_n_array = sum_over_n_array + array[indexesarray + k]
     ave_array = sum_over_n_array/n_ave
     return ave_array
@@ -215,7 +282,7 @@ def get_std_value(lmp_path, name, n_ave, inputstepsarray):
     return std_ave_array
 
 lmp_path = rr.folder_path_list_initial_to_last[-1]
-
+"""
 # check if all timestep the same for chunk
 for key in pn.map_chunkfile_char_save_folderpath.keys():
     path = lmp_path + pn.map_chunkfile_char_save_folderpath[key]["timestep_path"]
@@ -224,10 +291,22 @@ for key in pn.map_chunkfile_char_save_folderpath.keys():
     ):
         print("timestep file not match for all chunk file")
         breakpoint()
+"""
 
-# scale
-stress_scale = float(rr.logfile['den'])*float(rr.logfile['g'])*float(rr.logfile['width_wall_dp_unit'])*float(rr.logfile['dp'])
-stress_scale_str = r'$\rho_s g h $'
+stress_scale_width = float(rr.logfile['den'])*float(rr.logfile['g'])*float(rr.logfile['width_wall_dp_unit'])*float(rr.logfile['dp'])
+stress_scale_width_str = r'$\rho_s g w $'
+stress_scale_height = float(rr.logfile['den'])*float(rr.logfile['g'])*float(rr.logfile['z_length_create_dp_unit'])*float(rr.logfile['dp'])
+stress_scale_height_str = r'$\rho_s g h $'
+inwall_area = (
+    float(rr.logfile['x_period_dp_unit'])
+    *float(rr.logfile['z_length_create_dp_unit'])
+    *float(rr.logfile['dp'])**2
+)
+bottom_area = (
+    float(rr.logfile['width_wall_dp_unit'])
+    *float(rr.logfile['x_period_dp_unit'])
+    *float(rr.logfile['dp'])**2
+)
 velocity_scale = float(rr.logfile['in_velocity'])
 if velocity_scale < 0:
     velocity_scale = -velocity_scale
@@ -244,8 +323,19 @@ mu_tensor_scale = 1
 mu_tensor_scale_str = None
 I_tensor_scale = 1
 I_tensor_scale_str = None
-coord_scale = float(rr.logfile["dp"])
-coord_scale_str = r'$d_p$'
+
+# scale dictionary
+scale = {
+    'stress': stress_scale_width,
+    'velocity': velocity_scale,
+    'strain_rate': strain_rate_scale,
+    'coord_scale': coord_scale,
+    'mu': mu_scale,
+    'I': I_scale,
+    'mu_tensor': mu_tensor_scale,
+    'I_tensor': I_tensor_scale,
+    'Coord': float(rr.logfile['dp']),
+}
 # variable_name to string in pic label or legend
 v_name_to_labal_str = {
     "pressure":"P",
@@ -345,14 +435,14 @@ def plot_1D_from_chunk2D(
     char = pn.c_r_npyfilepath_coord_char[y_name]["coordinate_characteristic"]
     Coord1 = pn.load_coord(lmp_path, char, "Coord1")
     Coord2 = pn.load_coord(lmp_path, char, "Coord2")
-    x_value = get_value_include_ts_t_st(lmp_path, x_name, n_ave, inputstepsarray)
-    x_value_std = get_std_value_include_ts_t_st(lmp_path, x_name + "_std", n_ave, inputstepsarray)
-    y_value = get_value_include_ts_t_st(lmp_path, y_name, n_ave, inputstepsarray)
-    y_value_std = get_std_value_include_ts_t_st(lmp_path, y_name + "_std", n_ave, inputstepsarray)
+    x_value = get_value_include_ts_t_st(lmp_path, x_name, n_ave, inputstepsarray, y_name)
+    x_value_std = get_std_value_include_ts_t_st(lmp_path, x_name + "_std", n_ave, inputstepsarray, y_name)
+    y_value = get_value_include_ts_t_st(lmp_path, y_name, n_ave, inputstepsarray, y_name)
+    y_value_std = get_std_value_include_ts_t_st(lmp_path, y_name + "_std", n_ave, inputstepsarray, y_name)
     if ifdivideNcount:
-        Ncount_value = get_value_include_ts_t_st(lmp_path, 'Ncount', n_ave, inputstepsarray)
+        Ncount_value = get_value_include_ts_t_st(lmp_path, 'Ncount', n_ave, inputstepsarray, y_name)
     if coord2_index_array=="sumdividemass":
-        mass_value = get_value_include_ts_t_st(lmp_path, 'mass', n_ave, inputstepsarray)
+        mass_value = get_value_include_ts_t_st(lmp_path, 'mass', n_ave, inputstepsarray, y_name)
     # scale factor
     x_value = x_value/x_scale_factor
     x_value_std = x_value_std/x_scale_factor
@@ -799,12 +889,12 @@ def plot_1D_from_chunk2D_mask(
     y_name_label_in_figure = transfer_v_name_to_label_str_in_figure(y_name).replace('_middle', '')
     # legend_class: time, coord1, coord2
     # spaceave: coord1, coord2
-    x_value = get_value_include_ts_t_st(lmp_path, x_name, n_ave, inputstepsarray)
-    x_value_std = get_std_value_include_ts_t_st(lmp_path, x_name + "_std", n_ave, inputstepsarray)
-    y_value = get_value_include_ts_t_st(lmp_path, y_name, n_ave, inputstepsarray)
-    y_value_std = get_std_value_include_ts_t_st(lmp_path, y_name + "_std", n_ave, inputstepsarray)
+    x_value = get_value_include_ts_t_st(lmp_path, x_name, n_ave, inputstepsarray, y_name)
+    x_value_std = get_std_value_include_ts_t_st(lmp_path, x_name + "_std", n_ave, inputstepsarray, y_name)
+    y_value = get_value_include_ts_t_st(lmp_path, y_name, n_ave, inputstepsarray, y_name)
+    y_value_std = get_std_value_include_ts_t_st(lmp_path, y_name + "_std", n_ave, inputstepsarray, y_name)
     if ifdivideNcount:
-        Ncount_value = get_value_include_ts_t_st(lmp_path, 'Ncount', n_ave, inputstepsarray)
+        Ncount_value = get_value_include_ts_t_st(lmp_path, 'Ncount', n_ave, inputstepsarray, y_name)
     # scale factor
     x_value = x_value/x_scale_factor
     x_value_std = x_value_std/x_scale_factor
@@ -1233,10 +1323,10 @@ def plot_1D_for_chunk1D_near_wall(
     diagram_path_add_nve = dp.diagram_path + "n_ave_" + str(n_ave) + "/"
     # spaceave: coord
 
-    x_value = get_value_include_ts_t_st(lmp_path, x_name, n_ave, inputstepsarray)
-    x_value_std = get_std_value_include_ts_t_st(lmp_path, x_name + "_std", n_ave, inputstepsarray)
-    y_value = get_value_include_ts_t_st(lmp_path, y_name, n_ave, inputstepsarray)
-    y_value_std = get_std_value_include_ts_t_st(lmp_path, y_name + "_std", n_ave, inputstepsarray)
+    x_value = get_value_include_ts_t_st(lmp_path, x_name, n_ave, inputstepsarray, y_name)
+    x_value_std = get_std_value_include_ts_t_st(lmp_path, x_name + "_std", n_ave, inputstepsarray, y_name)
+    y_value = get_value_include_ts_t_st(lmp_path, y_name, n_ave, inputstepsarray, y_name)
+    y_value_std = get_std_value_include_ts_t_st(lmp_path, y_name + "_std", n_ave, inputstepsarray, y_name)
     # scale factor
     x_value = x_value/x_scale_factor
     x_value_std = x_value_std/x_scale_factor
@@ -1456,8 +1546,8 @@ def plot_quiver_from_chunk2D(
     # spaceave: coord1, coord2
     time_array = time_from_start_rotate(inputstepsarray)
     
-    x_value = get_value_include_ts_t_st(lmp_path, x_name, n_ave, inputstepsarray)
-    y_value = get_value_include_ts_t_st(lmp_path, y_name, n_ave, inputstepsarray)
+    x_value = get_value_include_ts_t_st(lmp_path, x_name, n_ave, inputstepsarray, y_name)
+    y_value = get_value_include_ts_t_st(lmp_path, y_name, n_ave, inputstepsarray, y_name)
     mask = x_value>0.1
     x_value[mask] = x_value[mask] - valueminus
     mask = y_value>0.1
@@ -1465,7 +1555,6 @@ def plot_quiver_from_chunk2D(
     # scale factor
     x_value = x_value/x_scale_factor
     y_value = y_value/y_scale_factor
-
     # subfolder name
     subfoldername = y_name + "_" + x_name + "/"
     os.makedirs(diagram_path_add_nve + subfoldername, exist_ok=True)
@@ -1533,14 +1622,14 @@ def plot_quiver_from_chunk2D(
         if ifloglength:
             ax.quiverkey(
                 Q, 0.1, 0.95, label_scale,
-                label = "logscale, : {"axis_label": :.2e} in 45 degree, ".format(label_scale) + "\n " + x_name + ", " + y_name + " at t {:.2f} s".format(time),
+                label = "logscale, : {:.2e} in 45 degree, ".format(label_scale) + "\n " + x_name + ", " + y_name + " at t {:.2f} s".format(time),
                 labelpos='E',
                 coordinates='figure', angle=45,
             )
         else:
             ax.quiverkey(
                 Q, 0.1, 0.95, label_scale,
-                label = " : {"axis_label": :.2e} in 45 degree, ".format(label_scale) + "\n " + x_name + ", " + y_name + " at t {:.2f} s".format(time),
+                label = " : {:.2e} in 45 degree, ".format(label_scale) + "\n " + x_name + ", " + y_name + " at t {:.2f} s".format(time),
                 labelpos='E',
                 coordinates='figure', angle=45,
             )
@@ -1635,7 +1724,7 @@ def plot_quiver_from_chunk2D(
             if ifloglength:
                 ax.quiverkey(
                     Q, 0.1, 0.95, label_scale_up,
-                    label = "up, logscale, : {"axis_label": :.2e} in 45 degree, ".format(label_scale_up) + "\n " + x_name + ", " + y_name + " at t {:.2f} s".format(time) + ", total up is {:.2e}".format(total_up),
+                    label = "up, logscale, : {:.2e} in 45 degree, ".format(label_scale_up) + "\n " + x_name + ", " + y_name + " at t {:.2f} s".format(time) + ", total up is {:.2e}".format(total_up),
                     labelpos='E',
                     coordinates='figure', angle=45,
                 )
@@ -1726,7 +1815,7 @@ def plot_quiver_from_chunk2D(
             if ifloglength:
                 ax.quiverkey(
                     Q, 0.1, 0.95, label_scale_down,
-                    label = "down, logscale, : {"axis_label": :.2e} in 45 degree, ".format(label_scale_down) + "\n " + x_name + ", " + y_name + " at t {:.2f} s".format(time) + ", total down is {:.2e}".format(total_down),
+                    label = "down, logscale, : {:.2e} in 45 degree, ".format(label_scale_down) + "\n " + x_name + ", " + y_name + " at t {:.2f} s".format(time) + ", total down is {:.2e}".format(total_down),
                     labelpos='E',
                     coordinates='figure', angle=45,
                 )
@@ -1847,8 +1936,7 @@ def plot_quiver_from_chunk2D(
         ax.set_ylabel(
             'z ({})'.format(coord_scale_str)
         )
-        
-            
+
         plt.xticks(np.arange(0, (max(Coord1[:,0])-min(Coord1[:,0]))/coord_scale+2, 2))
         plt.yticks(np.arange(0, (max(Coord2[0,:])-min(Coord2[0,:]))/coord_scale+6, 6))
         fig.savefig(
@@ -1865,15 +1953,546 @@ def plot_quiver_from_chunk2D(
         plt.close('all')
 
 
+def plot_quiver_from_chunk2D_fraction(
+        lmp_path,
+        n_ave, x_name, y_name, inputstepsarray,
+        spaceave=None,
+        x_scale_factor=1, x_scale_str=None, y_scale_factor=1, y_scale_str=None,
+        quiver_scale=0.1, label_scale=0.2,
+        ifloglength=False,
+        logvaluemin=10**-4,
+        valueminus=0,
+        ifplotseparateupdown=False,
+        quiver_scale_up=0.1, label_scale_up=0.2,
+        quiver_scale_down=0.1, label_scale_down=0.2,
+        ifstreamplot=True,
+        ifcontour=True,
+        contour_norm="linear",
+        contour_v_min_max="constant", # or "min_to_max",
+        vmin=-10, vmax=10,
+        ave_y=1, ave_z=1,
+    ):
+
+    diagram_path_add_nve = dp.diagram_path + "n_ave_" + str(n_ave) + "/"
+    if ifloglength:
+        quiver_scale = np.log10(quiver_scale/logvaluemin)
+        label_scale = np.log10(label_scale/logvaluemin)
+        quiver_scale_up = np.log10(quiver_scale_up/logvaluemin)
+        label_scale_up = np.log10(label_scale_up/logvaluemin)
+        quiver_scale_down = np.log10(quiver_scale_down/logvaluemin)
+        label_scale_down = np.log10(label_scale_down/logvaluemin)
+    # str for variable used in figure label legend
+    x_name_label_in_figure = transfer_v_name_to_label_str_in_figure(x_name).replace('_middle', '')
+    y_name_label_in_figure = transfer_v_name_to_label_str_in_figure(y_name).replace('_middle', '')
+    # spaceave: coord1, coord2
+    time_array = time_from_start_rotate(inputstepsarray)
+    
+    x_value = get_value_include_ts_t_st(lmp_path, x_name, n_ave, inputstepsarray, y_name)
+    y_value = get_value_include_ts_t_st(lmp_path, y_name, n_ave, inputstepsarray, y_name)
+    mask = x_value>0.1
+    x_value[mask] = x_value[mask] - valueminus
+    mask = y_value>0.1
+    y_value[mask] = y_value[mask] - valueminus
+    # scale factor
+    x_value = x_value/x_scale_factor
+    y_value = y_value/y_scale_factor
+    # subfolder name
+    subfoldername = y_name + "_" + x_name + "/"
+    os.makedirs(diagram_path_add_nve + subfoldername, exist_ok=True)
+    os.makedirs(diagram_path_add_nve + subfoldername + "streamplot/", exist_ok=True)
+    if ifplotseparateupdown:
+        os.makedirs(diagram_path_add_nve + subfoldername + "up/", exist_ok=True)
+        os.makedirs(diagram_path_add_nve + subfoldername + "down/", exist_ok=True)
+    if ifloglength:
+        os.makedirs(diagram_path_add_nve + subfoldername + "log/", exist_ok=True)
+        if ifplotseparateupdown:
+            os.makedirs(diagram_path_add_nve + subfoldername + "log/" + "up/", exist_ok=True)
+            os.makedirs(diagram_path_add_nve + subfoldername + "log/" + "down/", exist_ok=True)
+    char = pn.c_r_npyfilepath_coord_char[y_name]["coordinate_characteristic"]
+    Coord1 = pn.load_coord(lmp_path, char, "Coord1")
+    Coord2 = pn.load_coord(lmp_path, char, "Coord2")
+    
+    x_value_ave = 0
+    y_value_ave = 0
+    Coord1_ave = 0
+    Coord2_ave = 0
+    n_y = Coord1.shape[0]
+    n_z = Coord1.shape[1] 
+    for i in range(ave_y):
+        for j in range(ave_z):
+            x_value_ave += x_value[:, i:i+1-ave_y+n_y, j:j+1-ave_z+n_z]
+            y_value_ave += y_value[:, i:i+1-ave_y+n_y, j:j+1-ave_z+n_z]
+            Coord1_ave += Coord1[i:i+1-ave_y+n_y, j:j+1-ave_z+n_z]
+            Coord2_ave += Coord2[i:i+1-ave_y+n_y, j:j+1-ave_z+n_z]
+    x_value_ave = x_value_ave/ave_y/ave_z
+    y_value_ave = y_value_ave/ave_y/ave_z
+    Coord1_ave = Coord1_ave/ave_y/ave_z
+    Coord2_ave = Coord2_ave/ave_y/ave_z
+    x_value = x_value_ave
+    y_value = y_value_ave
+    Coord1 = Coord1_ave
+    Coord2 = Coord2_ave
+    # plot quiver vector field
+    for indexstep, step in enumerate(inputstepsarray):
+        x_value_plot = x_value[indexstep]
+        y_value_plot = y_value[indexstep]
+        # plot ave_z velocity across y
+        fig, ax = plt.subplots()
+        
+        # title
+
+        if x_scale_str is None:
+            x_label_str = x_name_label_in_figure
+        else:
+            x_label_str = x_name_label_in_figure + " (" + x_scale_str + ")"
+        ax.set_xlabel(x_label_str)
+        
+        if y_scale_str is None:
+            y_label_str = y_name_label_in_figure
+        else:
+            y_label_str = y_name_label_in_figure + " (" + y_scale_str + ")"
+        ax.set_ylabel(y_label_str)            
+        # plot
+        if ifloglength:
+            length = (x_value_plot**2 + y_value_plot**2)**0.5
+            masktolog = (length>=logvaluemin)
+            length_log = np.copy(length)
+            length_log[masktolog] = 1+logvaluemin + np.log10(length[masktolog]/logvaluemin)
+            #breakpoint()
+            x_value_plot_log = length_log*x_value_plot/length
+            y_value_plot_log = length_log*y_value_plot/length
+            Q = ax.quiver(
+                Coord1/coord_scale, Coord2/coord_scale, x_value_plot_log, y_value_plot_log,
+                units='width',angles='xy', scale_units='xy', scale=quiver_scale,
+                cmap='hsv',
+            )
+        else:
+            Q = ax.quiver(
+                Coord1/coord_scale, Coord2/coord_scale, x_value_plot, y_value_plot,
+                units='width',angles='xy', scale_units='xy', scale=quiver_scale,
+                cmap='hsv',
+            )
+            
+        
+        ax.set_xlabel(
+            'y ({})'.format(coord_scale_str)
+        )
+        ax.set_ylabel(
+            'z ({})'.format(coord_scale_str)
+        )
+        time = time_from_start_rotate(step)
+        if ifloglength:
+            ax.quiverkey(
+                Q, 0.1, 0.95, label_scale,
+                label = "logscale, : {:.2e} in 45 degree, ".format(label_scale) + "\n " + x_name + ", " + y_name + " at t {:.2f} s".format(time),
+                labelpos='E',
+                coordinates='figure', angle=45,
+            )
+        else:
+            ax.quiverkey(
+                Q, 0.1, 0.95, label_scale,
+                label = " : {:.2e} in 45 degree, ".format(label_scale) + "\n " + x_name + ", " + y_name + " at t {:.2f} s".format(time),
+                labelpos='E',
+                coordinates='figure', angle=45,
+            )
+            
+        plt.xticks(np.arange(0, (max(Coord1[:,0])-min(Coord1[:,0]))/coord_scale+2, 2))
+        plt.yticks(np.arange(0, (max(Coord2[0,:])-min(Coord2[0,:]))/coord_scale+6, 6))
+
+        if ifloglength:
+            fig.savefig(
+                "_".join([
+                    diagram_path_add_nve + subfoldername + "log/" + 'step',
+                    str(step),
+                    ".png",
+                ]),
+                format="png",
+                bbox_inches=None,
+            )
+        else:
+            fig.savefig(
+                "_".join([
+                    diagram_path_add_nve + subfoldername + 'step',
+                    str(step),
+                    ".png",
+                ]),
+                format="png",
+                bbox_inches=None,
+            )
+
+        # close figure after save
+        plt.close('all')
+    # plot up and down separate figure
+    if ifplotseparateupdown:
+        maskup = y_value>0
+        maskdown = y_value<0
+        x_value_up = np.zeros_like(x_value)
+        y_value_up = np.zeros_like(y_value)
+        x_value_down = np.zeros_like(x_value)
+        y_value_down = np.zeros_like(y_value)
+        x_value_up[maskup] = x_value[maskup]
+        y_value_up[maskup] = y_value[maskup]
+        x_value_down[maskdown] = x_value[maskdown]
+        y_value_down[maskdown] = y_value[maskdown]
+        for indexstep, step in enumerate(inputstepsarray):
+            x_value_plot = x_value_up[indexstep]
+            y_value_plot = y_value_up[indexstep]
+            total_up = np.sum(y_value_plot)
+            # plot ave_z velocity across y
+            fig, ax = plt.subplots()
+            
+            # title
+
+            if x_scale_str is None:
+                x_label_str = x_name_label_in_figure
+            else:
+                x_label_str = x_name_label_in_figure + " (" + x_scale_str + ")"
+            ax.set_xlabel(x_label_str)
+            
+            if y_scale_str is None:
+                y_label_str = y_name_label_in_figure
+            else:
+                y_label_str = y_name_label_in_figure + " (" + y_scale_str + ")"
+            ax.set_ylabel(y_label_str)            
+            # plot
+            if ifloglength:
+                length = (x_value_plot**2 + y_value_plot**2)**0.5
+                masktolog = (length>=logvaluemin)
+                length_log = np.copy(length)
+                length_log[masktolog] = 1+logvaluemin + np.log10(length[masktolog]/logvaluemin)
+                #breakpoint()
+                x_value_plot_log = length_log*x_value_plot/length
+                y_value_plot_log = length_log*y_value_plot/length
+                Q = ax.quiver(
+                    Coord1/coord_scale, Coord2/coord_scale, x_value_plot_log, y_value_plot_log,
+                    units='width',angles='xy', scale_units='xy', scale=quiver_scale_up,
+                    cmap='hsv',
+                )
+            else:
+                Q = ax.quiver(
+                    Coord1/coord_scale, Coord2/coord_scale, x_value_plot, y_value_plot,
+                    units='width',angles='xy', scale_units='xy', scale=quiver_scale_up,
+                    cmap='hsv',
+                )
+                
+            
+            ax.set_xlabel(
+                'y ({})'.format(coord_scale_str)
+            )
+            ax.set_ylabel(
+                'z ({})'.format(coord_scale_str)
+            )
+            time = time_from_start_rotate(step)
+            if ifloglength:
+                ax.quiverkey(
+                    Q, 0.1, 0.95, label_scale_up,
+                    label = "up, logscale, : {:.2e} in 45 degree, ".format(label_scale_up) + "\n " + x_name + ", " + y_name + " at t {:.2f} s".format(time) + ", total up is {:.2e}".format(total_up),
+                    labelpos='E',
+                    coordinates='figure', angle=45,
+                )
+            else:
+                ax.quiverkey(
+                    Q, 0.1, 0.95, label_scale_up,
+                    label = " : up, {:.2e} in 45 degree, ".format(label_scale_up) + "\n " + x_name + ", " + y_name + " at t {:.2f} s".format(time) + ", total up is {:.2e}".format(total_up),
+                    labelpos='E',
+                    coordinates='figure', angle=45,
+                )
+                
+            plt.xticks(np.arange(0, (max(Coord1[:,0])-min(Coord1[:,0]))/coord_scale+2, 2))
+            plt.yticks(np.arange(0, (max(Coord2[0,:])-min(Coord2[0,:]))/coord_scale+6, 6))
+
+            if ifloglength:
+                fig.savefig(
+                    "_".join([
+                        diagram_path_add_nve + subfoldername + "log/" + "up/" + 'step',
+                        str(step),
+                        ".png",
+                    ]),
+                    format="png",
+                    bbox_inches=None,
+                )
+            else:
+                fig.savefig(
+                    "_".join([
+                        diagram_path_add_nve + subfoldername + "up/" + 'step',
+                        str(step),
+                        ".png",
+                    ]),
+                    format="png",
+                    bbox_inches=None,
+                )
+
+            # close figure after save
+            plt.close('all')
+
+        for indexstep, step in enumerate(inputstepsarray):
+            x_value_plot = x_value_down[indexstep]
+            y_value_plot = y_value_down[indexstep]
+            total_down = np.sum(y_value_plot)
+            # plot ave_z velocity across y
+            fig, ax = plt.subplots()
+            
+            # title
+
+            if x_scale_str is None:
+                x_label_str = x_name_label_in_figure
+            else:
+                x_label_str = x_name_label_in_figure + " (" + x_scale_str + ")"
+            ax.set_xlabel(x_label_str)
+            
+            if y_scale_str is None:
+                y_label_str = y_name_label_in_figure
+            else:
+                y_label_str = y_name_label_in_figure + " (" + y_scale_str + ")"
+            ax.set_ylabel(y_label_str)            
+            # plot
+            if ifloglength:
+                length = (x_value_plot**2 + y_value_plot**2)**0.5
+                masktolog = (length>=logvaluemin)
+                length_log = np.copy(length)
+                length_log[masktolog] = 1+logvaluemin + np.log10(length[masktolog]/logvaluemin)
+                #breakpoint()
+                x_value_plot_log = length_log*x_value_plot/length
+                y_value_plot_log = length_log*y_value_plot/length
+                Q = ax.quiver(
+                    Coord1/coord_scale, Coord2/coord_scale, x_value_plot_log, y_value_plot_log,
+                    units='width',angles='xy', scale_units='xy', scale=quiver_scale_down,
+                    cmap='hsv',
+                )
+            else:
+                Q = ax.quiver(
+                    Coord1/coord_scale, Coord2/coord_scale, x_value_plot, y_value_plot,
+                    units='width',angles='xy', scale_units='xy', scale=quiver_scale_down,
+                    cmap='hsv',
+                )
+                
+            
+            ax.set_xlabel(
+                'y ({})'.format(coord_scale_str)
+            )
+            ax.set_ylabel(
+                'z ({})'.format(coord_scale_str)
+            )
+            time = time_from_start_rotate(step)
+            if ifloglength:
+                ax.quiverkey(
+                    Q, 0.1, 0.95, label_scale_down,
+                    label = "down, logscale, : {:.2e} in 45 degree, ".format(label_scale_down) + "\n " + x_name + ", " + y_name + " at t {:.2f} s".format(time) + ", total down is {:.2e}".format(total_down),
+                    labelpos='E',
+                    coordinates='figure', angle=45,
+                )
+            else:
+                ax.quiverkey(
+                    Q, 0.1, 0.95, label_scale_down,
+                    label = " : down, {:.2e} in 45 degree, ".format(label_scale_down) + "\n " + x_name + ", " + y_name + " at t {:.2f} s".format(time) + ", total down is {:.2e}".format(total_down),
+                    labelpos='E',
+                    coordinates='figure', angle=45,
+                )
+                
+            plt.xticks(np.arange(0, (max(Coord1[:,0])-min(Coord1[:,0]))/coord_scale+2, 2))
+            plt.yticks(np.arange(0, (max(Coord2[0,:])-min(Coord2[0,:]))/coord_scale+6, 6))
+
+            if ifloglength:
+                fig.savefig(
+                    "_".join([
+                        diagram_path_add_nve + subfoldername + "log/" + "down/" + 'step',
+                        str(step),
+                        ".png",
+                    ]),
+                    format="png",
+                    bbox_inches=None,
+                )
+            else:
+                fig.savefig(
+                    "_".join([
+                        diagram_path_add_nve + subfoldername + "down/" + 'step',
+                        str(step),
+                        ".png",
+                    ]),
+                    format="png",
+                    bbox_inches=None,
+                )
+
+            # close figure after save
+            plt.close('all')
+    # plot streamplot
+    for indexstep, step in enumerate(inputstepsarray):
+        x_value_plot = x_value[indexstep]
+        y_value_plot = y_value[indexstep]
+        # plot ave_z velocity across y
+        fig, ax = plt.subplots()
+        
+        # title
+
+        if x_scale_str is None:
+            x_label_str = x_name_label_in_figure
+        else:
+            x_label_str = x_name_label_in_figure + " (" + x_scale_str + ")"
+        ax.set_xlabel(x_label_str)
+        
+        if y_scale_str is None:
+            y_label_str = y_name_label_in_figure
+        else:
+            y_label_str = y_name_label_in_figure + " (" + y_scale_str + ")"
+        ax.set_ylabel(y_label_str)
+        # check if line0
+        if ifstreamplot:
+            # plot
+            strm = ax.streamplot(
+                Coord1[:,0]/coord_scale, Coord2[0,:]/coord_scale, np.transpose(x_value_plot), np.transpose(y_value_plot),
+                linewidth=1, color='k',
+                density=[0.8, 0.8],
+            )
+        vector_length = np.sqrt(x_value_plot**2 + y_value_plot**2)
+        vector_length = np.ma.masked_where(np.logical_not(vector_length > 0), vector_length)
+        #breakpoint()
+        d_Coord1 = Coord1[:,0][1]-Coord1[:,0][0]
+        d_Coord2 = Coord2[0,:][1]-Coord2[0,:][0]
+        Coord1_expand = Coord1[:,0] - d_Coord1/2
+        Coord1_expand = np.append(Coord1_expand, (Coord1_expand[-1]+d_Coord1))
+        Coord2_expand = Coord2[0,:] - d_Coord2/2
+        Coord2_expand = np.append(Coord2_expand, (Coord2_expand[-1]+d_Coord2))
+        if ifcontour:
+            if contour_v_min_max == "constant":
+                if contour_norm == "linear":
+                    contour = ax.pcolor(
+                        Coord1_expand/coord_scale, Coord2_expand/coord_scale, np.transpose(vector_length),
+                        norm=colors.Normalize(vmin=vmin, vmax=vmax), #norm=colors.LogNorm(vmin=10**-1, vmax=10), #norm=colors.LogNorm(vmin=np.transpose(vector_length).min(), vmax=np.transpose(vector_length).max()),
+                        cmap='coolwarm',
+                    )
+                elif contour_norm == "log":
+                    contour = ax.pcolor(
+                    Coord1_expand/coord_scale, Coord2_expand/coord_scale, np.transpose(vector_length),
+                    norm=colors.LogNorm(vmin=vmin, vmax=vmax), #norm=colors.LogNorm(vmin=np.transpose(vector_length).min(), vmax=np.transpose(vector_length).max()),
+                    cmap='coolwarm',
+                )
+                else:
+                    sys.exit("Error: contour_norm not defined")
+            elif contour_v_min_max == "min_to_max":
+                if contour_norm == "linear":
+                    contour = ax.pcolor(
+                        Coord1_expand/coord_scale, Coord2_expand/coord_scale, np.transpose(vector_length),
+                        norm=colors.Normalize(vmin=np.transpose(vector_length).min(), vmax=np.transpose(vector_length).max()),
+                        cmap='coolwarm',
+                    )
+                elif contour_norm == "log":
+                    contour = ax.pcolor(
+                    Coord1_expand/coord_scale, Coord2_expand/coord_scale, np.transpose(vector_length),
+                    norm=colors.LogNorm(vmin=np.transpose(vector_length).min(), vmax=np.transpose(vector_length).max()),
+                    cmap='coolwarm',
+                )
+                else:
+                    sys.exit("Error: contour_norm not defined")
+            else:
+                sys.exit("Error: contour_v_min_max not defined")
+            fig.colorbar(contour, ax=ax, extend='max')
+
+        time = time_from_start_rotate(step)
+        strain = strain_from_rotate_start(step)
+        ax.set_title(
+            "t = {:.2f} s".format(time) + ", strain is {:.2f}".format(strain)
+        )
+        ax.set_xlabel(
+            'y ({})'.format(coord_scale_str)
+        )
+        ax.set_ylabel(
+            'z ({})'.format(coord_scale_str)
+        )
+
+        plt.xticks(np.arange(0, (max(Coord1[:,0])-min(Coord1[:,0]))/coord_scale+2, 2))
+        plt.yticks(np.arange(0, (max(Coord2[0,:])-min(Coord2[0,:]))/coord_scale+6, 6))
+        fig.savefig(
+            "_".join([
+                diagram_path_add_nve + subfoldername + 'streamplot/' + 'step',
+                str(step),
+                ".png",
+            ]),
+            format="png",
+            bbox_inches=None,
+        )
+
+        # close figure after save
+        plt.close('all')
+
+
+def plotdata_nochunk(
+        lmp_path,
+        if_on_paper, n_ave, 
+        inputstepsarray,
+        x_name, x_scale_factor, fig_x_label,
+        y_name, y_scale_factor, fig_y_label,
+        useerrorbar,
+        if_mv_over_m=False,
+        if_include_0_y_axis=False,
+    ):
+    # onpaper
+
+    # plot data from chunk2D chunk1D
+    # choose lmp_path path for read data
+    # n_ave for average data output
+    # x_name, y_name
+    # choose timestep inputstepsarray
+    # choose coord1_index_array, coord2_index_array,
+    # n_ave_coord1, n_ave_coord2 for number of average
+    # x_scale_factor=1, x_scale_str=None, y_scale_factor=1, y_scale_str=None,
+        # ifdivideNcount = False,
+        # maskstatic=None,
+        # masknonstatic=None,
+    # output x y coord1 coord2 time
+    
+    # useerrorbar = True
+    # output std x_value_std
+    
+
+    # figure_class=None, legend_class=None,
+    # x_scale = 'linear', y_scale = 'linear',
+    
+    
+
+    # output figure
+
+    # create folder
+    plotdata_createfolder(if_on_paper, n_ave, x_name, y_name)
+
+    (fig, ax) = plotdata_figure_process_nochunk(
+        lmp_path,
+        if_on_paper,
+        n_ave,
+        inputstepsarray,
+        x_name, x_scale_factor, fig_x_label,
+        y_name, y_scale_factor, fig_y_label,
+        useerrorbar,
+        if_mv_over_m=if_mv_over_m,
+        if_include_0_y_axis=if_include_0_y_axis,
+    )
+    file_name = "_".join([
+        y_name,
+        x_name,
+        "nave_" + str(n_ave),
+        "st_" + transfer_time_to_str(inputstepsarray),
+    ])
+    fig.savefig(
+    "".join([
+        plotdata_folder_path(if_on_paper, n_ave, x_name, y_name),
+        file_name,
+        ".png",
+    ]),
+    format="png",
+    )
+    # close figure after save
+    plt.close('all')
+
+
 def plotdata(
         lmp_path,
         if_on_paper, n_ave, 
         inputstepsarray,
         coord1_index_array,
         coord2_index_array,
-        x_name, x_scale_factor, fig_x_label, x_array_legend_input_array_dim_order, x_array_legend_output_array_dim_order,
-        y_name, y_scale_factor, fig_y_label, y_array_legend_input_array_dim_order, y_array_legend_output_array_dim_order,
-        if_plot_errorbar,
+        x_name, x_scale_factor, fig_x_label, x_array_dim_order, x_array_legend_input_array_dim_order, x_array_legend_output_array_dim_order,
+        y_name, y_scale_factor, fig_y_label, y_array_dim_order, y_array_legend_input_array_dim_order, y_array_legend_output_array_dim_order,
+        useerrorbar,
+        if_mv_over_m=False,
     ):
     # onpaper
 
@@ -1905,28 +2524,200 @@ def plotdata(
     plotdata_createfolder(if_on_paper, n_ave, x_name, y_name)
 
     (fig, ax) = plotdata_figure_process(
-        lmp_path
+        lmp_path,
+        if_on_paper,
+        n_ave,
         inputstepsarray,
         coord1_index_array,
         coord2_index_array,
-        x_name, x_scale_factor, fig_x_label, x_array_legend_input_array_dim_order, x_array_legend_output_array_dim_order,
-        y_name, y_scale_factor, fig_y_label, y_array_legend_input_array_dim_order, y_array_legend_output_array_dim_order,
-        if_plot_errorbar,
+        x_name, x_scale_factor, fig_x_label, x_array_dim_order, x_array_legend_input_array_dim_order, x_array_legend_output_array_dim_order,
+        y_name, y_scale_factor, fig_y_label, y_array_dim_order, y_array_legend_input_array_dim_order, y_array_legend_output_array_dim_order,
+        useerrorbar,
+        if_mv_over_m=if_mv_over_m,
     )
     plotdata_figure_save(
         fig, ax,
+        n_ave,
         x_name,
         y_name,
         inputstepsarray,
         coord1_index_array,
         coord2_index_array,
+        y_array_legend_input_array_dim_order,
+        y_array_legend_output_array_dim_order,
         if_on_paper,
     )
+
+def plotdata1(
+        lmp_path,
+        if_on_paper, n_ave, 
+        inputstepsarray,
+        coord1_index_array,
+        coord2_index_array,
+        x_name, x_scale_factor, fig_x_label, x_array_dim_order, x_array_legend_input_array_dim_order, x_array_legend_output_array_dim_order,
+        y_name, y_scale_factor, fig_y_label, y_array_dim_order, y_array_legend_input_array_dim_order, y_array_legend_output_array_dim_order,
+        useerrorbar,
+        if_mv_over_m=False,
+    ):
+    y_dict = {
+        'name': y_name, 'scale_factor': y_scale_factor, 'fig_label': fig_y_label,
+        'array_dim_order': y_array_dim_order,
+        'legend_input_array_dim_order': y_array_legend_input_array_dim_order, 'legend_output_array_dim_order': y_array_legend_output_array_dim_order,
+    }
+    # create folder
+    plotdata_createfolder(if_on_paper, n_ave, x_name, y_name)
+
+    (fig, ax) = plotdata_figure_process(
+        lmp_path,
+        if_on_paper,
+        n_ave,
+        inputstepsarray,
+        coord1_index_array,
+        coord2_index_array,
+        x_name, x_scale_factor, fig_x_label, x_array_dim_order, x_array_legend_input_array_dim_order, x_array_legend_output_array_dim_order,
+        y_name, y_scale_factor, fig_y_label, y_array_dim_order, y_array_legend_input_array_dim_order, y_array_legend_output_array_dim_order,
+        useerrorbar,
+        if_mv_over_m=if_mv_over_m,
+    )
+    listforcolor = [0, 5, 10, 15, 20, 25, 30]
+    colorlist = ['black', 'blue', 'green', 'red', 'c', 'purple', 'chocolate', 'pink', 'navy']
+    for i in range(len(listforcolor)-1):
+        for n in range(listforcolor[i], listforcolor[i+1]):
+            ax.properties()['children'][n].set_color(colorlist[i])
+    # legend x y
+    legend_dic = legend_dic_produce(y_dict, inputstepsarray, coord1_index_array, coord2_index_array)
+    if not if_on_paper:
+        ax.legend(title=legend_dic['title'], loc='upper left', bbox_to_anchor=(1, 1))
+    ax.set_xscale('log')
+    plotdata_figure_save(
+        fig, ax,
+        n_ave,
+        x_name,
+        y_name,
+        inputstepsarray,
+        coord1_index_array,
+        coord2_index_array,
+        y_array_legend_input_array_dim_order,
+        y_array_legend_output_array_dim_order,
+        if_on_paper,
+    )
+
+def plotdata2(
+        lmp_path,
+        if_on_paper, n_ave, 
+        inputstepsarray,
+        coord1_index_array,
+        coord2_index_array,
+        x_name, x_scale_factor, fig_x_label, x_array_dim_order, x_array_legend_input_array_dim_order, x_array_legend_output_array_dim_order,
+        y_name, y_scale_factor, fig_y_label, y_array_dim_order, y_array_legend_input_array_dim_order, y_array_legend_output_array_dim_order,
+        useerrorbar,
+        if_mv_over_m=False,
+    ):
+    y_dict = {
+        'name': y_name, 'scale_factor': y_scale_factor, 'fig_label': fig_y_label,
+        'array_dim_order': y_array_dim_order,
+        'legend_input_array_dim_order': y_array_legend_input_array_dim_order, 'legend_output_array_dim_order': y_array_legend_output_array_dim_order,
+    }
+    # create folder
+    plotdata_createfolder(if_on_paper, n_ave, x_name, y_name)
+
+    (fig, ax) = plotdata_figure_process(
+        lmp_path,
+        if_on_paper,
+        n_ave,
+        inputstepsarray,
+        coord1_index_array,
+        coord2_index_array,
+        x_name, x_scale_factor, fig_x_label, x_array_dim_order, x_array_legend_input_array_dim_order, x_array_legend_output_array_dim_order,
+        y_name, y_scale_factor, fig_y_label, y_array_dim_order, y_array_legend_input_array_dim_order, y_array_legend_output_array_dim_order,
+        useerrorbar,
+        if_mv_over_m=if_mv_over_m,
+    )
+    listforcolor = np.arange(0,6,1)
+    colorlist = ['black', 'blue', 'green', 'red', 'c', 'purple', 'chocolate', 'pink', 'navy','black', 'blue', 'green', 'red', 'c', 'purple', 'chocolate', 'pink', 'navy']
+    for i in range(len(listforcolor)-1):
+        for n in range(listforcolor[i], listforcolor[i+1]):
+            ax.properties()['children'][n].set_color(colorlist[i])
+    # legend x y
+    legend_dic = legend_dic_produce(y_dict, inputstepsarray, coord1_index_array, coord2_index_array)
+    if not if_on_paper:
+        ax.legend(title=legend_dic['title'], loc='upper left', bbox_to_anchor=(1, 1))
+    ax.set_xscale('log')
+    plotdata_figure_save(
+        fig, ax,
+        n_ave,
+        x_name,
+        y_name,
+        inputstepsarray,
+        coord1_index_array,
+        coord2_index_array,
+        y_array_legend_input_array_dim_order,
+        y_array_legend_output_array_dim_order,
+        if_on_paper,
+    )
+
+def legend_dic_produce(y_dict, inputstepsarray, coord1_index_array, coord2_index_array):
+    if coord1_index_array is not None and coord2_index_array is not None:
+        if y_dict["legend_output_array_dim_order"] == '(c1c2)t':
+            coord_key_list = ["Coord1", "Coord2"]
+            legend_input_coord_array_dim_order = 'c1c2'
+            legend_output_coord_array_dim_order = '(c1c2)'
+        elif y_dict["legend_output_array_dim_order"] in ['tc1c2ave']:
+            coord_key_list = ["Coord1", "Coord2"]
+            legend_input_coord_array_dim_order = 'c1c2'
+            legend_output_coord_array_dim_order = 'c1c2ave'
+
+    elif coord1_index_array is not None and coord2_index_array is None:
+        coord_key_list = ["Coord1"]
+        legend_input_coord_array_dim_order = 'c1'
+        if y_dict["legend_output_array_dim_order"] in ['c1t', 'c1c2avet']:
+            legend_output_coord_array_dim_order = 'c1'
+        elif y_dict["legend_output_array_dim_order"] == 'c1avet':
+            legend_output_coord_array_dim_order = 'c1ave'
+
+    elif coord1_index_array is None and coord2_index_array is not None:
+        coord_key_list = ["Coord2"]
+        legend_input_coord_array_dim_order = 'c2'
+        if y_dict["legend_output_array_dim_order"] in ['c2t', 'c2c1avet']:
+            legend_output_coord_array_dim_order = 'c2'
+        elif y_dict["legend_output_array_dim_order"] == 'c2avet':
+            legend_output_coord_array_dim_order = 'c2ave'
+    
+    char = pn.c_r_npyfilepath_coord_char[y_dict['name']]["coordinate_characteristic"]
+    Coord = {}
+    for key in coord_key_list:
+        Coord[key] = pn.load_coord(lmp_path, char, key)
+        # select corrd
+        Coord[key] = select_coord(Coord[key], legend_input_coord_array_dim_order, coord1_index_array, coord2_index_array)
+        Coord[key] = value_array_to_plot(Coord[key], legend_input_coord_array_dim_order, legend_output_coord_array_dim_order)
+    
+    legend_dic = {}
+    # create legend label string
+    if y_dict["legend_output_array_dim_order"] != 'tc1c2ave':
+
+        if coord1_index_array is not None and coord2_index_array is not None:
+            legend_dic['label_list'] = [str(c1)+ "," +str(c2) for (c1, c2) in zip(Coord["Coord1"], Coord["Coord2"])]
+            legend_dic['title'] = plot_func_input["Coord1"]["axis_label"] + "," + plot_func_input["Coord2"]["axis_label"]
+
+        elif coord1_index_array is not None and coord2_index_array is None:
+            legend_dic['label_list'] = [str(c1) for c1 in Coord["Coord1"]]
+            legend_dic['title'] = plot_func_input["Coord1"]["axis_label"]
+
+        elif coord1_index_array is None and coord2_index_array is not None:
+            legend_dic['label_list'] = [str(c2) for c2 in Coord["Coord2"]]
+            legend_dic['title'] = plot_func_input["Coord2"]["axis_label"]
+            
+    elif y_dict["legend_output_array_dim_order"] == 'tc1c2ave':
+        legend_dic['label_list'] = ["{:.2f}".format(s) for s in strain_from_rotate_start(inputstepsarray)]
+        legend_dic['title'] = 'strain'
+    return legend_dic
+
 def plotdata_folder_path(if_on_paper, n_ave, x_name, y_name):
     # folderpath
     if if_on_paper:
         folderpath = "".join([
-            dp.diagram_path,
+            dp.diagram_path, 
+            "onpaper/",
             "n_ave_",
             str(n_ave),
             "/",
@@ -1937,8 +2728,8 @@ def plotdata_folder_path(if_on_paper, n_ave, x_name, y_name):
         ])
     else:
         folderpath = "".join([
-            dp.diagram_path, 
-            "onpaper/",
+            dp.diagram_path,
+            "notonpaper/",
             "n_ave_",
             str(n_ave),
             "/",
@@ -1956,27 +2747,44 @@ def plotdata_createfolder(if_on_paper, n_ave, x_name, y_name):
         exist_ok=True,
     )
 
-def plotdata_file_name(if_on_paper, n_ave, x_name, y_name, stepsarray, coord1array, coord2array):
-    # file_name
-    file_name = "_".join([
-        y_name,
-        x_name,
-        "nave_" + str(n_ave),
-        "st_" + transfer_time_to_str(stepsarray),
-        "c1_" + transfer_coor_to_str(coord1array),
-        "c2_" + transfer_coor_to_str(coord2array),
-    ])
-    return file_name
-
-def plotdata_data_process(
-        lmp_path, if_on_paper, n_ave,
-        x_name, y_name,
-        inputstepsarray,
-        coord1_index_array,
-        coord2_index_array,
-        from_chunk_dim,
+def plotdata_file_name(
+        if_on_paper, n_ave, x_name, y_name, stepsarray, coord1array, coord2array,
+        y_array_legend_input_array_dim_order,
+        y_array_legend_output_array_dim_order,
     ):
-
+    # file_name
+    if coord1array is not None and coord2array is not None:
+        file_name = "_".join([
+            y_name,
+            x_name,
+            "nave_" + str(n_ave),
+            "st_" + transfer_time_to_str(stepsarray),
+            "c1_" + transfer_coor_to_str(coord1array),
+            "c2_" + transfer_coor_to_str(coord2array),
+            "yli_" + y_array_legend_input_array_dim_order,
+            "ylo_" + y_array_legend_output_array_dim_order,
+        ])
+    elif coord1array is None and coord2array is not None:
+        file_name = "_".join([
+            y_name,
+            x_name,
+            "nave_" + str(n_ave),
+            "st_" + transfer_time_to_str(stepsarray),
+            "c2_" + transfer_coor_to_str(coord2array),
+            "yli_" + y_array_legend_input_array_dim_order,
+            "ylo_" + y_array_legend_output_array_dim_order,
+        ])
+    elif coord1array is not None and coord2array is None:
+        file_name = "_".join([
+            y_name,
+            x_name,
+            "nave_" + str(n_ave),
+            "st_" + transfer_time_to_str(stepsarray),
+            "c1_" + transfer_coor_to_str(coord1array),
+            "yli_" + y_array_legend_input_array_dim_order,
+            "ylo_" + y_array_legend_output_array_dim_order,
+        ])
+    return file_name
 
 def value_array_to_plot(array, input_array_dim_order, output_array_dim_order, motion=None):
     """
@@ -1996,6 +2804,14 @@ def value_array_to_plot(array, input_array_dim_order, output_array_dim_order, mo
         `a` with its axes permuted.  A view is returned whenever
         possible.
     """
+    if input_array_dim_order == "tc1c2" and output_array_dim_order == "c1c2avet" and motion == None:
+        array = np.transpose(array, axes=[1, 2, 0])
+        array = np.nanmean(array, axis=1)
+    if input_array_dim_order == "tc1c2" and output_array_dim_order == "tc1c2ave" and motion == None:
+        array = np.nanmean(array, axis=2)
+    if input_array_dim_order == "c1c2" and output_array_dim_order == "c1c2ave" and motion == None:
+        array = np.nanmean(array, axis=1)
+
     if input_array_dim_order == "tc1c2" and output_array_dim_order == "(c1c2)t" and motion == None:
         # order tc1c2 -> (c1c2)t
         # order tc1c2 -> c1c2t
@@ -2009,6 +2825,44 @@ def value_array_to_plot(array, input_array_dim_order, output_array_dim_order, mo
         # flatten all
         array = array.reshape(-1)
 
+    if input_array_dim_order == "t" and output_array_dim_order == "t" and motion == None:
+        # order c1c2 -> (c1c2)
+        # flatten all
+        pass
+
+    if input_array_dim_order == "tc1" and output_array_dim_order == "c1t" and motion == None:
+        # order tc1 -> c1t
+        array = np.transpose(array, axes=[1, 0])
+    if input_array_dim_order == "c1" and output_array_dim_order == "c1" and motion == None:
+        pass
+
+    if input_array_dim_order == "c2" and output_array_dim_order == "c2" and motion == None:
+        pass
+
+    if input_array_dim_order == "tc2" and output_array_dim_order == "c2t" and motion == None:
+        # order tc1 -> c1t
+        array = np.transpose(array, axes=[1, 0])
+    
+    if input_array_dim_order == "c2" and output_array_dim_order == "c2ave" and motion == None:
+        array = np.nanmean(array)
+        array = np.expand_dims(array, axis=0)
+
+    if input_array_dim_order == "tc2" and output_array_dim_order == "c2avet" and motion == None:
+        # order tc1 -> c1t
+        array = np.transpose(array, axes=[1, 0])
+        array = np.nanmean(array, axis=0)
+        array = np.expand_dims(array, axis=0)
+    
+    if input_array_dim_order == "c1" and output_array_dim_order == "c1ave" and motion == None:
+        array = np.nanmean(array)
+        array = np.expand_dims(array, axis=0)
+
+    if input_array_dim_order == "tc1" and output_array_dim_order == "c1avet" and motion == None:
+        # order tc1 -> c1t
+        array = np.transpose(array, axes=[1, 0])
+        array = np.nanmean(array, axis=0)
+        array = np.expand_dims(array, axis=0)
+
     return array
 
 
@@ -2017,7 +2871,6 @@ def value_array_to_plot(array, input_array_dim_order, output_array_dim_order, mo
 # curve tc1c2: sf N N
 def reorganize_data_stress_strain(
         array
-
     ):
     # order tc1c2 -> (c1c2)t
     array = value_array_to_plot(array, "tc1c2", "(c1c2)t")
@@ -2032,119 +2885,362 @@ def reorganize_data_stress_strain(
     stringlabel = {}
     for key in ["Coord1", "Coord2"]:
         stringlabel[key] = plot_func_input[key]["axis_label"]
-    legend_label_string_list = ["("+c1+","+c2+")", for c1, c2 in zip(Coord["Coord1"], Coord["Coord2"])]
+    legend_label_string_list = [
+        ",".join(list(c)) for c in zip(Coord["Coord1"], Coord["Coord2"])
+    ]
     legend_label_string = stringlabel["Coord1"] + "," + stringlabel["Coord2"] + "=" + ",".join(legend_label_string_list)
     
     return (x_value_plot, y_value_plot, x_value_std_plot, y_value_std_plot, labelstring)
 
+def select_coord(array, array_dim_order, coord1_index_array, coord2_index_array):
+    if coord1_index_array is not None and coord2_index_array is not None: 
+        if array_dim_order == 'tc1c2':
+            if coord1_index_array == 'all':
+                pass
+            else:
+                array = array[:, coord1_index_array, :]
+            if coord2_index_array == 'all':
+                pass
+            else:
+                array = array[:, :, coord2_index_array]
+        elif array_dim_order == 'c1c2':
+            if coord1_index_array == 'all':
+                pass
+            else:
+                array = array[coord1_index_array, :]
+            if coord2_index_array == 'all':
+                pass
+            else:
+                array = array[:, coord2_index_array]
+        elif array_dim_order == 't':
+            pass
+    elif coord1_index_array is not None and coord2_index_array is None:
+        if array_dim_order == 'tc1':
+            if coord1_index_array == 'all':
+                pass
+            else:
+                array = array[:, coord1_index_array]
+        elif array_dim_order == 'c1':
+            if coord1_index_array == 'all':
+                pass
+            else:
+                array = array[coord1_index_array]
+        elif array_dim_order == 't':
+            pass
+    elif coord1_index_array is None and coord2_index_array is not None:
+        if array_dim_order == 'tc2':
+            if coord2_index_array == 'all':
+                pass
+            else:
+                array = array[:, coord2_index_array]
+        elif array_dim_order == 'c2':
+            if coord2_index_array == 'all':
+                pass
+            else:
+                array = array[coord2_index_array]
+        elif array_dim_order == 't':
+            pass
+
+    return array
 
 
-# x-dict: name scale_factor fig_label
-def plotdata_figure_process(
-    lmp_path,
-    inputstepsarray,
-    coord1_index_array,
-    coord2_index_array,
-    x_name, x_scale_factor, fig_x_label, x_array_legend_input_array_dim_order, x_array_legend_output_array_dim_order,
-    y_name, y_scale_factor, fig_y_label, y_array_legend_input_array_dim_order, y_array_legend_output_array_dim_order,
-    if_plot_errorbar,
+
+def plot_from_organized_data(
+        fig, ax,
+        if_on_paper,
+        x_dict,
+        y_dict,
+        legend_label_list,
+        legend_title,
+        useerrorbar,
     ):
-    # get value and rescale
+
+    if x_dict['legend_output_array_dim_order'] == 't' and y_dict['legend_output_array_dim_order'] in ['(c1c2)t', 'c1t', 'c2t', 'c1avet', 'c2avet']:
+        # ax plot errorbar
+        if useerrorbar:
+            for i, legend_label in enumerate(legend_label_list):
+                ax.errorbar(
+                    x_dict['value'], y_dict['value'][i], xerr=x_dict['value_std'][i], yerr=y_dict['value_std'][i],
+                    label=legend_label,
+                    marker = ".",
+                    linestyle = 'None',
+                    markersize=12,
+                )
+        else:
+            for i, legend_label in enumerate(legend_label_list):
+                ax.plot(
+                    x_dict['value'], y_dict['value'][i],
+                    label=legend_label,
+                    marker = ".",
+                    linestyle = 'None',
+                    markersize=12,
+                )
+    elif x_dict['legend_output_array_dim_order'] == 'c1c2ave' and y_dict['legend_output_array_dim_order'] in ['tc1c2ave']:
+        # ax plot errorbar
+        if useerrorbar:
+            for i, legend_label in enumerate(legend_label_list):
+                ax.errorbar(
+                    x_dict['value'], y_dict['value'][i], xerr=x_dict['value_std'][i], yerr=y_dict['value_std'][i],
+                    label=legend_label,
+                    marker = ".",
+                    linestyle = 'None',
+                    markersize=12,
+                )
+        else:
+            for i, legend_label in enumerate(legend_label_list):
+                ax.plot(
+                    x_dict['value'], y_dict['value'][i],
+                    label=legend_label,
+                    marker = ".",
+                    linestyle = 'None',
+                    markersize=12,
+                )
+    elif x_dict['legend_output_array_dim_order'] in ['(c1c2)t'] and y_dict['legend_output_array_dim_order'] in ['(c1c2)t']:
+        # ax plot errorbar
+        if useerrorbar:
+            for i, legend_label in enumerate(legend_label_list):
+                ax.errorbar(
+                    x_dict['value'][i], y_dict['value'][i], xerr=x_dict['value_std'][i], yerr=y_dict['value_std'][i],
+                    label=legend_label,
+                    marker = ".",
+                    linestyle = 'None',
+                    markersize=12,
+                )
+        else:
+            for i, legend_label in enumerate(legend_label_list):
+                ax.plot(
+                    x_dict['value'][i], y_dict['value'][i],
+                    label=legend_label,
+                    marker = ".",
+                    linestyle = 'None',
+                    markersize=12,
+                )
+    # legend x y
+    if not if_on_paper:
+        ax.legend(title=legend_title, loc='upper left', bbox_to_anchor=(1, 1))
+
+    return (fig, ax)
+
+def plotdata_figure_process_nochunk(
+    lmp_path,
+    if_on_paper,
+    n_ave,
+    inputstepsarray,
+    x_name, x_scale_factor, fig_x_label,
+    y_name, y_scale_factor, fig_y_label,
+    useerrorbar,
+    if_mv_over_m=False,
+    if_include_0_y_axis=False,
+    ):
+    # set x y dict
     x_dict = {
         'name': x_name, 'scale_factor': x_scale_factor, 'fig_label': fig_x_label,
-        'legend_input_array_dim_order': x_array_legend_input_array_dim_order, 'legend_output_array_dim_order': x_array_legend_output_array_dim_order,
         'value': None, 'value_std': None,
     }
     y_dict = {
         'name': y_name, 'scale_factor': y_scale_factor, 'fig_label': fig_y_label,
-        'legend_input_array_dim_order': y_array_legend_input_array_dim_order, 'legend_output_array_dim_order': y_array_legend_output_array_dim_order,
         'value': None, 'value_std': None,
     }
-
     # get value for x y and rescale
     for d in [x_dict, y_dict]:
         # get value
-        d['value'] = get_value_include_ts_t_st(lmp_path, d['name'], n_ave, inputstepsarray)/d['scale_factor']
-        # select corrd
-        d['value'] = d['value'][:, coord1_index_array, coord2_index_array]
-        # reorganize data set for plot convenience
-        d['value'] = value_array_to_plot(d['value'], d['legend_input_array_dim_order'], d["legend_output_array_dim_order"])
-        # if need errorbar then get std value
-        if if_plot_errorbar:
-            d['value_std'] = get_std_value_include_ts_t_st(lmp_path, d['name'] + "_std", n_ave, inputstepsarray)/d['scale_factor']
-            # select corrd
-            d['value_std'] = d['value_std'][:, coord1_index_array, coord2_index_array]
-            # reorganize data set for plot convenience
-            d['value_std'] = value_array_to_plot(d['value_std'], d['legend_input_array_dim_order'], d["legend_output_array_dim_order"])
-
+        d['value'] = get_value_nochunk_include_ts_t_st(lmp_path, d['name'], n_ave, inputstepsarray, y_name)/d['scale_factor']
+        
     # check if x-array y-array has the same shape
-    if x_dict['value'].shape != y_dict['value'].shape:
+    xarray = x_dict['value']
+    yarray = y_dict['value']
+    if xarray.shape[-1] != yarray.shape[-1]:
         sys.exit("shape for x y are different")
-
-    # get coord
-    char = pn.c_r_npyfilepath_coord_char[y_name]["coordinate_characteristic"]
-    Coord = {}
-    for key in ["Coord1", "Coord2"]:
-        Coord[key] = pn.load_coord(lmp_path, char, key)
-        # select corrd
-        Coord[key] = Coord[key][coord1_index_array, coord2_index_array]
-        Coord[key] = value_array_to_plot(Coord[key], "c1c2", "(c1c2)")
-    # create legend label string
-    stringlabel = {}
-    for key in ["Coord1", "Coord2"]:
-        stringlabel[key] = plot_func_input[key]["axis_label"]
-    legend_label_list = [c1+","+c2, for c1, c2 in zip(Coord["Coord1"], Coord["Coord2"])]
-    legend_title = stringlabel["Coord1"] + "," + stringlabel["Coord2"]
-
+    
+    
+    
     # plot ave_z velocity across y
     fig, ax = plt.subplots()
-    # legend x y
-    ax.legend(title=legend_title, loc='upper left', bbox_to_anchor=(1, 1))
+    
     # xy scale label
-
+    ax.set_xlabel(x_dict['fig_label'])
+    ax.set_ylabel(y_dict['fig_label'])
     # rotate label
     plt.setp(ax.xaxis.get_minorticklabels(), rotation=30)
     plt.setp(ax.get_xticklabels(), rotation=30)
     # Shrink current axis by 20%
     box = ax.get_position()
     ax.set_position([box.x0, box.y0, box.width * 0.6, box.height])
+    ax.plot(
+        x_dict['value'], y_dict['value'],
+        marker = ".",
+        linestyle = 'None',
+        markersize=12,
+    )
+    # legend x y
+    if not if_on_paper:
+        ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
 
-    # ax plot errorbar
-    if useerrorbar:
-        for i, legend_label in enumerate(legend_label_list):
-            ax.errorbar(
-                x_dict['value'][i], y_dict['value'][i], xerr=x_dict['value_std'][i], yerr=y_dict['value_std'][i],
-                label=legend_label,
-                marker = ".",
-                linestyle = 'None',
-                markersize=12,
-            )
+    # if_include_0_y_axis
+    if if_include_0_y_axis:
+        if ax.get_ylim()[0]*ax.get_ylim()[1] <= 0:
+            pass
+        else:
+            if ax.get_ylim()[0] > 0:
+                ax.set_ylim(bottom=0)
+            else:
+                ax.set_ylim(top=0)
+
+    return (fig, ax)
+
+
+# x-dict: name scale_factor fig_label
+def plotdata_figure_process(
+    lmp_path,
+    if_on_paper,
+    n_ave,
+    inputstepsarray,
+    coord1_index_array,
+    coord2_index_array,
+    x_name, x_scale_factor, fig_x_label, x_array_dim_order, x_array_legend_input_array_dim_order, x_array_legend_output_array_dim_order,
+    y_name, y_scale_factor, fig_y_label, y_array_dim_order, y_array_legend_input_array_dim_order, y_array_legend_output_array_dim_order,
+    useerrorbar,
+    if_mv_over_m=False,
+    ):
+    # set x y dict
+    x_dict = {
+        'name': x_name, 'scale_factor': x_scale_factor, 'fig_label': fig_x_label,
+        'array_dim_order': x_array_dim_order,
+        'legend_input_array_dim_order': x_array_legend_input_array_dim_order, 'legend_output_array_dim_order': x_array_legend_output_array_dim_order,
+        'value': None, 'value_std': None,
+    }
+    y_dict = {
+        'name': y_name, 'scale_factor': y_scale_factor, 'fig_label': fig_y_label,
+        'array_dim_order': y_array_dim_order,
+        'legend_input_array_dim_order': y_array_legend_input_array_dim_order, 'legend_output_array_dim_order': y_array_legend_output_array_dim_order,
+        'value': None, 'value_std': None,
+    }
+    if if_mv_over_m:
+        if y_dict['name'] == "velocity_1":
+            mv_name = 'mv_1'
+        elif y_dict['name'] == "velocity_2":
+            mv_name = 'mv_2'
+        elif y_dict['name'] == "velocity_3":
+            mv_name = 'mv_3'
+
+        mv_dict = {
+            'name': mv_name, 'scale_factor': y_scale_factor, 'fig_label': fig_y_label,
+            'array_dim_order': y_array_dim_order,
+            'legend_input_array_dim_order': y_array_legend_input_array_dim_order, 'legend_output_array_dim_order': y_array_legend_output_array_dim_order,
+            'value': None, 'value_std': None,
+        }
+        m_dict = {
+            'name': 'mass', 'scale_factor': y_scale_factor, 'fig_label': fig_y_label,
+            'array_dim_order': y_array_dim_order,
+            'legend_input_array_dim_order': y_array_legend_input_array_dim_order, 'legend_output_array_dim_order': y_array_legend_output_array_dim_order,
+            'value': None, 'value_std': None,
+        }
+
+        for d in [mv_dict, m_dict]:
+            # get value
+            d['value'] = get_value_include_ts_t_st(lmp_path, d['name'], n_ave, inputstepsarray, y_name)
+            # select corrd
+            d['value'] = select_coord(d['value'], d['array_dim_order'], coord1_index_array, coord2_index_array)
+            # reorganize data set for plot convenience
+            d['value'] = value_array_to_plot(d['value'], d['legend_input_array_dim_order'], d["legend_output_array_dim_order"])
+            
+            # if need errorbar then get std value
+            if useerrorbar:
+                d['value_std'] = get_std_value_include_ts_t_st(lmp_path, d['name'] + "_std", n_ave, inputstepsarray, y_name)
+                # select corrd
+                d['value_std'] = select_coord(d['value_std'], d['array_dim_order'], coord1_index_array, coord2_index_array)
+                # reorganize data set for plot convenience
+                d['value_std'] = value_array_to_plot(d['value_std'], d['legend_input_array_dim_order'], d["legend_output_array_dim_order"])
+        
+        y_dict['value'] = mv_dict['value']/m_dict['value']/d['scale_factor']
+        #y_dict['value_std'] = mv_dict['value_std']/m_dict['value_std']
+        
+        # get value for x y and rescale
+        for d in [x_dict]:
+            # get value
+            d['value'] = get_value_include_ts_t_st(lmp_path, d['name'], n_ave, inputstepsarray, y_name)/d['scale_factor']
+            # select corrd
+            d['value'] = select_coord(d['value'], d['array_dim_order'], coord1_index_array, coord2_index_array)
+            # reorganize data set for plot convenience
+            d['value'] = value_array_to_plot(d['value'], d['legend_input_array_dim_order'], d["legend_output_array_dim_order"])
+            
+            # if need errorbar then get std value
+            if useerrorbar:
+                d['value_std'] = get_std_value_include_ts_t_st(lmp_path, d['name'] + "_std", n_ave, inputstepsarray, y_name)/d['scale_factor']
+                # select corrd
+                d['value_std'] = select_coord(d['value_std'], d['array_dim_order'], coord1_index_array, coord2_index_array)
+                # reorganize data set for plot convenience
+                d['value_std'] = value_array_to_plot(d['value_std'], d['legend_input_array_dim_order'], d["legend_output_array_dim_order"])
     else:
-        for i, legend_label in enumerate(legend_label_list):
-            ax.plot(
-                x_dict['value'][i], y_dict['value'][i],
-                label=legend_label,
-                marker = ".",
-                linestyle = 'None',
-                markersize=12,
-            )
+        # get value for x y and rescale
+        for d in [x_dict, y_dict]:
+            # get value
+            d['value'] = get_value_include_ts_t_st(lmp_path, d['name'], n_ave, inputstepsarray, y_name)/d['scale_factor']
+            # select corrd
+            d['value'] = select_coord(d['value'], d['array_dim_order'], coord1_index_array, coord2_index_array)
+            # reorganize data set for plot convenience
+            d['value'] = value_array_to_plot(d['value'], d['legend_input_array_dim_order'], d["legend_output_array_dim_order"])
+            
+            # if need errorbar then get std value
+            if useerrorbar:
+                d['value_std'] = get_std_value_include_ts_t_st(lmp_path, d['name'] + "_std", n_ave, inputstepsarray, y_name)/d['scale_factor']
+                # select corrd
+                d['value_std'] = select_coord(d['value_std'], d['array_dim_order'], coord1_index_array, coord2_index_array)
+                # reorganize data set for plot convenience
+                d['value_std'] = value_array_to_plot(d['value_std'], d['legend_input_array_dim_order'], d["legend_output_array_dim_order"])
+    
+    # check if x-array y-array has the same shape
+    xarray = x_dict['value']
+    yarray = y_dict['value']
+    if xarray.shape[-1] != yarray.shape[-1]:
+        sys.exit("shape for x y are different")
+    
+    legend_dic = legend_dic_produce(y_dict, inputstepsarray, coord1_index_array, coord2_index_array)
+    legend_label_list = legend_dic['label_list']
+    legend_title = legend_dic['title']
+    
+    # plot ave_z velocity across y
+    fig, ax = plt.subplots()
+    
+    # xy scale label
+    ax.set_xlabel(x_dict['fig_label'])
+    ax.set_ylabel(y_dict['fig_label'])
+    # rotate label
+    plt.setp(ax.xaxis.get_minorticklabels(), rotation=30)
+    plt.setp(ax.get_xticklabels(), rotation=30)
+    # Shrink current axis by 20%
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0, box.width * 0.6, box.height])
+    (fig, ax) = plot_from_organized_data(
+        fig, ax,
+        if_on_paper,
+        x_dict,
+        y_dict,
+        legend_label_list,
+        legend_title,
+        useerrorbar,
+    )
+    
     return (fig, ax)
 
 # save figure file
 def plotdata_figure_save(
         fig, ax,
+        n_ave,
         x_name,
         y_name,
         inputstepsarray,
         coord1_index_array,
         coord2_index_array,
+        y_array_legend_input_array_dim_order,
+        y_array_legend_output_array_dim_order,
         if_on_paper,
     ):
-    
     file_name = plotdata_file_name(
-        if_on_paper, n_ave, x_name, y_name, inputstepsarray, coord1array, coord2array
+        if_on_paper, n_ave, x_name, y_name, inputstepsarray, coord1_index_array, coord2_index_array,
+        y_array_legend_input_array_dim_order,
+        y_array_legend_output_array_dim_order,
     )
-    
     fig.savefig(
     "".join([
         plotdata_folder_path(if_on_paper, n_ave, x_name, y_name),
@@ -2223,6 +3319,745 @@ plot_func_input = {
 def main():
     # set plot path 
     lmp_path = rr.folder_path_list_initial_to_last[-1]
+
+    # plot nochunk
+    plot_input_dict_list_nochunk = [
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': False, 'n_ave': 51, 
+            'inputstepsarray': np.arange(5600000, 40000000, 500000),
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$',
+            'y_name': 'v_force_outwall_1', "y_scale_factor": inwall_area*stress_scale_height, 'fig_y_label': r'$\sigma_{21}$' + "(static wall)",
+            'useerrorbar': False,
+            'if_include_0_y_axis': True,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': False, 'n_ave': 51, 
+            'inputstepsarray': np.arange(5600000, 40000000, 500000),
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$',
+            'y_name': 'v_force_outwall_2', "y_scale_factor": inwall_area*stress_scale_height, 'fig_y_label': r'$\sigma_{22}$' + "(static wall)",
+            'useerrorbar': False,
+            'if_include_0_y_axis': True,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': False, 'n_ave': 51, 
+            'inputstepsarray': np.arange(5600000, 40000000, 500000),
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$',
+            'y_name': 'v_force_outwall_3', "y_scale_factor": inwall_area*stress_scale_height, 'fig_y_label': r'$\sigma_{23}$' + "(static wall)",
+            'useerrorbar': False,
+            'if_include_0_y_axis': True,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': False, 'n_ave': 51, 
+            'inputstepsarray': np.arange(5600000, 40000000, 500000),
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$',
+            'y_name': 'v_force_inwall_1', "y_scale_factor": inwall_area*stress_scale_height, 'fig_y_label': r'$\sigma_{21}$' + "(shearing wall)",
+            'useerrorbar': False,
+            'if_include_0_y_axis': True,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': False, 'n_ave': 51, 
+            'inputstepsarray': np.arange(5600000, 40000000, 500000),
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$',
+            'y_name': 'v_force_inwall_2', "y_scale_factor": inwall_area*stress_scale_height, 'fig_y_label': r'$\sigma_{22}$' + "(shearing wall)",
+            'useerrorbar': False,
+            'if_include_0_y_axis': True,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': False, 'n_ave': 51, 
+            'inputstepsarray': np.arange(5600000, 40000000, 500000),
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$',
+            'y_name': 'v_force_inwall_3', "y_scale_factor": inwall_area*stress_scale_height, 'fig_y_label': r'$\sigma_{23}$' + "(shearing wall)",
+            'useerrorbar': False,
+            'if_include_0_y_axis': True,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': False, 'n_ave': 51, 
+            'inputstepsarray': np.arange(5600000, 40000000, 500000),
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$',
+            'y_name': 'v_force_zbottom_1', "y_scale_factor": bottom_area*stress_scale_height, 'fig_y_label': r'$\sigma_{31}$' + "(bottom)",
+            'useerrorbar': False,
+            'if_include_0_y_axis': True,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': False, 'n_ave': 51, 
+            'inputstepsarray': np.arange(5600000, 40000000, 500000),
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$',
+            'y_name': 'v_force_zbottom_2', "y_scale_factor": bottom_area*stress_scale_height, 'fig_y_label': r'$\sigma_{32}$' + "(bottom)",
+            'useerrorbar': False,
+            'if_include_0_y_axis': True,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': False, 'n_ave': 51, 
+            'inputstepsarray': np.arange(5600000, 40000000, 500000),
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$',
+            'y_name': 'v_force_zbottom_3', "y_scale_factor": bottom_area*stress_scale_height, 'fig_y_label': r'$\sigma_{33}$' + "(bottom)",
+            'useerrorbar': False,
+            'if_include_0_y_axis': True,
+        },
+    ]
+    plot_input_dict_list_nochunk_static = [
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': False, 'n_ave': 1, 
+            'inputstepsarray': np.arange(4800000, 5600000, 100000),
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$',
+            'y_name': 'v_force_outwall_1', "y_scale_factor": inwall_area*stress_scale_height, 'fig_y_label': r'$\sigma_{21}$' + "(static wall)",
+            'useerrorbar': False,
+            'if_include_0_y_axis': True,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': False, 'n_ave': 1, 
+            'inputstepsarray': np.arange(4800000, 5600000, 100000),
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$',
+            'y_name': 'v_force_outwall_2', "y_scale_factor": inwall_area*stress_scale_height, 'fig_y_label': r'$\sigma_{22}$' + "(static wall)",
+            'useerrorbar': False,
+            'if_include_0_y_axis': True,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': False, 'n_ave': 1, 
+            'inputstepsarray': np.arange(4800000, 5600000, 100000),
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$',
+            'y_name': 'v_force_outwall_3', "y_scale_factor": inwall_area*stress_scale_height, 'fig_y_label': r'$\sigma_{23}$' + "(static wall)",
+            'useerrorbar': False,
+            'if_include_0_y_axis': True,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': False, 'n_ave': 1, 
+            'inputstepsarray': np.arange(4800000, 5600000, 100000),
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$',
+            'y_name': 'v_force_inwall_1', "y_scale_factor": inwall_area*stress_scale_height, 'fig_y_label': r'$\sigma_{21}$' + "(shearing wall)",
+            'useerrorbar': False,
+            'if_include_0_y_axis': True,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': False, 'n_ave': 1, 
+            'inputstepsarray': np.arange(4800000, 5600000, 100000),
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$',
+            'y_name': 'v_force_inwall_2', "y_scale_factor": inwall_area*stress_scale_height, 'fig_y_label': r'$\sigma_{22}$' + "(shearing wall)",
+            'useerrorbar': False,
+            'if_include_0_y_axis': True,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': False, 'n_ave': 1, 
+            'inputstepsarray': np.arange(4800000, 5600000, 100000),
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$',
+            'y_name': 'v_force_inwall_3', "y_scale_factor": inwall_area*stress_scale_height, 'fig_y_label': r'$\sigma_{23}$' + "(shearing wall)",
+            'useerrorbar': False,
+            'if_include_0_y_axis': True,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': False, 'n_ave': 1, 
+            'inputstepsarray': np.arange(4800000, 5600000, 100000),
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$',
+            'y_name': 'v_force_zbottom_1', "y_scale_factor": bottom_area*stress_scale_height, 'fig_y_label': r'$\sigma_{31}$' + "(bottom)",
+            'useerrorbar': False,
+            'if_include_0_y_axis': True,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': False, 'n_ave': 1, 
+            'inputstepsarray': np.arange(4800000, 5600000, 100000),
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$',
+            'y_name': 'v_force_zbottom_2', "y_scale_factor": bottom_area*stress_scale_height, 'fig_y_label': r'$\sigma_{32}$' + "(bottom)",
+            'useerrorbar': False,
+            'if_include_0_y_axis': True,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': False, 'n_ave': 1, 
+            'inputstepsarray': np.arange(4800000, 5600000, 100000),
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$',
+            'y_name': 'v_force_zbottom_3', "y_scale_factor": bottom_area*stress_scale_height, 'fig_y_label': r'$\sigma_{33}$' + "(bottom)",
+            'useerrorbar': False,
+            'if_include_0_y_axis': True,
+        },
+    ]
+    for plot_input_dict in plot_input_dict_list_nochunk:
+        plotdata_nochunk(**plot_input_dict)
+    for plot_input_dict in plot_input_dict_list_nochunk_static:
+        plotdata_nochunk(**plot_input_dict)
+    # plot velocity-Coord1
+    plot_input_dict_list_velocity = [
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': True, 'n_ave': 51, 
+            'inputstepsarray': np.append(np.arange(4500000, 7000000, 500000), np.array([40000000])),
+            'coord1_index_array': 'all',
+            'coord2_index_array': 'all',
+            'x_name': "Coord1", 'x_scale_factor': scale['Coord'], 'fig_x_label': 'y', 'x_array_dim_order': 'c1c2',
+            'x_array_legend_input_array_dim_order': 'c1c2', 'x_array_legend_output_array_dim_order': 'c1c2ave',
+            'y_name': 'velocity_1', "y_scale_factor": scale['velocity'], 'fig_y_label': 'V', 'y_array_dim_order': 'tc1c2',
+            'y_array_legend_input_array_dim_order': 'tc1c2', 'y_array_legend_output_array_dim_order': 'tc1c2ave',
+            'useerrorbar': False,
+            'if_mv_over_m': True,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': False, 'n_ave': 51, 
+            'inputstepsarray': np.append(np.arange(4500000, 7000000, 500000), np.array([40000000])),
+            'coord1_index_array': 'all',
+            'coord2_index_array': 'all',
+            'x_name': "Coord1", 'x_scale_factor': scale['Coord'], 'fig_x_label': 'y', 'x_array_dim_order': 'c1c2',
+            'x_array_legend_input_array_dim_order': 'c1c2', 'x_array_legend_output_array_dim_order': 'c1c2ave',
+            'y_name': 'velocity_1', "y_scale_factor": scale['velocity'], 'fig_y_label': 'V', 'y_array_dim_order': 'tc1c2',
+            'y_array_legend_input_array_dim_order': 'tc1c2', 'y_array_legend_output_array_dim_order': 'tc1c2ave',
+            'useerrorbar': False,
+            'if_mv_over_m': True,
+        },
+    ]
+    
+    for plot_input_dict in plot_input_dict_list_velocity:
+        plotdata(**plot_input_dict)
+
+    """
+    # plot
+    plot_input_dict_list = []
+    plot_input_dict_list_wall = []
+    
+    plot_input_dict_list_inwall = [
+        # wall stress average
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': True, 'n_ave': 51, 
+            'inputstepsarray': np.arange(5100000, 40000000, 500000),
+            'coord1_index_array': None,
+            'coord2_index_array': 'all',
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$', 'x_array_dim_order': 't',
+            'x_array_legend_input_array_dim_order': 't', 'x_array_legend_output_array_dim_order': 't',
+            'y_name': 'inwall_stress_1', "y_scale_factor": scale['stress'], 'fig_y_label': r'$\sigma_{21}$', 'y_array_dim_order': 'tc2',
+            'y_array_legend_input_array_dim_order': 'tc2', 'y_array_legend_output_array_dim_order': 'c2avet',
+            'useerrorbar': False,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': False, 'n_ave': 51, 
+            'inputstepsarray': np.arange(5100000, 40000000, 500000),
+            'coord1_index_array': None,
+            'coord2_index_array': 'all',
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$', 'x_array_dim_order': 't',
+            'x_array_legend_input_array_dim_order': 't', 'x_array_legend_output_array_dim_order': 't',
+            'y_name': 'inwall_stress_1', "y_scale_factor": scale['stress'], 'fig_y_label': 'inwall_stress_1', 'y_array_dim_order': 'tc2',
+            'y_array_legend_input_array_dim_order': 'tc2', 'y_array_legend_output_array_dim_order': 'c2avet',
+            'useerrorbar': False,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': True, 'n_ave': 51, 
+            'inputstepsarray': np.arange(5100000, 40000000, 500000),
+            'coord1_index_array': None,
+            'coord2_index_array': 'all',
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$', 'x_array_dim_order': 't',
+            'x_array_legend_input_array_dim_order': 't', 'x_array_legend_output_array_dim_order': 't',
+            'y_name': 'inwall_stress_2', "y_scale_factor": scale['stress'], 'fig_y_label': r'$\sigma_{22}$', 'y_array_dim_order': 'tc2',
+            'y_array_legend_input_array_dim_order': 'tc2', 'y_array_legend_output_array_dim_order': 'c2avet',
+            'useerrorbar': False,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': False, 'n_ave': 51, 
+            'inputstepsarray': np.arange(5100000, 40000000, 500000),
+            'coord1_index_array': None,
+            'coord2_index_array': 'all',
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$', 'x_array_dim_order': 't',
+            'x_array_legend_input_array_dim_order': 't', 'x_array_legend_output_array_dim_order': 't',
+            'y_name': 'inwall_stress_2', "y_scale_factor": scale['stress'], 'fig_y_label': 'inwall_stress_2', 'y_array_dim_order': 'tc2',
+            'y_array_legend_input_array_dim_order': 'tc2', 'y_array_legend_output_array_dim_order': 'c2avet',
+            'useerrorbar': False,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': True, 'n_ave': 51, 
+            'inputstepsarray': np.arange(5100000, 40000000, 500000),
+            'coord1_index_array': None,
+            'coord2_index_array': 'all',
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$', 'x_array_dim_order': 't',
+            'x_array_legend_input_array_dim_order': 't', 'x_array_legend_output_array_dim_order': 't',
+            'y_name': 'inwall_stress_3', "y_scale_factor": scale['stress'], 'fig_y_label': r'$\sigma_{23}$', 'y_array_dim_order': 'tc2',
+            'y_array_legend_input_array_dim_order': 'tc2', 'y_array_legend_output_array_dim_order': 'c2avet',
+            'useerrorbar': False,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': False, 'n_ave': 51, 
+            'inputstepsarray': np.arange(5100000, 40000000, 500000),
+            'coord1_index_array': None,
+            'coord2_index_array': 'all',
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$', 'x_array_dim_order': 't',
+            'x_array_legend_input_array_dim_order': 't', 'x_array_legend_output_array_dim_order': 't',
+            'y_name': 'inwall_stress_3', "y_scale_factor": scale['stress'], 'fig_y_label': 'inwall_stress_3', 'y_array_dim_order': 'tc2',
+            'y_array_legend_input_array_dim_order': 'tc2', 'y_array_legend_output_array_dim_order': 'c2avet',
+            'useerrorbar': False,
+        },
+    ]
+    plot_input_dict_list_wall = plot_input_dict_list_wall + plot_input_dict_list_inwall
+    
+    plot_input_dict_list_outwall = [
+        # wall stress average
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': True, 'n_ave': 51, 
+            'inputstepsarray': np.arange(5100000, 40000000, 500000),
+            'coord1_index_array': None,
+            'coord2_index_array': 'all',
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$', 'x_array_dim_order': 't',
+            'x_array_legend_input_array_dim_order': 't', 'x_array_legend_output_array_dim_order': 't',
+            'y_name': 'outwall_stress_1', "y_scale_factor": scale['stress'], 'fig_y_label': r'$\sigma_{21}$', 'y_array_dim_order': 'tc2',
+            'y_array_legend_input_array_dim_order': 'tc2', 'y_array_legend_output_array_dim_order': 'c2avet',
+            'useerrorbar': False,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': False, 'n_ave': 51, 
+            'inputstepsarray': np.arange(5100000, 40000000, 500000),
+            'coord1_index_array': None,
+            'coord2_index_array': 'all',
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$', 'x_array_dim_order': 't',
+            'x_array_legend_input_array_dim_order': 't', 'x_array_legend_output_array_dim_order': 't',
+            'y_name': 'outwall_stress_1', "y_scale_factor": scale['stress'], 'fig_y_label': 'outwall_stress_1', 'y_array_dim_order': 'tc2',
+            'y_array_legend_input_array_dim_order': 'tc2', 'y_array_legend_output_array_dim_order': 'c2avet',
+            'useerrorbar': False,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': True, 'n_ave': 51, 
+            'inputstepsarray': np.arange(5100000, 40000000, 500000),
+            'coord1_index_array': None,
+            'coord2_index_array': 'all',
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$', 'x_array_dim_order': 't',
+            'x_array_legend_input_array_dim_order': 't', 'x_array_legend_output_array_dim_order': 't',
+            'y_name': 'outwall_stress_2', "y_scale_factor": scale['stress'], 'fig_y_label': r'$\sigma_{22}$', 'y_array_dim_order': 'tc2',
+            'y_array_legend_input_array_dim_order': 'tc2', 'y_array_legend_output_array_dim_order': 'c2avet',
+            'useerrorbar': False,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': False, 'n_ave': 51, 
+            'inputstepsarray': np.arange(5100000, 40000000, 500000),
+            'coord1_index_array': None,
+            'coord2_index_array': 'all',
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$', 'x_array_dim_order': 't',
+            'x_array_legend_input_array_dim_order': 't', 'x_array_legend_output_array_dim_order': 't',
+            'y_name': 'outwall_stress_2', "y_scale_factor": scale['stress'], 'fig_y_label': 'outwall_stress_2', 'y_array_dim_order': 'tc2',
+            'y_array_legend_input_array_dim_order': 'tc2', 'y_array_legend_output_array_dim_order': 'c2avet',
+            'useerrorbar': False,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': True, 'n_ave': 51, 
+            'inputstepsarray': np.arange(5100000, 40000000, 500000),
+            'coord1_index_array': None,
+            'coord2_index_array': 'all',
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$', 'x_array_dim_order': 't',
+            'x_array_legend_input_array_dim_order': 't', 'x_array_legend_output_array_dim_order': 't',
+            'y_name': 'outwall_stress_3', "y_scale_factor": scale['stress'], 'fig_y_label': r'$\sigma_{23}$', 'y_array_dim_order': 'tc2',
+            'y_array_legend_input_array_dim_order': 'tc2', 'y_array_legend_output_array_dim_order': 'c2avet',
+            'useerrorbar': False,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': False, 'n_ave': 51, 
+            'inputstepsarray': np.arange(5100000, 40000000, 500000),
+            'coord1_index_array': None,
+            'coord2_index_array': 'all',
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$', 'x_array_dim_order': 't',
+            'x_array_legend_input_array_dim_order': 't', 'x_array_legend_output_array_dim_order': 't',
+            'y_name': 'outwall_stress_3', "y_scale_factor": scale['stress'], 'fig_y_label': 'outwall_stress_3', 'y_array_dim_order': 'tc2',
+            'y_array_legend_input_array_dim_order': 'tc2', 'y_array_legend_output_array_dim_order': 'c2avet',
+            'useerrorbar': False,
+        },
+    ]
+    plot_input_dict_list_wall = plot_input_dict_list_wall + plot_input_dict_list_outwall
+    
+    plot_input_dict_list_zbottom = [
+        # wall stress average
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': True, 'n_ave': 51, 
+            'inputstepsarray': np.arange(5100000, 40000000, 500000),
+            'coord1_index_array': 'all',
+            'coord2_index_array': None,
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$', 'x_array_dim_order': 't',
+            'x_array_legend_input_array_dim_order': 't', 'x_array_legend_output_array_dim_order': 't',
+            'y_name': 'zbottom_stress_1', "y_scale_factor": scale['stress'], 'fig_y_label': r'$\sigma_{31}$', 'y_array_dim_order': 'tc1',
+            'y_array_legend_input_array_dim_order': 'tc1', 'y_array_legend_output_array_dim_order': 'c1avet',
+            'useerrorbar': False,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': False, 'n_ave': 51, 
+            'inputstepsarray': np.arange(5100000, 40000000, 500000),
+            'coord1_index_array': 'all',
+            'coord2_index_array': None,
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$', 'x_array_dim_order': 't',
+            'x_array_legend_input_array_dim_order': 't', 'x_array_legend_output_array_dim_order': 't',
+            'y_name': 'zbottom_stress_1', "y_scale_factor": scale['stress'], 'fig_y_label': 'zbottom_stress_1', 'y_array_dim_order': 'tc1',
+            'y_array_legend_input_array_dim_order': 'tc1', 'y_array_legend_output_array_dim_order': 'c1avet',
+            'useerrorbar': False,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': True, 'n_ave': 51, 
+            'inputstepsarray': np.arange(5100000, 40000000, 500000),
+            'coord1_index_array': 'all',
+            'coord2_index_array': None,
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$', 'x_array_dim_order': 't',
+            'x_array_legend_input_array_dim_order': 't', 'x_array_legend_output_array_dim_order': 't',
+            'y_name': 'zbottom_stress_2', "y_scale_factor": scale['stress'], 'fig_y_label': r'$\sigma_{32}$', 'y_array_dim_order': 'tc1',
+            'y_array_legend_input_array_dim_order': 'tc1', 'y_array_legend_output_array_dim_order': 'c1avet',
+            'useerrorbar': False,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': False, 'n_ave': 51, 
+            'inputstepsarray': np.arange(5100000, 40000000, 500000),
+            'coord1_index_array': 'all',
+            'coord2_index_array': None,
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$', 'x_array_dim_order': 't',
+            'x_array_legend_input_array_dim_order': 't', 'x_array_legend_output_array_dim_order': 't',
+            'y_name': 'zbottom_stress_2', "y_scale_factor": scale['stress'], 'fig_y_label': 'zbottom_stress_2', 'y_array_dim_order': 'tc1',
+            'y_array_legend_input_array_dim_order': 'tc1', 'y_array_legend_output_array_dim_order': 'c1avet',
+            'useerrorbar': False,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': True, 'n_ave': 51, 
+            'inputstepsarray': np.arange(5100000, 40000000, 500000),
+            'coord1_index_array': 'all',
+            'coord2_index_array': None,
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$', 'x_array_dim_order': 't',
+            'x_array_legend_input_array_dim_order': 't', 'x_array_legend_output_array_dim_order': 't',
+            'y_name': 'zbottom_stress_3', "y_scale_factor": scale['stress'], 'fig_y_label': r'$\sigma_{33}$', 'y_array_dim_order': 'tc1',
+            'y_array_legend_input_array_dim_order': 'tc1', 'y_array_legend_output_array_dim_order': 'c1avet',
+            'useerrorbar': False,
+        },
+        {
+            'lmp_path': lmp_path,
+            'if_on_paper': False, 'n_ave': 51, 
+            'inputstepsarray': np.arange(5100000, 40000000, 500000),
+            'coord1_index_array': 'all',
+            'coord2_index_array': None,
+            'x_name': "strain", 'x_scale_factor': 1, 'fig_x_label': r'$\gamma$', 'x_array_dim_order': 't',
+            'x_array_legend_input_array_dim_order': 't', 'x_array_legend_output_array_dim_order': 't',
+            'y_name': 'zbottom_stress_3', "y_scale_factor": scale['stress'], 'fig_y_label': 'zbottom_stress_3', 'y_array_dim_order': 'tc1',
+            'y_array_legend_input_array_dim_order': 'tc1', 'y_array_legend_output_array_dim_order': 'c1avet',
+            'useerrorbar': False,
+        },
+    ]
+    plot_input_dict_list_wall = plot_input_dict_list_wall + plot_input_dict_list_zbottom
+    
+    plot_input_dict_list = plot_input_dict_list + plot_input_dict_list_wall
+    
+    for plot_input_dict in plot_input_dict_list:
+        plotdata(**plot_input_dict)
+    """
+    """
+    
+
+    # mu-I
+    ## mu-I steady state
+    for (coord1_index_array, coord2_index_array) in [('all', np.arange(15)), ('all',[0]),([0],np.arange(15)),([-1],np.arange(15))]:
+        plot_input_dict_list_mu_I = [
+            {
+                'lmp_path': lmp_path,
+                'if_on_paper': True, 'n_ave': 201, 
+                'inputstepsarray': np.array([40000000]),
+                'coord1_index_array': coord1_index_array,
+                'coord2_index_array': coord2_index_array,
+                'x_name': "I_12", 'x_scale_factor': scale['I'], 'fig_x_label': r'$I_{12}$', 'x_array_dim_order': 'tc1c2',
+                'x_array_legend_input_array_dim_order': 'tc1c2', 'x_array_legend_output_array_dim_order': '(c1c2)t',
+                'y_name': 'mu_12_middle', "y_scale_factor": scale['mu'], 'fig_y_label': r'$\mu_{12}$', 'y_array_dim_order': 'tc1c2',
+                'y_array_legend_input_array_dim_order': 'tc1c2', 'y_array_legend_output_array_dim_order': '(c1c2)t',
+                'useerrorbar': False,
+                'if_mv_over_m': False,
+            },
+            {
+                'lmp_path': lmp_path,
+                'if_on_paper': False, 'n_ave': 201,
+                'inputstepsarray': np.array([40000000]),
+                'coord1_index_array': coord1_index_array,
+                'coord2_index_array': coord2_index_array,
+                'x_name': "I_12", 'x_scale_factor': scale['I'], 'fig_x_label': r'$I_{12}$', 'x_array_dim_order': 'tc1c2',
+                'x_array_legend_input_array_dim_order': 'tc1c2', 'x_array_legend_output_array_dim_order': '(c1c2)t',
+                'y_name': 'mu_12_middle', "y_scale_factor": scale['mu'], 'fig_y_label': r'$\mu_{12}$', 'y_array_dim_order': 'tc1c2',
+                'y_array_legend_input_array_dim_order': 'tc1c2', 'y_array_legend_output_array_dim_order': '(c1c2)t',
+                'useerrorbar': False,
+                'if_mv_over_m': False,
+            },
+            {
+                'lmp_path': lmp_path,
+                'if_on_paper': True, 'n_ave': 201, 
+                'inputstepsarray': np.array([40000000]),
+                'coord1_index_array': coord1_index_array,
+                'coord2_index_array': coord2_index_array,
+                'x_name': "I_tensor", 'x_scale_factor': scale['I_tensor'], 'fig_x_label': r'$I$', 'x_array_dim_order': 'tc1c2',
+                'x_array_legend_input_array_dim_order': 'tc1c2', 'x_array_legend_output_array_dim_order': '(c1c2)t',
+                'y_name': 'mu_tensor_12', "y_scale_factor": scale['mu_tensor'], 'fig_y_label': r'$\mu_{12}$', 'y_array_dim_order': 'tc1c2',
+                'y_array_legend_input_array_dim_order': 'tc1c2', 'y_array_legend_output_array_dim_order': '(c1c2)t',
+                'useerrorbar': False,
+                'if_mv_over_m': False,
+            },
+            {
+                'lmp_path': lmp_path,
+                'if_on_paper': False, 'n_ave': 201, 
+                'inputstepsarray': np.array([40000000]),
+                'coord1_index_array': coord1_index_array,
+                'coord2_index_array': coord2_index_array,
+                'x_name': "I_tensor", 'x_scale_factor': scale['I_tensor'], 'fig_x_label': r'$I$', 'x_array_dim_order': 'tc1c2',
+                'x_array_legend_input_array_dim_order': 'tc1c2', 'x_array_legend_output_array_dim_order': '(c1c2)t',
+                'y_name': 'mu_tensor_12', "y_scale_factor": scale['mu_tensor'], 'fig_y_label': r'$\mu_{12}$', 'y_array_dim_order': 'tc1c2',
+                'y_array_legend_input_array_dim_order': 'tc1c2', 'y_array_legend_output_array_dim_order': '(c1c2)t',
+                'useerrorbar': False,
+                'if_mv_over_m': False,
+            },
+        ]
+        for plot_input_dict in plot_input_dict_list_mu_I:
+            plotdata(**plot_input_dict)
+    
+    for (coord1_index_array, coord2_index_array) in [([0,-1], np.arange(15))]:
+        plot_input_dict_list_mu_I = [
+            {
+                'lmp_path': lmp_path,
+                'if_on_paper': True, 'n_ave': 201, 
+                'inputstepsarray': np.array([40000000]),
+                'coord1_index_array': coord1_index_array,
+                'coord2_index_array': coord2_index_array,
+                'x_name': "I_12", 'x_scale_factor': scale['I'], 'fig_x_label': r'$I_{12}$', 'x_array_dim_order': 'tc1c2',
+                'x_array_legend_input_array_dim_order': 'tc1c2', 'x_array_legend_output_array_dim_order': '(c1c2)t',
+                'y_name': 'mu_12_middle', "y_scale_factor": scale['mu'], 'fig_y_label': r'$\mu_{12}$', 'y_array_dim_order': 'tc1c2',
+                'y_array_legend_input_array_dim_order': 'tc1c2', 'y_array_legend_output_array_dim_order': '(c1c2)t',
+                'useerrorbar': False,
+                'if_mv_over_m': False,
+            },
+            {
+                'lmp_path': lmp_path,
+                'if_on_paper': False, 'n_ave': 201,
+                'inputstepsarray': np.array([40000000]),
+                'coord1_index_array': coord1_index_array,
+                'coord2_index_array': coord2_index_array,
+                'x_name': "I_12", 'x_scale_factor': scale['I'], 'fig_x_label': r'$I_{12}$', 'x_array_dim_order': 'tc1c2',
+                'x_array_legend_input_array_dim_order': 'tc1c2', 'x_array_legend_output_array_dim_order': '(c1c2)t',
+                'y_name': 'mu_12_middle', "y_scale_factor": scale['mu'], 'fig_y_label': r'$\mu_{12}$', 'y_array_dim_order': 'tc1c2',
+                'y_array_legend_input_array_dim_order': 'tc1c2', 'y_array_legend_output_array_dim_order': '(c1c2)t',
+                'useerrorbar': False,
+                'if_mv_over_m': False,
+            },
+        ]
+        for plot_input_dict in plot_input_dict_list_mu_I:
+            plotdata1(**plot_input_dict)
+
+    for (coord1_index_array, coord2_index_array) in [([6], np.arange(9,15))]:
+        plot_input_dict_list_mu_I = [
+            {
+                'lmp_path': lmp_path,
+                'if_on_paper': True, 'n_ave': 201, 
+                'inputstepsarray': np.array([40000000]),
+                'coord1_index_array': coord1_index_array,
+                'coord2_index_array': coord2_index_array,
+                'x_name': "I_12", 'x_scale_factor': scale['I'], 'fig_x_label': r'$I_{12}$', 'x_array_dim_order': 'tc1c2',
+                'x_array_legend_input_array_dim_order': 'tc1c2', 'x_array_legend_output_array_dim_order': '(c1c2)t',
+                'y_name': 'mu_12_middle', "y_scale_factor": scale['mu'], 'fig_y_label': r'$\mu_{12}$', 'y_array_dim_order': 'tc1c2',
+                'y_array_legend_input_array_dim_order': 'tc1c2', 'y_array_legend_output_array_dim_order': '(c1c2)t',
+                'useerrorbar': False,
+                'if_mv_over_m': False,
+            },
+            {
+                'lmp_path': lmp_path,
+                'if_on_paper': False, 'n_ave': 201,
+                'inputstepsarray': np.array([40000000]),
+                'coord1_index_array': coord1_index_array,
+                'coord2_index_array': coord2_index_array,
+                'x_name': "I_12", 'x_scale_factor': scale['I'], 'fig_x_label': r'$I_{12}$', 'x_array_dim_order': 'tc1c2',
+                'x_array_legend_input_array_dim_order': 'tc1c2', 'x_array_legend_output_array_dim_order': '(c1c2)t',
+                'y_name': 'mu_12_middle', "y_scale_factor": scale['mu'], 'fig_y_label': r'$\mu_{12}$', 'y_array_dim_order': 'tc1c2',
+                'y_array_legend_input_array_dim_order': 'tc1c2', 'y_array_legend_output_array_dim_order': '(c1c2)t',
+                'useerrorbar': False,
+                'if_mv_over_m': False,
+            },
+        ]
+        for plot_input_dict in plot_input_dict_list_mu_I:
+            plotdata2(**plot_input_dict)
+
+    
+    plot_quiver_from_chunk2D(
+        lmp_path,
+        201, "mu_12", "mu_12", np.arange(10000000,75000000,5000000),
+        spaceave=None,
+        x_scale_factor=2**0.5*1, x_scale_str=None, y_scale_factor=2**0.5*1, y_scale_str=None,
+        quiver_scale=1, label_scale=1,
+        ifloglength=False,
+        ifstreamplot=False,
+        ifcontour=True,
+        contour_norm="linear",
+        contour_v_min_max="constant", # or "min_to_max",
+        vmin=0, vmax=0.6,
+    )
+
+    plot_quiver_from_chunk2D(
+        lmp_path,
+        201, "I_12", "I_12", np.arange(10000000,75000000,5000000),
+        spaceave=None,
+        x_scale_factor=1, x_scale_str=None, y_scale_factor=1, y_scale_str=None,
+        quiver_scale=1, label_scale=1,
+        ifloglength=False,
+        ifstreamplot=False,
+        ifcontour=True,
+        contour_norm="linear",
+        contour_v_min_max="constant", # or "min_to_max",
+        vmin=0, vmax=2*10**-3,
+    )
+
+    plot_quiver_from_chunk2D(
+        lmp_path,
+        201, "velocity_2", "velocity_3", np.arange(10000000,75000000,5000000),
+        spaceave=None,
+        x_scale_factor=1, x_scale_str=None, y_scale_factor=1, y_scale_str=None,
+        quiver_scale=0.0001, label_scale=0.0001,
+        ifloglength=True,
+        ifplotseparateupdown=True,
+        quiver_scale_up=0.0001, label_scale_up=0.0001,
+        quiver_scale_down=0.0005, label_scale_down=0.0005,
+    )
+
+    plot_quiver_from_chunk2D(
+        lmp_path,
+        201, "fraction", "fraction", np.arange(10000000,75000000,5000000),
+        spaceave=None,
+        x_scale_factor=2**0.5*1, x_scale_str=None, y_scale_factor=2**0.5*1, y_scale_str=None,
+        quiver_scale=1, label_scale=1,
+        ifloglength=False,
+        ifstreamplot=False,
+        ifcontour=True,
+        contour_norm="linear",
+        contour_v_min_max="constant", # or "min_to_max",
+        vmin=0.4, vmax=0.7,
+    )
+    
+    plot_quiver_from_chunk2D(
+        lmp_path,
+        51, "mu_12", "mu_12", np.arange(5260000,10000000,500000),
+        spaceave=None,
+        x_scale_factor=2**0.5*1, x_scale_str=None, y_scale_factor=2**0.5*1, y_scale_str=None,
+        quiver_scale=1, label_scale=1,
+        ifloglength=False,
+        ifstreamplot=False,
+        ifcontour=True,
+        contour_norm="linear",
+        contour_v_min_max="constant", # or "min_to_max",
+        vmin=0, vmax=0.6,
+    )
+
+    plot_quiver_from_chunk2D(
+        lmp_path,
+        51, "I_12", "I_12", np.arange(5260000,10000000,500000),
+        spaceave=None,
+        x_scale_factor=1, x_scale_str=None, y_scale_factor=1, y_scale_str=None,
+        quiver_scale=1, label_scale=1,
+        ifloglength=False,
+        ifstreamplot=False,
+        ifcontour=True,
+        contour_norm="linear",
+        contour_v_min_max="constant", # or "min_to_max",
+        vmin=0, vmax=2*10**-3,
+    )
+
+    plot_quiver_from_chunk2D(
+        lmp_path,
+        51, "velocity_2", "velocity_3", np.arange(5260000,10000000,500000),
+        spaceave=None,
+        x_scale_factor=1, x_scale_str=None, y_scale_factor=1, y_scale_str=None,
+        quiver_scale=0.0001, label_scale=0.0001,
+        ifloglength=True,
+        ifplotseparateupdown=True,
+        quiver_scale_up=0.0001, label_scale_up=0.0001,
+        quiver_scale_down=0.0005, label_scale_down=0.0005,
+        contour_norm = "log",
+        contour_v_min_max = "constant",
+        vmin=10**-5, vmax=10**-1,
+    )
+    
+    plot_quiver_from_chunk2D_fraction(
+        lmp_path,
+        51, "fraction", "fraction", np.arange(5260000,10000000,500000),
+        spaceave=None,
+        x_scale_factor=2**0.5*1, x_scale_str=None, y_scale_factor=2**0.5*1, y_scale_str=None,
+        quiver_scale=1, label_scale=1,
+        ifloglength=False,
+        ifstreamplot=False,
+        ifcontour=True,
+        contour_norm="linear",
+        contour_v_min_max="constant", # or "min_to_max",
+        vmin=0.4, vmax=0.7,
+        ave_y=3, ave_z=3,
+    )
+
+    plot_quiver_from_chunk2D_fraction(
+        lmp_path,
+        201, "fraction", "fraction", np.arange(10000000,75000000,5000000),
+        spaceave=None,
+        x_scale_factor=2**0.5*1, x_scale_str=None, y_scale_factor=2**0.5*1, y_scale_str=None,
+        quiver_scale=1, label_scale=1,
+        ifloglength=False,
+        ifstreamplot=False,
+        ifcontour=True,
+        contour_norm="linear",
+        contour_v_min_max="constant", # or "min_to_max",
+        vmin=0.4, vmax=0.7,
+        ave_y=3, ave_z=3,
+    )
+    
+    """
+    # all -->   teach c1each c2sum     legend t each
+
+    # 1Dplot from chunk2D
+    # velocity
+
+    # wall stress
+    # contact number 
+    #for (input_stepsarray, x_name, y_name, x_scale_factor, x_scale_str, y_scale_factor, y_scale_str, x_scale) in [
+    #    (np.arange(1000000,40000000,1000000),"strain", "fraction", 1, None, 1, None, 'linear'),
+    #    (np.arange(1000000,40000000,1000000),"strain", "n_contact", 1, None, 1, None, 'linear'),
+    #    (np.arange(1000000,40000000,1000000),"I_12", "mu_12_middle", I_scale, None, mu_scale, mu_scale_str, 'log'),
+    #    (np.arange(1000000,40000000,1000000),"I_tensor", "mu_tensor_12", I_tensor_scale, I_tensor_scale_str, mu_tensor_scale, mu_tensor_scale_str, 'linear'),
+    #    (np.arange(1000000,40000000,1000000),"strain", "I_12", 1, None, I_scale, None, 'linear'),
+    #    (np.arange(1000000,40000000,1000000),"strain", "mu_12_middle", 1, None, mu_scale, mu_scale_str, 'linear'),
+    #    (np.arange(1000000,40000000,1000000),"strain", "I_tensor", 1, None, I_scale, None, 'linear'),
+    #    (np.arange(1000000,40000000,1000000),"strain", "mu_tensor_12", 1, None, mu_scale, mu_scale_str, 'linear'),
+    #    (np.arange(1000000,40000000,1000000),"strain", "velocity_1", 1, None, velocity_scale, velocity_scale_str, 'linear'),
+    #    (np.arange(1000000,40000000,1000000),"strain", "velocity_2", 1, None, velocity_scale, velocity_scale_str, 'linear'),
+    #    (np.arange(1000000,40000000,1000000),"strain", "velocity_3", 1, None, velocity_scale, velocity_scale_str, 'linear'),
+    #    (np.arange(1000000,40000000,1000000),"strain", "strain_rate_21_middle", 1, None, strain_rate_scale, strain_rate_scale_str, 'linear'),
+    #    (np.arange(1000000,40000000,1000000),"strain", "strain_rate_31_middle", 1, None, strain_rate_scale, strain_rate_scale_str, 'linear'),
+    #    (np.arange(1000000,40000000,1000000),"strain", "strain_rate_22_middle", 1, None, strain_rate_scale, strain_rate_scale_str, 'linear'),
+    #    (np.arange(1000000,40000000,1000000),"strain", "strain_rate_32_middle", 1, None, strain_rate_scale, strain_rate_scale_str, 'linear'),
+    #    (np.arange(1000000,40000000,1000000),"strain", "strain_rate_23_middle", 1, None, strain_rate_scale, strain_rate_scale_str, 'linear'),
+    #    (np.arange(1000000,40000000,1000000),"strain", "strain_rate_33_middle", 1, None, strain_rate_scale, strain_rate_scale_str, 'linear'),
+    #    (np.arange(1000000,40000000,1000000),"strain", "stress_11", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
+    #    (np.arange(1000000,40000000,1000000),"strain", "stress_22", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
+    #    (np.arange(1000000,40000000,1000000),"strain", "stress_33", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
+    #    (np.arange(1000000,40000000,1000000),"strain", "stress_12", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
+    #    (np.arange(1000000,40000000,1000000),"strain", "stress_13", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
+    #    (np.arange(1000000,40000000,1000000),"strain", "stress_23", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
+    #    (np.arange(1000000,40000000,1000000),"fraction", "mu_12_middle", 1, None, mu_scale, mu_scale_str, 'linear'),
+    #    (np.arange(1000000,40000000,1000000),"fraction", "I_12", 1, None, I_scale, None, 'linear'),
+    #    (np.arange(1000000,40000000,1000000),"fraction", "mu_tensor_12", 1, None, mu_tensor_scale, mu_tensor_scale_str, 'linear'),
+    #    (np.arange(1000000,40000000,1000000),"fraction", "I_tensor", 1, None, I_tensor_scale, I_tensor_scale_str, 'linear'),
+    #]:
+    
     """
     # contour for pressure and stress12 mu_12
     plot_quiver_from_chunk2D(
@@ -2255,8 +4090,8 @@ def main():
         lmp_path,
         11, "pressure", "pressure", np.arange(5100000,6500000,100000),
         spaceave=None,
-        x_scale_factor=2**0.5*stress_scale, x_scale_str=None, y_scale_factor=2**0.5*stress_scale, y_scale_str=None,
-        quiver_scale=stress_scale, label_scale=1,
+        x_scale_factor=2**0.5*stress_scale_width, x_scale_str=None, y_scale_factor=2**0.5*stress_scale_width, y_scale_str=None,
+        quiver_scale=stress_scale_width, label_scale=1,
         ifloglength=False,
         ifstreamplot=False,
         ifcontour=True,
@@ -2268,8 +4103,8 @@ def main():
         lmp_path,
         11, "stress_12", "stress_12", np.arange(5100000,6500000,100000),
         spaceave=None,
-        x_scale_factor=2**0.5*stress_scale, x_scale_str=None, y_scale_factor=2**0.5*stress_scale, y_scale_str=None,
-        quiver_scale=stress_scale, label_scale=1,
+        x_scale_factor=2**0.5*stress_scale_width, x_scale_str=None, y_scale_factor=2**0.5*stress_scale_width, y_scale_str=None,
+        quiver_scale=stress_scale_width, label_scale=1,
         ifloglength=False,
         ifstreamplot=False,
         ifcontour=True,
@@ -2323,8 +4158,8 @@ def main():
         lmp_path,
         301, "pressure", "pressure", np.arange(7000000,40000000,5000000),
         spaceave=None,
-        x_scale_factor=2**0.5*stress_scale, x_scale_str=None, y_scale_factor=2**0.5*stress_scale, y_scale_str=None,
-        quiver_scale=stress_scale, label_scale=1,
+        x_scale_factor=2**0.5*stress_scale_width, x_scale_str=None, y_scale_factor=2**0.5*stress_scale_width, y_scale_str=None,
+        quiver_scale=stress_scale_width, label_scale=1,
         ifloglength=False,
         ifstreamplot=False,
         ifcontour=True,
@@ -2336,8 +4171,8 @@ def main():
         lmp_path,
         301, "stress_12", "stress_12", np.arange(7000000,40000000,5000000),
         spaceave=None,
-        x_scale_factor=2**0.5*stress_scale, x_scale_str=None, y_scale_factor=2**0.5*stress_scale, y_scale_str=None,
-        quiver_scale=stress_scale, label_scale=1,
+        x_scale_factor=2**0.5*stress_scale_width, x_scale_str=None, y_scale_factor=2**0.5*stress_scale_width, y_scale_str=None,
+        quiver_scale=stress_scale_width, label_scale=1,
         ifloglength=False,
         ifstreamplot=False,
         ifcontour=True,
@@ -2373,17 +4208,19 @@ def main():
             x_scale=x_scale,
             useerrorbar=False,
         )
-    """
+    
+    
+
     # wall stress
-    """
+    
     for (input_stepsarray, x_name, y_name, x_scale_factor, x_scale_str, y_scale_factor, y_scale_str, x_scale) in [
-        (np.arange(5000000,40000000,1000000),"strain", "inwall_stress_3", 1, None, stress_scale, stress_scale_str, 'linear'),
-        (np.arange(5000000,40000000,1000000),"strain", "outwall_stress_1", 1, None, stress_scale, stress_scale_str, 'linear'),
-        (np.arange(5000000,40000000,1000000),"strain", "outwall_stress_2", 1, None, stress_scale, stress_scale_str, 'linear'),
-        (np.arange(5000000,40000000,1000000),"strain", "outwall_stress_3", 1, None, stress_scale, stress_scale_str, 'linear'),
-        (np.arange(5000000,40000000,1000000),"strain", "zbottom_stress_1", 1, None, stress_scale, stress_scale_str, 'linear'),
-        (np.arange(5000000,40000000,1000000),"strain", "zbottom_stress_2", 1, None, stress_scale, stress_scale_str, 'linear'),
-        (np.arange(5000000,40000000,1000000),"strain", "zbottom_stress_3", 1, None, stress_scale, stress_scale_str, 'linear'),
+        (np.arange(5000000,40000000,1000000),"strain", "inwall_stress_3", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
+        (np.arange(5000000,40000000,1000000),"strain", "outwall_stress_1", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
+        (np.arange(5000000,40000000,1000000),"strain", "outwall_stress_2", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
+        (np.arange(5000000,40000000,1000000),"strain", "outwall_stress_3", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
+        (np.arange(5000000,40000000,1000000),"strain", "zbottom_stress_1", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
+        (np.arange(5000000,40000000,1000000),"strain", "zbottom_stress_2", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
+        (np.arange(5000000,40000000,1000000),"strain", "zbottom_stress_3", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
     ]:
         plot_1D_for_chunk1D_near_wall(
             lmp_path,
@@ -2395,8 +4232,8 @@ def main():
             showlegend=False,
         )
     for (input_stepsarray, x_name, y_name, x_scale_factor, x_scale_str, y_scale_factor, y_scale_str, x_scale) in [
-        (np.arange(5000000,40000000,1000000),"strain", "inwall_stress_1", 1, None, stress_scale, stress_scale_str, 'linear'),
-        (np.arange(5000000,40000000,1000000),"strain", "inwall_stress_2", 1, None, stress_scale, stress_scale_str, 'linear'),
+        (np.arange(5000000,40000000,1000000),"strain", "inwall_stress_1", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
+        (np.arange(5000000,40000000,1000000),"strain", "inwall_stress_2", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
     ]:
         plot_1D_for_chunk1D_near_wall(
             lmp_path,
@@ -2444,8 +4281,8 @@ def main():
         (np.arange(6000000,40000000,1000000), "mu_12_middle", "I_12", mu_scale, mu_scale_str, I_scale, None, 'log'),
         (np.array([30000000]), "mu_12_middle", "I_12", mu_scale, mu_scale_str, I_scale, None, 'log'),
         # strain
-        (np.array([30000000]), "strain", "pressure", 1, None, stress_scale, stress_scale_str, 'linear'),
-        (np.array([30000000]), "strain", "stress_12", 1, None, stress_scale, stress_scale_str, 'linear'),
+        (np.array([30000000]), "strain", "pressure", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
+        (np.array([30000000]), "strain", "stress_12", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
         (np.array([30000000]), "strain", "strain_rate_21_middle", 1, None, strain_rate_scale, strain_rate_scale_str, 'linear'),
     ]:
         for (coord1_index_array, coord2_index_array) in [
@@ -2472,8 +4309,7 @@ def main():
                 useerrorbar=useerrorbar,
             )
     
-    """
-    """
+    
     # 1Dplot from chunk2D
 
     for (input_stepsarray, x_name, y_name, x_scale_factor, x_scale_str, y_scale_factor, y_scale_str, x_scale) in [
@@ -2494,12 +4330,12 @@ def main():
         (np.arange(1000000,40000000,1000000),"strain", "strain_rate_32_middle", 1, None, strain_rate_scale, strain_rate_scale_str, 'linear'),
         (np.arange(1000000,40000000,1000000),"strain", "strain_rate_23_middle", 1, None, strain_rate_scale, strain_rate_scale_str, 'linear'),
         (np.arange(1000000,40000000,1000000),"strain", "strain_rate_33_middle", 1, None, strain_rate_scale, strain_rate_scale_str, 'linear'),
-        (np.arange(1000000,40000000,1000000),"strain", "stress_11", 1, None, stress_scale, stress_scale_str, 'linear'),
-        (np.arange(1000000,40000000,1000000),"strain", "stress_22", 1, None, stress_scale, stress_scale_str, 'linear'),
-        (np.arange(1000000,40000000,1000000),"strain", "stress_33", 1, None, stress_scale, stress_scale_str, 'linear'),
-        (np.arange(1000000,40000000,1000000),"strain", "stress_12", 1, None, stress_scale, stress_scale_str, 'linear'),
-        (np.arange(1000000,40000000,1000000),"strain", "stress_13", 1, None, stress_scale, stress_scale_str, 'linear'),
-        (np.arange(1000000,40000000,1000000),"strain", "stress_23", 1, None, stress_scale, stress_scale_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "stress_11", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "stress_22", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "stress_33", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "stress_12", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "stress_13", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "stress_23", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
         (np.arange(1000000,40000000,1000000),"fraction", "mu_12_middle", 1, None, mu_scale, mu_scale_str, 'linear'),
         (np.arange(1000000,40000000,1000000),"fraction", "I_12", 1, None, I_scale, None, 'linear'),
         (np.arange(1000000,40000000,1000000),"fraction", "mu_tensor_12", 1, None, mu_tensor_scale, mu_tensor_scale_str, 'linear'),
@@ -2610,15 +4446,15 @@ def main():
     
     # 1Dplot from chunk1D
     for (input_stepsarray, x_name, y_name, x_scale_factor, x_scale_str, y_scale_factor, y_scale_str, x_scale) in [
-        (np.arange(1000000,40000000,1000000),"strain", "inwall_stress_1", 1, None, stress_scale, stress_scale_str, 'linear'),
-        (np.arange(1000000,40000000,1000000),"strain", "inwall_stress_2", 1, None, stress_scale, stress_scale_str, 'linear'),
-        (np.arange(1000000,40000000,1000000),"strain", "inwall_stress_3", 1, None, stress_scale, stress_scale_str, 'linear'),
-        (np.arange(1000000,40000000,1000000),"strain", "outwall_stress_1", 1, None, stress_scale, stress_scale_str, 'linear'),
-        (np.arange(1000000,40000000,1000000),"strain", "outwall_stress_2", 1, None, stress_scale, stress_scale_str, 'linear'),
-        (np.arange(1000000,40000000,1000000),"strain", "outwall_stress_3", 1, None, stress_scale, stress_scale_str, 'linear'),
-        (np.arange(1000000,40000000,1000000),"strain", "zbottom_stress_1", 1, None, stress_scale, stress_scale_str, 'linear'),
-        (np.arange(1000000,40000000,1000000),"strain", "zbottom_stress_2", 1, None, stress_scale, stress_scale_str, 'linear'),
-        (np.arange(1000000,40000000,1000000),"strain", "zbottom_stress_3", 1, None, stress_scale, stress_scale_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "inwall_stress_1", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "inwall_stress_2", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "inwall_stress_3", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "outwall_stress_1", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "outwall_stress_2", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "outwall_stress_3", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "zbottom_stress_1", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "zbottom_stress_2", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
+        (np.arange(1000000,40000000,1000000),"strain", "zbottom_stress_3", 1, None, stress_scale_width, stress_scale_width_str, 'linear'),
         ]:
         for (coord_index_array) in [
             [0,1,2,3,4,5,-2,-1],

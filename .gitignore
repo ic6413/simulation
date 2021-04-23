@@ -1,0 +1,4 @@
+# ignore all folder named as data
+data/
+
+/test1
