@@ -27,14 +27,14 @@ plt.style.use('classic')
 plt.rcParams.update({'font.size': 16})
 
 
-if "if_inwall_wall_gran" in rr.logfile.keys():
-    if rr.logfile["if_inwall_wall_gran"] == "yes":
-        if "wall_gran_type" in rr.logfile.keys():
-            if rr.logfile["wall_gran_type"] == "1":
+if "if_inwall_wall_gran" in rr.log_variable.keys():
+    if rr.log_variable["if_inwall_wall_gran"] == "yes":
+        if "wall_gran_type" in rr.log_variable.keys():
+            if rr.log_variable["wall_gran_type"] == "1":
                 ybottomwalltype = "rough (d=1.1)"
-            elif rr.logfile["wall_gran_type"] == "2":
+            elif rr.log_variable["wall_gran_type"] == "2":
                 ybottomwalltype = "rough (d=1)"
-            elif rr.logfile["wall_gran_type"] == "3":
+            elif rr.log_variable["wall_gran_type"] == "3":
                 ybottomwalltype = "rough (d=0.9)"
             else:
                 sys.exit("can not get wall gran type")
@@ -44,19 +44,19 @@ if "if_inwall_wall_gran" in rr.logfile.keys():
         ybottomwalltype = "smooth"
 else:
     ybottomwalltype = "smooth"
-height = rr.logfile["z_length_create_dp_unit"]
-width = rr.logfile["width_wall_dp_unit"]
-periodlength = rr.logfile["x_period_dp_unit"]
+height = rr.log_variable["z_length_create_dp_unit"]
+width = rr.log_variable["width_wall_dp_unit"]
+periodlength = rr.log_variable["x_period_dp_unit"]
 labelstring_size_walltype = "L: " + periodlength + "\n" + "W: " + width + "\n" + "H: " + height + "\n" + ybottomwalltype
 
 # define function for extract data from fix txt to dataframe
-if rr.logfile["shearwall"] == "zcylinder":
+if rr.log_variable["shearwall"] == "zcylinder":
     wallfiles = [
                 "force_zbottom_to_particle.allstep",
                 "force_outwall_to_particle.allstep",
                 "force_inwall_to_particle.allstep",
     ]
-if rr.logfile["shearwall"] == "yplane":
+if rr.log_variable["shearwall"] == "yplane":
     wallfiles = [
                 "force_zbottom_to_particle.allstep",
                 "force_y_top_to_particle.allstep",
@@ -65,13 +65,13 @@ if rr.logfile["shearwall"] == "yplane":
     
     
 
-diameter = float(rr.logfile['dp'])
-width_wall_dp_unit = int(rr.logfile['width_wall_dp_unit'])
+diameter = float(rr.log_variable['dp'])
+width_wall_dp_unit = int(rr.log_variable['width_wall_dp_unit'])
 
-g = float(rr.logfile['g'])
-d_step = int(rr.logfile['freq_ave_wall'])
+g = float(rr.log_variable['g'])
+d_step = int(rr.log_variable['freq_ave_wall'])
 
-force_scale = 0.6*float(rr.logfile['den'])*g*float(height)**2*float(periodlength)/2*diameter**3
+force_scale = 0.6*float(rr.log_variable['den'])*g*float(height)**2*float(periodlength)/2*diameter**3
 
 
 def plot_wall_force(if_plot_to_last, step1, step2, fob1.call_header_by_bettername[key]ormat="png", ifpickle=False, ifplotfrominitial=False, ifplotfromrotate=True):
@@ -101,7 +101,7 @@ def plot_wall_force(if_plot_to_last, step1, step2, fob1.call_header_by_betternam
             for variable2 in header:
                 fig = plt.figure()
                 ax = fig.add_subplot(111)
-                x_array = df["v_t"].values - rr.logfile["rotate_start_time"]
+                x_array = df["v_t"].values - rr.log_variable["rotate_start_time"]
                 y_array = df[variable2].values
                 if "force" in variable2:
                     y_array /= force_scale
@@ -175,7 +175,7 @@ def plot_wall_force_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", i
             for variable2 in header:
                 fig = plt.figure()
                 ax = fig.add_subplot(111)
-                x_array = df["v_t"].values - rr.logfile["rotate_start_time"]
+                x_array = df["v_t"].values - rr.log_variable["rotate_start_time"]
                 y_array = df[variable2].values
                 if "force" in variable2:
                     y_array /= force_scale

@@ -5,7 +5,7 @@ import read_setting as rr
 import plotfigure.plotchunk1 as pp
 
 def checkNchunkint():
-    if int(rr.logfile["freq_ave_chunk_momentum_mass_field"]) != 0:
+    if int(rr.log_variable["freq_ave_chunk_momentum_mass_field"]) != 0:
         ob1 = pp.chunkstress(1, rr.lammps_directory)
         for step_inloop in ob1.allsteps:
             n_line_0 = int(int(step_inloop - ob1.step_first_in_file)/ob1.d_step)*(ob1.n_line_in_a_step+1) + 4

@@ -15,7 +15,7 @@ def combine_previous_wall_data(wallfile_name, ifplotfrominitial=False, ifplotfro
     for index in range(rr.n_simu_total):
 
         if ifplotfromrotate:
-            dic = rr.logdiclist[::-1][index]
+            dic = rr.log_variable_dic_list[::-1][index]
             if dic["ifrotate"] == "no" or float(dic["Sa"]) == 0:
                 break
 
@@ -30,7 +30,7 @@ def combine_previous_wall_data(wallfile_name, ifplotfrominitial=False, ifplotfro
         if index >= 1:
             df = df.loc[df['TimeStep']<next_step1]
         array = df['v_t'].values
-        array += rr.logdiclist[rr.n_simu_total-1-index]["previous_time"]
+        array += rr.log_variable_dic_list[rr.n_simu_total-1-index]["previous_time"]
         df['v_t'] = array
         next_step1 = step1_default
         
@@ -48,13 +48,13 @@ def combine_previous_wall_data_and_save(wallfile_name, ifplotfrominitial=False, 
     combine_previous_wall_data(wallfile_name, ifplotfrominitial, ifplotfromrotate).to_hdf(dp.combine_previous_from_output + "wall/" + wallfile_name, key='df', mode='w', format='fixed')
 
 def combine_previous_allwall_data_and_save():
-    if rr.logfile["shearwall"] == "zcylinder":
+    if rr.log_variable["shearwall"] == "zcylinder":
         wallfiles_name = [
                     "force_zbottom_to_particle.allstep",
                     "force_outwall_to_particle.allstep",
                     "force_inwall_to_particle.allstep",
         ]
-    if rr.logfile["shearwall"] == "yplane":
+    if rr.log_variable["shearwall"] == "yplane":
         wallfiles_name = [
                     "force_zbottom_to_particle.allstep",
                     "force_y_top_to_particle.allstep",
@@ -66,8 +66,8 @@ def combine_previous_allwall_data_and_save():
 
 def combine_previous_chunk_data():
     for index in range(rr.n_simu_total):
-        logfile_inthis_index = rr.logdiclist[index]
-        d_step = int(logfile_inthis_index['freq_ave_chunk_momentum_mass_field'])
+        log_variable_inthis_index = rr.log_variable_dic_list[index]
+        d_step = int(log_variable_inthis_index['freq_ave_chunk_momentum_mass_field'])
         with open(rr.folder_path_list_last_to_initial[index] + "output/momentum_mass_field/" + "fix.momentum_mass_field.all") as f:
             lines = f.read().strip().split('\n')
         header = lines[2].split()[1:]
@@ -84,7 +84,7 @@ def combine_previous_chunk_data():
             data = np.array(data, dtype=np.float64)
             return data
         step_array = np.arange(step1_default, step2_default + d_step, d_step)
-        time_array = step_array*logfile_inthis_index["ts"] + rr.logdiclist[rr.n_simu_total-1-index]["previous_time"]
+        time_array = step_array*log_variable_inthis_index["ts"] + rr.log_variable_dic_list[rr.n_simu_total-1-index]["previous_time"]
         data_array = np.empty([step_array.shape[0], n_line_in_a_step, len(header)])
         for n1 in range(step_array.shape[0]):
             data_array[n1,:,:] = data_inloop(step_array[n1])
@@ -97,7 +97,7 @@ def combine_previous_chunk_data():
         if index >= 1:
             df = df.loc[df['TimeStep']<next_step1]
         array = df['v_t'].values
-        array += rr.logdiclist[rr.n_simu_total-1-index]["previous_time"]
+        array += rr.log_variable_dic_list[rr.n_simu_total-1-index]["previous_time"]
         df['v_t'] = array
         next_step1 = step1_default
         

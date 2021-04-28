@@ -8,15 +8,15 @@ lammps_directory = os.getcwd() + '/'
 # read from pickle if exist
 if os.path.isfile(lammps_directory + 'python_global.pckl'):
     f = open(lammps_directory + 'python_global.pckl', 'rb')
-    [logdiclist, n_simu_total, line_log_list, logfile, folder_path_list_initial_to_last] = pickle.load(f)
+    [log_variable_dic_list, n_simu_total, line_log_list, log_variable, folder_path_list_initial_to_last] = pickle.load(f)
     f.close()
 # if global pickle not exist
 else: 
-    # read line_log_list, all logfile for all current and previous simulation  
+    # read line_log_list, all log_variable for all current and previous simulation  
     # and count n_simu_total, the number of simulation including current and previous 
     n_simu_total = 0
     line_log_list = []
-    logdiclist = []
+    log_variable_dic_list = []
     
     def parent_dir(mypath):
         return os.path.abspath(os.path.join(mypath, os.pardir))
@@ -52,9 +52,9 @@ else:
         # read variable from log file
         lines_start_variable = [line for line in lines if line.startswith("variable")]
         variable_names = [line.split()[1] for line in lines_start_variable]
-        logfile = dict.fromkeys(variable_names)
+        log_variable = dict.fromkeys(variable_names)
         # get variable
-        for variable_name in logfile.keys():
+        for variable_name in log_variable.keys():
             satisfy_lines = [line for line in lines_start_variable if line.split()[1] == variable_name]
             
             if len(satisfy_lines) != 0:
@@ -78,23 +78,23 @@ else:
 
                 else:
                     pass
-                logfile[variable_name] = variable_value
+                log_variable[variable_name] = variable_value
 
             else:
                 sys.exit("can not find variable {} in log file".format(variable_name))
 
         # shearwall
-        if "if_inwall_wall_gran" in logfile.keys():
-            if logfile["if_inwall_wall_gran"]=="yes":
-                logfile["shearwall"] = "yplane"
+        if "if_inwall_wall_gran" in log_variable.keys():
+            if log_variable["if_inwall_wall_gran"]=="yes":
+                log_variable["shearwall"] = "yplane"
             else:
                 for line in lines:
                     if line.startswith("fix") and line.split()[3] == "wall/gran":
                         if line.split()[1] == "inwall": 
-                            logfile["shearwall"] = line.split()[11]
+                            log_variable["shearwall"] = line.split()[11]
                             break
                         elif line.split()[1] == "y_bottom":
-                            logfile["shearwall"] = line.split()[11]
+                            log_variable["shearwall"] = line.split()[11]
                             break
                         else:
                             sys.exit("shearwall missed")
@@ -102,10 +102,10 @@ else:
             for line in lines:
                 if line.startswith("fix") and line.split()[3] == "wall/gran":
                     if line.split()[1] == "inwall": 
-                        logfile["shearwall"] = line.split()[11]
+                        log_variable["shearwall"] = line.split()[11]
                         break
                     elif line.split()[1] == "y_bottom":
-                        logfile["shearwall"] = line.split()[11]
+                        log_variable["shearwall"] = line.split()[11]
                         break
                     else:
                         sys.exit("shearwall missed")
@@ -116,15 +116,15 @@ else:
         satisfy_lines = [line for line in lines_start_compute if line.split()[3] == 'chunk/atom' and line.split()[1] == "chunk_2_3"]
         # get chunk/atom
         if len(satisfy_lines) != 0:
-            logfile["chunk/atom 23"] = [
+            log_variable["chunk/atom 23"] = [
                                     satisfy_lines[0].split()[1],
                                     satisfy_lines[0].split()[5],
                                     satisfy_lines[0].split()[4],
                                     ]
         else:
             pass
-        # append logfile to logdiclist
-        logdiclist.append(logfile)
+        # append log_variable to log_variable_dic_list
+        log_variable_dic_list.append(log_variable)
         # if rst_from = 0 stop reading otherwise continue to set dir to parent folder
         rst_from = int(
             [line for line in lines_start_variable if line.split()[1] == 'rst_from'][0].split()[3]
@@ -133,7 +133,7 @@ else:
             break
         else:
             dir = os.path.abspath(os.path.join(dir, os.pardir))
-    logdiclist = logdiclist[::-1]
+    log_variable_dic_list = log_variable_dic_list[::-1]
     line_log_list = line_log_list[::-1]
     folder_path_list_initial_to_last = [lammps_directory+"../"*(n_simu_total-1-n) for n in range(n_simu_total)]
     folder_path_list_last_to_initial = folder_path_list_initial_to_last[::-1]
@@ -273,7 +273,7 @@ else:
     restart_time = 0
     for n in range(n_simu_total):
         if n == 0:
-            logdiclist[n]["previous_time"] = restart_time
+            log_variable_dic_list[n]["previous_time"] = restart_time
         else:
             for n_line1, line in enumerate(line_log_list[n-1]):
                 if len(line) >= 2:
@@ -287,30 +287,30 @@ else:
 
             for n_line, line in enumerate(line_log_list[n-1]):
                 if n_line>n_line1 and n_line<n_line2:
-                    if line.split()[0]==str(logdiclist[n]['rst_from']):
+                    if line.split()[0]==str(log_variable_dic_list[n]['rst_from']):
                         restart_time += float(line.split()[1])
-            logdiclist[n]["previous_time"] = restart_time
+            log_variable_dic_list[n]["previous_time"] = restart_time
     
     # count the time no rotation
     rotate_start_time = 0
     for i in range(n_simu_total):
-        if int(logdiclist[i]["rst_from"]) == 0:
+        if int(log_variable_dic_list[i]["rst_from"]) == 0:
             previous_time_step = 0
         else:
-            previous_time_step = float(logdiclist[i-1]["ts"])
-        rotate_start_time += previous_time_step*int(logdiclist[i]["rst_from"])
-        if logdiclist[i]["ifrotate"] == "yes" and float(logdiclist[i]["Sa"]) != 0:
-            logdiclist[i]["rotate_start_time"] = rotate_start_time
+            previous_time_step = float(log_variable_dic_list[i-1]["ts"])
+        rotate_start_time += previous_time_step*int(log_variable_dic_list[i]["rst_from"])
+        if log_variable_dic_list[i]["ifrotate"] == "yes" and float(log_variable_dic_list[i]["Sa"]) != 0:
+            log_variable_dic_list[i]["rotate_start_time"] = rotate_start_time
             break
         else:
-            logdiclist[i]["rotate_start_time"] = None # have not rotate
+            log_variable_dic_list[i]["rotate_start_time"] = None # have not rotate
 
     for i in range(n_simu_total):    
-        logdiclist[i]["rotate_start_time"] = rotate_start_time
+        log_variable_dic_list[i]["rotate_start_time"] = rotate_start_time
         
-    # logfile
-    logfile = logdiclist[-1]
-    # save all global variable get from logfile to pickle
+    # log_variable
+    log_variable = log_variable_dic_list[-1]
+    # save all global variable get from log_variable to pickle
     f = open(lammps_directory + 'python_global.pckl', 'wb')
-    pickle.dump([logdiclist, n_simu_total, line_log_list, logfile, folder_path_list_initial_to_last], f)
+    pickle.dump([log_variable_dic_list, n_simu_total, line_log_list, log_variable, folder_path_list_initial_to_last], f)
     f.close()

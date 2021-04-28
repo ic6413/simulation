@@ -8,31 +8,31 @@ import pickle
 import read_setting as rr
 import datapath as dp
 # chunk method
-if rr.logfile["shearwall"] == "zcylinder":
+if rr.log_variable["shearwall"] == "zcylinder":
     chunk_method = 'rz'
-if rr.logfile["shearwall"] == "yplane":
+if rr.log_variable["shearwall"] == "yplane":
     chunk_method = 'yz'
 
 # map dim index to coordinate
-if rr.logfile["shearwall"] == "zcylinder":
+if rr.log_variable["shearwall"] == "zcylinder":
     map_dim_index_to_coordinate = ["t", "r", "z"]
-elif rr.logfile["shearwall"] == "yplane":
+elif rr.log_variable["shearwall"] == "yplane":
     map_dim_index_to_coordinate = ["x", "y", "z"]
 
 # xyztoCoor
-if rr.logfile["shearwall"] == "zcylinder":
+if rr.log_variable["shearwall"] == "zcylinder":
     # chink first dim unchange in the begining
     chunk_first_dim_coord = "z"
     chunk_second_dim_coord = "r"
-elif rr.logfile["shearwall"] == "yplane":
-    if "chunk/atom 23" in rr.logfile.keys():
-        if rr.logfile["chunk/atom 23"][1] == "y":
+elif rr.log_variable["shearwall"] == "yplane":
+    if "chunk/atom 23" in rr.log_variable.keys():
+        if rr.log_variable["chunk/atom 23"][1] == "y":
             chunk_first_dim_coord = "y"
             chunk_second_dim_coord = "z"
             xyztoCoor = {}
             xyztoCoor["y"] = "Coord1"
             xyztoCoor["z"] = "Coord2"
-        elif rr.logfile["chunk/atom 23"][1] == "z":
+        elif rr.log_variable["chunk/atom 23"][1] == "z":
             chunk_first_dim_coord = "z"
             chunk_second_dim_coord = "y"
             xyztoCoor["z"] = "Coord1"
@@ -49,38 +49,38 @@ else:
     sys.exit("chunk_method wrong")
 
 # n_1 n_2 position_index_to_array_dim_index
-if rr.logfile["shearwall"] == "zcylinder":
+if rr.log_variable["shearwall"] == "zcylinder":
     position_index_to_array_dim_index = {
                                     1: 1,
                                     2: 0,
                                     }
-    n_r = int(rr.logfile['N_bin_r'])
-    n_z = int(rr.logfile['N_bin_z'])
+    n_r = int(rr.log_variable['N_bin_r'])
+    n_z = int(rr.log_variable['N_bin_z'])
     n_1 = n_z
     n_2 = n_r
     n_12 = n_1*n_2
     
-    dx = 1/n_r*int(rr.logfile['width_wall_dp_unit'])
-    dy = 1/n_z*float(rr.logfile['zhi_chunk_dp_unit'])
+    dx = 1/n_r*int(rr.log_variable['width_wall_dp_unit'])
+    dy = 1/n_z*float(rr.log_variable['zhi_chunk_dp_unit'])
     x_array, y_array = np.meshgrid(
-                                int(rr.logfile['ri_wall_dp_unit']) + (np.arange(n_1)+0.5)/n_1*int(rr.logfile['width_wall_dp_unit']),
-                                (np.arange(n_2)+0.5)/n_2*float(rr.logfile['zhi_chunk_dp_unit']),
+                                int(rr.log_variable['ri_wall_dp_unit']) + (np.arange(n_1)+0.5)/n_1*int(rr.log_variable['width_wall_dp_unit']),
+                                (np.arange(n_2)+0.5)/n_2*float(rr.log_variable['zhi_chunk_dp_unit']),
                                 )
     x_array = x_array.reshape((-1))
     y_array = y_array.reshape((-1))
-    vol_in_chunks = np.pi*((x_array+0.5*dx)**2-(x_array-0.5*dx)**2)*(y_array+0.5*dy-(y_array-0.5*dy))*float(rr.logfile['dp'])**3
-elif rr.logfile["shearwall"] == "yplane":
-    n_y = int(rr.logfile['N_bin_y'])
-    n_z = int(rr.logfile['N_bin_z'])
-    if "chunk/atom 23" in rr.logfile.keys():
-        if rr.logfile["chunk/atom 23"][1] == "y":
+    vol_in_chunks = np.pi*((x_array+0.5*dx)**2-(x_array-0.5*dx)**2)*(y_array+0.5*dy-(y_array-0.5*dy))*float(rr.log_variable['dp'])**3
+elif rr.log_variable["shearwall"] == "yplane":
+    n_y = int(rr.log_variable['N_bin_y'])
+    n_z = int(rr.log_variable['N_bin_z'])
+    if "chunk/atom 23" in rr.log_variable.keys():
+        if rr.log_variable["chunk/atom 23"][1] == "y":
             position_index_to_array_dim_index = {
                                             1: 0,
                                             2: 1,
                                             }
             n_1 = n_y
             n_2 = n_z
-        elif rr.logfile["chunk/atom 23"][1] == "z":
+        elif rr.log_variable["chunk/atom 23"][1] == "z":
             position_index_to_array_dim_index = {
                                             2: 0,
                                             1: 1,
@@ -98,18 +98,18 @@ elif rr.logfile["shearwall"] == "yplane":
         n_2 = n_z
 
     n_12 = n_1*n_2
-    dx = 1/n_y*int(rr.logfile['width_wall_dp_unit'])
-    dy = 1/n_z*float(rr.logfile['zhi_chunk_dp_unit'])
-    vol_in_chunks = float(rr.logfile['dp'])*int(rr.logfile['x_period_dp_unit'])*dx*dy*float(rr.logfile['dp'])**2
+    dx = 1/n_y*int(rr.log_variable['width_wall_dp_unit'])
+    dy = 1/n_z*float(rr.log_variable['zhi_chunk_dp_unit'])
+    vol_in_chunks = float(rr.log_variable['dp'])*int(rr.log_variable['x_period_dp_unit'])*dx*dy*float(rr.log_variable['dp'])**2
 else:
     sys.exit("chunk_method wrong")
 # time count from step 0
 def time_from_step_0(step):
-    return step*float(rr.logfile["ts"])
+    return step*float(rr.log_variable["ts"])
 
 # time count from rotate started
 def time_from_start_rotate(step):
-    return time_from_step_0(step)-rr.logfile["rotate_start_time"]
+    return time_from_step_0(step)-rr.log_variable["rotate_start_time"]
 
 def extend_chunk_object_to_multisimu(class_name, *arg):
     ob1 = class_name(*arg)
@@ -140,10 +140,10 @@ def extend_chunk_object_to_multisimu(class_name, *arg):
                     if i == (rr.n_simu_total - 1):
                         stepslist_in_each_simu_list.append(stepslist[k:])
                     else:
-                        if step > int(rr.logdiclist[i]["rst_from"]) and step <= int(rr.logdiclist[i+1]["rst_from"]):
+                        if step > int(rr.log_variable_dic_list[i]["rst_from"]) and step <= int(rr.log_variable_dic_list[i+1]["rst_from"]):
                             stepslist_in_each_simu.append(step)
                             k = k+1
-                        elif step > int(rr.logdiclist[i+1]["rst_from"]):
+                        elif step > int(rr.log_variable_dic_list[i+1]["rst_from"]):
                             stepslist_in_each_simu_list.append(stepslist_in_each_simu)
                             stepslist_in_each_simu = []
                             break
@@ -157,14 +157,14 @@ def extend_chunk_object_to_multisimu(class_name, *arg):
 # class chunk common
 class chunk(object):
 
-    if "if_inwall_wall_gran" in rr.logfile.keys():
-        if rr.logfile["if_inwall_wall_gran"] == "yes":
-            if "wall_gran_type" in rr.logfile.keys():
-                if rr.logfile["wall_gran_type"] == "1":
+    if "if_inwall_wall_gran" in rr.log_variable.keys():
+        if rr.log_variable["if_inwall_wall_gran"] == "yes":
+            if "wall_gran_type" in rr.log_variable.keys():
+                if rr.log_variable["wall_gran_type"] == "1":
                     ybottomwalltype = "rough (d=0.9)"
-                elif rr.logfile["wall_gran_type"] == "2":
+                elif rr.log_variable["wall_gran_type"] == "2":
                     ybottomwalltype = "rough (d=1)"
-                elif rr.logfile["wall_gran_type"] == "3":
+                elif rr.log_variable["wall_gran_type"] == "3":
                     ybottomwalltype = "rough (d=1.1)"
                 else:
                     sys.exit("can not get wall gran type")
@@ -175,9 +175,9 @@ class chunk(object):
     else:
         ybottomwalltype = "smooth"
 
-    height = rr.logfile["z_length_create_dp_unit"]
-    width = rr.logfile["width_wall_dp_unit"]
-    periodlength = rr.logfile["x_period_dp_unit"]
+    height = rr.log_variable["z_length_create_dp_unit"]
+    width = rr.log_variable["width_wall_dp_unit"]
+    periodlength = rr.log_variable["x_period_dp_unit"]
     labelstring_size_walltype = ybottomwalltype + "\n" + "L " + periodlength + "\n" + "W " + width + "\n" + "H " + height
     labelstring_size_walltype_one_line = ybottomwalltype + ", " + "L " + periodlength + ", " + "W " + width + ", " + "H " + height
 
@@ -258,7 +258,7 @@ class chunk(object):
 
         # check index_read_from
         for index_read_from in range(rr.n_simu_total):
-            if min_step > int(rr.logdiclist[index_read_from]["rst_from"]):
+            if min_step > int(rr.log_variable_dic_list[index_read_from]["rst_from"]):
                 break
             else:
                 pass
@@ -323,10 +323,10 @@ class chunk(object):
     @staticmethod
     def plot_quiver_position_label(fig, ax):
     
-        if rr.logfile["shearwall"] == "zcylinder":
+        if rr.log_variable["shearwall"] == "zcylinder":
             plt.xlabel('r')
             plt.ylabel('z')
-        elif rr.logfile["shearwall"] == "yplane":
+        elif rr.log_variable["shearwall"] == "yplane":
             plt.xlabel('y')
             plt.ylabel('z')
         
@@ -341,7 +341,7 @@ class chunk1D(chunk):
             self.chunk_coor_array = self.get_coord("Coord2")
         except:
             # old version chunk
-            if rr.logfile["shearwall"] == "zcylinder":
+            if rr.log_variable["shearwall"] == "zcylinder":
                 self.chunk_coor_array = self.firstdata("v_z")
             else:
                 sys.exit("chunk_method wrong")
@@ -410,7 +410,7 @@ class chunk1D(chunk):
             value = value/self.n_ave
             ave_square_2 = ave_square_2/self.n_ave
             # calculate std
-            totaln = self.n_ave*int(rr.logfile["repeat_ave_chunk_wallforce"])
+            totaln = self.n_ave*int(rr.log_variable["repeat_ave_chunk_wallforce"])
             if (ddof == 1 and totaln == 1):
                 std = 0
             else:
@@ -476,7 +476,7 @@ class chunk1D(chunk):
         self,
         step, Y_name,
         Y_scale,
-        X_scale=float(rr.logfile['dp']),
+        X_scale=float(rr.log_variable['dp']),
         ):
 
         # reduce to 1D X_vector Y_vector
@@ -500,7 +500,7 @@ class chunk1D(chunk):
         Y_name,
         Y_scale,
         Ylabel,
-        X_scale=float(rr.logfile['dp']),
+        X_scale=float(rr.log_variable['dp']),
         ):
         
         fig, ax = plt.subplots()
@@ -509,7 +509,7 @@ class chunk1D(chunk):
                 self.datachunk_ave_one_step_XY(
                     step, Y_name,
                     Y_scale,
-                    X_scale=float(rr.logfile['dp']),
+                    X_scale=float(rr.log_variable['dp']),
                 )
             )
 
@@ -542,7 +542,7 @@ class chunk1D(chunk):
         Y_scale,
         Ylabel,
         savepath,
-        X_scale=float(rr.logfile['dp']),
+        X_scale=float(rr.log_variable['dp']),
         figformat="png", ifpickle=False, bbox_inches="tight", onefigure=True
         ):
         self.infofrom_filepath_n_ave_dic_by_stepsarray(stepsarray)
@@ -607,7 +607,7 @@ class chunk1D(chunk):
             stepsarray, Y_name, Y_scale,
             index_n,
         )
-        value_coor_dpunit = self.chunk_coor_array[index_n]/float(rr.logfile['dp'])
+        value_coor_dpunit = self.chunk_coor_array[index_n]/float(rr.log_variable['dp'])
         # plot
         ax.errorbar(time, Y_vector, yerr=Y_std_vector,
                 label=self.chunk_coor_array_label + "={:.1f}, ".format(value_coor_dpunit),
@@ -671,7 +671,7 @@ class chunkinwallforce(chunk1D):
         Y_name,
         Y_scale,
         Ylabel,
-        X_scale=float(rr.logfile['dp']),
+        X_scale=float(rr.log_variable['dp']),
         ):
         
         fig, ax = plt.subplots()
@@ -680,7 +680,7 @@ class chunkinwallforce(chunk1D):
                 self.datachunk_ave_one_step_XY(
                     step, "v_inwall_per_atom_1",
                     Y_scale,
-                    X_scale=float(rr.logfile['dp']),
+                    X_scale=float(rr.log_variable['dp']),
                 )
             )
 
@@ -688,7 +688,7 @@ class chunkinwallforce(chunk1D):
                 self.datachunk_ave_one_step_XY(
                     step, "v_inwall_per_atom_2",
                     Y_scale,
-                    X_scale=float(rr.logfile['dp']),
+                    X_scale=float(rr.log_variable['dp']),
                 )
             )
 
@@ -723,7 +723,7 @@ class chunkinwallforce(chunk1D):
         Y_scale,
         Ylabel,
         savepath,
-        X_scale=float(rr.logfile['dp']),
+        X_scale=float(rr.log_variable['dp']),
         figformat="png", ifpickle=False, bbox_inches="tight", onefigure=True
         ):
         self.infofrom_filepath_n_ave_dic_by_stepsarray(stepsarray)
@@ -786,15 +786,15 @@ class chunkzbottomwallforce(chunk1D):
             self.chunk_coor_array = self.get_coord("Coord1")
         except:
             # old version chunk
-            if rr.logfile["shearwall"] == "zcylinder":
+            if rr.log_variable["shearwall"] == "zcylinder":
                 self.chunk_coor_array = self.firstdata("v_r")
             else:
                 sys.exit("chunk_method wrong")
         
         # chunk_coor_array_label
-        if rr.logfile["shearwall"] == "zcylinder":
+        if rr.log_variable["shearwall"] == "zcylinder":
             self.chunk_coor_array_label = "r"
-        elif rr.logfile["shearwall"] == "yplane":
+        elif rr.log_variable["shearwall"] == "yplane":
             self.chunk_coor_array_label = "y"
         else:
             sys.exit("chunk_method wrong")
@@ -810,16 +810,16 @@ class chunk2D(chunk):
             self.chunk_y_array = self.get_coord("Coord2")
         except:
             # old version chunk
-            if rr.logfile["shearwall"] == "zcylinder":
+            if rr.log_variable["shearwall"] == "zcylinder":
                 self.chunk_x_array = self.firstdata("v_r")
                 self.chunk_y_array = self.firstdata("v_z")
             else:
                 sys.exit("chunk_method wrong")
         # x-y coordinate in chunk
-        if rr.logfile["shearwall"] == "zcylinder":
+        if rr.log_variable["shearwall"] == "zcylinder":
             self.chunk_x_array_label = "r"
             self.chunk_y_array_label = "z"
-        elif rr.logfile["shearwall"] == "yplane":
+        elif rr.log_variable["shearwall"] == "yplane":
             self.chunk_x_array_label = "y"
             self.chunk_y_array_label = "z"
         else:
@@ -919,7 +919,7 @@ class chunk2D(chunk):
             # calculate std
             value = value/self.n_ave
             ave_square_2 = ave_square_2/self.n_ave
-            totaln = self.n_ave*int(rr.logfile["repeat_ave_chunk_momentum_mass_field"])
+            totaln = self.n_ave*int(rr.log_variable["repeat_ave_chunk_momentum_mass_field"])
             if (ddof == 1 and totaln == 1):
                 std = 0
             else:
@@ -1016,7 +1016,7 @@ class chunk2D(chunk):
     def datachunk_ave_one_step_quiver_x23(
         self,
         step, Q_name, V_name, Q_scale, V_scale,
-        x_scale=float(rr.logfile['dp']), y_scale=float(rr.logfile['dp']),
+        x_scale=float(rr.log_variable['dp']), y_scale=float(rr.log_variable['dp']),
         ):
 
         # V array
@@ -1045,7 +1045,7 @@ class chunk2D(chunk):
         time, x_array, y_array, Q_array, V_array,
         step, Q_name, V_name, Q_scale, V_scale,
         quiver_scale=0.1, label_scale=0.2,
-        x_scale=float(rr.logfile['dp']), y_scale=float(rr.logfile['dp']),
+        x_scale=float(rr.log_variable['dp']), y_scale=float(rr.log_variable['dp']),
         ):
         fig1, ax1 = plt.subplots()
         #fig1.figsize = [12.8, 9.6]
@@ -1077,7 +1077,7 @@ class chunk2D(chunk):
         self,
         step, Q_name, V_name, Q_scale, V_scale,
         quiver_scale=0.1, label_scale=0.2,
-        x_scale=float(rr.logfile['dp']), y_scale=float(rr.logfile['dp']),
+        x_scale=float(rr.log_variable['dp']), y_scale=float(rr.log_variable['dp']),
         ):
 
         [time, x_array, y_array, Q_array, V_array] = (
@@ -1090,7 +1090,7 @@ class chunk2D(chunk):
         time, x_array, y_array, Q_array, V_array,
         step, Q_name, V_name, Q_scale, V_scale,
         quiver_scale=0.1, label_scale=0.2,
-        x_scale=float(rr.logfile['dp']), y_scale=float(rr.logfile['dp']),
+        x_scale=float(rr.log_variable['dp']), y_scale=float(rr.log_variable['dp']),
         )
         self.quiveraddkey("equal (" + Q_name + ", " + V_name + ") = {:.2e}".format(label_scale) + ". At {:.2e} s".format(time), label_scale)
     
@@ -1100,7 +1100,7 @@ class chunk2D(chunk):
         stepsarray,
         Q_name, V_name, Q_scale, V_scale,
         savepath,
-        x_scale=float(rr.logfile['dp']), y_scale=float(rr.logfile['dp']),
+        x_scale=float(rr.log_variable['dp']), y_scale=float(rr.log_variable['dp']),
         figformat="png", ifpickle=False,
         quiver_scale=0.1, label_scale=0.2,
         ):
@@ -1118,12 +1118,12 @@ class chunk2D(chunk):
         self,
         step, Q_name, V_name, Q_scale, V_scale,
         diff_position_index,
-        x_scale=float(rr.logfile['dp']), y_scale=float(rr.logfile['dp']),
+        x_scale=float(rr.log_variable['dp']), y_scale=float(rr.log_variable['dp']),
         ):
         
         [time, x_array, y_array, Q_array, V_array] = self.datachunk_ave_one_step_quiver_x23(
                                                                                             step, Q_name, V_name, Q_scale, V_scale,
-                                                                                            x_scale=float(rr.logfile['dp']), y_scale=float(rr.logfile['dp']),
+                                                                                            x_scale=float(rr.log_variable['dp']), y_scale=float(rr.log_variable['dp']),
                                                                                             )
         diff_along_array_dim = position_index_to_array_dim_index[diff_position_index]
         Ncount_array = self.value_in_a_step_ave(step, 'Ncount', index_n_1=None, index_n_2=None)[0]
@@ -1154,7 +1154,7 @@ class chunk2D(chunk):
         step, Q_name, V_name, Q_scale, V_scale,
         diff_position_index,
         quiver_scale=0.1, label_scale=0.2,
-        x_scale=float(rr.logfile['dp']), y_scale=float(rr.logfile['dp']),
+        x_scale=float(rr.log_variable['dp']), y_scale=float(rr.log_variable['dp']),
         ):
 
         [time, x_array, y_array, Q_array, V_array] = (
@@ -1168,7 +1168,7 @@ class chunk2D(chunk):
         time, x_array, y_array, Q_array, V_array,
         step, Q_name, V_name, Q_scale, V_scale,
         quiver_scale=0.1, label_scale=0.2,
-        x_scale=float(rr.logfile['dp']), y_scale=float(rr.logfile['dp']),
+        x_scale=float(rr.log_variable['dp']), y_scale=float(rr.log_variable['dp']),
         )
         self.quiveraddkey("equal (diff_" + Q_name + ", diff_" + V_name + ") = {:.2e}".format(label_scale) + ". At {:.2e} s".format(time), label_scale)
     
@@ -1179,7 +1179,7 @@ class chunk2D(chunk):
         Q_name, V_name, Q_scale, V_scale,
         diff_position_index,
         savepath,
-        x_scale=float(rr.logfile['dp']), y_scale=float(rr.logfile['dp']),
+        x_scale=float(rr.log_variable['dp']), y_scale=float(rr.log_variable['dp']),
         figformat="png", ifpickle=False,
         quiver_scale=0.1, label_scale=0.2,
         ):
@@ -1200,7 +1200,7 @@ class chunk2D(chunk):
         Y_scale,
         k, k_index,
         diff_coord_index,
-        X_scale=float(rr.logfile['dp']),
+        X_scale=float(rr.log_variable['dp']),
         ):
         
         # coord_index_horizental_in_plot should not equal k
@@ -1268,7 +1268,7 @@ class chunk2D(chunk):
         k, k_index_array,
         Ylabel,
         diff_coord_index,
-        X_scale=float(rr.logfile['dp']),
+        X_scale=float(rr.log_variable['dp']),
         ):
         
         fig, ax = plt.subplots()
@@ -1280,7 +1280,7 @@ class chunk2D(chunk):
                         Y_scale,
                         k, k_index,
                         diff_coord_index,
-                        X_scale=float(rr.logfile['dp']),
+                        X_scale=float(rr.log_variable['dp']),
                     )
                 )
                 
@@ -1291,7 +1291,7 @@ class chunk2D(chunk):
                 elif position_index_to_array_dim_index[k] == 1:
                     k_value = self.chunk_y_array[0, k_index]
 
-                k_value = k_value/float(rr.logfile['dp'])
+                k_value = k_value/float(rr.log_variable['dp'])
                 # plot
                 ax.errorbar(X_vector, Y_vector, yerr=Y_std_vector,
                         label="t={:.2e} s".format(time) + ", " + map_dim_index_to_coordinate[k] + "=" + "{:.2f}".format(k_value),
@@ -1322,7 +1322,7 @@ class chunk2D(chunk):
         Ylabel,
         diff_coord_index,
         savepath,
-        X_scale=float(rr.logfile['dp']),
+        X_scale=float(rr.log_variable['dp']),
         figformat="png", ifpickle=False, bbox_inches="tight", onefigure=True
         ):
         self.infofrom_filepath_n_ave_dic_by_stepsarray(stepsarray)
@@ -1365,7 +1365,7 @@ class chunk2D(chunk):
         step, coord_index_horizental_in_plot, Y_name,
         Y_scale,
         k, k_index,
-        X_scale=float(rr.logfile['dp']),
+        X_scale=float(rr.log_variable['dp']),
         ):
         
         # coord_index_horizental_in_plot should not equal k
@@ -1399,7 +1399,7 @@ class chunk2D(chunk):
         Y_scale,
         k, k_index_array,
         Ylabel,
-        X_scale=float(rr.logfile['dp']),
+        X_scale=float(rr.log_variable['dp']),
         ):
         
         fig, ax = plt.subplots()
@@ -1411,7 +1411,7 @@ class chunk2D(chunk):
                         step, coord_index_horizental_in_plot, Y_name,
                         Y_scale,
                         k, k_index,
-                        X_scale=float(rr.logfile['dp']),
+                        X_scale=float(rr.log_variable['dp']),
                     )
                 )
                 
@@ -1422,7 +1422,7 @@ class chunk2D(chunk):
                 elif position_index_to_array_dim_index[k] == 1:
                     k_value = self.chunk_y_array[0, k_index]
 
-                k_value = k_value/float(rr.logfile['dp'])
+                k_value = k_value/float(rr.log_variable['dp'])
                 # plot
                 ax.errorbar(X_vector, Y_vector, yerr=Y_std_vector,
                         label="t={:.2e} s".format(time) + ", " + map_dim_index_to_coordinate[k] + "=" + "{:.2f}".format(k_value),
@@ -1452,7 +1452,7 @@ class chunk2D(chunk):
         k, k_index_array,
         Ylabel,
         savepath,
-        X_scale=float(rr.logfile['dp']),
+        X_scale=float(rr.log_variable['dp']),
         figformat="png", ifpickle=False, bbox_inches="tight", onefigure=True
         ):
         self.infofrom_filepath_n_ave_dic_by_stepsarray(stepsarray)
@@ -1520,8 +1520,8 @@ class chunk2D(chunk):
             stepsarray, Y_name, Y_scale,
             index_n_1, index_n_2,
         )
-        value_x_dpunit = self.chunk_x_array[index_n_1, index_n_2]/float(rr.logfile['dp'])
-        value_y_dpunit = self.chunk_y_array[index_n_1, index_n_2]/float(rr.logfile['dp'])
+        value_x_dpunit = self.chunk_x_array[index_n_1, index_n_2]/float(rr.log_variable['dp'])
+        value_y_dpunit = self.chunk_y_array[index_n_1, index_n_2]/float(rr.log_variable['dp'])
         # plot
         ax.errorbar(time, Y_vector, yerr=Y_std_vector,
                 label=self.chunk_x_array_label + "={:.1f}, ".format(value_x_dpunit) + self.chunk_y_array_label + "={:.1f}".format(value_y_dpunit),
@@ -1593,25 +1593,25 @@ class chunkstress(chunk2D):
         step, coord_index_horizental_in_plot, Y_name,
         Y_scale,
         k, k_index,
-        X_scale=float(rr.logfile['dp']),
+        X_scale=float(rr.log_variable['dp']),
         ):
         (time, X_vector, X_label, stress_00_vector, stress_00_std_vector) = self.datachunk_ave_one_step_XY_fix_k(
         step, coord_index_horizental_in_plot, self.call_header_by_bettername["stress_00"],
         Y_scale,
         k, k_index,
-        X_scale=float(rr.logfile['dp']),
+        X_scale=float(rr.log_variable['dp']),
         )
         (time, X_vector, X_label, stress_11_vector, stress_11_std_vector) = self.datachunk_ave_one_step_XY_fix_k(
         step, coord_index_horizental_in_plot, self.call_header_by_bettername["stress_11"],
         Y_scale,
         k, k_index,
-        X_scale=float(rr.logfile['dp']),
+        X_scale=float(rr.log_variable['dp']),
         )
         (time, X_vector, X_label, stress_22_vector, stress_22_std_vector) = self.datachunk_ave_one_step_XY_fix_k(
         step, coord_index_horizental_in_plot, self.call_header_by_bettername["stress_22"],
         Y_scale,
         k, k_index,
-        X_scale=float(rr.logfile['dp']),
+        X_scale=float(rr.log_variable['dp']),
         )
 
         pressure_vector = -1/3*(stress_00_vector + stress_11_vector + stress_22_vector)
@@ -1643,7 +1643,7 @@ class chunkmomentum(chunk2D):
         Y_scale,
         k, k_index,
         diff_coord_index,
-        X_scale=float(rr.logfile['dp']),
+        X_scale=float(rr.log_variable['dp']),
         ):
         
         # coord_index_horizental_in_plot should not equal k
@@ -1717,7 +1717,7 @@ class chunkmomentum(chunk2D):
         k, k_index_array,
         Ylabel,
         diff_coord_index,
-        X_scale=float(rr.logfile['dp']),
+        X_scale=float(rr.log_variable['dp']),
         ):
         
         fig, ax = plt.subplots()
@@ -1729,7 +1729,7 @@ class chunkmomentum(chunk2D):
                         Y_scale,
                         k, k_index,
                         diff_coord_index,
-                        X_scale=float(rr.logfile['dp']),
+                        X_scale=float(rr.log_variable['dp']),
                     )
                 )
                 
@@ -1740,7 +1740,7 @@ class chunkmomentum(chunk2D):
                 elif position_index_to_array_dim_index[k] == 1:
                     k_value = self.chunk_y_array[0, k_index]
 
-                k_value = k_value/float(rr.logfile['dp'])
+                k_value = k_value/float(rr.log_variable['dp'])
                 # plot
                 ax.errorbar(X_vector, Y_vector, yerr=Y_std_vector,
                         label="t={:.2e} s".format(time) + ", " + map_dim_index_to_coordinate[k] + "=" + "{:.2f}".format(k_value),
@@ -1771,7 +1771,7 @@ class chunkmomentum(chunk2D):
         Ylabel,
         diff_coord_index,
         savepath,
-        X_scale=float(rr.logfile['dp']),
+        X_scale=float(rr.log_variable['dp']),
         figformat="png", ifpickle=False, bbox_inches="tight", onefigure=True
         ):
         self.infofrom_filepath_n_ave_dic_by_stepsarray(stepsarray)
@@ -1816,7 +1816,7 @@ class chunkmuI(chunk2D):
     def data_to_plot_mu_I(self, step, coord_index_horizental_in_plot,
         i, j,
         k, k_index,
-        X_scale=float(rr.logfile['dp']),
+        X_scale=float(rr.log_variable['dp']),
         ):
         if position_index_to_array_dim_index[k] + 1 == 1:
             n_k = n_1
@@ -1825,7 +1825,7 @@ class chunkmuI(chunk2D):
         else:
             sys.exit("k is wrong")
         k_index_middle = np.arange(n_k-1)[k_index]
-        stress_scale = float(rr.logfile['den'])*float(rr.logfile['g'])*float(rr.logfile['width_wall_dp_unit'])*float(rr.logfile['dp'])
+        stress_scale = float(rr.log_variable['den'])*float(rr.log_variable['g'])*float(rr.log_variable['width_wall_dp_unit'])*float(rr.log_variable['dp'])
 
         stress_data = chunkstress(self.n_ave, self.lmp_path)
         pressure_vector= 1/4*(
@@ -1833,25 +1833,25 @@ class chunkmuI(chunk2D):
                 step, coord_index_horizental_in_plot, chunkstress.call_header_by_bettername["stress_" + str(i) + str(j)],
                 stress_scale,
                 k, k_index_middle,
-                X_scale=float(rr.logfile['dp']),
+                X_scale=float(rr.log_variable['dp']),
                 )[3][0:-1]
             +stress_data.datachunk_ave_one_step_pressure_fix_k(
                 step, coord_index_horizental_in_plot, chunkstress.call_header_by_bettername["stress_" + str(i) + str(j)],
                 stress_scale,
                 k, k_index_middle,
-                X_scale=float(rr.logfile['dp']),
+                X_scale=float(rr.log_variable['dp']),
                 )[3][1:]
             +stress_data.datachunk_ave_one_step_pressure_fix_k(
                 step, coord_index_horizental_in_plot, chunkstress.call_header_by_bettername["stress_" + str(i) + str(j)],
                 stress_scale,
                 k, k_index_middle+1,
-                X_scale=float(rr.logfile['dp']),
+                X_scale=float(rr.log_variable['dp']),
                 )[3][0:-1]
             +stress_data.datachunk_ave_one_step_pressure_fix_k(
                 step, coord_index_horizental_in_plot, chunkstress.call_header_by_bettername["stress_" + str(i) + str(j)],
                 stress_scale,
                 k, k_index_middle+1,
-                X_scale=float(rr.logfile['dp']),
+                X_scale=float(rr.log_variable['dp']),
                 )[3][1:]
             )
         stress_ij = 1/4*(
@@ -1859,32 +1859,32 @@ class chunkmuI(chunk2D):
                 step, coord_index_horizental_in_plot, chunkstress.call_header_by_bettername["stress_" + str(i) + str(j)],
                 stress_scale,
                 k, k_index_middle,
-                X_scale=float(rr.logfile['dp']),
+                X_scale=float(rr.log_variable['dp']),
             )[3][0:-1]
             +stress_data.datachunk_ave_one_step_XY_fix_k(
                 step, coord_index_horizental_in_plot, chunkstress.call_header_by_bettername["stress_" + str(i) + str(j)],
                 stress_scale,
                 k, k_index_middle,
-                X_scale=float(rr.logfile['dp']),
+                X_scale=float(rr.log_variable['dp']),
             )[3][1:]
             +stress_data.datachunk_ave_one_step_XY_fix_k(
                 step, coord_index_horizental_in_plot, chunkstress.call_header_by_bettername["stress_" + str(i) + str(j)],
                 stress_scale,
                 k, k_index_middle+1,
-                X_scale=float(rr.logfile['dp']),
+                X_scale=float(rr.log_variable['dp']),
             )[3][0:-1]
             +stress_data.datachunk_ave_one_step_XY_fix_k(
                 step, coord_index_horizental_in_plot, chunkstress.call_header_by_bettername["stress_" + str(i) + str(j)],
                 stress_scale,
                 k, k_index_middle+1,
-                X_scale=float(rr.logfile['dp']),
+                X_scale=float(rr.log_variable['dp']),
             )[3][1:]
         )
 
-        velocity_scale = float(rr.logfile['in_velocity'])
+        velocity_scale = float(rr.log_variable['in_velocity'])
         if velocity_scale < 0:
             velocity_scale = -velocity_scale
-        shear_rate_scale = velocity_scale/(float(rr.logfile['width_wall_dp_unit'])*float(rr.logfile['dp']))
+        shear_rate_scale = velocity_scale/(float(rr.log_variable['width_wall_dp_unit'])*float(rr.log_variable['dp']))
         momentum_data = chunkmomentum(self.n_ave, self.lmp_path)
         shear_rate_abs_2 = 0
         for (i_loop, j_loop) in [
@@ -1899,7 +1899,7 @@ class chunkmuI(chunk2D):
                 shear_rate_scale,
                 k, k_index_middle,
                 j_loop,
-                X_scale=float(rr.logfile['dp']),
+                X_scale=float(rr.log_variable['dp']),
                 )
             #if len(d_Y_d_diff_coord_vector) == 12:
             #    breakpoint()
@@ -1912,7 +1912,7 @@ class chunkmuI(chunk2D):
         shear_rate_abs = shear_rate_abs_2**0.5
         mu = np.abs(stress_ij)/pressure_vector #*shear_rate_abs/np.abs(shear_rate_ij)
         #mu = np.abs(stress_ij)/pressure_vector*shear_rate_abs/np.abs(shear_rate_ij)
-        inertia = shear_rate_abs*float(rr.logfile["dp"])/(pressure_vector/float(rr.logfile["den"]))**0.5
+        inertia = shear_rate_abs*float(rr.log_variable["dp"])/(pressure_vector/float(rr.log_variable["den"]))**0.5
         # mask too small pressure
         maskoutsmallpressure = (pressure_vector > 5*10**-9)
         #if not np.all(maskoutsmallpressure):
@@ -1931,7 +1931,7 @@ class chunkmuI(chunk2D):
         coord_index_horizental_in_plot,
         i, j,
         k, k_index_array,
-        X_scale=float(rr.logfile['dp']),
+        X_scale=float(rr.log_variable['dp']),
         ifgroupk_indexortimeorz="time"
         ):
         fig, ax = plt.subplots()
@@ -1944,13 +1944,13 @@ class chunkmuI(chunk2D):
                 elif position_index_to_array_dim_index[k] == 1:
                     k_value = self.chunk_y_array[0, k_index]
                 
-                k_value = k_value/float(rr.logfile['dp'])
+                k_value = k_value/float(rr.log_variable['dp'])
 
                 (time, mu ,inertia) = self.data_to_plot_mu_I(
                         stepsarray[0], coord_index_horizental_in_plot,
                         i, j,
                         k, k_index,
-                        X_scale=float(rr.logfile['dp']),
+                        X_scale=float(rr.log_variable['dp']),
                     )
 
                 def adddim(array_to_expand):
@@ -1971,7 +1971,7 @@ class chunkmuI(chunk2D):
                         step, coord_index_horizental_in_plot,
                         i, j,
                         k, k_index,
-                        X_scale=float(rr.logfile['dp']),
+                        X_scale=float(rr.log_variable['dp']),
                     )
                     time_array[i] = time 
                     mu_array[i] = mu 
@@ -1993,7 +1993,7 @@ class chunkmuI(chunk2D):
                         step, coord_index_horizental_in_plot,
                         i, j,
                         k, k_index,
-                        X_scale=float(rr.logfile['dp']),
+                        X_scale=float(rr.log_variable['dp']),
                     )
                     
                     # k_value
@@ -2003,7 +2003,7 @@ class chunkmuI(chunk2D):
                     elif position_index_to_array_dim_index[k] == 1:
                         k_value = self.chunk_y_array[0, k_index]
 
-                    k_value = k_value/float(rr.logfile['dp'])
+                    k_value = k_value/float(rr.log_variable['dp'])
                     # plot
                     ax.errorbar(inertia, mu, yerr=0,
                             label="t={:.2e} s".format(time) + ", " + map_dim_index_to_coordinate[k] + "=" + "{:.2f}".format(k_value),
@@ -2035,7 +2035,7 @@ class chunkmuI(chunk2D):
         i, j,
         k, k_index_array,
         savepath,
-        X_scale=float(rr.logfile['dp']),
+        X_scale=float(rr.log_variable['dp']),
         figformat="png", ifpickle=False, bbox_inches="tight", onefigure=True
         ):
         self.infofrom_filepath_n_ave_dic_by_stepsarray(stepsarray)
@@ -2106,7 +2106,7 @@ class chunkomega(chunk2D):
 # check 
 
 def checkNchunkint():
-    if int(rr.logfile["freq_ave_chunk_momentum_mass_field"]) != 0:
+    if int(rr.log_variable["freq_ave_chunk_momentum_mass_field"]) != 0:
         ob1 = chunkstress(1, rr.lammps_directory)
         for step_inloop in ob1.allsteps:
             n_line_0 = int(int(step_inloop - ob1.step_first_in_file)/ob1.d_step)*(ob1.n_line_in_a_step+1) + 4
@@ -2159,10 +2159,10 @@ def run_main_by_stepsarray(number_average, stepsarray):
             savepath,
         )
     # stress
-    stress_scale = float(rr.logfile['den'])*float(rr.logfile['g'])*float(rr.logfile['width_wall_dp_unit'])*float(rr.logfile['dp'])
-    bin_volume = float(rr.logfile['width_wall_dp_unit'])*float(rr.logfile['bin_y_dp_unit_approximate'])*float(rr.logfile['bin_z_dp_unit_approximate'])*float(rr.logfile['dp'])**3
+    stress_scale = float(rr.log_variable['den'])*float(rr.log_variable['g'])*float(rr.log_variable['width_wall_dp_unit'])*float(rr.log_variable['dp'])
+    bin_volume = float(rr.log_variable['width_wall_dp_unit'])*float(rr.log_variable['bin_y_dp_unit_approximate'])*float(rr.log_variable['bin_z_dp_unit_approximate'])*float(rr.log_variable['dp'])**3
     stress_volume_scale = stress_scale*bin_volume
-    if int(rr.logfile["freq_ave_chunk_momentum_mass_field"]) != 0:
+    if int(rr.log_variable["freq_ave_chunk_momentum_mass_field"]) != 0:
         ob1 = chunkstress(number_average, rr.lammps_directory)
         # plot near vertical wall and bottom
         for (coord_index_horizental_in_plot, k, index_of_k) in [
@@ -2186,8 +2186,8 @@ def run_main_by_stepsarray(number_average, stepsarray):
 
     # execute only if run as a script
     # chunk wall force
-    eachbin2D_on_vertical_area = float(rr.logfile['width_wall_dp_unit'])*float(rr.logfile['bin_z_dp_unit_approximate'])*float(rr.logfile['dp'])**2
-    eachbin2D_on_bottom_area = float(rr.logfile['width_wall_dp_unit'])*float(rr.logfile['bin_y_dp_unit_approximate'])*float(rr.logfile['dp'])**2
+    eachbin2D_on_vertical_area = float(rr.log_variable['width_wall_dp_unit'])*float(rr.log_variable['bin_z_dp_unit_approximate'])*float(rr.log_variable['dp'])**2
+    eachbin2D_on_bottom_area = float(rr.log_variable['width_wall_dp_unit'])*float(rr.log_variable['bin_y_dp_unit_approximate'])*float(rr.log_variable['dp'])**2
     
     vertical_wallforce_scale = stress_scale*eachbin2D_on_vertical_area
     horizental_wallforce_scale = stress_scale*eachbin2D_on_bottom_area
@@ -2255,7 +2255,7 @@ def run_main_by_stepsarray(number_average, stepsarray):
     
     # chunkmomentum
     ob3 = chunkmomentum(number_average, rr.lammps_directory)
-    velocity_scale = float(rr.logfile['in_velocity'])
+    velocity_scale = float(rr.log_variable['in_velocity'])
     if velocity_scale < 0:
         velocity_scale = -velocity_scale
     for key in ["mv_0", "mv_1", "mv_2"]:
@@ -2316,10 +2316,10 @@ def run_main_all_steps(number_average):
     # execute only if run as a script
     
     # stress
-    stress_scale = float(rr.logfile['den'])*float(rr.logfile['g'])*float(rr.logfile['width_wall_dp_unit'])*float(rr.logfile['dp'])
-    bin_volume = float(rr.logfile['width_wall_dp_unit'])*float(rr.logfile['bin_y_dp_unit_approximate'])*float(rr.logfile['bin_z_dp_unit_approximate'])*float(rr.logfile['dp'])**3
+    stress_scale = float(rr.log_variable['den'])*float(rr.log_variable['g'])*float(rr.log_variable['width_wall_dp_unit'])*float(rr.log_variable['dp'])
+    bin_volume = float(rr.log_variable['width_wall_dp_unit'])*float(rr.log_variable['bin_y_dp_unit_approximate'])*float(rr.log_variable['bin_z_dp_unit_approximate'])*float(rr.log_variable['dp'])**3
     stress_volume_scale = stress_scale*bin_volume
-    if int(rr.logfile["freq_ave_chunk_momentum_mass_field"]) != 0:
+    if int(rr.log_variable["freq_ave_chunk_momentum_mass_field"]) != 0:
         ob1 = chunkstress(number_average, rr.lammps_directory)
         # plot near vertical wall and bottom
         for index_n_1 in [0, -1]:

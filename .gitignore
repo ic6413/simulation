@@ -1,3 +1,6 @@
 # ignore all folder named as data
 data/
 
+conf/
+
+results/

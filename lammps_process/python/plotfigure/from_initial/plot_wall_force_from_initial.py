@@ -25,29 +25,29 @@ import os
 plt.style.use('classic')
 
 # define function for extract data from fix txt to dataframe
-if rr.logfile["shearwall"] == "zcylinder":
+if rr.log_variable["shearwall"] == "zcylinder":
     chunk_method = 'rz'
     wallfile1 = "force_zbottom_to_particle.allstep"
     wallfile2 = "force_outwall_to_particle.allstep"
     wallfile3 = "force_inwall_to_particle.allstep"
-if rr.logfile["shearwall"] == "yplane":
+if rr.log_variable["shearwall"] == "yplane":
     chunk_method = 'yz'
     wallfile1 = "force_zbottom_to_particle.allstep"
     wallfile2 = "force_y_top_to_particle.allstep"
     wallfile3 = "force_y_bottom_to_particle.allstep"
     
 
-diameter = float(rr.logfile['dp'])
-width_wall_dp_unit = int(rr.logfile['width_wall_dp_unit'])
+diameter = float(rr.log_variable['dp'])
+width_wall_dp_unit = int(rr.log_variable['width_wall_dp_unit'])
 if chunk_method == "rz":
-    ri = diameter*int(rr.logfile['ri_wall_dp_unit']) 
+    ri = diameter*int(rr.log_variable['ri_wall_dp_unit']) 
 elif chunk_method == "yz":
-    x_period = diameter*int(rr.logfile['x_period_dp_unit'])
+    x_period = diameter*int(rr.log_variable['x_period_dp_unit'])
 else:
     sys.exit("chunk_method wrong")
-g = float(rr.logfile['g'])
-d_step = int(rr.logfile['freq_ave_wall'])
-velocity_scale = float(rr.logfile['in_velocity'])
+g = float(rr.log_variable['g'])
+d_step = int(rr.log_variable['freq_ave_wall'])
+velocity_scale = float(rr.log_variable['in_velocity'])
 if velocity_scale < 0:
     velocity_scale = -velocity_scale
 
@@ -58,30 +58,30 @@ if velocity_scale == 0:
     elif chunk_method == "yz":
         velocity_scale = (Sa_fake*g*width_wall_dp_unit**3*diameter)**0.5
 
-height_dpunit = float(rr.logfile['zhi_chunk_dp_unit'])
+height_dpunit = float(rr.log_variable['zhi_chunk_dp_unit'])
 
 if chunk_method == "rz":
-    n_1 = int(rr.logfile['N_bin_r'])
-    n_2 = int(rr.logfile['N_bin_z'])
+    n_1 = int(rr.log_variable['N_bin_r'])
+    n_2 = int(rr.log_variable['N_bin_z'])
 elif chunk_method == "yz":
-    n_1 = int(rr.logfile['N_bin_y'])
-    n_2 = int(rr.logfile['N_bin_z'])
+    n_1 = int(rr.log_variable['N_bin_y'])
+    n_2 = int(rr.log_variable['N_bin_z'])
 else:
     sys.exit("chunk_method wrong")
 
 n_12 = n_1*n_2
 if chunk_method == "rz":
     x_array, y_array = np.meshgrid(
-                                int(rr.logfile['ri_wall_dp_unit']) + (np.arange(n_1)+0.5)/n_1*width_wall_dp_unit,
+                                int(rr.log_variable['ri_wall_dp_unit']) + (np.arange(n_1)+0.5)/n_1*width_wall_dp_unit,
                                 (np.arange(n_2)+0.5)/n_2*height_dpunit,
                                 )
 elif chunk_method == "yz":
-    if rr.logfile["chunk/atom 23"][1] == "y":
+    if rr.log_variable["chunk/atom 23"][1] == "y":
         y_array, x_array = np.meshgrid(
                                        (np.arange(n_2)+0.5)/n_2*height_dpunit,
                                        (np.arange(n_1)+0.5)/n_1*width_wall_dp_unit,
                                     )
-    elif rr.logfile["chunk/atom 23"][1] == "z":
+    elif rr.log_variable["chunk/atom 23"][1] == "z":
         x_array, y_array = np.meshgrid(
                                        (np.arange(n_1)+0.5)/n_1*width_wall_dp_unit,
                                        (np.arange(n_2)+0.5)/n_2*height_dpunit,

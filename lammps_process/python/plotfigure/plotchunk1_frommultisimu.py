@@ -13,10 +13,10 @@ def separate_steps_to_different_simulation(stepslist):
                 if i == (rr.n_simu_total - 1):
                     stepslist_in_each_simu_list.append(stepslist[k:])
                 else:
-                    if step > int(rr.logdiclist[i]["rst_from"]) and step <= int(rr.logdiclist[i+1]["rst_from"]):
+                    if step > int(rr.log_variable_dic_list[i]["rst_from"]) and step <= int(rr.log_variable_dic_list[i+1]["rst_from"]):
                         stepslist_in_each_simu.append(step)
                         k = k+1
-                    elif step > int(rr.logdiclist[i+1]["rst_from"]):
+                    elif step > int(rr.log_variable_dic_list[i+1]["rst_from"]):
                         stepslist_in_each_simu_list.append(stepslist_in_each_simu)
                         stepslist_in_each_simu = []
                         break
@@ -46,7 +46,7 @@ class chunkmulti(object):
         # if header not the same, output simu_index, and do not append line
         # if header the same, combine lines
 
-        self.logfile = rr.logfile
+        self.log_variable = rr.log_variable
         self.header = self.lines[2].split()[1:]
         self.n_line_in_a_step = int(self.lines[3].split()[1])
         self.step_first_in_file = int(self.lines[3].split()[0])
@@ -71,14 +71,14 @@ class chunkmulti(object):
         self.extrasteps = self.extrasteps[maskextra]
         self.first_extra_middle_last_steps = np.append(self.first_middle_last_steps, self.extrasteps)
         self.first_extra_middle_last_steps.sort()
-        if "if_inwall_wall_gran" in rr.logfile.keys():
-            if rr.logfile["if_inwall_wall_gran"] == "yes":
-                if "wall_gran_type" in rr.logfile.keys():
-                    if rr.logfile["wall_gran_type"] == "1":
+        if "if_inwall_wall_gran" in rr.log_variable.keys():
+            if rr.log_variable["if_inwall_wall_gran"] == "yes":
+                if "wall_gran_type" in rr.log_variable.keys():
+                    if rr.log_variable["wall_gran_type"] == "1":
                         self.ybottomwalltype = "rough (d=0.9)"
-                    elif rr.logfile["wall_gran_type"] == "2":
+                    elif rr.log_variable["wall_gran_type"] == "2":
                         self.ybottomwalltype = "rough (d=1)"
-                    elif rr.logfile["wall_gran_type"] == "3":
+                    elif rr.log_variable["wall_gran_type"] == "3":
                         self.ybottomwalltype = "rough (d=1.1)"
                     else:
                         sys.exit("can not get wall gran type")
@@ -89,9 +89,9 @@ class chunkmulti(object):
         else:
             self.ybottomwalltype = "smooth"
 
-        self.height = rr.logfile["z_length_create_dp_unit"]
-        self.width = rr.logfile["width_wall_dp_unit"]
-        self.periodlength = rr.logfile["x_period_dp_unit"]
+        self.height = rr.log_variable["z_length_create_dp_unit"]
+        self.width = rr.log_variable["width_wall_dp_unit"]
+        self.periodlength = rr.log_variable["x_period_dp_unit"]
         self.labelstring_size_walltype = self.ybottomwalltype + "\n" + "L " + self.periodlength + "\n" + "W " + self.width + "\n" + "H " + self.height
         self.labelstring_size_walltype_one_line = self.ybottomwalltype + ", " + "L " + self.periodlength + ", " + "W " + self.width + ", " + "H " + self.height
     

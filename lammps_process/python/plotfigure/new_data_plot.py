@@ -35,6 +35,7 @@ outwall_coord_filepath_header = (
         "Chunk Coord1 Coord2",
     )
 zbottom_coord_filepath_header = (
+
         "output/wall/chunk/coord_zbottom",
         "Chunk Coord1 Coord2",
     )
@@ -439,38 +440,38 @@ nochunk_npyfilepath_coord_char = {
 }
 
 # n_1 n_2 position_index_to_array_dim_index
-if rr.logfile["shearwall"] == "zcylinder":
+if rr.log_variable["shearwall"] == "zcylinder":
     position_index_to_array_dim_index = {
         1: 1,
         2: 0,
     }
-    n_r = int(rr.logfile['N_bin_r'])
-    n_z = int(rr.logfile['N_bin_z'])
+    n_r = int(rr.log_variable['N_bin_r'])
+    n_z = int(rr.log_variable['N_bin_z'])
     n_1 = n_z
     n_2 = n_r
     n_12 = n_1*n_2
     
-    dx = 1/n_r*int(rr.logfile['width_wall_dp_unit'])
-    dy = 1/n_z*float(rr.logfile['zhi_chunk_dp_unit'])
+    dx = 1/n_r*int(rr.log_variable['width_wall_dp_unit'])
+    dy = 1/n_z*float(rr.log_variable['zhi_chunk_dp_unit'])
     x_array, y_array = np.meshgrid(
-                                int(rr.logfile['ri_wall_dp_unit']) + (np.arange(n_1)+0.5)/n_1*int(rr.logfile['width_wall_dp_unit']),
-                                (np.arange(n_2)+0.5)/n_2*float(rr.logfile['zhi_chunk_dp_unit']),
+                                int(rr.log_variable['ri_wall_dp_unit']) + (np.arange(n_1)+0.5)/n_1*int(rr.log_variable['width_wall_dp_unit']),
+                                (np.arange(n_2)+0.5)/n_2*float(rr.log_variable['zhi_chunk_dp_unit']),
                                 )
     x_array = x_array.reshape((-1))
     y_array = y_array.reshape((-1))
-    vol_in_chunks = np.pi*((x_array+0.5*dx)**2-(x_array-0.5*dx)**2)*(y_array+0.5*dy-(y_array-0.5*dy))*float(rr.logfile['dp'])**3
-elif rr.logfile["shearwall"] == "yplane":
-    n_y = int(rr.logfile['N_bin_y'])
-    n_z = int(rr.logfile['N_bin_z'])
-    if "chunk/atom 23" in rr.logfile.keys():
-        if rr.logfile["chunk/atom 23"][1] == "y":
+    vol_in_chunks = np.pi*((x_array+0.5*dx)**2-(x_array-0.5*dx)**2)*(y_array+0.5*dy-(y_array-0.5*dy))*float(rr.log_variable['dp'])**3
+elif rr.log_variable["shearwall"] == "yplane":
+    n_y = int(rr.log_variable['N_bin_y'])
+    n_z = int(rr.log_variable['N_bin_z'])
+    if "chunk/atom 23" in rr.log_variable.keys():
+        if rr.log_variable["chunk/atom 23"][1] == "y":
             position_index_to_array_dim_index = {
                                             1: 0,
                                             2: 1,
                                             }
             n_1 = n_y
             n_2 = n_z
-        elif rr.logfile["chunk/atom 23"][1] == "z":
+        elif rr.log_variable["chunk/atom 23"][1] == "z":
             position_index_to_array_dim_index = {
                                             2: 0,
                                             1: 1,
@@ -507,9 +508,9 @@ def count_n_2(lmp_path):
     return n_2
 
 n_2 = count_n_2(rr.folder_path_list_initial_to_last[-1])
-dx = 1/n_1*int(rr.logfile['width_wall_dp_unit'])
-dy = 1/n_2*float(rr.logfile['zhi_chunk_dp_unit'])
-vol_in_chunks = float(rr.logfile['dp'])*int(rr.logfile['x_period_dp_unit'])*dx*dy*float(rr.logfile['dp'])**2
+dx = 1/n_1*int(rr.log_variable['width_wall_dp_unit'])
+dy = 1/n_2*float(rr.log_variable['zhi_chunk_dp_unit'])
+vol_in_chunks = float(rr.log_variable['dp'])*int(rr.log_variable['x_period_dp_unit'])*dx*dy*float(rr.log_variable['dp'])**2
 def chunk_coord_data_transfer_text_to_npy(lmp_path, filepath_rela_lmp_path, outputfolder_rela_lmp_path):
    
     # python read line
@@ -588,7 +589,7 @@ def chunk_variable_data_transfer_text_to_npy(lmp_path, filepath_rela_lmp_path, o
         index_of_Ncount_in_header = header.index('Ncount')
         Ncount_column = lines[:, index_of_Ncount_in_header]
         reset_mask = (
-            Ncount_column*int(rr.logfile[n_sample_keyword]) < 0.99
+            Ncount_column*int(rr.log_variable[n_sample_keyword]) < 0.99
         )
     # save all variable in the folder
     for i in range(n_header):
@@ -745,7 +746,7 @@ def calculate_std_and_save(lmp_path, chunk_tuple, variable_name):
     
     #breakpoint()
     n_sample_keyword = chunk_tuple[4]
-    n_sample = int(rr.logfile[n_sample_keyword])
+    n_sample = int(rr.log_variable[n_sample_keyword])
     std = calculate_std_by_ave_and_sq_ave(n_sample, ave, ave_sq_revised)
     np.save(lmp_path + chunk_tuple[3] + variable_name + "_std" + ".npy", std)
 
@@ -772,10 +773,10 @@ def propagation_of_std_divide(a, std_a, b, std_b):
     return value
 
 bin_volume = (
-    float(rr.logfile['width_wall_dp_unit'])
-    *float(rr.logfile['bin_y_dp_unit_approximate'])
-    *float(rr.logfile['bin_z_dp_unit_approximate'])
-    *float(rr.logfile['dp'])**3
+    float(rr.log_variable['width_wall_dp_unit'])
+    *float(rr.log_variable['bin_y_dp_unit_approximate'])
+    *float(rr.log_variable['bin_z_dp_unit_approximate'])
+    *float(rr.log_variable['dp'])**3
 )
 
 # data
@@ -835,8 +836,8 @@ def data_auto(lmp_path):
         calculate_std_and_save_input_v_list(lmp_path, chunk_tuple, variable_name_list)
     
     # calculate wall stress and save
-    eachbin2D_on_vertical_area = float(rr.logfile['width_wall_dp_unit'])*float(rr.logfile['bin_z_dp_unit_approximate'])*float(rr.logfile['dp'])**2
-    eachbin2D_on_bottom_area = float(rr.logfile['width_wall_dp_unit'])*float(rr.logfile['bin_y_dp_unit_approximate'])*float(rr.logfile['dp'])**2
+    eachbin2D_on_vertical_area = float(rr.log_variable['width_wall_dp_unit'])*float(rr.log_variable['bin_z_dp_unit_approximate'])*float(rr.log_variable['dp'])**2
+    eachbin2D_on_bottom_area = float(rr.log_variable['width_wall_dp_unit'])*float(rr.log_variable['bin_y_dp_unit_approximate'])*float(rr.log_variable['dp'])**2
     
     for index_component_i in [1,2,3]:
         for wallstr, bin2D_area_nearwall in [
@@ -956,10 +957,10 @@ def data_auto(lmp_path):
 
     # pressure
     bin_volume = (
-        float(rr.logfile['width_wall_dp_unit'])
-        *float(rr.logfile['bin_y_dp_unit_approximate'])
-        *float(rr.logfile['bin_z_dp_unit_approximate'])
-        *float(rr.logfile['dp'])**3
+        float(rr.log_variable['width_wall_dp_unit'])
+        *float(rr.log_variable['bin_y_dp_unit_approximate'])
+        *float(rr.log_variable['bin_z_dp_unit_approximate'])
+        *float(rr.log_variable['dp'])**3
     )
     stress_11 = load_v_array(lmp_path, "stress_multiply_binvolume_11")/bin_volume
     stress_22 = load_v_array(lmp_path, "stress_multiply_binvolume_22")/bin_volume
@@ -1103,8 +1104,8 @@ def data_auto(lmp_path):
     save_v_array_to_disk(lmp_path, "mu_tensor_23", mu_tensor_23)
     save_v_array_to_disk(lmp_path, "mu_tensor_23_std", mu_tensor_23_std)
     # I = symmetry strain_rate(second_invariant) d / sqrt(P/density of particle)
-    diameter = float(rr.logfile["dp"])
-    density = float(rr.logfile['den'])
+    diameter = float(rr.log_variable["dp"])
+    density = float(rr.log_variable['den'])
     pressure_sqrt_std = (0.25*pressure_std**2/pressure)**0.5
     pressure_middle = ave_4_grid_for_the_last_axis(pressure)
     pressure_sqrt_middle_std = ave_4_grid_for_the_last_axis_std(pressure_sqrt_std)
@@ -1128,8 +1129,8 @@ def data_auto(lmp_path):
     # calculate fraction and save
     mass = load_v_array(lmp_path, "mass")
     mass_std = load_v_array(lmp_path, "mass_std")
-    fraction = mass/float(rr.logfile['den'])/vol_in_chunks
-    fraction_std = mass_std/float(rr.logfile['den'])/vol_in_chunks
+    fraction = mass/float(rr.log_variable['den'])/vol_in_chunks
+    fraction_std = mass_std/float(rr.log_variable['den'])/vol_in_chunks
     np.save(lmp_path + "postprocess/npy/calculate/" + "fraction" + ".npy", fraction)
     np.save(lmp_path + "postprocess/npy/calculate/" + "fraction_std" + ".npy", fraction_std)
 

@@ -62,13 +62,13 @@ plt.rc('mathtext', fontset="stix")
 
 
 def time_from_step_0(step):
-    return step*float(rr.logfile["ts"])
+    return step*float(rr.log_variable["ts"])
 
 def time_from_start_rotate(step):
-    return time_from_step_0(step)-rr.logfile["rotate_start_time"]
+    return time_from_step_0(step)-rr.log_variable["rotate_start_time"]
 
 def strain_from_rotate_start(step):
-    shear_rate = float(rr.logfile['in_velocity'])/(float(rr.logfile['width_wall_dp_unit'])*float(rr.logfile['dp']))
+    shear_rate = float(rr.log_variable['in_velocity'])/(float(rr.log_variable['width_wall_dp_unit'])*float(rr.log_variable['dp']))
     return time_from_start_rotate(step)*shear_rate
 
 
@@ -293,27 +293,27 @@ for key in pn.map_chunkfile_char_save_folderpath.keys():
         breakpoint()
 """
 
-stress_scale_width = float(rr.logfile['den'])*float(rr.logfile['g'])*float(rr.logfile['width_wall_dp_unit'])*float(rr.logfile['dp'])
+stress_scale_width = float(rr.log_variable['den'])*float(rr.log_variable['g'])*float(rr.log_variable['width_wall_dp_unit'])*float(rr.log_variable['dp'])
 stress_scale_width_str = r'$\rho_s g w $'
-stress_scale_height = float(rr.logfile['den'])*float(rr.logfile['g'])*float(rr.logfile['z_length_create_dp_unit'])*float(rr.logfile['dp'])
+stress_scale_height = float(rr.log_variable['den'])*float(rr.log_variable['g'])*float(rr.log_variable['z_length_create_dp_unit'])*float(rr.log_variable['dp'])
 stress_scale_height_str = r'$\rho_s g h $'
 inwall_area = (
-    float(rr.logfile['x_period_dp_unit'])
-    *float(rr.logfile['z_length_create_dp_unit'])
-    *float(rr.logfile['dp'])**2
+    float(rr.log_variable['x_period_dp_unit'])
+    *float(rr.log_variable['z_length_create_dp_unit'])
+    *float(rr.log_variable['dp'])**2
 )
 bottom_area = (
-    float(rr.logfile['width_wall_dp_unit'])
-    *float(rr.logfile['x_period_dp_unit'])
-    *float(rr.logfile['dp'])**2
+    float(rr.log_variable['width_wall_dp_unit'])
+    *float(rr.log_variable['x_period_dp_unit'])
+    *float(rr.log_variable['dp'])**2
 )
-velocity_scale = float(rr.logfile['in_velocity'])
+velocity_scale = float(rr.log_variable['in_velocity'])
 if velocity_scale < 0:
     velocity_scale = -velocity_scale
 velocity_scale_str = r'$V_{inwall}$'
-strain_rate_scale = velocity_scale/(float(rr.logfile['width_wall_dp_unit'])*float(rr.logfile['dp']))
+strain_rate_scale = velocity_scale/(float(rr.log_variable['width_wall_dp_unit'])*float(rr.log_variable['dp']))
 strain_rate_scale_str = r'$V_{inwall}/Width$'
-coord_scale = float(rr.logfile['dp'])
+coord_scale = float(rr.log_variable['dp'])
 coord_scale_str = r'$d_p$'
 mu_scale = -1
 mu_scale_str = None #r'$-1$'
@@ -334,7 +334,7 @@ scale = {
     'I': I_scale,
     'mu_tensor': mu_tensor_scale,
     'I_tensor': I_tensor_scale,
-    'Coord': float(rr.logfile['dp']),
+    'Coord': float(rr.log_variable['dp']),
 }
 # variable_name to string in pic label or legend
 v_name_to_labal_str = {
@@ -932,8 +932,8 @@ def plot_1D_from_chunk2D_mask(
     char = pn.c_r_npyfilepath_coord_char[y_name]["coordinate_characteristic"]
     Coord1 = pn.load_coord(lmp_path, char, "Coord1")
     Coord2 = pn.load_coord(lmp_path, char, "Coord2")
-    x = Coord1/float(rr.logfile["dp"])
-    y = Coord2/float(rr.logfile["dp"])
+    x = Coord1/float(rr.log_variable["dp"])
+    y = Coord2/float(rr.log_variable["dp"])
     maskstatic = (y-9) - (9-0.5)/(15.5-10.5)*(x-15.5) < 0
     masknonstatic = (y-25) - (25-0.5)/(15.5-5)*(x-5) > 0
     if ifmaskstatic:

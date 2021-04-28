@@ -26,22 +26,22 @@ plt.style.use('classic')
 
 
 # define function for extract data from fix txt to dataframe
-if rr.logfile["shearwall"] == "zcylinder":
+if rr.log_variable["shearwall"] == "zcylinder":
     wallfiles = [
                 "force_zbottom_to_particle.allstep",
     ]
-if rr.logfile["shearwall"] == "yplane":
+if rr.log_variable["shearwall"] == "yplane":
     wallfiles = [
                 "force_zbottom_to_particle.allstep",
     ]
     
     
 
-diameter = float(rr.logfile['dp'])
-width_wall_dp_unit = int(rr.logfile['width_wall_dp_unit'])
+diameter = float(rr.log_variable['dp'])
+width_wall_dp_unit = int(rr.log_variable['width_wall_dp_unit'])
 
-g = float(rr.logfile['g'])
-d_step = int(rr.logfile['freq_ave_wall'])
+g = float(rr.log_variable['g'])
+d_step = int(rr.log_variable['freq_ave_wall'])
 
 lmp_path_list = [
     "/home/ic6413/lmp_run/block_xp_50_w_16_h_240_Sa_2e-6_his_yes_xmu_5e-1_noshear_2e7/f_2e7_run_5e7/f_55e6_run_5e7/",
@@ -63,9 +63,9 @@ def plot_wall_diff_height_steady_time(if_plot_to_last, step1, step2, figformat="
         
         for wallfile in wallfiles:
             if ifplotfrominitial:
-                logdiclist = rr.log_current_plus_previousfrom_initial_to_lastest(lammps_directory)
-                for index in range(len(logdiclist)):
-                    n_log_list = len(logdiclist)
+                log_variable_dic_list = rr.log_current_plus_previousfrom_initial_to_lastest(lammps_directory)
+                for index in range(len(log_variable_dic_list)):
+                    n_log_list = len(log_variable_dic_list)
                     folder_path_list_initial_to_last = [lammps_directory+"../"*(n_log_list-1-n) for n in range(n_log_list)]
                     folder_path_list_last_to_initial = [folder_path_list_initial_to_last[n_log_list-1-n] for n in range(n_log_list)]
 
@@ -92,8 +92,8 @@ def plot_wall_diff_height_steady_time(if_plot_to_last, step1, step2, figformat="
                             if n == 0:
                                 restart_time_from_last_to_current = 0
                             else:
-                                logfile = logdiclist[n]
-                                rst_from_current = str(logfile['rst_from'])
+                                log_variable = log_variable_dic_list[n]
+                                rst_from_current = str(log_variable['rst_from'])
                                 last_log_path = log_path_list_initial_to_last[n-1]
                             
                                 if os.path.isfile(last_log_path):

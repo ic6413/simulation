@@ -1,10 +1,10 @@
 import sys
 import os
 
-# check if logfile output has atom variable define two times
-def if_atom_variable_define_notonly_1_times(logfilepath):
-    if os.path.isfile(logfilepath):
-        with open(logfilepath, mode='r') as f:
+# check if log_variable output has atom variable define two times
+def if_atom_variable_define_notonly_1_times(log_variablepath):
+    if os.path.isfile(log_variablepath):
+        with open(log_variablepath, mode='r') as f:
             lines = f.read().strip().split('\n')
     else:
         sys.exit("log file not exist")

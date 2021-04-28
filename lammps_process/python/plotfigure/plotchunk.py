@@ -26,14 +26,14 @@ import read_setting as rr
 plt.style.use('classic')
 plt.rcParams.update({'font.size': 16})
 
-if "if_inwall_wall_gran" in rr.logfile.keys():
-    if rr.logfile["if_inwall_wall_gran"] == "yes":
-        if "wall_gran_type" in rr.logfile.keys():
-            if rr.logfile["wall_gran_type"] == "1":
+if "if_inwall_wall_gran" in rr.log_variable.keys():
+    if rr.log_variable["if_inwall_wall_gran"] == "yes":
+        if "wall_gran_type" in rr.log_variable.keys():
+            if rr.log_variable["wall_gran_type"] == "1":
                 ybottomwalltype = "rough (d=0.9)"
-            elif rr.logfile["wall_gran_type"] == "2":
+            elif rr.log_variable["wall_gran_type"] == "2":
                 ybottomwalltype = "rough (d=1)"
-            elif rr.logfile["wall_gran_type"] == "3":
+            elif rr.log_variable["wall_gran_type"] == "3":
                 ybottomwalltype = "rough (d=1.1)"
             else:
                 sys.exit("can not get wall gran type")
@@ -44,15 +44,15 @@ if "if_inwall_wall_gran" in rr.logfile.keys():
 else:
     ybottomwalltype = "smooth"
 
-height = rr.logfile["z_length_create_dp_unit"]
-width = rr.logfile["width_wall_dp_unit"]
-periodlength = rr.logfile["x_period_dp_unit"]
+height = rr.log_variable["z_length_create_dp_unit"]
+width = rr.log_variable["width_wall_dp_unit"]
+periodlength = rr.log_variable["x_period_dp_unit"]
 labelstring_size_walltype = "L= " + periodlength + ", W= " + width + ", H= " + height + ", " + ybottomwalltype
 
 # define function for extract data from fix txt to dataframe
-if rr.logfile["shearwall"] == "zcylinder":
+if rr.log_variable["shearwall"] == "zcylinder":
     chunk_method = 'rz'
-if rr.logfile["shearwall"] == "yplane":
+if rr.log_variable["shearwall"] == "yplane":
     chunk_method = 'yz'
 # map dim index to coordinate
 if chunk_method == "rz":
@@ -65,18 +65,18 @@ map_dim_index_to_coordinate_reverse = {}
 for i, co in enumerate(map_dim_index_to_coordinate):
     map_dim_index_to_coordinate_reverse[co]=i
 
-diameter = float(rr.logfile['dp'])
-width_wall_dp_unit = int(rr.logfile['width_wall_dp_unit'])
+diameter = float(rr.log_variable['dp'])
+width_wall_dp_unit = int(rr.log_variable['width_wall_dp_unit'])
 
 if chunk_method == "rz":
-    ri = diameter*int(rr.logfile['ri_wall_dp_unit']) 
+    ri = diameter*int(rr.log_variable['ri_wall_dp_unit']) 
 elif chunk_method == "yz":
-    x_period = diameter*int(rr.logfile['x_period_dp_unit'])
+    x_period = diameter*int(rr.log_variable['x_period_dp_unit'])
 else:
     sys.exit("chunk_method wrong")
-g = float(rr.logfile['g'])
-d_step = int(rr.logfile['freq_ave_chunk_momentum_mass_field'])
-velocity_scale = float(rr.logfile['in_velocity'])
+g = float(rr.log_variable['g'])
+d_step = int(rr.log_variable['freq_ave_chunk_momentum_mass_field'])
+velocity_scale = float(rr.log_variable['in_velocity'])
 if velocity_scale < 0:
     velocity_scale = -velocity_scale
 
@@ -87,17 +87,17 @@ if velocity_scale == 0:
     elif chunk_method == "yz":
         velocity_scale = (Sa_fake*g*width_wall_dp_unit**3*diameter)**0.5
 
-height_dpunit = float(rr.logfile['zhi_chunk_dp_unit'])
-shear_rate_scale = float(rr.logfile['in_velocity'])/(float(rr.logfile['width_wall_dp_unit'])*float(rr.logfile['dp']))
-stress_scale = float(rr.logfile['den'])*g*height_dpunit*diameter
+height_dpunit = float(rr.log_variable['zhi_chunk_dp_unit'])
+shear_rate_scale = float(rr.log_variable['in_velocity'])/(float(rr.log_variable['width_wall_dp_unit'])*float(rr.log_variable['dp']))
+stress_scale = float(rr.log_variable['den'])*g*height_dpunit*diameter
 
 if chunk_method == "rz":
     position_index_to_array_dim_index = {
                                     1: 1,
                                     2: 0,
                                     }
-    n_r = int(rr.logfile['N_bin_r'])
-    n_z = int(rr.logfile['N_bin_z'])
+    n_r = int(rr.log_variable['N_bin_r'])
+    n_z = int(rr.log_variable['N_bin_z'])
     n_1 = n_z
     n_2 = n_r
     n_12 = n_1*n_2
@@ -105,23 +105,23 @@ if chunk_method == "rz":
     dx = 1/n_r*width_wall_dp_unit
     dy = 1/n_z*height_dpunit
     x_array, y_array = np.meshgrid(
-                                int(rr.logfile['ri_wall_dp_unit']) + (np.arange(n_1)+0.5)/n_1*width_wall_dp_unit,
+                                int(rr.log_variable['ri_wall_dp_unit']) + (np.arange(n_1)+0.5)/n_1*width_wall_dp_unit,
                                 (np.arange(n_2)+0.5)/n_2*height_dpunit,
                                 )
     x_array = x_array.reshape((-1))
     y_array = y_array.reshape((-1))
     vol_in_chunks = np.pi*((x_array+0.5*dx)**2-(x_array-0.5*dx)**2)*(y_array+0.5*dy-(y_array-0.5*dy))*diameter**3
 elif chunk_method == "yz":
-    n_y = int(rr.logfile['N_bin_y'])
-    n_z = int(rr.logfile['N_bin_z'])
-    if rr.logfile["chunk/atom 23"][1] == "y":
+    n_y = int(rr.log_variable['N_bin_y'])
+    n_z = int(rr.log_variable['N_bin_z'])
+    if rr.log_variable["chunk/atom 23"][1] == "y":
         position_index_to_array_dim_index = {
                                         1: 0,
                                         2: 1,
                                         }
         n_1 = n_y
         n_2 = n_z
-    elif rr.logfile["chunk/atom 23"][1] == "z":
+    elif rr.log_variable["chunk/atom 23"][1] == "z":
         position_index_to_array_dim_index = {
                                         2: 0,
                                         1: 1,
@@ -143,13 +143,13 @@ if chunk_method == "rz":
     chunk_first_dim_coord = "z"
     chunk_second_dim_coord = "r"
 elif chunk_method == "yz":
-    if rr.logfile["chunk/atom 23"][1] == "y":
+    if rr.log_variable["chunk/atom 23"][1] == "y":
         chunk_first_dim_coord = "y"
         chunk_second_dim_coord = "z"
         xyztoCoor = {}
         xyztoCoor["y"] = "Coord1"
         xyztoCoor["z"] = "Coord2"
-    elif rr.logfile["chunk/atom 23"][1] == "z":
+    elif rr.log_variable["chunk/atom 23"][1] == "z":
         chunk_first_dim_coord = "z"
         chunk_second_dim_coord = "y"
         xyztoCoor["z"] = "Coord1"
@@ -211,8 +211,8 @@ def step2_fix_initial_to_last_func(index):
 
         lmp_dir = rr.folder_path_list_initial_to_last[index]
         lines = lines_from_one_simu(lmp_dir)
-        logfile = rr.logdiclist[index]
-        freq = int(logfile["freq_ave_chunk_momentum_mass_field"])
+        log_variable = rr.log_variable_dic_list[index]
+        freq = int(log_variable["freq_ave_chunk_momentum_mass_field"])
         step1 = step_first_in_file(lines)
         step2 = step_last_in_file(lines)
         
@@ -225,7 +225,7 @@ def step2_fix_initial_to_last_func(index):
 
 
 def step_last_fix_change_by_n_ave(n_ave, index):
-    return step2_fix_initial_to_last_func(index)-int((n_ave-1)/2*int(rr.logdiclist[index]["freq_ave_chunk_momentum_mass_field"]))
+    return step2_fix_initial_to_last_func(index)-int((n_ave-1)/2*int(rr.log_variable_dic_list[index]["freq_ave_chunk_momentum_mass_field"]))
 
 
 def data_in_one_step(step, lines):
@@ -257,11 +257,11 @@ def value_in_a_step_ave(step, variable_name, n_ave, lines):
 
 
 def time_in_a_step(step):
-    return step*float(rr.logfile["ts"])
+    return step*float(rr.log_variable["ts"])
 
 
 def time_in_a_step_from_start_rotate(step):
-    return step*float(rr.logfile["ts"])-rr.logfile["rotate_start_time"]
+    return step*float(rr.log_variable["ts"])-rr.log_variable["rotate_start_time"]
 
 
 def path_nve_subfolder_in_folder(n_ave, folder):
@@ -340,7 +340,7 @@ class chunk(object):
 
         self.n_ave = n_ave
         self.lmp_path = lmp_path
-        self.logfile = rr.logdiclist[-1]
+        self.log_variable = rr.log_variable_dic_list[-1]
         self.lines = lines_from_one_simu(self.lmp_path)
         self.header = self.lines[2].split()[1:]
         self.n_line_in_a_step = int(self.lines[3].split()[1])
@@ -364,14 +364,14 @@ class chunk(object):
         self.extrasteps = self.extrasteps[maskextra]
         self.first_extra_middle_last_steps = np.append(self.first_middle_last_steps, self.extrasteps)
         self.first_extra_middle_last_steps.sort()
-        if "if_inwall_wall_gran" in rr.logfile.keys():
-            if rr.logfile["if_inwall_wall_gran"] == "yes":
-                if "wall_gran_type" in rr.logfile.keys():
-                    if rr.logfile["wall_gran_type"] == "1":
+        if "if_inwall_wall_gran" in rr.log_variable.keys():
+            if rr.log_variable["if_inwall_wall_gran"] == "yes":
+                if "wall_gran_type" in rr.log_variable.keys():
+                    if rr.log_variable["wall_gran_type"] == "1":
                         self.ybottomwalltype = "rough (d=0.9)"
-                    elif rr.logfile["wall_gran_type"] == "2":
+                    elif rr.log_variable["wall_gran_type"] == "2":
                         self.ybottomwalltype = "rough (d=1)"
-                    elif rr.logfile["wall_gran_type"] == "3":
+                    elif rr.log_variable["wall_gran_type"] == "3":
                         self.ybottomwalltype = "rough (d=1.1)"
                     else:
                         sys.exit("can not get wall gran type")
@@ -382,9 +382,9 @@ class chunk(object):
         else:
             self.ybottomwalltype = "smooth"
 
-        self.height = rr.logfile["z_length_create_dp_unit"]
-        self.width = rr.logfile["width_wall_dp_unit"]
-        self.periodlength = rr.logfile["x_period_dp_unit"]
+        self.height = rr.log_variable["z_length_create_dp_unit"]
+        self.width = rr.log_variable["width_wall_dp_unit"]
+        self.periodlength = rr.log_variable["x_period_dp_unit"]
         self.labelstring_size_walltype = self.ybottomwalltype + "\n" + "L " + self.periodlength + "\n" + "W " + self.width + "\n" + "H " + self.height
         self.labelstring_size_walltype_one_line = self.ybottomwalltype + ", " + "L " + self.periodlength + ", " + "W " + self.width + ", " + "H " + self.height
         
@@ -547,7 +547,7 @@ class chunk(object):
             sys.exit("chunk_method wrong")
         quiver_scale = 0.2
         label_scale = 0.6
-        vy_array = mass/float(rr.logfile['den'])/vol_in_chunks
+        vy_array = mass/float(rr.log_variable['den'])/vol_in_chunks
         fig1, ax1 = plt.subplots()
         
         #fig1.figsize = [12.8, 9.6]
@@ -1171,7 +1171,7 @@ class chunk(object):
             mass = manysteparray(steparray, "c_m1", self.n_ave, self.lines)
             time = time_in_a_step(steparray)
 
-        volumn_fraction = mass/float(rr.logfile['den'])/vol_in_chunks
+        volumn_fraction = mass/float(rr.log_variable['den'])/vol_in_chunks
         diff_volumn_fraction = np.diff(volumn_fraction, axis=1)
         diff_time = time_in_a_step(np.diff(steparray, axis=0))
         diff_t_volumn_fraction = diff_volumn_fraction/diff_time
@@ -1482,7 +1482,7 @@ class chunk(object):
                 )
         mass = new_mass/gridwidth
         vector = new_vector/gridwidth
-        fraction = mass/float(rr.logfile['den'])/vol_in_chunks
+        fraction = mass/float(rr.log_variable['den'])/vol_in_chunks
         
         sum_along_array_dim = position_index_to_array_dim_index[j]
 
@@ -1751,8 +1751,8 @@ class chunk_include_pre(object):
         self.n_log_list = len(self.log_file_list_initial_to_last)
         
         first_rotate_index = 0
-        for logfile in self.log_file_list_initial_to_last:
-            if logfile["ifrotate"] == "yes" and float(logfile["Sa"]) != 0:
+        for log_variable in self.log_file_list_initial_to_last:
+            if log_variable["ifrotate"] == "yes" and float(log_variable["Sa"]) != 0:
                 break
             first_rotate_index += 1
         
@@ -2139,7 +2139,7 @@ def plotchunk_ave_one_step_volumnfraction_x23(step, n_ave, lines, figformat="png
         sys.exit("chunk_method wrong")
     quiver_scale = 0.2
     label_scale = 0.6
-    vy_array = mass/float(rr.logfile['den'])/vol_in_chunks
+    vy_array = mass/float(rr.log_variable['den'])/vol_in_chunks
     fig1, ax1 = plt.subplots()
     
     #fig1.figsize = [12.8, 9.6]
@@ -2794,7 +2794,7 @@ def check_volumnfraction_x23_increase_decrease_plot(steparray, n_ave, lines, fig
         mass = manysteparray(steparray, "c_m1", n_ave, lines)
         time = time_in_a_step(steparray)
 
-    volumn_fraction = mass/float(rr.logfile['den'])/vol_in_chunks
+    volumn_fraction = mass/float(rr.log_variable['den'])/vol_in_chunks
     diff_volumn_fraction = np.diff(volumn_fraction, axis=1)
     diff_time = time_in_a_step(np.diff(steparray, axis=0))
     diff_t_volumn_fraction = diff_volumn_fraction/diff_time
@@ -2993,7 +2993,7 @@ def plotchunk_fraction_ave_j_ave(step, fig, ax, n_ave, lines, j, k, figformat="p
 
     mass = new_mass
     vector = new_vector
-    fraction = mass/float(rr.logfile['den'])/(vol_in_chunks*gridwidth)
+    fraction = mass/float(rr.log_variable['den'])/(vol_in_chunks*gridwidth)
 
     not_surroundemptyorselfempty = if_grid_surround_not_empty(mass)
 
@@ -3101,18 +3101,18 @@ def plotVymax_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", ifpickl
         
         if chunk_method == "rz":
             x_array, y_array = np.meshgrid(
-                                        int(rr.logfile['ri_wall_dp_unit']) + (np.arange(n_1)+0.5)/n_1*width_wall_dp_unit,
+                                        int(rr.log_variable['ri_wall_dp_unit']) + (np.arange(n_1)+0.5)/n_1*width_wall_dp_unit,
                                         (np.arange(n_2)+0.5)/n_2*height_dpunit,
                                         )
             x_array = x_array.reshape((-1))
-            x_array_to_movingwall_dp_unit = x_array - rr.logfile['ri_wall_dp_unit']
+            x_array_to_movingwall_dp_unit = x_array - rr.log_variable['ri_wall_dp_unit']
 
         elif chunk_method == "yz":
-            if rr.logfile["chunk/atom 23"][1] == "y":
+            if rr.log_variable["chunk/atom 23"][1] == "y":
                 x_array = data0[:,dic_index_of_variable_in_header(lines)["Coord1"]]
                 x_array = x_array/diameter
                 
-            elif rr.logfile["chunk/atom 23"][1] == "z":
+            elif rr.log_variable["chunk/atom 23"][1] == "z":
                 x_array = data0[:,dic_index_of_variable_in_header(lines)["Coord2"]]
                 x_array = x_array/diameter
             else:
@@ -3146,20 +3146,20 @@ def plotVymax_ave(if_plot_to_last, step1, step2, n_ave, figformat="png", ifpickl
 
             if chunk_method == "rz":
                 x_array, y_array = np.meshgrid(
-                                            int(rr.logfile['ri_wall_dp_unit']) + (np.arange(n_1)+0.5)/n_1*width_wall_dp_unit,
+                                            int(rr.log_variable['ri_wall_dp_unit']) + (np.arange(n_1)+0.5)/n_1*width_wall_dp_unit,
                                             (np.arange(n_2)+0.5)/n_2*height_dpunit,
                                             )
                 x_array = x_array.reshape((-1))
                 y_array = y_array.reshape((-1))
                 vy_array = divide_zero(data[:,dic_index_of_variable_in_header(lines)["v_mv3"]],data[:,dic_index_of_variable_in_header(lines)["c_m1"]])/velocity_scale
             elif chunk_method == "yz":
-                if rr.logfile["chunk/atom 23"][1] == "y":
+                if rr.log_variable["chunk/atom 23"][1] == "y":
                     x_array = data[:,dic_index_of_variable_in_header(lines)["Coord1"]]
                     y_array = data[:,dic_index_of_variable_in_header(lines)["Coord2"]]
                     x_array = x_array/diameter
                     y_array = y_array/diameter
                     
-                elif rr.logfile["chunk/atom 23"][1] == "z":
+                elif rr.log_variable["chunk/atom 23"][1] == "z":
                     x_array = data[:,dic_index_of_variable_in_header(lines)["Coord2"]]
                     y_array = data[:,dic_index_of_variable_in_header(lines)["Coord1"]]
                     x_array = x_array/diameter

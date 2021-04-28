@@ -14,48 +14,48 @@ quiver_scale_velocity_xaxis_shearplaneshear_yaxis_z = 1
 # ====================================== import attribute
 
 # startstep
-startstep = int(rr.logfile['rst_from'])
+startstep = int(rr.log_variable['rst_from'])
 # timestep
-ts = eval(rr.logfile['ts'])
+ts = eval(rr.log_variable['ts'])
 # atom radius
-dp0 = eval(rr.logfile['dp'])
-density = eval(rr.logfile['den'])
+dp0 = eval(rr.log_variable['dp'])
+density = eval(rr.log_variable['den'])
 # intersection pointmu
-if rr.logfile["shearwall"] == "zcylinder":
-    r_in = eval(rr.logfile['ri_wall'])
-    r_out = eval(rr.logfile['ro_wall'])
+if rr.log_variable["shearwall"] == "zcylinder":
+    r_in = eval(rr.log_variable['ri_wall'])
+    r_out = eval(rr.log_variable['ro_wall'])
 
 try:
-    omega_in = eval(rr.logfile['omega_in'])
+    omega_in = eval(rr.log_variable['omega_in'])
 except:
     omega_in = 0
 try:
-    N_bin_r = int(rr.logfile['N_bin_r'])
+    N_bin_r = int(rr.log_variable['N_bin_r'])
 except:
     pass
 try:
-    N_bin_z = int(rr.logfile['N_bin_z'])
+    N_bin_z = int(rr.log_variable['N_bin_z'])
 except:
     pass
 # gravity
 gravitation_direction_x = 0
 gravitation_direction_y = 0
 gravitation_direction_z = -1
-g = eval(rr.logfile['g'])*np.array([gravitation_direction_x, gravitation_direction_y, gravitation_direction_z])
+g = eval(rr.log_variable['g'])*np.array([gravitation_direction_x, gravitation_direction_y, gravitation_direction_z])
 # parameter
-mu = eval(rr.logfile['xmu'])
-#kn = eval(rr.logfile['kn']) 
-#kt = eval(rr.logfile['kt'])
-#gamma_n = eval(rr.logfile['gamma_n'])
-#gamma_t = eval(rr.logfile['gamma_t'])
-n_type = int(rr.logfile['n_type'])
+mu = eval(rr.log_variable['xmu'])
+#kn = eval(rr.log_variable['kn']) 
+#kt = eval(rr.log_variable['kt'])
+#gamma_n = eval(rr.log_variable['gamma_n'])
+#gamma_t = eval(rr.log_variable['gamma_t'])
+n_type = int(rr.log_variable['n_type'])
 if n_type == 1:
     type_radius_list = [
         [1, 1.0*dp0/2]
     ]
 elif n_type == 3:
-    dp_big = eval(rr.logfile['dp_big'])
-    dp_small = eval(rr.logfile['dp_small'])
+    dp_big = eval(rr.log_variable['dp_big'])
+    dp_small = eval(rr.log_variable['dp_small'])
     type_radius_list = [
         [1, dp_small/2],
         [2, dp0/2],
@@ -64,7 +64,7 @@ elif n_type == 3:
 else:
     sys.exit("n_type not 3 or 1")
 type_radius_array = np.transpose(np.asarray(type_radius_list))
-zlo_wall = eval(rr.logfile['zlo_wall'])
+zlo_wall = eval(rr.log_variable['zlo_wall'])
 walls_p = [
     [
         'p',
@@ -78,7 +78,7 @@ walls_p = [
         [0,0,0],
     ],
 ]
-if rr.logfile["shearwall"] == "zcylinder":
+if rr.log_variable["shearwall"] == "zcylinder":
     walls_cy = [
         [
             'cy',
@@ -242,12 +242,12 @@ def wall_stress_fix_k_folder_path(i,j,k):
     return f_stress_field_samescale_path + "wall/" + str(i) + str(j) + "_k_" + str(k) + "/"
 
 if if_plot_velocity_field_scale_same == "yes":
-    if rr.logfile["shearwall"] == "zcylinder":
+    if rr.log_variable["shearwall"] == "zcylinder":
         f_momentum_mass_field_v23x23_path = f_momentum_mass_field_samescale_path + "Vr_Vz_Xr_Xz/"
         f_momentum_mass_field_v13x23_path = f_momentum_mass_field_samescale_path + "Vr_Vtheta_Xr_Xz/"
         os.makedirs(f_momentum_mass_field_v23x23_path, exist_ok=True)
         os.makedirs(f_momentum_mass_field_v13x23_path, exist_ok=True)
-    if rr.logfile["shearwall"] == "yplane":
+    if rr.log_variable["shearwall"] == "yplane":
         f_momentum_mass_field_v23x23_path = f_momentum_mass_field_samescale_path + "Vx_Vz_Xx_Xz/"
         f_momentum_mass_field_v13x23_path = f_momentum_mass_field_samescale_path + "Vx_Vtheta_Xx_Xz/"
         os.makedirs(f_momentum_mass_field_v23x23_path, exist_ok=True)
@@ -256,12 +256,12 @@ if if_plot_velocity_field_scale_same == "yes":
     f_momentum_mass_field_volumnfraction_x23_path = f_momentum_mass_field_samescale_path + "density_Xx_Xz/"
     os.makedirs(f_momentum_mass_field_volumnfraction_x23_path, exist_ok=True)
 else:
-    if rr.logfile["shearwall"] == "zcylinder":
+    if rr.log_variable["shearwall"] == "zcylinder":
         f_momentum_mass_field_v23x23_path = f_momentum_mass_field_path + "Vr_Vz_Xr_Xz/"
         f_momentum_mass_field_v13x23_path = f_momentum_mass_field_path + "Vr_Vtheta_Xr_Xz/"
         os.makedirs(f_momentum_mass_field_v23x23_path, exist_ok=True)
         os.makedirs(f_momentum_mass_field_v13x23_path, exist_ok=True)
-    if rr.logfile["shearwall"] == "yplane":
+    if rr.log_variable["shearwall"] == "yplane":
         f_momentum_mass_field_v23x23_path = f_momentum_mass_field_path + "Vx_Vz_Xx_Xz/"
         f_momentum_mass_field_v13x23_path = f_momentum_mass_field_path + "Vx_Vtheta_Xx_Xz/"
         os.makedirs(f_momentum_mass_field_v23x23_path, exist_ok=True)

@@ -36,11 +36,11 @@ def produce_latex(subfolder_under_diagram, latexpdfname):
     #breakpoint()
 
     with doc.create(Section("Simulation Plot")):
-        doc.append("Width= " + str(rr.logfile["width_wall_dp_unit"]) + " diameter")
-        doc.append("\nHeight= " + str(rr.logfile["z_length_create_dp_unit"]) + " diameter")
-        doc.append("\nPeriodic length in shear direction = " + str(rr.logfile["x_period_dp_unit"]) + " diameter")
-        doc.append("\nSavage_number = " + str(rr.logfile["Sa"]))
-        doc.append("\nV_wall = " + str(float(rr.logfile["in_velocity"])/float(rr.logfile["dp"])) + " diameter/second")
+        doc.append("Width= " + str(rr.log_variable["width_wall_dp_unit"]) + " diameter")
+        doc.append("\nHeight= " + str(rr.log_variable["z_length_create_dp_unit"]) + " diameter")
+        doc.append("\nPeriodic length in shear direction = " + str(rr.log_variable["x_period_dp_unit"]) + " diameter")
+        doc.append("\nSavage_number = " + str(rr.log_variable["Sa"]))
+        doc.append("\nV_wall = " + str(float(rr.log_variable["in_velocity"])/float(rr.log_variable["dp"])) + " diameter/second")
         
            
         for pic_path in pic_path_list:

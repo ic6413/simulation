@@ -26,24 +26,24 @@ overlap_tolerence = 0
 abs_error_tolerence = dp.abs_error_tolerence
 # ==== inputvariable varables end ====
 # timestep
-ts = float(rr.logfile['ts']) 
+ts = float(rr.log_variable['ts']) 
 # atom radius
-dp0 = float(rr.logfile['dp']) 
-density = flaot(rr.logfile["den"])
+dp0 = float(rr.log_variable['dp']) 
+density = flaot(rr.log_variable["den"])
 # intersection pointmu
-r_in = float(rr.logfile["r_in"]) 
-r_out = float(rr.logfile["r_out"]) 
+r_in = float(rr.log_variable["r_in"]) 
+r_out = float(rr.log_variable["r_out"]) 
 # gravity
-g = float(rr.logfile["g"])  
+g = float(rr.log_variable["g"])  
 # parameter
-mu = float(rr.logfile["mu"]) 
-kn = float(rr.logfile["kn"])  
-kt = float(rr.logfile["kt"])  
-gamma_n = float(rr.logfile["gamma_n"]) 
-gamma_t = float(rr.logfile["gamma_t"]) 
-type_radius_array = int(rr.logfile["type_radius_array"]) 
-zlo_wall = rr.logfile["zlo_wall"]
-walls = rr.logfile["walls"]
+mu = float(rr.log_variable["mu"]) 
+kn = float(rr.log_variable["kn"])  
+kt = float(rr.log_variable["kt"])  
+gamma_n = float(rr.log_variable["gamma_n"]) 
+gamma_t = float(rr.log_variable["gamma_t"]) 
+type_radius_array = int(rr.log_variable["type_radius_array"]) 
+zlo_wall = rr.log_variable["zlo_wall"]
+walls = rr.log_variable["walls"]
 # ====================================== end import attribute
 
 
@@ -675,7 +675,7 @@ def contact_ids_inonestep(df_onestep, id_i):
     return contact_idj_wall
 
 def airviscous(v):
-    viscous = rr.logfile["gamma_air"]*rr.logfile["mp"]
+    viscous = rr.log_variable["gamma_air"]*rr.log_variable["mp"]
     return -viscous*v
 
 def gravity(mi):
@@ -684,7 +684,7 @@ def gravity(mi):
 def force_sum_except_contact(mi, v):
     force_sum_except_contact = 0
     force_sum_except_contact += gravity(mi)
-    if rr.logfile["ifairviscous"]=="yes":
+    if rr.log_variable["ifairviscous"]=="yes":
         force_sum_except_contact += airviscous(v)
     return force_sum_except_contact
 
@@ -1270,7 +1270,7 @@ def fjwi_plus_cal_multistep_multicontact_fromcustom(f_read, id_i, step1, step2, 
     typei = dfi[['type']].values[:-1]
     mi = mass_by_type(typei, density)
     fi_only_contact_cal_plus = sum_fjit_plus_cal_steps + sum_fjin_plus_cal_steps
-    if int(rr.logfile['freq_ave_wall']) != 0:
+    if int(rr.log_variable['freq_ave_wall']) != 0:
         fi_only_contact_plus = dfi[['f_sum_pairforce[1]','f_sum_pairforce[2]','f_sum_pairforce[3]']].values[1:] 
     else:
         fi_only_contact_plus = fi_plus - force_sum_except_contact(mi, vi+0.5*fi/mi*ts)
