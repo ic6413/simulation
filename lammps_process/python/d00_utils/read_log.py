@@ -4,7 +4,6 @@ import sys
 import os
 import pandas as pd
 
-
 def get_lines_fromlog_variable(log_file_path):
     
     if os.path.isfile(log_file_path):
@@ -59,6 +58,20 @@ def end_step(thermo_dataframe):
 def begin_to_end_step(thermo_dataframe):
     begin_to_end_step = end_step(thermo_dataframe) - begin_step(thermo_dataframe)
     return begin_to_end_step
+
+def fixavetime_info(lines):
+    # fix avspatial_ave all ave/time 1 10000 10000
+    # return dic['id']{['n_repeat'], ['file']
+    fixavetime_info = {}
+    for line in lines:
+        if line.startswith("fix") and line.split()[3] == "ave/time":
+            subdic = {}
+            subdic['n_repeat'] = line.split()[5]
+            for n, str in enumerate(line.split()):
+                if str in ['file', 'mode']:
+                    subdic[str] = line.split()[n + 1]
+            fixavetime_info[line.split()[1]] = subdic
+    return fixavetime_info
 
 def get_a_log_variable_dic_from_a_logfile(log_file_folder_path, logfilename = 'log.lammps'):
     log_file_path = os.path.join(log_file_folder_path, logfilename)
@@ -143,6 +156,8 @@ def get_a_log_variable_dic_from_a_logfile(log_file_folder_path, logfilename = 'l
     else:
         pass
     
+    log_variable['fixavetime'] = fixavetime_info(lines)
+
     if "lines" in log_variable.keys():
         sys.exit("lines in log key")
     else:
@@ -164,17 +179,6 @@ def get_a_log_variable_dic_from_a_logfile(log_file_folder_path, logfilename = 'l
         log_variable['log_file_folder_path'] = log_file_folder_path
 
     return log_variable
-
-def folder_name_under_subfolder_of_data(log_variable_dic_list):
-    # L W H Sa rotate_start_time endtime history wallshape xmu hooke/hertz kn kt gamma_n gamma_t timestep
-    variable_name = [
-
-    ]
-    variable_label_string = {
-
-    }
-    name = 0
-    return name
 
 def get_all_log_variable(lmp_folder_path):
     # get previous log_variable
@@ -237,25 +241,25 @@ def dump_variable(lmp_folder_path):
     folder_path_list_initial_to_last = [log_variable['log_file_folder_path'] for log_variable in log_variable_dic_list]
     log_variable = log_variable_dic_list[-1]
     
-    return [log_variable_dic_list, n_simu_total, log_variable, folder_path_list_initial_to_last]
+    return (log_variable_dic_list, n_simu_total, log_variable, folder_path_list_initial_to_last)
 
 def dump_variable_save(lmp_folder_path, outputpicklepath, outputjsonpath, log_variable_name = 'log.lammps'):
-    [log_variable_dic_list, n_simu_total, log_variable, folder_path_list_initial_to_last] = dump_variable(lmp_folder_path)
+    (log_variable_dic_list, n_simu_total, log_variable, folder_path_list_initial_to_last) = dump_variable(lmp_folder_path)
     # save all global variable get from log_variable to pickle
     if outputpicklepath is not None:
         with open(outputpicklepath, 'wb') as f:
-            pickle.dump([log_variable_dic_list, n_simu_total, log_variable, folder_path_list_initial_to_last], f)
+            pickle.dump((log_variable_dic_list, n_simu_total, log_variable, folder_path_list_initial_to_last), f)
     if outputjsonpath is not None:
         with open(outputjsonpath, 'w') as f:
-            json.dump([log_variable_dic_list, n_simu_total, log_variable, folder_path_list_initial_to_last], f)
-    return [log_variable_dic_list, n_simu_total, log_variable, folder_path_list_initial_to_last]
+            json.dump((log_variable_dic_list, n_simu_total, log_variable, folder_path_list_initial_to_last), f)
+    return (log_variable_dic_list, n_simu_total, log_variable, folder_path_list_initial_to_last)
 
 def get_dumped_variable(lmp_folder_path, inputpicklepath):
     if os.path.isfile(inputpicklepath):
         with open(inputpicklepath, 'rb') as f:
-            [log_variable_dic_list, n_simu_total, log_variable, folder_path_list_initial_to_last] = pickle.load(f)
+            (log_variable_dic_list, n_simu_total, log_variable, folder_path_list_initial_to_last) = pickle.load(f)
     else:
-        [log_variable_dic_list, n_simu_total, log_variable, folder_path_list_initial_to_last] = dump_variable_save(lmp_folder_path, inputpicklepath, None)
+        (log_variable_dic_list, n_simu_total, log_variable, folder_path_list_initial_to_last) = dump_variable_save(lmp_folder_path, inputpicklepath, None)
     
-    return [log_variable_dic_list, n_simu_total, log_variable, folder_path_list_initial_to_last]
+    return (log_variable_dic_list, n_simu_total, log_variable, folder_path_list_initial_to_last)
 
