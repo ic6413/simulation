@@ -274,19 +274,6 @@ def save_non_coord_to_npy_scalar(
             lines_column,
         )
 
-    timestepfilepath = os.path.join(
-        output_folder_path,
-        'TimeStep.npy',
-    )
-    totalstepsarray = np.load(timestepfilepath)
-    # save timestep in the folder
-    timestep_filepath = os.path.join(
-        output_folder_path,
-        "timestep",
-    )
-    check_npy_file_exist(timestep_filepath)
-    np.save(timestep_filepath, totalstepsarray)
-
 def multi_simu_save_non_coord_to_npy_scalar(
     folder_path_list_initial_to_last,
     log_variable_dic_list, fixtimeave_id_name,
@@ -339,3 +326,16 @@ def multi_simu_save_coord_to_npy(
                     log_variable, fixtimeave_id_name,
                     n_row_header=3, n_column_of_step=1, n_column_of_chunk_number=2,
                 )
+
+def rename_all_variable(n_simu_total, log_variable_dic_list):
+    for fixtimeave_id_name in di.map_fixtimeave_value_to_coord_by_id.keys():
+        for n in range(n_simu_total):
+            folder_path = di.fixtimeave_npy_output_folder_path(n, fixtimeave_id_name, log_variable_dic_list)
+            for root, dirs, files in os.walk(folder_path):
+                for name in files:
+                    if di.eliminate_npy_if_yes(name) in di.dic_rename_fixtimeave_npy_headername_to_use:
+                        os.rename(
+                            os.path.join(root, name),
+                            os.path.join(root, di.add_npy_if_not(di.dic_rename_fixtimeave_npy_headername_to_use[di.eliminate_npy_if_yes(name)])),
+                        )
+                    

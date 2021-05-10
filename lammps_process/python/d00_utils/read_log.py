@@ -20,10 +20,15 @@ def thermo_dataframe(lines):
     for n, line in enumerate(lines):
         if len(line) >= 2 and line.split()[0]=="Step":
             n_line_header_thermo = n
-        if len(line) >= 2 and line.split()[0]=="Loop" and line.split()[1]=="time":           
+        if len(line) >= 2 and line.split()[0]=="ERROR":
             n_line_end_thermo = n - 1
+            iferror = True
+        elif len(line) >= 2 and line.split()[0]=="Loop" and line.split()[1]=="time":           
+            n_line_end_thermo = n - 1
+            iferror = False
     # check if n_line_end_thermo > n_line_header_thermo > 0
     if n_line_end_thermo <= n_line_header_thermo or n_line_header_thermo <= 0:
+        breakpoint()
         sys.exit('thermo output wrong')
     header = lines[n_line_header_thermo].split()
     datastring = lines[n_line_header_thermo + 1: n_line_end_thermo + 1]
@@ -39,24 +44,32 @@ def begin_time(thermo_dataframe):
     begin_time = thermo_dataframe['Time'].values[0]
     return begin_time
 
-def end_time(thermo_dataframe):
-    end_time = thermo_dataframe['Time'].values[-1]
+def end_time(thermo_dataframe, next_thermo_dataframe=None):
+    if next_thermo_dataframe is None:
+        end_time = thermo_dataframe['Time'].values[-1]
+    else:
+        e_step = end_step(thermo_dataframe, next_thermo_dataframe)
+        df = thermo_dataframe.loc[thermo_dataframe['Step'] == e_step]
+        end_time = df['Time'].values[-1]
     return end_time
 
-def begin_to_end_time(thermo_dataframe):
-    begin_to_end_time = end_time(thermo_dataframe) - begin_time(thermo_dataframe)
+def begin_to_end_time(thermo_dataframe, next_thermo_dataframe=None):
+    begin_to_end_time = end_time(thermo_dataframe, next_thermo_dataframe) - begin_time(thermo_dataframe)
     return begin_to_end_time
 
 def begin_step(thermo_dataframe):
     begin_step = thermo_dataframe['Step'].values[0]
     return begin_step
 
-def end_step(thermo_dataframe):
-    end_step = thermo_dataframe['Step'].values[-1]
+def end_step(thermo_dataframe, next_thermo_dataframe=None):
+    if next_thermo_dataframe is None:
+        end_step = thermo_dataframe['Step'].values[-1]
+    else:
+        end_step = begin_step(next_thermo_dataframe)
     return end_step
 
-def begin_to_end_step(thermo_dataframe):
-    begin_to_end_step = end_step(thermo_dataframe) - begin_step(thermo_dataframe)
+def begin_to_end_step(thermo_dataframe, next_thermo_dataframe=None):
+    begin_to_end_step = end_step(thermo_dataframe, next_thermo_dataframe) - begin_step(thermo_dataframe)
     return begin_to_end_step
 
 def fixavetime_info(lines):
@@ -205,8 +218,11 @@ def add_total_time(log_variable_dic_list):
     if not int(log_variable_dic_list[0]["rst_from"]) == 0:
         sys.exit('first simu rst_from is not 0')
     total_time = 0
-    for log_variable in log_variable_dic_list:
-        total_time += begin_to_end_time(log_variable['thermo_dataframe'])
+    for n, log_variable in enumerate(log_variable_dic_list):
+        if n == len(log_variable_dic_list)-1:
+            total_time += begin_to_end_time(log_variable['thermo_dataframe'], None)
+        else:
+            total_time += begin_to_end_time(log_variable['thermo_dataframe'], log_variable_dic_list[n+1]['thermo_dataframe'])
         log_variable['total_time'] = total_time
     return log_variable_dic_list
 

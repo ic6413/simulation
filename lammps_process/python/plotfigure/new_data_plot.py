@@ -45,7 +45,7 @@ coord_aross_yz_filepath_header = (
         "Chunk Coord1 Coord2",
     )
 
-# coord filepath header save_npy_folder_pathrela_lmp n_sample_string for all output
+# coord filepath header save_npy_raw_folder_pathrela_lmp n_sample_string for all output
 chunk_contact = (
         coord_aross_yz_filepath_header,
         "output/contact/fix.contact_number.all",
@@ -655,7 +655,7 @@ def data_not_chunk_transfer_text_to_npy(lmp_path, filepath_rela_lmp_path, output
     np.save(lmp_path + outputfolder_rela_lmp_path + "timestep", totalstepsarray)
 
 def text_to_npy_for_chunk(lmp_path, chunk_tuple):
-    # chunk_tuple = coord filepath header save_npy_folder_path
+    # chunk_tuple = coord filepath header save_npy_raw_folder_path
     (coord_filepath, coord_header) = chunk_tuple[0]
     value_filepath = chunk_tuple[1]
     value_header = chunk_tuple[2]

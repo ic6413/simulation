@@ -12,41 +12,24 @@ lmp_folder_path = di.lmp_folder_path
 
 folder_name_under_subfolder_of_data = di.folder_name_under_subfolder_of_data(log_variable_dic_list)
 
-post_process_folder_path = di.post_process_folder_path(folder_name_under_subfolder_of_data)
+intermediate_subfolder_path = di.intermediate_subfolder_path(folder_name_under_subfolder_of_data)
 
-os.makedirs(post_process_folder_path, exist_ok=True)
+os.makedirs(intermediate_subfolder_path, exist_ok=True)
 
-log_folder_path = os.path.join(post_process_folder_path, di.log_output_folder_name)
+log_folder_path = os.path.join(intermediate_subfolder_path, di.log_output_folder_name)
 os.makedirs(log_folder_path, exist_ok=True)
 logpicklepath = os.path.join(log_folder_path,  di.logpicklefilename)
 dr.dump_variable_save(lmp_folder_path, logpicklepath, None, log_variable_name = di.logpicklefilename)
 
-
 # check if all fixavetime included
-d1 = di.map_fixtimeave_value_to_coord_by_id
-list1 = di.no_coord_fixtimeave
-outputlist = list(d1.keys()) + list(d1.values()) + list1
+outputlist = list(di.map_fixtimeave_value_to_coord_by_id.keys()) + list(di.output_shape_map_from_id.keys()) + di.no_coord_fixtimeave
 
 for key in log_variable['fixavetime'].keys():
     if key not in outputlist:
+        breakpoint()
         sys.exit("some fixavetime not included")
 
-for key in log_variable['fixavetime'].keys():
-    if key not in di.npy_output_subfolder_name_map_from_id.keys():
-        sys.exit("some fixavetime not included")
-
-
-for n, log_variable in enumerate(log_variable_dic_list):
-    lmp_folder_path = folder_path_list_initial_to_last[n]
-    
-    # npy
-    npy_folder_path = os.path.join(
-        post_process_folder_path,
-        'npy',
-        'simu_' + str(n),
-    )
 # mode scalar
-
 for fixtimeave_id_name in di.no_coord_fixtimeave:
     dd.multi_simu_save_non_coord_to_npy_scalar(
         folder_path_list_initial_to_last,
