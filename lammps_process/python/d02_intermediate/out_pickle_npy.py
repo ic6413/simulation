@@ -22,11 +22,10 @@ logpicklepath = os.path.join(log_folder_path,  di.logpicklefilename)
 dr.dump_variable_save(lmp_folder_path, logpicklepath, None, log_variable_name = di.logpicklefilename)
 
 # check if all fixavetime included
-outputlist = list(di.map_fixtimeave_value_to_coord_by_id.keys()) + list(di.output_shape_map_from_id.keys()) + di.no_coord_fixtimeave
+outputlist = list(di.map_fixtimeave_value_to_coord_by_id.keys()) + di.coord_chunk_id_list + di.no_coord_fixtimeave
 
 for key in log_variable['fixavetime'].keys():
     if key not in outputlist:
-        breakpoint()
         sys.exit("some fixavetime not included")
 
 # mode scalar

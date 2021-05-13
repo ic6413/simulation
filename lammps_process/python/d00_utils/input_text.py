@@ -1,4 +1,5 @@
 import os
+import sys
 lmp_folder_path = os.path.join(
     os.path.expanduser("~"),
     'simulation',
@@ -62,6 +63,9 @@ no_coord_fixtimeave = [
     'timeav_zbottom_force',
 ]
 
+chunk_output_list = list(map_fixtimeave_value_to_coord_by_id.keys()) + coord_chunk_id_list
+outputlist = list(map_fixtimeave_value_to_coord_by_id.keys()) + coord_chunk_id_list + no_coord_fixtimeave
+
 npy_output_subfolder_name_map_from_id = {
     'coord1and2_chunk_2_3': "coord_chunk_2_3",
     'coord1and2_chunk_near_inwall': "coord_chunk_inwall",
@@ -78,6 +82,9 @@ npy_output_subfolder_name_map_from_id = {
     'timeav_outwall_force': "outwall_force",
     'timeav_zbottom_force': "zbottom_force",
 }
+for id_fix in outputlist:
+    if id_fix not in npy_output_subfolder_name_map_from_id:
+        sys.exit("some id not includeed in npy_output_subfolder_name_map_from_id")
 
 output_shape_map_from_id = {
     'coord1and2_chunk_2_3':  ['n_1', 'n_2'],
@@ -87,10 +94,15 @@ output_shape_map_from_id = {
     'avspatial_ave': ['t', 'n_1', 'n_2'],
     'avspatial_omega_ave': ['t', 'n_1', 'n_2'],
     'avspatialstress_ave': ['t', 'n_1', 'n_2'],
+    'contact_ave': ['t', 'n_1', 'n_2'],
     'ave_std_inwall': ['t', 'n_2'],
     'ave_std_outwall': ['t', 'n_2'],
     'ave_std_zbottom': ['t', 'n_1'],
 }
+
+for id_fix in chunk_output_list:
+    if id_fix not in output_shape_map_from_id:
+        sys.exit("some id not includeed in output_shape_map_from_id")
 
 # npy
 def npy_raw_folder_path(n, log_variable_dic_list):
@@ -137,9 +149,17 @@ def fixtimeave_npy_output_file_path(n, fixtimeave_id_name, log_variable_dic_list
     )
     return filepath
 
+def fixtimeave_npy_output_coord_file_path(n, fixtimeave_id_name_for_v, log_variable_dic_list, coord_name):
+    fixtimeave_id_name_for_coord = map_fixtimeave_value_to_coord_by_id[fixtimeave_id_name_for_v]
+    filepath = fixtimeave_npy_output_file_path(n, fixtimeave_id_name_for_coord, log_variable_dic_list, coord_name)
+    return filepath
+
 dic_rename_fixtimeave_npy_headername_to_use = {
+    'Coord1': 'Coord1',
+    'Coord2': 'Coord2',
     'TimeStep': 'timestep',
     'timestep': 'timestep',
+    'v_t': 'time',
     'Ncount': 'Ncount',
     'n_contact': 'n_contact',
     'c_m1': 'mass',
@@ -199,11 +219,28 @@ dic_rename_fixtimeave_npy_headername_to_use = {
     'v_force_z_bottom_z': 'zbottom_force_3',
 }
 
+v_name_after_rename_list = [
+    dic_rename_fixtimeave_npy_headername_to_use[key] for key in dic_rename_fixtimeave_npy_headername_to_use
+]
+def map_name_to_sq_name(name):
+    return name + "_sq"
+
+def map_name_to_std_name(name):
+    return name + "_std"
 dic_rename_fixtimeave_npy_headername_to_use_sq = {}
 for key in dic_rename_fixtimeave_npy_headername_to_use:
-    dic_rename_fixtimeave_npy_headername_to_use_sq[key + "_sq"] = dic_rename_fixtimeave_npy_headername_to_use[key] + "_sq"
+    dic_rename_fixtimeave_npy_headername_to_use_sq[map_name_to_sq_name(key)] = map_name_to_sq_name(
+        dic_rename_fixtimeave_npy_headername_to_use[key]
+    )
 
 dic_rename_fixtimeave_npy_headername_to_use.update(dic_rename_fixtimeave_npy_headername_to_use_sq)
+
+def sq_file_path(n, log_variable_dic_list, fixtimeave_id_name, filename):
+    sq_filename = map_name_to_sq_name(eliminate_npy_if_yes(filename))
+    sq_filename = add_npy_if_not(sq_filename)
+    filepath = fixtimeave_npy_output_file_path(n, fixtimeave_id_name, log_variable_dic_list, sq_filename)
+    return filepath
+
 
 # processed folder
 def processed_subfolder_path(folder_name_under_subfolder_of_data):
@@ -226,6 +263,14 @@ def npy_calculated_folder_path(n, log_variable_dic_list):
     )
     return folder_path
 
+# std
+def npy_calculated_std_file_path(v_name, n, log_variable_dic_list):
+    file_path = os.path.join(
+        npy_calculated_folder_path(n, log_variable_dic_list),
+        add_npy_if_not(v_name),
+    )
+    return file_path
+
 # calculate variable name to filename
 calculated_coord_filename = {
     # coord
@@ -240,7 +285,7 @@ def npy_calculated_coord_file_path(v_name, n, log_variable_dic_list):
     return file_path
 
 # calculate variable name to filename
-calculated_variable_filename_map_to_filename = {
+calculated_variable_name_map_to_filename = {
     # velocity
     "velocity_1": "velocity_1",
     "velocity_2": "velocity_2",
@@ -333,22 +378,35 @@ calculated_variable_filename_map_to_filename = {
 def npy_calculated_variable_file_path(v_name, n, log_variable_dic_list):
     file_path = os.path.join(
         npy_calculated_folder_path(n, log_variable_dic_list),
-        add_npy_if_not(calculated_variable_filename_map_to_filename[v_name]),
+        add_npy_if_not(calculated_variable_name_map_to_filename[v_name]),
     )
     return file_path
 
+def v_name_to_path(n, v_name, log_variable_dic_list, fixtimeave_id_name=None, is_std=False, is_calculated_v=False):
+    if fixtimeave_id_name is not None:
+        path = fixtimeave_npy_output_file_path(n, fixtimeave_id_name, log_variable_dic_list, v_name)
+    elif is_std:
+        path = npy_calculated_std_file_path(v_name, n, log_variable_dic_list)
+    elif is_calculated_v:
+        path = npy_calculated_variable_file_path(v_name, n, log_variable_dic_list)
+    else:
+        sys.exit("input wrong")
+    return path
 
-# stress
-# pressure
-# strain rate
 
-# mu_tensor
-# mu
-# I_tensor
-# I
+figures_folder_path = os.path.join(
+    os.path.expanduser("~"),
+    'simulation',
+    'lammps_process',
+    'data',
+    '07_plots',
+)
 
+def figures_file_path(figurename):
+    file_path = os.path.join(
+        figures_folder_path,
+        figurename,
+    )
+    return file_path
 
-
-calculated_variable_name_list = [
-
-]
+###### plot

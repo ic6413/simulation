@@ -24,7 +24,12 @@ def len_in_each_dim_coord23(coord_2_3_path, n_row_header=3, n_column_of_step=1, 
         lines = f.read().strip().split('\n')
     first_4_lines = lines[0: 4]
     # header
-    header = first_4_lines[n_row_header-1].split()[1:]
+    header_line = first_4_lines[n_row_header-1]
+    if header_line[0] == "#":
+        n_column_variable_start = 2
+    else:
+        n_column_variable_start = 1
+    header = header_line.split()[n_column_variable_start-1:]
     # stepsarray
     n_line_in_a_step = int(first_4_lines[n_row_header].split()[n_column_of_chunk_number-1])
 
@@ -128,7 +133,12 @@ def save_coord_to_npy(
     )
     first_4_lines = lines[0: n_row_header+1]
     # header
-    header = first_4_lines[n_row_header-1].split()[1:]
+    header_line = first_4_lines[n_row_header-1]
+    if header_line[0] == "#":
+        n_column_variable_start = 2
+    else:
+        n_column_variable_start = 1
+    header = header = header_line.split()[n_column_variable_start-1:]
     # stepsarray
     n_line_in_a_step = int(first_4_lines[n_row_header].split()[n_column_of_chunk_number-1])
 
@@ -172,7 +182,12 @@ def save_non_coord_to_npy(
     n_line_in_file = len(lines)
     first_4_lines = lines[0: n_row_header + 1]
     # header
-    header = first_4_lines[n_row_header-1].split()[1:]
+    header_line = first_4_lines[n_row_header-1]
+    if header_line[0] == "#":
+        n_column_variable_start = 2
+    else:
+        n_column_variable_start = 1
+    header = header_line.split()[n_column_variable_start-1:]
     # stepsarray
     n_line_in_a_step = int(first_4_lines[n_row_header].split()[1])
     step_first_in_file = int(first_4_lines[n_row_header].split()[n_column_of_step - 1])
@@ -249,7 +264,12 @@ def save_non_coord_to_npy_scalar(
     )
 
     # header
-    header = lines[n_row_header-1].split()[1:]
+    header_line = lines[n_row_header-1]
+    if header_line[0] == "#":
+        n_column_variable_start = 2
+    else:
+        n_column_variable_start = 1
+    header = header_line.split()[n_column_variable_start-1:]
 
     # calculate index of line to delete
     # start from timestep row
@@ -328,7 +348,7 @@ def multi_simu_save_coord_to_npy(
                 )
 
 def rename_all_variable(n_simu_total, log_variable_dic_list):
-    for fixtimeave_id_name in di.map_fixtimeave_value_to_coord_by_id.keys():
+    for fixtimeave_id_name in di.outputlist:
         for n in range(n_simu_total):
             folder_path = di.fixtimeave_npy_output_folder_path(n, fixtimeave_id_name, log_variable_dic_list)
             for root, dirs, files in os.walk(folder_path):
