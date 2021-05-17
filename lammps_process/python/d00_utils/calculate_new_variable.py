@@ -88,7 +88,11 @@ def save_velocity_by_mv(n, in_name_mv, out_v_name, log_variable_dic_list, mass_n
         mass = np.load(mass_file_path, mmap_mode='r')
         velocity_i = mv_i/mass
         np.save(out_file_path, velocity_i)
-    else:sys.exit("in_file_path_1 and mass_file_path not exist")
+    else:
+        sys.exit(
+            "in_file_path_1 and mass_file_path not exist for n=" + str(n)
+            + ", in_file_path_1 is " + in_file_path_1 + ", mass_file_path is " + mass_file_path
+        )
 
 def multi_save_velocity_by_mv(in_name_mv, out_v_name, log_variable_dic_list, mass_name='mass'):
     for n in range(len(log_variable_dic_list)):

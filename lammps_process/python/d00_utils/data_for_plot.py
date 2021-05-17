@@ -129,3 +129,23 @@ def total_wall_force_strain(
     force = get_ave_value(n_ave, 'timeav_inwall_force', force_v_name, inputstepsarray, log_variable_dic_list, fixtimeave_id_name=fixtimeave_id_name)
     strain = strain_from_rotate_start(np.array(inputstepsarray), log_variable_dic_list[-1])
     return (strain, force)
+
+def quiver_data(
+    log_variable_dic_list,
+    n_ave,
+    inputstepsarray,
+    v_name_quiver_vector_1,
+    v_name_quiver_vector_2,
+    v_name_quiver_axis_1,
+    v_name_quiver_axis_2,
+    fixtimeave_id_fortime='avspatial_ave',
+    fixtimeave_id_forcoord='avspatial_ave',
+    fixtimeave_id_name='avspatial_ave',
+    is_calculated_v=False,
+    ):
+    V_1 = get_ave_value(n_ave, fixtimeave_id_fortime, v_name_quiver_vector_1, inputstepsarray, log_variable_dic_list, fixtimeave_id_name=fixtimeave_id_name, is_calculated_v=is_calculated_v)
+    V_2 = get_ave_value(n_ave, fixtimeave_id_fortime, v_name_quiver_vector_2, inputstepsarray, log_variable_dic_list, fixtimeave_id_name=fixtimeave_id_name, is_calculated_v=is_calculated_v)
+
+    coord_1 = get_coord_by_variable(len(log_variable_dic_list)-1, "Coord1", log_variable_dic_list, fixtimeave_id_forcoord)
+    coord_2 = get_coord_by_variable(len(log_variable_dic_list)-1, "Coord2", log_variable_dic_list, fixtimeave_id_forcoord)
+    return (coord_1, coord_2, V_1, V_2)

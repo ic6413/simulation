@@ -86,6 +86,20 @@ def fixavetime_info(lines):
             fixavetime_info[line.split()[1]] = subdic
     return fixavetime_info
 
+def fixavechunk_info(lines):
+    # fix avspatial_ave all ave/chunk 1 10000 10000
+    # return dic['id']{['n_repeat'], ['file']
+    fixavechunk_info = {}
+    for line in lines:
+        if line.startswith("fix") and line.split()[3] == "ave/chunk":
+            subdic = {}
+            subdic['n_repeat'] = line.split()[5]
+            for n, str in enumerate(line.split()):
+                if str in ['file', 'mode']:
+                    subdic[str] = line.split()[n + 1]
+            fixavechunk_info[line.split()[1]] = subdic
+    return fixavechunk_info
+
 def get_a_log_variable_dic_from_a_logfile(log_file_folder_path, logfilename = 'log.lammps'):
     log_file_path = os.path.join(log_file_folder_path, logfilename)
     lines = get_lines_fromlog_variable(log_file_path)
@@ -158,7 +172,9 @@ def get_a_log_variable_dic_from_a_logfile(log_file_folder_path, logfilename = 'l
     # select compute line
     lines_start_compute = [line for line in lines if line.startswith("compute")]
     # get chunk 23 info
-    satisfy_lines = [line for line in lines_start_compute if line.split()[3] == 'chunk/atom' and line.split()[1] == "chunk_2_3"]
+    satisfy_lines = [
+        line for line in lines_start_compute if line.split()[3] == 'chunk/atom' and (line.split()[1] == "chunk_2_3" or line.split()[1] == "chunk_y_z")
+    ]
     # get chunk/atom
     if len(satisfy_lines) != 0:
         log_variable["chunk/atom 23"] = [
@@ -170,7 +186,7 @@ def get_a_log_variable_dic_from_a_logfile(log_file_folder_path, logfilename = 'l
         pass
     
     log_variable['fixavetime'] = fixavetime_info(lines)
-
+    log_variable['fixavechunk'] = fixavechunk_info(lines)
     if "lines" in log_variable.keys():
         sys.exit("lines in log key")
     else:

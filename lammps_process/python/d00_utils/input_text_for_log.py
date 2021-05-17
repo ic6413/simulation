@@ -44,19 +44,30 @@ def intermediate_subfolder_path(folder_name_under_subfolder_of_data):
     )
     return folder_path
 
-coord_name_list = [
-    "Coord1",
-    "Coord2",
-]
-
+coord_2_3_fixtimeave_id_name_list = ['coord1and2_chunk_2_3', 'avspatial_ave']
 coord_2_3_fixtimeave_id_name = 'coord1and2_chunk_2_3'
+for n, coord_2_3_fixtimeave_id_name in enumerate(coord_2_3_fixtimeave_id_name_list):
+    if coord_2_3_fixtimeave_id_name in log_variable['fixavetime']:
+        break
+    # len_in_each_dim_coord23
+    coord_2_3_path = os.path.join(
+        lmp_folder_path,
+        log_variable['fixavetime'][di.coord_2_3_fixtimeave_id_name]['file'],
+    )
+    len_in_each_dim_coord23 = dd.len_in_each_dim_coord23(coord_2_3_path, n_row_header=3, n_column_of_step=1, n_column_of_chunk_number=2)
+    # coord chunk
+    for fixtimeave_id_name in di.coord_chunk_id_list:
+        dd.multi_simu_save_coord_to_npy(
+        folder_path_list_initial_to_last,
+        len_in_each_dim_coord23,
+        log_variable_dic_list, fixtimeave_id_name,
+        n_row_header=3, n_column_of_step=1, n_column_of_chunk_number=2,
+        )
 
 coord_chunk_id_23 = 'coord1and2_chunk_2_3'
 coord_chunk_id_inwall = 'coord1and2_chunk_near_inwall'
 coord_chunk_id_outwall = 'coord1and2_chunk_near_outwall'
 coord_chunk_id_zbottom = 'coord1and2_chunk_near_zbottom'
-
-coord_chunk_id_23_replace = 'avspatial'
 
 coord_chunk_id_list = [
     coord_chunk_id_23,
@@ -66,17 +77,13 @@ coord_chunk_id_list = [
 ]
 
 map_fixtimeave_value_to_coord_by_id = {
-    'avspatial_ave': coord_chunk_id_23,
-    'avspatial_omega_ave': coord_chunk_id_23,
-    'avspatialstress_ave': coord_chunk_id_23,
-    'contact_ave': coord_chunk_id_23,
-    'ave_std_inwall': coord_chunk_id_inwall,
-    'ave_std_outwall': coord_chunk_id_outwall,
-    'ave_std_zbottom': coord_chunk_id_zbottom,
-}
-
-map_fixtimeave_to_fixchunkave = {
-    'avspatial_ave': 'avspatial',
+    'avspatial_ave': 'coord1and2_chunk_2_3',
+    'avspatial_omega_ave': 'coord1and2_chunk_2_3',
+    'avspatialstress_ave': 'coord1and2_chunk_2_3',
+    'contact_ave': 'coord1and2_chunk_2_3',
+    'ave_std_inwall': 'coord1and2_chunk_near_inwall',
+    'ave_std_outwall': 'coord1and2_chunk_near_outwall',
+    'ave_std_zbottom': 'coord1and2_chunk_near_zbottom',
 }
 
 no_coord_fixtimeave = [
@@ -91,10 +98,10 @@ chunk_output_list = list(map_fixtimeave_value_to_coord_by_id.keys()) + coord_chu
 outputlist = list(map_fixtimeave_value_to_coord_by_id.keys()) + coord_chunk_id_list + no_coord_fixtimeave
 
 npy_output_subfolder_name_map_from_id = {
-    coord_chunk_id_23: "coord_chunk_2_3",
-    coord_chunk_id_inwall: "coord_chunk_inwall",
-    coord_chunk_id_outwall: "coord_chunk_outwall",
-    coord_chunk_id_zbottom: "coord_chunk_zbottom",
+    'coord1and2_chunk_2_3': "coord_chunk_2_3",
+    'coord1and2_chunk_near_inwall': "coord_chunk_inwall",
+    'coord1and2_chunk_near_outwall': "coord_chunk_outwall",
+    'coord1and2_chunk_near_zbottom': "coord_chunk_zbottom",
     'avspatial_ave': "chunk_spatial",
     'avspatial_omega_ave': "chunk_spatial_omega",
     'avspatialstress_ave': "chunk_spatial_stress",
@@ -113,7 +120,7 @@ for id_fix in outputlist:
         sys.exit("some id not includeed in npy_output_subfolder_name_map_from_id")
 
 output_shape_map_from_id = {
-    coord_chunk_id_23:  ['n_1', 'n_2'],
+    'coord1and2_chunk_2_3':  ['n_1', 'n_2'],
     'coord1and2_chunk_near_inwall': ['n_2'],
     'coord1and2_chunk_near_outwall': ['n_2'],
     'coord1and2_chunk_near_zbottom': ['n_1'],
@@ -151,14 +158,6 @@ def fixtimeave_text_file_path(n, fixtimeave_id_name, log_variable_dic_list, fold
     folder_path = os.path.join(
         folder_path_list_initial_to_last[n],
         log_variable_dic_list[n]['fixavetime'][fixtimeave_id_name]['file'],
-    )
-    return folder_path
-
-def fixchunkave_text_file_path(n, fixchunkave_id_name, log_variable_dic_list, folder_path_list_initial_to_last):
-
-    folder_path = os.path.join(
-        folder_path_list_initial_to_last[n],
-        log_variable_dic_list[n]['fixavechunk'][fixchunkave_id_name]['file'],
     )
     return folder_path
 
@@ -200,9 +199,6 @@ dic_rename_fixtimeave_npy_headername_to_use = {
     'v_mv1': 'mv_1',
     'v_mv2': 'mv_2',
     'v_mv3': 'mv_3',
-    'v_mvx': 'mv_1',
-    'v_mvy': 'mv_2',
-    'v_mvz': 'mv_3',
     'v_Ek1': 'Ek_1',
     'v_Ek2': 'Ek_2',
     'v_Ek3': 'Ek_3',

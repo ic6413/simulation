@@ -121,16 +121,18 @@ def save_coord_to_npy(
     input_text_path, output_folder_path, output_shape, len_in_each_dim_coord23,
     log_variable, fixtimeave_id_name,
     n_row_header=3, n_column_of_step=1, n_column_of_chunk_number=2,
+    fixtype='fixavetime',
     ):
     # python read line
     with open(input_text_path) as f:
         # line list
         lines = f.read().strip().split('\n')
-    check_fixtimeave_mode_consistency(
-        log_variable['fixavetime'][fixtimeave_id_name]['mode'],
-        n_row_header+1,
-        lines,
-    )
+    if fixtype=='fixavetime':
+        check_fixtimeave_mode_consistency(
+            log_variable[fixtype][fixtimeave_id_name]['mode'],
+            n_row_header+1,
+            lines,
+        )
     first_4_lines = lines[0: n_row_header+1]
     # header
     header_line = first_4_lines[n_row_header-1]
@@ -154,31 +156,34 @@ def save_coord_to_npy(
 
     # save all variable in the folder
     for i in range(n_header):
-        lines_column = lines[:, i]
-        array_with_shape = reshape_array(lines_column, output_shape, len_in_each_dim_coord23, n_step=None)
-        Coord1_is_y_or_z = if_Coord1_is_y_or_z(log_variable)
-        ordered_array = reorder_array(array_with_shape, Coord1_is_y_or_z)
-        outputfilepath = os.path.join(
-            output_folder_path,
-            header[i],
-        )
-        check_npy_file_exist(outputfilepath)
-        np.save(outputfilepath, ordered_array)
+        if header[i] in di.coord_name_list:
+            lines_column = lines[:, i]
+            array_with_shape = reshape_array(lines_column, output_shape, len_in_each_dim_coord23, n_step=None)
+            Coord1_is_y_or_z = if_Coord1_is_y_or_z(log_variable)
+            ordered_array = reorder_array(array_with_shape, Coord1_is_y_or_z)
+            outputfilepath = os.path.join(
+                output_folder_path,
+                header[i],
+            )
+            check_npy_file_exist(outputfilepath)
+            np.save(outputfilepath, ordered_array)
 # mode vector
 def save_non_coord_to_npy(
     input_text_path, output_folder_path, output_shape, len_in_each_dim_coord23,
     log_variable, fixtimeave_id_name,
     n_row_header=3, n_column_of_step=1, n_column_of_chunk_number=2,
+    fixtype='fixavetime',
     ):
     # python read line
     with open(input_text_path) as f:
         # line list
         lines = f.read().strip().split('\n')
-    check_fixtimeave_mode_consistency(
-        log_variable['fixavetime'][fixtimeave_id_name]['mode'],
-        n_row_header+1,
-        lines,
-    )
+    if fixtype=='fixavetime':
+        check_fixtimeave_mode_consistency(
+            log_variable[fixtype][fixtimeave_id_name]['mode'],
+            n_row_header+1,
+            lines,
+        )
     n_line_in_file = len(lines)
     first_4_lines = lines[0: n_row_header + 1]
     # header
@@ -219,7 +224,7 @@ def save_non_coord_to_npy(
         index_of_Ncount_in_header = header.index('Ncount')
         Ncount_column = lines[:, index_of_Ncount_in_header]
         reset_mask = (
-            Ncount_column*int(log_variable['fixavetime'][fixtimeave_id_name]['n_repeat']) < 0.99
+            Ncount_column*int(log_variable[fixtype][fixtimeave_id_name]['n_repeat']) < 0.99
         )
     # save all variable in the folder
     for i in range(n_header):
@@ -311,6 +316,73 @@ def multi_simu_save_non_coord_to_npy_scalar(
                     n_row_header=2,
                 )
 
+def multi_simu_save_coord_23_to_npy_replace(
+    folder_path_list_initial_to_last,
+    len_in_each_dim_coord23,
+    log_variable_dic_list,
+    n_row_header=3, n_column_of_step=1, n_column_of_chunk_number=2,
+    ):
+    for n, log_variable in enumerate(log_variable_dic_list):
+        # mode scalar
+        if di.coord_chunk_id_23_replace in log_variable_dic_list[n]['fixavechunk'].keys():
+            output_folder_path = di.fixtimeave_npy_output_folder_path(n, di.coord_chunk_id_23, log_variable_dic_list)
+            input_text_path = di.fixchunkave_text_file_path(n, di.coord_chunk_id_23_replace, log_variable_dic_list, folder_path_list_initial_to_last)
+            if os.path.exists(input_text_path):
+                save_coord_to_npy(
+                    input_text_path, output_folder_path, di.output_shape_map_from_id[di.coord_chunk_id_23], len_in_each_dim_coord23,
+                    log_variable, di.coord_chunk_id_23_replace,
+                    n_row_header=3, n_column_of_step=1, n_column_of_chunk_number=2,
+                    fixtype="fixavechunk",
+                )
+
+def inwall_cood_from_chunk23_coord(coord_array_from_chunk23):
+    if len(coord_array_from_chunk23.shape) != 2:
+        sys.exit("len(coord_array_from_chunk23.shape) not 2")
+    coord_inwall = coord_array_from_chunk23[0,:]
+    return coord_inwall
+
+def outwall_cood_from_chunk23_coord(coord_array_from_chunk23):
+    if len(coord_array_from_chunk23.shape) != 2:
+        sys.exit("len(coord_array_from_chunk23.shape) not 2")
+    coord_outwall = coord_array_from_chunk23[-1,:]
+    return coord_outwall
+
+def zbottom_cood_from_chunk23_coord(coord_array_from_chunk23):
+    if len(coord_array_from_chunk23.shape) != 2:
+        sys.exit("len(coord_array_from_chunk23.shape) not 2")
+    coord_zbottom = coord_array_from_chunk23[:,0]
+    return coord_zbottom
+
+def save_inwall_coord_from_chunk23(log_variable_dic_list):
+    for name in di.coord_name_list:
+        for n in range(len(log_variable_dic_list)):
+            value = np.load(di.fixtimeave_npy_output_file_path(n, di.coord_chunk_id_23, log_variable_dic_list, name))
+            os.makedirs(di.fixtimeave_npy_output_folder_path(n, di.coord_chunk_id_inwall, log_variable_dic_list), exist_ok=True)
+            np.save(
+                di.fixtimeave_npy_output_file_path(n, di.coord_chunk_id_inwall,
+                log_variable_dic_list,name), inwall_cood_from_chunk23_coord(value),
+            )
+
+def save_outwall_coord_from_chunk23(log_variable_dic_list):
+    for name in di.coord_name_list:
+        for n in range(len(log_variable_dic_list)):
+            value = np.load(di.fixtimeave_npy_output_file_path(n, di.coord_chunk_id_23, log_variable_dic_list, name))
+            os.makedirs(di.fixtimeave_npy_output_folder_path(n, di.coord_chunk_id_outwall, log_variable_dic_list), exist_ok=True)
+            np.save(
+                di.fixtimeave_npy_output_file_path(n, di.coord_chunk_id_outwall,
+                log_variable_dic_list,name), outwall_cood_from_chunk23_coord(value),
+            )
+
+def save_zbottom_coord_from_chunk23(log_variable_dic_list):
+    for name in di.coord_name_list:
+        for n in range(len(log_variable_dic_list)):
+            value = np.load(di.fixtimeave_npy_output_file_path(n, di.coord_chunk_id_23, log_variable_dic_list, name))
+            os.makedirs(di.fixtimeave_npy_output_folder_path(n, di.coord_chunk_id_zbottom, log_variable_dic_list), exist_ok=True)
+            np.save(
+                di.fixtimeave_npy_output_file_path(n, di.coord_chunk_id_zbottom,
+                log_variable_dic_list,name), zbottom_cood_from_chunk23_coord(value),
+            )
+
 def multi_simu_save_non_coord_to_npy(
     folder_path_list_initial_to_last,
     len_in_each_dim_coord23,
@@ -328,6 +400,18 @@ def multi_simu_save_non_coord_to_npy(
                     log_variable, fixtimeave_id_name,
                     n_row_header=3, n_column_of_step=1, n_column_of_chunk_number=2,
                 )
+        elif fixtimeave_id_name in di.map_fixtimeave_to_fixchunkave:
+            if di.map_fixtimeave_to_fixchunkave[fixtimeave_id_name] in log_variable_dic_list[n]['fixavechunk'].keys():
+                output_folder_path = di.fixtimeave_npy_output_folder_path(n, fixtimeave_id_name, log_variable_dic_list)
+                input_text_path_chunk = di.fixchunkave_text_file_path(n, di.map_fixtimeave_to_fixchunkave[fixtimeave_id_name], log_variable_dic_list, folder_path_list_initial_to_last)
+                
+                if os.path.exists(input_text_path_chunk):
+                    save_non_coord_to_npy(
+                        input_text_path_chunk, output_folder_path, di.output_shape_map_from_id[fixtimeave_id_name], len_in_each_dim_coord23,
+                        log_variable, di.map_fixtimeave_to_fixchunkave[fixtimeave_id_name],
+                        n_row_header=3, n_column_of_step=1, n_column_of_chunk_number=2,
+                        fixtype='fixavechunk',
+                    )
 
 def multi_simu_save_coord_to_npy(
     folder_path_list_initial_to_last,
