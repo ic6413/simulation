@@ -1,16 +1,43 @@
 import os
 import sys
-lmp_folder_path = os.path.join(
-    os.path.expanduser("~"),
-    'simulation',
-    'lammps_process',
-    'data',
-    '01_raw',
-    'Link to lmp_run',
-    'block_xp_50_w_16_h_30_Sa_2e-6_his_yes_xmu_5e-1_noshearfor_5e6_and_run_1e7',
-    'f_5e6_run_1e7',
-    'f_15e6_run_15e7',
-)
+lmp_folder_path_dic = {
+    1: os.path.join(
+        os.path.expanduser("~"),
+        'simulation',
+        'lammps_process',
+        'data',
+        '01_raw',
+        'Link to lmp_run',
+        'block_xp_50_w_16_h_30_Sa_2e-6_his_yes_xmu_5e-1_noshearfor_5e6_and_run_1e7',
+        'f_5e6_run_1e7',
+        'f_15e6_run_15e7',
+    ),
+    2: os.path.join(
+        os.path.expanduser("~"),
+        'simulation',
+        'lammps_process',
+        'data',
+        '01_raw',
+        'Link to lmp_run',
+        '20200921_nott_H_60_W_16_L_50',
+        'f_5e6',
+        'f_15e6',
+        'f_45e6',
+    ),
+    3: os.path.join(
+        os.path.expanduser("~"),
+        'simulation',
+        'lammps_process',
+        'data',
+        '01_raw',
+        'Link to lmp_run',
+        '20200921_nott_H_90_W_16_L_50',
+        'f_5e6',
+        'f_15e6',
+        'f_35e6',
+    ),
+}
+lmp_folder_path = lmp_folder_path_dic[1]
 
 log_output_folder_name = "log"
 logpicklefilename = 'log.pickle'
