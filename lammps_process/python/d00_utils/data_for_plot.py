@@ -9,6 +9,11 @@ def get_timestep(n, fixid_for_timestep, log_variable_dic_list):
     timestep = np.load(timestepfilepath, mmap_mode='r')
     return timestep
 
+def get_d_step(n, fixid_for_timestep, log_variable_dic_list):
+    timestep = get_timestep(n, fixid_for_timestep, log_variable_dic_list)
+    d_step = timestep[1] - timestep[0]
+    return d_step
+    
 def get_variable(n, v_name, log_variable_dic_list, fixtimeave_id_name=None, is_std=False, is_calculated_v=False):
     v_path = di.v_name_to_path(n, v_name, log_variable_dic_list, fixtimeave_id_name=fixtimeave_id_name, is_std=is_std, is_calculated_v=is_calculated_v)
     value = np.load(v_path, mmap_mode='r')

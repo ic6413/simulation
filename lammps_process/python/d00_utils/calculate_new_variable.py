@@ -62,7 +62,6 @@ def multi_calculate_std_and_save(log_variable_dic_list):
                             n, log_variable_dic_list, name, di.map_name_to_sq_name(name), fixtimeave_id_name, di.map_name_to_std_name(name),
                         )
 
-
 def propagation_of_std_plus_or_minus(a, std_a, b, std_b):
     value = (
         (std_a)**2 + (std_b)**2
@@ -78,6 +77,27 @@ def propagation_of_std_divide(a, std_a, b, std_b):
         (std_a/a)**2 + (std_b/b)**2
     )**0.5
     return value
+
+def vol_in_chunks(log_variable):
+    n_1 = int(log_variable['N_bin_y'])
+    n_2 = int(log_variable['N_bin_z'])
+    dx = 1/n_1*int(log_variable['width_wall_dp_unit'])
+    dy = 1/n_2*float(log_variable['zhi_chunk_dp_unit'])
+    vol_in_chunks = float(log_variable['dp'])**3*int(log_variable['x_period_dp_unit'])*dx*dy
+    return vol_in_chunks
+
+def save_fraction_by_mass(n, out_v_name, log_variable_dic_list, mass_name='mass'):
+    mass_file_path = di.fixtimeave_npy_output_file_path(n, 'avspatial_ave', log_variable_dic_list, mass_name)
+    if os.path.exists(mass_file_path):
+        out_file_path = di.npy_calculated_variable_file_path(out_v_name, n, log_variable_dic_list)
+        mass = np.load(mass_file_path, mmap_mode='r')
+        fraction = mass/float(log_variable_dic_list[-1]['den'])/vol_in_chunks(log_variable_dic_list[-1])
+        np.save(out_file_path, fraction)
+    else:
+        sys.exit(
+            "mass_file_path not exist for n=" + str(n)
+            + ", mass_file_path is " + mass_file_path
+        )
 
 def save_velocity_by_mv(n, in_name_mv, out_v_name, log_variable_dic_list, mass_name='mass'):
     in_file_path_1 = di.fixtimeave_npy_output_file_path(n, 'avspatial_ave', log_variable_dic_list, in_name_mv)
@@ -97,3 +117,7 @@ def save_velocity_by_mv(n, in_name_mv, out_v_name, log_variable_dic_list, mass_n
 def multi_save_velocity_by_mv(in_name_mv, out_v_name, log_variable_dic_list, mass_name='mass'):
     for n in range(len(log_variable_dic_list)):
         save_velocity_by_mv(n, in_name_mv, out_v_name, log_variable_dic_list, mass_name='mass')
+
+def multi_save_fraction_by_mass(out_v_name, log_variable_dic_list, mass_name='mass'):
+    for n in range(len(log_variable_dic_list)):
+        save_fraction_by_mass(n, out_v_name, log_variable_dic_list, mass_name='mass')

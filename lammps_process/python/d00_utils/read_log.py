@@ -72,32 +72,30 @@ def begin_to_end_step(thermo_dataframe, next_thermo_dataframe=None):
     begin_to_end_step = end_step(thermo_dataframe, next_thermo_dataframe) - begin_step(thermo_dataframe)
     return begin_to_end_step
 
-def fixavetime_info(lines):
-    # fix avspatial_ave all ave/time 1 10000 10000
+def fixave_info_for_time_or_chunk(lines, stylename):
     # return dic['id']{['n_repeat'], ['file']
     fixavetime_info = {}
     for line in lines:
-        if line.startswith("fix") and line.split()[3] == "ave/time":
+        if line.startswith("fix") and line.split()[3] == stylename:
             subdic = {}
             subdic['n_repeat'] = line.split()[5]
+            subdic['n_freq'] = line.split()[6]
             for n, str in enumerate(line.split()):
                 if str in ['file', 'mode']:
                     subdic[str] = line.split()[n + 1]
             fixavetime_info[line.split()[1]] = subdic
     return fixavetime_info
 
+def fixavetime_info(lines):
+    # fix avspatial_ave all ave/time 1 10000 10000
+    # return dic['id']{['n_repeat'], ['file']
+    fixavetime_info = fixave_info_for_time_or_chunk(lines, "ave/time")
+    return fixavetime_info
+
 def fixavechunk_info(lines):
     # fix avspatial_ave all ave/chunk 1 10000 10000
     # return dic['id']{['n_repeat'], ['file']
-    fixavechunk_info = {}
-    for line in lines:
-        if line.startswith("fix") and line.split()[3] == "ave/chunk":
-            subdic = {}
-            subdic['n_repeat'] = line.split()[5]
-            for n, str in enumerate(line.split()):
-                if str in ['file', 'mode']:
-                    subdic[str] = line.split()[n + 1]
-            fixavechunk_info[line.split()[1]] = subdic
+    fixavechunk_info  = fixave_info_for_time_or_chunk(lines, "ave/chunk")
     return fixavechunk_info
 
 def get_a_log_variable_dic_from_a_logfile(log_file_folder_path, logfilename = 'log.lammps'):

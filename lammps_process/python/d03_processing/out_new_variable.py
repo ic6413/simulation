@@ -21,3 +21,6 @@ for n in range(n_simu_total):
 dc.multi_save_velocity_by_mv('mv_1', 'velocity_1', log_variable_dic_list, mass_name='mass')
 dc.multi_save_velocity_by_mv('mv_2', 'velocity_2', log_variable_dic_list, mass_name='mass')
 dc.multi_save_velocity_by_mv('mv_3', 'velocity_3', log_variable_dic_list, mass_name='mass')
+
+# calculate fraction
+dc.multi_save_fraction_by_mass('fraction', log_variable_dic_list, mass_name='mass')

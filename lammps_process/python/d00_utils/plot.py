@@ -344,6 +344,7 @@ def api_velocity_streamplot_contour_xyqv_2222(
     vmax = 10**0,
     ifrotate_tick=True,
     ifshrink=False,
+    titlelabel="",
     ):
     
     # plot ave_z velocity across y
@@ -379,7 +380,7 @@ def api_velocity_streamplot_contour_xyqv_2222(
         (fig, ax) = shrink(fig, ax)
     if not if_on_paper:
         (fig, ax) = action_for_not_on_paper(fig, ax)
-
+        plt.title(titlelabel)
     return (fig, ax)
 
 def plot_velocity_ave_y(
@@ -415,6 +416,14 @@ def plot_velocity_ave_y(
         (fig, ax) = shrink(fig, ax)
     if not if_on_paper:
         (fig, ax) = action_for_not_on_paper(fig, ax)
+        log_variable = log_variable_dic_list[-1]
+        shear_rate = float(log_variable['in_velocity'])/(float(log_variable['width_wall_dp_unit'])*float(log_variable['dp']))
+        titlelabel = (
+            "each point average over strain = " + '{:.4e}'.format(
+                n_ave*ddfp.get_d_step(len(log_variable_dic_list)-1, fixtimeave_id_name, log_variable_dic_list)*float(log_variable["ts"])*shear_rate
+            )
+        )
+        plt.title(titlelabel)
     if if_include_0_y_axis:
         (fig, ax) = include_0_y_axis(fig, ax)
     return (fig, ax)
@@ -449,6 +458,14 @@ def plot_total_wall_force_strain(
         (fig, ax) = shrink(fig, ax)
     if not if_on_paper:
         (fig, ax) = action_for_not_on_paper(fig, ax)
+        log_variable = log_variable_dic_list[-1]
+        shear_rate = float(log_variable['in_velocity'])/(float(log_variable['width_wall_dp_unit'])*float(log_variable['dp']))
+        titlelabel = (
+            "each point average over strain = " + '{:.4e}'.format(
+                n_ave*ddfp.get_d_step(len(log_variable_dic_list)-1, fixtimeave_id_name, log_variable_dic_list)*float(log_variable["ts"])*shear_rate
+            )
+        )
+        plt.title(titlelabel)
     if if_include_0_y_axis:
         (fig, ax) = include_0_y_axis(fig, ax)
     return (fig, ax)
@@ -540,6 +557,75 @@ def plot_velocity_3_ave_y(
     )
     return (fig, ax)
 
+def save_plot_total_wall_force_strain(
+    log_variable_dic_list,
+    n_ave,
+    inputstepsarray,
+    strain_scale_factor, fig_x_label,
+    force_scale_factor, fig_y_label,
+    force_v_name,
+    if_on_paper=False,
+    if_include_0_y_axis=True,
+    fixtimeave_id_name='timeav_inwall_force',
+    ifrotate_tick=True,
+    ifshrink=False,
+    filename='wall',
+    ):
+    (fig, ax) = plot_total_wall_force_strain(
+    log_variable_dic_list,
+    n_ave,
+    inputstepsarray,
+    strain_scale_factor, fig_x_label,
+    force_scale_factor, fig_y_label,
+    force_v_name,
+    if_on_paper=if_on_paper,
+    if_include_0_y_axis=if_include_0_y_axis,
+    fixtimeave_id_name=fixtimeave_id_name,
+    ifrotate_tick=ifrotate_tick,
+    ifshrink=ifshrink,
+    )
+    if if_on_paper:
+        os.makedirs(di.plots_for_paper_folder(log_variable_dic_list), exist_ok=True)
+        filepath = di.plots_for_paper_file_path(log_variable_dic_list, filename)
+    else:
+        os.makedirs(di.plots_for_view_folder(log_variable_dic_list), exist_ok=True)
+        filepath = di.plots_for_view_file_path(log_variable_dic_list, filename)
+    save_close(fig, ax, filepath)
+
+def save_plot_velocity_1_ave_y(
+    log_variable_dic_list,
+    n_ave,
+    inputstepsarray,
+    coord1_scale_factor, fig_x_label,
+    velocity_scale_factor, fig_y_label,
+    if_on_paper=False,
+    if_include_0_y_axis=True,
+    n_sum_over_axis = 2,
+    fixtimeave_id_name='avspatial_ave',
+    ifrotate_tick=True,
+    ifshrink=False,
+    filename='velocity_1.png',
+    ):
+    (fig, ax) = plot_velocity_1_ave_y(
+        log_variable_dic_list,
+        n_ave,
+        inputstepsarray,
+        coord1_scale_factor, fig_x_label,
+        velocity_scale_factor, fig_y_label,
+        if_on_paper=if_on_paper,
+        if_include_0_y_axis=if_include_0_y_axis,
+        n_sum_over_axis = n_sum_over_axis,
+        fixtimeave_id_name=fixtimeave_id_name,
+        ifrotate_tick=ifrotate_tick,
+        ifshrink=ifshrink,
+    )
+    if if_on_paper:
+        os.makedirs(di.plots_for_paper_folder(log_variable_dic_list), exist_ok=True)
+        filepath = di.plots_for_paper_file_path(log_variable_dic_list, filename)
+    else:
+        os.makedirs(di.plots_for_view_folder(log_variable_dic_list), exist_ok=True)
+        filepath = di.plots_for_view_file_path(log_variable_dic_list, filename)
+    save_close(fig, ax, filepath)
 
 def save_plot_velocity_streamplot_contour(
     log_variable_dic_list,
@@ -581,6 +667,16 @@ def save_plot_velocity_streamplot_contour(
     for n, step in enumerate(inputstepsarray):
         (x_value, y_value, q_value, v_value) = (coord_1, coord_2, V_1[n], V_2[n])
         # plot ave_z velocity across y
+        log_variable = log_variable_dic_list[-1]
+        shear_rate = float(log_variable['in_velocity'])/(float(log_variable['width_wall_dp_unit'])*float(log_variable['dp']))
+        titlelabel = (
+            r'$\gamma = $' + '{:.2e}'.format(ddfp.strain_from_rotate_start(step, log_variable_dic_list[-1]))
+            + "\n"
+            + "each figure average over strain = " + '{:.4e}'.format(
+                n_ave*ddfp.get_d_step(len(log_variable_dic_list)-1, fixtimeave_id_fortime, log_variable_dic_list)*float(log_variable["ts"])*shear_rate
+            )
+        )
+        
         (fig, ax) = api_velocity_streamplot_contour_xyqv_2222(
             x_value, x_scale_factor, fig_x_label,
             y_value, y_scale_factor, fig_y_label,
@@ -596,9 +692,13 @@ def save_plot_velocity_streamplot_contour(
             vmax = vmax,
             ifrotate_tick=ifrotate_tick,
             ifshrink=ifshrink,
+            titlelabel=titlelabel,
         )
-        os.makedirs(di.plots_for_view_folder(log_variable_dic_list), exist_ok=True)
-        os.makedirs(di.plots_for_paper_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_view_file_path(log_variable_dic_list, 'stream_' + str(step) + '.png')
+        if if_on_paper:
+            os.makedirs(di.plots_for_paper_folder(log_variable_dic_list), exist_ok=True)
+            filepath = di.plots_for_paper_file_path(log_variable_dic_list, 'stream_' + str(step) + '.png')
+        else:
+            os.makedirs(di.plots_for_view_folder(log_variable_dic_list), exist_ok=True)
+            filepath = di.plots_for_view_file_path(log_variable_dic_list, 'stream_' + str(step) + '.png')
         save_close(fig, ax, filepath)
 
