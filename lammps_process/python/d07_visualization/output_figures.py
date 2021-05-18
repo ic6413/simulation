@@ -27,6 +27,8 @@ os.makedirs(di.plots_for_paper_folder(log_variable_dic_list), exist_ok=True)
     if_include_0_y_axis=True,
     n_sum_over_axis = 2,
     fixtimeave_id_name='avspatial_ave',
+    ifrotate_tick=True,
+    ifshrink=False,
 )
 dp.save_close(fig, ax, di.plots_for_view_file_path(log_variable_dic_list, 'velocity_1.png'))
 
@@ -85,6 +87,8 @@ for (force_v_name, fixtimeave_id_name, force_scale_factor, fig_y_label, path) in
         if_on_paper=False,
         if_include_0_y_axis=True,
         fixtimeave_id_name=fixtimeave_id_name,
+        ifrotate_tick=True,
+        ifshrink=False,
     )
     dp.save_close(fig, ax, di.plots_for_view_file_path(log_variable_dic_list, path))
 
@@ -109,6 +113,8 @@ dp.save_plot_velocity_streamplot_contour(
     contour_v_min_max = "min_to_max", # or "min_to_max",
     vmin = 10**-5,
     vmax = 10**0,
+    ifrotate_tick=True,
+    ifshrink=False,
 )
 # plot fraction
 

@@ -7,6 +7,48 @@ import d00_utils.data_for_plot as ddfp
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 
+# setting matplotlib
+# Here are some matplotlib style settings that I (JSW) find useful for publication-quality plots
+# http://tobackgroup.physics.tamu.edu/useful/matplotlib-formatting.txt
+# First, we set the width of a figure to be exactly the width of a single column in PRL or PRD (in
+# inches), and set the aspect ratio to be 4:3.
+
+plt.rc('figure', figsize=(3.375, 3.375*(.75)), titlesize=10)
+
+# This line sets the resolution (number of dots per inch) for saving figures to raster formats like
+# PNG.  It's mainly useful to set the size of the figures displayed in the webbrowser in the Jupyter
+# or IPython notebook
+plt.rc('savefig', dpi=180)
+#plt.rc('axes.formatter', limits=(0,0), use_mathtext=True)
+plt.rc('savefig', bbox='tight')
+plt.ticklabel_format(style='sci', axis='both')
+
+# The default for scatter plots is to put three points in each legend entry.  Usually one is
+# sufficient.
+#plt.rc('legend', scatterpoints=1, fontsize=10, frameon=True)
+
+# We would like the text to be created using TeX, so we get full support for LaTeX math syntax.
+#plt.rc('text', usetex=True)
+
+# We want all the text to be Computer Modern, and 10pt.  This way, combined with the correct setting
+# of the size of the figure, the text in the figure will exactly match the text in the rest of the
+# manuscript.
+
+plt.rc('font', size=8, weight='normal', family='sans-serif', serif=['Helvetica', 'Arial'])
+
+plt.rc('axes', labelsize=10, titlesize=8, labelweight='normal')
+
+# http://aeturrell.com/2018/01/31/publication-quality-plots-in-python/
+#plt.rc('xtick', labelsize=10)
+#plt.rc('ytick', labelsize=10)
+plt.rc('figure', autolayout=False)
+plt.rc('lines', linewidth=2)
+plt.rc('lines', markersize=4)
+plt.rc('mathtext', fontset="stix")
+
+# more setting
+# http://physicalmodelingwithpython.blogspot.com/2015/06/making-plots-for-publication.html
+
 def include_0_y_axis(fig, ax):
     if ax.get_ylim()[0]*ax.get_ylim()[1] <= 0:
         pass
@@ -25,10 +67,13 @@ def action_for_not_on_paper(fig, ax):
     (fig, ax) = show_legend(fig, ax)
     return (fig, ax)
 
-def rotate_ticklabel_shrink(fig, ax):
+def rotate_ticklabel(fig, ax):
     # rotate ticklabel
     plt.setp(ax.xaxis.get_minorticklabels(), rotation=30)
     plt.setp(ax.get_xticklabels(), rotation=30)
+    return (fig, ax)
+
+def shrink(fig, ax):
     # Shrink current axis by 20%
     box = ax.get_position()
     ax.set_position([box.x0, box.y0, box.width * 0.6, box.height])
@@ -209,6 +254,8 @@ def api_quiver_2D_2D_dim_xyqv_2222(
     quiver_scale,
     label_scale,
     label="",
+    ifrotate_tick=True,
+    ifshrink=False,
     ):
     # plot ave_z velocity across y
     fig, ax = plt.subplots()
@@ -226,7 +273,10 @@ def api_quiver_2D_2D_dim_xyqv_2222(
         label_scale,
         label="",
     )
-    (fig, ax) = rotate_ticklabel_shrink(fig, ax)
+    if ifrotate_tick:
+        (fig, ax) = rotate_ticklabel(fig, ax)
+    if ifshrink:
+        (fig, ax) = shrink(fig, ax)
     return (fig, ax)
 
 def api_streamplot_2D_2D_dim_xyqv_2222(
@@ -292,6 +342,8 @@ def api_velocity_streamplot_contour_xyqv_2222(
     contour_v_min_max = "constant", # or "min_to_max",
     vmin = 10**-5,
     vmax = 10**0,
+    ifrotate_tick=True,
+    ifshrink=False,
     ):
     
     # plot ave_z velocity across y
@@ -321,7 +373,10 @@ def api_velocity_streamplot_contour_xyqv_2222(
         vmax = vmax,
     )
 
-    (fig, ax) = rotate_ticklabel_shrink(fig, ax)
+    if ifrotate_tick:
+        (fig, ax) = rotate_ticklabel(fig, ax)
+    if ifshrink:
+        (fig, ax) = shrink(fig, ax)
     if not if_on_paper:
         (fig, ax) = action_for_not_on_paper(fig, ax)
 
@@ -338,6 +393,8 @@ def plot_velocity_ave_y(
     if_include_0_y_axis=True,
     n_sum_over_axis = 2,
     fixtimeave_id_name='avspatial_ave',
+    ifrotate_tick=True,
+    ifshrink=False,
     ):
     (coord, velocity, labels_list) = ddfp.velocity_ave_y(
         mv_v_name,
@@ -352,7 +409,10 @@ def plot_velocity_ave_y(
         velocity, velocity_scale_factor, fig_y_label,
         labels_list,
     )
-    (fig, ax) = rotate_ticklabel_shrink(fig, ax)
+    if ifrotate_tick:
+        (fig, ax) = rotate_ticklabel(fig, ax)
+    if ifshrink:
+        (fig, ax) = shrink(fig, ax)
     if not if_on_paper:
         (fig, ax) = action_for_not_on_paper(fig, ax)
     if if_include_0_y_axis:
@@ -369,6 +429,8 @@ def plot_total_wall_force_strain(
     if_on_paper=False,
     if_include_0_y_axis=True,
     fixtimeave_id_name='timeav_inwall_force',
+    ifrotate_tick=True,
+    ifshrink=False,
     ):
     (strain, total_wall_force) = ddfp.total_wall_force_strain(
         log_variable_dic_list,
@@ -381,7 +443,10 @@ def plot_total_wall_force_strain(
         strain, strain_scale_factor, fig_x_label,
         total_wall_force, force_scale_factor, fig_y_label,
     )
-    (fig, ax) = rotate_ticklabel_shrink(fig, ax)
+    if ifrotate_tick:
+        (fig, ax) = rotate_ticklabel(fig, ax)
+    if ifshrink:
+        (fig, ax) = shrink(fig, ax)
     if not if_on_paper:
         (fig, ax) = action_for_not_on_paper(fig, ax)
     if if_include_0_y_axis:
@@ -398,6 +463,8 @@ def plot_velocity_1_ave_y(
     if_include_0_y_axis=True,
     n_sum_over_axis = 2,
     fixtimeave_id_name='avspatial_ave',
+    ifrotate_tick=True,
+    ifshrink=False,
     ):
     (fig, ax) =  plot_velocity_ave_y(
     log_variable_dic_list,
@@ -410,6 +477,8 @@ def plot_velocity_1_ave_y(
     if_include_0_y_axis=if_include_0_y_axis,
     n_sum_over_axis = n_sum_over_axis,
     fixtimeave_id_name=fixtimeave_id_name,
+    ifrotate_tick=ifrotate_tick,
+    ifshrink=ifshrink,
     )
     return (fig, ax)
 
@@ -423,6 +492,8 @@ def plot_velocity_2_ave_y(
     if_include_0_y_axis=True,
     n_sum_over_axis = 2,
     fixtimeave_id_name='avspatial_ave',
+    ifrotate_tick=True,
+    ifshrink=False,
     ):
     (fig, ax) =  plot_velocity_ave_y(
     log_variable_dic_list,
@@ -435,6 +506,8 @@ def plot_velocity_2_ave_y(
     if_include_0_y_axis=if_include_0_y_axis,
     n_sum_over_axis = n_sum_over_axis,
     fixtimeave_id_name=fixtimeave_id_name,
+    ifrotate_tick=ifrotate_tick,
+    ifshrink=ifshrink,
     )
     return (fig, ax)
 
@@ -448,6 +521,8 @@ def plot_velocity_3_ave_y(
     if_include_0_y_axis=True,
     n_sum_over_axis = 2,
     fixtimeave_id_name='avspatial_ave',
+    ifrotate_tick=True,
+    ifshrink=False,
     ):
     (fig, ax) =  plot_velocity_ave_y(
     log_variable_dic_list,
@@ -460,6 +535,8 @@ def plot_velocity_3_ave_y(
     if_include_0_y_axis=if_include_0_y_axis,
     n_sum_over_axis = n_sum_over_axis,
     fixtimeave_id_name=fixtimeave_id_name,
+    ifrotate_tick=ifrotate_tick,
+    ifshrink=ifshrink,
     )
     return (fig, ax)
 
@@ -484,6 +561,8 @@ def save_plot_velocity_streamplot_contour(
     contour_v_min_max = "constant", # or "min_to_max",
     vmin = 10**-5,
     vmax = 10**0,
+    ifrotate_tick=True,
+    ifshrink=False,
     ):
     
     (coord_1, coord_2, V_1, V_2) = ddfp.quiver_data(
@@ -515,6 +594,8 @@ def save_plot_velocity_streamplot_contour(
             contour_v_min_max = contour_v_min_max, # or "min_to_max",
             vmin = vmin,
             vmax = vmax,
+            ifrotate_tick=ifrotate_tick,
+            ifshrink=ifshrink,
         )
         os.makedirs(di.plots_for_view_folder(log_variable_dic_list), exist_ok=True)
         os.makedirs(di.plots_for_paper_folder(log_variable_dic_list), exist_ok=True)
