@@ -43,7 +43,6 @@ def produce_latex(log_variable_dic_list, pic_path_list, default_filepath):
         doc.append("\nPeriodic length in shear direction = " + str(log_variable["x_period_dp_unit"]) + " diameter")
         doc.append("\nSavage_number = " + str(log_variable["Sa"]))
         doc.append("\nV_wall = " + str(float(log_variable["in_velocity"])/float(log_variable["dp"])) + " diameter/second")
-            
         for pic_path in pic_path_list:
             with doc.create(Figure(position='h!')) as pic:
                 pic.add_image(pic_path)

@@ -36,11 +36,43 @@ lmp_folder_path_dic = {
         'f_15e6',
         'f_35e6',
     ),
+    4: os.path.join(
+        os.path.expanduser("~"),
+        'simulation',
+        'lammps_process',
+        'data',
+        '01_raw',
+        'Link to lmp_run',
+        'block_xp_50_w_16_h_120_Sa_2e-6_his_yes_xmu_5e-1_noshear_2e7',
+        'f_2e7_run_5e7',
+    ),
+    5: os.path.join(
+        os.path.expanduser("~"),
+        'simulation',
+        'lammps_process',
+        'data',
+        '01_raw',
+        'Link to lmp_run',
+        'block_xp_50_w_16_h_30_Sa_2e-6_his_yes_xmu_5e-1_noshearfor_5e6_and_run_1e7',
+        'f_5e6_run_1e7_v1_20191111_Sa_2e-7',
+    ),
+    6: os.path.join(
+        os.path.expanduser("~"),
+        'simulation',
+        'lammps_process',
+        'data',
+        '01_raw',
+        'Link to lmp_run',
+        'block_xp_50_w_16_h_30_Sa_2e-6_his_yes_xmu_5e-1_noshearfor_5e6_and_run_1e7',
+        'f_5e6_run_1e7_v1_20191111_Sa_2e-5',
+    ),
 }
-lmp_folder_path = lmp_folder_path_dic[1]
+lmp_folder_path = lmp_folder_path_dic[2]
 
 log_output_folder_name = "log"
 logpicklefilename = 'log.pickle'
+
+
 
 def folder_name_under_subfolder_of_data(log_variable_dic_list):
     # L W H Sa rotate_start_time endtime history wallshape xmu hooke/hertz kn kt gamma_n gamma_t timestep
@@ -57,6 +89,7 @@ def folder_name_under_subfolder_of_data(log_variable_dic_list):
         + "_H_" + str(log_variable["z_length_create_dp_unit"])
         + "_L_" + str(log_variable["x_period_dp_unit"])
         + "_Sa_" + "{:.2e}".format(float(log_variable["Sa"]))
+        + "_total_time_" + "{:.2e}".format(float(log_variable["total_time"]))
     )
     return name
 
@@ -454,30 +487,36 @@ def v_name_to_path(n, v_name, log_variable_dic_list, fixtimeave_id_name=None, is
     elif is_calculated_v:
         path = npy_calculated_variable_file_path(v_name, n, log_variable_dic_list)
     else:
-        sys.exit("input wrong")
+        sys.exit("input wrong for fixtimeave_id_name or is_std or is_calculated_v")
     return path
 
-def plots_folder(log_variable_dic_list):
-    folder_path = os.path.join(
-        os.path.expanduser("~"),
-        'simulation',
-        'lammps_process',
-        'data',
-        '07_plots',
-        folder_name_under_subfolder_of_data(log_variable_dic_list),
-    )
-    return folder_path
+view_folder_path = os.path.join(
+    os.path.expanduser("~"),
+    'simulation',
+    'lammps_process',
+    'data',
+    '07_plots',
+    'view',
+)
+paper_folder_path = os.path.join(
+    os.path.expanduser("~"),
+    'simulation',
+    'lammps_process',
+    'data',
+    '07_plots',
+    'paper',
+)
 def plots_for_view_folder(log_variable_dic_list):
     folder_path = os.path.join(
-        plots_folder(log_variable_dic_list),
-        'view',
+        view_folder_path,
+        folder_name_under_subfolder_of_data(log_variable_dic_list),
     )
     return folder_path
 
 def plots_for_paper_folder(log_variable_dic_list):
     folder_path = os.path.join(
-        plots_folder(log_variable_dic_list),
-        'paper',
+        paper_folder_path,
+        folder_name_under_subfolder_of_data(log_variable_dic_list),
     )
     return folder_path
 
@@ -521,3 +560,17 @@ def latex_for_paper_file_path(log_variable_dic_list):
     return path
 
 ###### plot
+
+
+###### sync to overleaf dropbox
+dropbox_thesis_figures_folder_path = '/home/ic6413/Dropbox/應用程式/Overleaf/Thesis Figures/images'
+dropbox_thesis_figures_folder_path_simulation = os.path.join(
+    dropbox_thesis_figures_folder_path,
+    'simulation',
+)
+def plots_for_sync_paper_folder(log_variable_dic_list):
+    folder_path = os.path.join(
+        dropbox_thesis_figures_folder_path_simulation,
+        folder_name_under_subfolder_of_data(log_variable_dic_list),
+    )
+    return folder_path

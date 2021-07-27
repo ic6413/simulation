@@ -442,4 +442,18 @@ def rename_all_variable(n_simu_total, log_variable_dic_list):
                             os.path.join(root, name),
                             os.path.join(root, di.add_npy_if_not(di.dic_rename_fixtimeave_npy_headername_to_use[di.eliminate_npy_if_yes(name)])),
                         )
-                    
+
+def get_timestep(n, fixid_for_timestep, log_variable_dic_list):
+    timestepfilepath = di.fixtimeave_npy_output_file_path(n, fixid_for_timestep, log_variable_dic_list, 'timestep')
+    timestep = np.load(timestepfilepath, mmap_mode='r')
+    return timestep
+    
+def get_variable(n, v_name, log_variable_dic_list, fixtimeave_id_name=None, is_std=False, is_calculated_v=False):
+    v_path = di.v_name_to_path(n, v_name, log_variable_dic_list, fixtimeave_id_name=fixtimeave_id_name, is_std=is_std, is_calculated_v=is_calculated_v)
+    value = np.load(v_path, mmap_mode='r')
+    return value
+
+def get_coord_by_variable(n, coord_name, log_variable_dic_list, fixtimeave_id_name):
+    v_path = di.fixtimeave_npy_output_coord_file_path(n, fixtimeave_id_name, log_variable_dic_list, coord_name)
+    value = np.load(v_path, mmap_mode='r')
+    return value                    
