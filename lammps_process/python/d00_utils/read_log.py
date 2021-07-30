@@ -228,6 +228,18 @@ def get_all_log_variable(lmp_folder_path):
         sys.exit('log_variable wrong')
     return log_variable_dic_list
 
+def add_total_step(log_variable_dic_list):
+    if not int(log_variable_dic_list[0]["rst_from"]) == 0:
+        sys.exit('first simu rst_from is not 0')
+    total_step = 0
+    for n, log_variable in enumerate(log_variable_dic_list):
+        if n == len(log_variable_dic_list)-1:
+            total_step += begin_to_end_step(log_variable['thermo_dataframe'], None)
+        else:
+            total_step += begin_to_end_step(log_variable['thermo_dataframe'], log_variable_dic_list[n+1]['thermo_dataframe'])
+        log_variable['total_step'] = total_step
+    return log_variable_dic_list
+
 def add_total_time(log_variable_dic_list):
     if not int(log_variable_dic_list[0]["rst_from"]) == 0:
         sys.exit('first simu rst_from is not 0')
@@ -253,6 +265,7 @@ def add_rotate_start_time(log_variable_dic_list):
     return log_variable_dic_list
 
 def add_log_variable_from_log_variable_dic_list(log_variable_dic_list):
+    log_variable_dic_list = add_total_step(log_variable_dic_list)
     log_variable_dic_list = add_total_time(log_variable_dic_list)
     log_variable_dic_list = add_rotate_start_time(log_variable_dic_list)
     return log_variable_dic_list

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import numpy as np
 import subprocess
-from pylatex import Document, Section, Subsection, Figure, Package
+from pylatex import Document, Section, Subsection, Figure, Package, NewPage
 from pylatex.utils import italic
 from pylatex.utils import NoEscape
 import os
@@ -43,11 +43,17 @@ def produce_latex(log_variable_dic_list, pic_path_list, default_filepath):
         doc.append("\nPeriodic length in shear direction = " + str(log_variable["x_period_dp_unit"]) + " diameter")
         doc.append("\nSavage_number = " + str(log_variable["Sa"]))
         doc.append("\nV_wall = " + str(float(log_variable["in_velocity"])/float(log_variable["dp"])) + " diameter/second")
-        for pic_path in pic_path_list:
-            with doc.create(Figure(position='h!')) as pic:
+        for n, pic_path in enumerate(pic_path_list[:49]):
+            with doc.create(Figure(position='!ht')) as pic:
                 pic.add_image(pic_path)
-                pic.add_caption(NoEscape("\label{fig:epsart}"))
-        
+                capstring = r'\label{fig:' + str(n) + '} This is a figure.'
+                pic.add_caption(NoEscape(capstring))
+    with doc.create(Section("Simulation Plot2")):
+        for n, pic_path in enumerate(pic_path_list[49:]):
+            with doc.create(Figure(position='!ht')) as pic:
+                pic.add_image(pic_path)
+                capstring = r'\label{fig:' + str(n+49) + '} This is a figure.'
+                pic.add_caption(NoEscape(capstring))
         doc.append(NoEscape("\\FloatBarrier"))
         
     doc.generate_pdf(clean_tex=False)

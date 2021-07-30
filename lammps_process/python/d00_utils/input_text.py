@@ -67,7 +67,7 @@ lmp_folder_path_dic = {
         'f_5e6_run_1e7_v1_20191111_Sa_2e-5',
     ),
 }
-lmp_folder_path = lmp_folder_path_dic[2]
+lmp_folder_path = lmp_folder_path_dic[3]
 
 log_output_folder_name = "log"
 logpicklefilename = 'log.pickle'
@@ -490,20 +490,20 @@ def v_name_to_path(n, v_name, log_variable_dic_list, fixtimeave_id_name=None, is
         sys.exit("input wrong for fixtimeave_id_name or is_std or is_calculated_v")
     return path
 
-view_folder_path = os.path.join(
+plot_folder_path = os.path.join(
     os.path.expanduser("~"),
     'simulation',
     'lammps_process',
     'data',
     '07_plots',
+)
+
+view_folder_path = os.path.join(
+    plot_folder_path,
     'view',
 )
 paper_folder_path = os.path.join(
-    os.path.expanduser("~"),
-    'simulation',
-    'lammps_process',
-    'data',
-    '07_plots',
+    plot_folder_path,
     'paper',
 )
 def plots_for_view_folder(log_variable_dic_list):
@@ -561,16 +561,43 @@ def latex_for_paper_file_path(log_variable_dic_list):
 
 ###### plot
 
-
 ###### sync to overleaf dropbox
 dropbox_thesis_figures_folder_path = '/home/ic6413/Dropbox/應用程式/Overleaf/Thesis Figures/images'
-dropbox_thesis_figures_folder_path_simulation = os.path.join(
+dropbox_thesis_figures_view_folder_path_simulation = os.path.join(
     dropbox_thesis_figures_folder_path,
     'simulation',
+    'view',
 )
+dropbox_thesis_figures_paper_folder_path_simulation = os.path.join(
+    dropbox_thesis_figures_folder_path,
+    'simulation',
+    'paper',
+)
+
 def plots_for_sync_paper_folder(log_variable_dic_list):
     folder_path = os.path.join(
-        dropbox_thesis_figures_folder_path_simulation,
+        dropbox_thesis_figures_paper_folder_path_simulation,
         folder_name_under_subfolder_of_data(log_variable_dic_list),
     )
     return folder_path
+
+def plots_for_sync_view_folder(log_variable_dic_list):
+    folder_path = os.path.join(
+        dropbox_thesis_figures_view_folder_path_simulation,
+        folder_name_under_subfolder_of_data(log_variable_dic_list),
+    )
+    return folder_path
+
+def dropbox_plots_for_view_file_path(log_variable_dic_list, figurename):
+    file_path = os.path.join(
+        plots_for_sync_view_folder(log_variable_dic_list),
+        figurename,
+    )
+    return file_path
+
+def dropbox_plots_for_paper_file_path(log_variable_dic_list, figurename):
+    file_path = os.path.join(
+        plots_for_sync_paper_folder(log_variable_dic_list),
+        figurename,
+    )
+    return file_path

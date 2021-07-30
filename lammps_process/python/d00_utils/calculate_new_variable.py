@@ -195,7 +195,10 @@ def stress_middle_fix_by_velocity_and_wall(i, j, n_ave, n_ave_coord1, n_ave_coor
     stress = ave_4_grid_for_the_last_axis(stress)
     return stress
 
-def pressure_middle(n_ave, n_ave_coord1, n_ave_coord2, inputstepsarray, log_variable_dic_list, ifcorrect_by_ave_velocity=True, ifcorrect_by_wall=True):
+def pressure_middle(
+        n_ave, n_ave_coord1, n_ave_coord2, inputstepsarray, log_variable_dic_list,
+        ifcorrect_by_ave_velocity=True, ifcorrect_by_wall=True,
+    ):
     pressure = 0
     for (i,j) in [
         (1,1),
@@ -397,6 +400,15 @@ def I_ij(i, j, n_ave, n_ave_coord1, n_ave_coord2, inputstepsarray, log_variable_
     density = float(log_variable['den'])
     I_ij = strain_rate*d/(P/density)**0.5
     return I_ij
+
+def trace_I(n_ave, n_ave_coord1, n_ave_coord2, inputstepsarray, log_variable_dic_list, ifcorrect_by_ave_velocity=True, ifcorrect_by_wall=True):
+    strain_rate = strain_rate_diagonal_ave(n_ave, n_ave_coord1, n_ave_coord2, inputstepsarray, log_variable_dic_list)
+    log_variable = log_variable_dic_list[-1]
+    d = float(log_variable['dp'])
+    P = pressure_middle(n_ave, n_ave_coord1, n_ave_coord2, inputstepsarray, log_variable_dic_list, ifcorrect_by_ave_velocity=ifcorrect_by_ave_velocity, ifcorrect_by_wall=ifcorrect_by_wall)
+    density = float(log_variable['den'])
+    trace_I = strain_rate*d/(P/density)**0.5
+    return trace_I
 
 def multi_save_velocity_by_mv(in_name_mv, out_v_name, log_variable_dic_list, mass_name='mass'):
     for n in range(len(log_variable_dic_list)):

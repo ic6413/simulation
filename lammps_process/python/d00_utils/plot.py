@@ -90,6 +90,26 @@ def save_close(fig, ax, filepath, ifaddpng=True):
     )
     # close figure after save
     plt.close('all')
+    
+def create_folder_save(
+        log_variable_dic_list,
+        filename,
+        fig, ax,
+        if_on_paper=False,
+    ):
+
+    if if_on_paper:
+        os.makedirs(di.plots_for_paper_folder(log_variable_dic_list), exist_ok=True)
+        filepath = di.plots_for_paper_file_path(log_variable_dic_list, filename)
+        os.makedirs(di.plots_for_sync_paper_folder(log_variable_dic_list), exist_ok=True)
+        filepath_dropbox = di.dropbox_plots_for_paper_file_path(log_variable_dic_list, filename)
+    else:
+        os.makedirs(di.plots_for_view_folder(log_variable_dic_list), exist_ok=True)
+        filepath = di.plots_for_view_file_path(log_variable_dic_list, filename)
+        os.makedirs(di.plots_for_sync_view_folder(log_variable_dic_list), exist_ok=True)
+        filepath_dropbox = di.dropbox_plots_for_view_file_path(log_variable_dic_list, filename)
+    save_close(fig, ax, filepath)
+    save_close(fig, ax, filepath_dropbox)
 
 def api_ax_dim_xy_11(
         fig, ax,
@@ -1069,14 +1089,12 @@ def save_plot_ave_value_for_select_region_yz_strain(
         is_std=is_std,
         is_calculated_v=is_calculated_v,
     )
-    if if_on_paper:
-        os.makedirs(di.plots_for_paper_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_paper_file_path(log_variable_dic_list, filename)
-    else:
-        os.makedirs(di.plots_for_view_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_view_file_path(log_variable_dic_list, filename)
-    save_close(fig, ax, filepath)
-
+    create_folder_save(
+        log_variable_dic_list,
+        filename,
+        fig, ax,
+        if_on_paper=if_on_paper,
+    )
 def save_plot_ave_ratio_value_for_select_region_yz_strain(
     log_variable_dic_list,
     n_ave,
@@ -1114,13 +1132,12 @@ def save_plot_ave_ratio_value_for_select_region_yz_strain(
         is_calculated_v1=is_calculated_v1,
         is_calculated_v2=is_calculated_v2,
     )
-    if if_on_paper:
-        os.makedirs(di.plots_for_paper_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_paper_file_path(log_variable_dic_list, filename)
-    else:
-        os.makedirs(di.plots_for_view_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_view_file_path(log_variable_dic_list, filename)
-    save_close(fig, ax, filepath)
+    create_folder_save(
+        log_variable_dic_list,
+        filename,
+        fig, ax,
+        if_on_paper=if_on_paper,
+    )
 
 def save_plot_total_wall_force_strain(
     log_variable_dic_list,
@@ -1149,13 +1166,12 @@ def save_plot_total_wall_force_strain(
     ifrotate_tick=ifrotate_tick,
     ifshrink=ifshrink,
     )
-    if if_on_paper:
-        os.makedirs(di.plots_for_paper_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_paper_file_path(log_variable_dic_list, filename)
-    else:
-        os.makedirs(di.plots_for_view_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_view_file_path(log_variable_dic_list, filename)
-    save_close(fig, ax, filepath)
+    create_folder_save(
+        log_variable_dic_list,
+        filename,
+        fig, ax,
+        if_on_paper=if_on_paper,
+    )
 
 def save_plot_total_wall_force_ratio_strain(
     log_variable_dic_list,
@@ -1186,13 +1202,12 @@ def save_plot_total_wall_force_ratio_strain(
     ifshrink=ifshrink,
     ifabs=ifabs,
     )
-    if if_on_paper:
-        os.makedirs(di.plots_for_paper_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_paper_file_path(log_variable_dic_list, filename)
-    else:
-        os.makedirs(di.plots_for_view_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_view_file_path(log_variable_dic_list, filename)
-    save_close(fig, ax, filepath)
+    create_folder_save(
+        log_variable_dic_list,
+        filename,
+        fig, ax,
+        if_on_paper=if_on_paper,
+    )
 
 def save_plot_velocity_1_ave_y(
     log_variable_dic_list,
@@ -1221,13 +1236,12 @@ def save_plot_velocity_1_ave_y(
         ifrotate_tick=ifrotate_tick,
         ifshrink=ifshrink,
     )
-    if if_on_paper:
-        os.makedirs(di.plots_for_paper_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_paper_file_path(log_variable_dic_list, filename)
-    else:
-        os.makedirs(di.plots_for_view_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_view_file_path(log_variable_dic_list, filename)
-    save_close(fig, ax, filepath)
+    create_folder_save(
+        log_variable_dic_list,
+        filename,
+        fig, ax,
+        if_on_paper=if_on_paper,
+    )
 
 def save_plot_velocity_2_ave_y(
     log_variable_dic_list,
@@ -1256,14 +1270,12 @@ def save_plot_velocity_2_ave_y(
         ifrotate_tick=ifrotate_tick,
         ifshrink=ifshrink,
     )
-    if if_on_paper:
-        os.makedirs(di.plots_for_paper_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_paper_file_path(log_variable_dic_list, filename)
-    else:
-        os.makedirs(di.plots_for_view_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_view_file_path(log_variable_dic_list, filename)
-    save_close(fig, ax, filepath)
-
+    create_folder_save(
+        log_variable_dic_list,
+        filename,
+        fig, ax,
+        if_on_paper=if_on_paper,
+    )
 def save_plot_velocity_3_ave_y(
     log_variable_dic_list,
     n_ave,
@@ -1291,14 +1303,12 @@ def save_plot_velocity_3_ave_y(
         ifrotate_tick=ifrotate_tick,
         ifshrink=ifshrink,
     )
-    if if_on_paper:
-        os.makedirs(di.plots_for_paper_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_paper_file_path(log_variable_dic_list, filename)
-    else:
-        os.makedirs(di.plots_for_view_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_view_file_path(log_variable_dic_list, filename)
-    save_close(fig, ax, filepath)
-
+    create_folder_save(
+        log_variable_dic_list,
+        filename,
+        fig, ax,
+        if_on_paper=if_on_paper,
+    )
 def save_plot_variable_vs_y_or_z_or_strain(
     log_variable_dic_list,
     n_ave,
@@ -1336,14 +1346,12 @@ def save_plot_variable_vs_y_or_z_or_strain(
         is_std=is_std,
         is_calculated_v=is_calculated_v,
     )
-    if if_on_paper:
-        os.makedirs(di.plots_for_paper_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_paper_file_path(log_variable_dic_list, filename)
-    else:
-        os.makedirs(di.plots_for_view_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_view_file_path(log_variable_dic_list, filename)
-    save_close(fig, ax, filepath)
-
+    create_folder_save(
+        log_variable_dic_list,
+        filename,
+        fig, ax,
+        if_on_paper=if_on_paper,
+    )
 def save_plot_velocity_ave_z_strain(
     log_variable_dic_list,
     n_ave,
@@ -1375,14 +1383,12 @@ def save_plot_velocity_ave_z_strain(
         ifrotate_tick=ifrotate_tick,
         ifshrink=ifshrink,
     )
-    if if_on_paper:
-        os.makedirs(di.plots_for_paper_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_paper_file_path(log_variable_dic_list, filename)
-    else:
-        os.makedirs(di.plots_for_view_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_view_file_path(log_variable_dic_list, filename)
-    save_close(fig, ax, filepath)
-
+    create_folder_save(
+        log_variable_dic_list,
+        filename,
+        fig, ax,
+        if_on_paper=if_on_paper,
+    )
 def save_plot_velocity_select_z_vs_y(
     log_variable_dic_list,
     n_ave,
@@ -1412,14 +1418,12 @@ def save_plot_velocity_select_z_vs_y(
         ifrotate_tick=ifrotate_tick,
         ifshrink=ifshrink,
     )
-    if if_on_paper:
-        os.makedirs(di.plots_for_paper_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_paper_file_path(log_variable_dic_list, filename)
-    else:
-        os.makedirs(di.plots_for_view_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_view_file_path(log_variable_dic_list, filename)
-    save_close(fig, ax, filepath)
-
+    create_folder_save(
+        log_variable_dic_list,
+        filename,
+        fig, ax,
+        if_on_paper=if_on_paper,
+    )
 def save_plot_wall_stress_coord(
     log_variable_dic_list,
     n_ave,
@@ -1452,14 +1456,12 @@ def save_plot_wall_stress_coord(
         ifrotate_tick=ifrotate_tick,
         ifshrink=ifshrink,
         )
-    if if_on_paper:
-        os.makedirs(di.plots_for_paper_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_paper_file_path(log_variable_dic_list, filename)
-    else:
-        os.makedirs(di.plots_for_view_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_view_file_path(log_variable_dic_list, filename)
-    save_close(fig, ax, filepath)
-
+    create_folder_save(
+        log_variable_dic_list,
+        filename,
+        fig, ax,
+        if_on_paper=if_on_paper,
+    )
 def save_plot_wall_stress_ratio_coord(
     log_variable_dic_list,
     n_ave,
@@ -1496,14 +1498,12 @@ def save_plot_wall_stress_ratio_coord(
         ifshrink=ifshrink,
         ifabs=ifabs,
         )
-    if if_on_paper:
-        os.makedirs(di.plots_for_paper_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_paper_file_path(log_variable_dic_list, filename)
-    else:
-        os.makedirs(di.plots_for_view_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_view_file_path(log_variable_dic_list, filename)
-    save_close(fig, ax, filepath)
-
+    create_folder_save(
+        log_variable_dic_list,
+        filename,
+        fig, ax,
+        if_on_paper=if_on_paper,
+    )
 def save_plot_velocity_streamplot_contour(
     log_variable_dic_list,
     n_ave,
@@ -1579,13 +1579,12 @@ def save_plot_velocity_streamplot_contour(
             ifshrink=ifshrink,
             titlelabel=titlelabel,
         )
-        if if_on_paper:
-            os.makedirs(di.plots_for_paper_folder(log_variable_dic_list), exist_ok=True)
-            filepath = di.plots_for_paper_file_path(log_variable_dic_list, filenamelist[n])
-        else:
-            os.makedirs(di.plots_for_view_folder(log_variable_dic_list), exist_ok=True)
-            filepath = di.plots_for_view_file_path(log_variable_dic_list, filenamelist[n])
-        save_close(fig, ax, filepath)
+        create_folder_save(
+            log_variable_dic_list,
+            filenamelist[n],
+            fig, ax,
+            if_on_paper=if_on_paper,
+        )
 
 def save_plot_fraction_contour(
     log_variable_dic_list,
@@ -1654,13 +1653,12 @@ def save_plot_fraction_contour(
             ifshrink=ifshrink,
             titlelabel=titlelabel,
         )
-        if if_on_paper:
-            os.makedirs(di.plots_for_paper_folder(log_variable_dic_list), exist_ok=True)
-            filepath = di.plots_for_paper_file_path(log_variable_dic_list, filenamelist[n])
-        else:
-            os.makedirs(di.plots_for_view_folder(log_variable_dic_list), exist_ok=True)
-            filepath = di.plots_for_view_file_path(log_variable_dic_list, filenamelist[n])
-        save_close(fig, ax, filepath)
+        create_folder_save(
+            log_variable_dic_list,
+            filenamelist[n],
+            fig, ax,
+            if_on_paper=if_on_paper,
+        )
 
 # define plot for mu I
 def plot_mu_ij_I_ij(
@@ -1761,16 +1759,54 @@ def plot_mu_ij(
 def plot_I_ij(
     i, j, n_ave, n_ave_coord1, n_ave_coord2, inputstepsarray, log_variable_dic_list, index,
     fig_x_label, fig_y_label,
+    iflog=True,
     ):
     strain = ddfp.strain_from_rotate_start(np.array(inputstepsarray), log_variable_dic_list[-1])
     I_ij = dcn.I_ij(i, j, n_ave, n_ave_coord1, n_ave_coord2, inputstepsarray, log_variable_dic_list, ifcorrect_by_ave_velocity=True, ifcorrect_by_wall=True)[index]
     fig, ax = plt.subplots()
-    ax.plot(
-        strain,
-        np.log10(np.abs(I_ij)),
-        marker = ".",
-        linestyle = 'None',
-        markersize=12,
+    if iflog:
+        ax.plot(
+            strain,
+            np.log10(np.abs(I_ij)),
+            marker = ".",
+            linestyle = 'None',
+            markersize=12,
+        )
+    else:
+        ax.plot(
+            strain,
+            I_ij,
+            marker = ".",
+            linestyle = 'None',
+            markersize=12,
+        )
+    ax.set_xlabel(fig_x_label)
+    ax.set_ylabel(fig_y_label)
+    return (fig, ax)
+
+def plot_trace_I(
+    n_ave, n_ave_coord1, n_ave_coord2, inputstepsarray, log_variable_dic_list, index,
+    fig_x_label, fig_y_label,
+    iflog=True,
+    ):
+    strain = ddfp.strain_from_rotate_start(np.array(inputstepsarray), log_variable_dic_list[-1])
+    I_ij = dcn.trace_I(n_ave, n_ave_coord1, n_ave_coord2, inputstepsarray, log_variable_dic_list, ifcorrect_by_ave_velocity=True, ifcorrect_by_wall=True)[index]
+    fig, ax = plt.subplots()
+    if iflog:
+        ax.plot(
+            strain,
+            np.log10(np.abs(I_ij)),
+            marker = ".",
+            linestyle = 'None',
+            markersize=12,
+        )
+    else:
+        ax.plot(
+            strain,
+            I_ij,
+            marker = ".",
+            linestyle = 'None',
+            markersize=12,
         )
     ax.set_xlabel(fig_x_label)
     ax.set_ylabel(fig_y_label)
@@ -1785,13 +1821,12 @@ def save_plot_mu_ij_I_ij(
     i, j, n_ave, n_ave_coord1, n_ave_coord2, inputstepsarray, log_variable_dic_list, index,
     fig_x_label, fig_y_label,
     )
-    if if_on_paper:
-        os.makedirs(di.plots_for_paper_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_paper_file_path(log_variable_dic_list, filename)
-    else:
-        os.makedirs(di.plots_for_view_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_view_file_path(log_variable_dic_list, filename)
-    save_close(fig, ax, filepath)
+    create_folder_save(
+        log_variable_dic_list,
+        filename,
+        fig, ax,
+        if_on_paper=if_on_paper,
+    )
 
 def save_plot_mu_I(
     n_ave, n_ave_coord1, n_ave_coord2, inputstepsarray, log_variable_dic_list, index,
@@ -1804,13 +1839,12 @@ def save_plot_mu_I(
         fig_x_label, fig_y_label,
         ignore_diagonal=ignore_diagonal,
     )
-    if if_on_paper:
-        os.makedirs(di.plots_for_paper_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_paper_file_path(log_variable_dic_list, filename)
-    else:
-        os.makedirs(di.plots_for_view_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_view_file_path(log_variable_dic_list, filename)
-    save_close(fig, ax, filepath)
+    create_folder_save(
+        log_variable_dic_list,
+        filename,
+        fig, ax,
+        if_on_paper=if_on_paper,
+    )
 
 def save_plot_mu(
     n_ave, n_ave_coord1, n_ave_coord2, inputstepsarray, log_variable_dic_list, index,
@@ -1823,13 +1857,12 @@ def save_plot_mu(
         fig_x_label, fig_y_label,
         ignore_diagonal=ignore_diagonal,
     )
-    if if_on_paper:
-        os.makedirs(di.plots_for_paper_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_paper_file_path(log_variable_dic_list, filename)
-    else:
-        os.makedirs(di.plots_for_view_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_view_file_path(log_variable_dic_list, filename)
-    save_close(fig, ax, filepath)
+    create_folder_save(
+        log_variable_dic_list,
+        filename,
+        fig, ax,
+        if_on_paper=if_on_paper,
+    )
 
 def save_plot_I(
     n_ave, n_ave_coord1, n_ave_coord2, inputstepsarray, log_variable_dic_list, index,
@@ -1842,13 +1875,12 @@ def save_plot_I(
         fig_x_label, fig_y_label,
         ignore_diagonal=ignore_diagonal,
     )
-    if if_on_paper:
-        os.makedirs(di.plots_for_paper_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_paper_file_path(log_variable_dic_list, filename)
-    else:
-        os.makedirs(di.plots_for_view_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_view_file_path(log_variable_dic_list, filename)
-    save_close(fig, ax, filepath)
+    create_folder_save(
+        log_variable_dic_list,
+        filename,
+        fig, ax,
+        if_on_paper=if_on_paper,
+    )
 
 def save_plot_mu_ij(
     i, j, n_ave, n_ave_coord1, n_ave_coord2, inputstepsarray, log_variable_dic_list, index,
@@ -1859,27 +1891,45 @@ def save_plot_mu_ij(
         i, j, n_ave, n_ave_coord1, n_ave_coord2, inputstepsarray, log_variable_dic_list, index,
         fig_x_label, fig_y_label,
     )
-    if if_on_paper:
-        os.makedirs(di.plots_for_paper_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_paper_file_path(log_variable_dic_list, filename)
-    else:
-        os.makedirs(di.plots_for_view_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_view_file_path(log_variable_dic_list, filename)
-    save_close(fig, ax, filepath)
+    create_folder_save(
+        log_variable_dic_list,
+        filename,
+        fig, ax,
+        if_on_paper=if_on_paper,
+    )
 
 def save_plot_I_ij(
     i, j, n_ave, n_ave_coord1, n_ave_coord2, inputstepsarray, log_variable_dic_list, index,
     fig_x_label, fig_y_label, filename,
     if_on_paper=False,
+    iflog=True,
     ):
     fig, ax = plot_I_ij(
         i, j, n_ave, n_ave_coord1, n_ave_coord2, inputstepsarray, log_variable_dic_list, index,
         fig_x_label, fig_y_label,
+        iflog=iflog,
     )
-    if if_on_paper:
-        os.makedirs(di.plots_for_paper_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_paper_file_path(log_variable_dic_list, filename)
-    else:
-        os.makedirs(di.plots_for_view_folder(log_variable_dic_list), exist_ok=True)
-        filepath = di.plots_for_view_file_path(log_variable_dic_list, filename)
-    save_close(fig, ax, filepath)
+    create_folder_save(
+        log_variable_dic_list,
+        filename,
+        fig, ax,
+        if_on_paper=if_on_paper,
+    )
+
+def save_plot_trace_I(
+    n_ave, n_ave_coord1, n_ave_coord2, inputstepsarray, log_variable_dic_list, index,
+    fig_x_label, fig_y_label, filename,
+    if_on_paper=False,
+    iflog=True,
+    ):
+    fig, ax = plot_trace_I(
+        n_ave, n_ave_coord1, n_ave_coord2, inputstepsarray, log_variable_dic_list, index,
+        fig_x_label, fig_y_label,
+        iflog=iflog,
+    )
+    create_folder_save(
+        log_variable_dic_list,
+        filename,
+        fig, ax,
+        if_on_paper=if_on_paper,
+    )
