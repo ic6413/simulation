@@ -1933,3 +1933,12 @@ def save_plot_trace_I(
         fig, ax,
         if_on_paper=if_on_paper,
     )
+
+# combine fig from different simu
+def combine_figure(list_of_fig_ax):
+    n = len(list_of_fig_ax)
+    fig, axs = plt.subplots(1, n)
+    for i in range(n):
+        fig_sub, ax = list_of_fig_ax[i]
+        axs[i] = ax
+        axs[i].set_title(fig_sub.title)

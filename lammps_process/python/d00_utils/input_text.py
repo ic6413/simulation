@@ -1,5 +1,9 @@
 import os
 import sys
+import d00_utils.read_log as dr
+# simulation dictionary: 
+# key: index
+# value: simulation_path
 lmp_folder_path_dic = {
     1: os.path.join(
         os.path.expanduser("~"),
@@ -92,6 +96,10 @@ def folder_name_under_subfolder_of_data(log_variable_dic_list):
         + "_total_time_" + "{:.2e}".format(float(log_variable["total_time"]))
     )
     return name
+
+def folder_name_under_subfolder_of_data_by_path(lmp_folder_path):
+    (log_variable_dic_list, n_simu_total, log_variable, folder_path_list_initial_to_last) = dr.dump_variable(lmp_folder_path)
+    return folder_name_under_subfolder_of_data(log_variable_dic_list)
 
 def intermediate_subfolder_path(folder_name_under_subfolder_of_data):
     folder_path = os.path.join(
@@ -213,6 +221,7 @@ def fixtimeave_text_file_path(n, fixtimeave_id_name, log_variable_dic_list, fold
         log_variable_dic_list[n]['fixavetime'][fixtimeave_id_name]['file'],
     )
     return folder_path
+
 
 def fixchunkave_text_file_path(n, fixchunkave_id_name, log_variable_dic_list, folder_path_list_initial_to_last):
 
@@ -534,13 +543,17 @@ def plots_for_paper_file_path(log_variable_dic_list, figurename):
     )
     return file_path
 
+latex_folder_path_08 = os.path.join(
+    os.path.expanduser("~"),
+    'simulation',
+    'lammps_process',
+    'data',
+    '08_latex',
+)
+
 def latex_folder_path(log_variable_dic_list):
     folder_path = os.path.join(
-        os.path.expanduser("~"),
-        'simulation',
-        'lammps_process',
-        'data',
-        '08_latex',
+        latex_folder_path_08,
         folder_name_under_subfolder_of_data(log_variable_dic_list),
     )
     return folder_path
@@ -601,3 +614,4 @@ def dropbox_plots_for_paper_file_path(log_variable_dic_list, figurename):
         figurename,
     )
     return file_path
+

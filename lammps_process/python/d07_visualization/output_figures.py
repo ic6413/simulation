@@ -8,8 +8,6 @@ import d00_utils.plot as dp
 import d00_utils.data_for_plot as ddfp
 import numpy as np
 
-
-
 def main():
 
     lmp_folder_path = di.lmp_folder_path
@@ -130,27 +128,30 @@ def main():
             (8, 8, 0, 4, add_pre_filename_string + 'contact_region_static_1.png'),
             (14, 2, 0, 4, add_pre_filename_string + 'contact_region_static_2.png'),
         ]:
-            dp.save_plot_ave_ratio_value_for_select_region_yz_strain(
-                log_variable_dic_list,
-                201,
-                fraction_steps,
-                1, r'$\gamma$',
-                1, 'contact number',
-                'n_contact', 'Ncount',
-                n_y_0, d_n_y,
-                n_z_0, d_n_z,
-                if_on_paper=if_on_paper,
-                ifrotate_tick=True,
-                ifshrink=False,
-                fixtimeave_id_fortime='avspatial_ave',
-                fixtimeave_id_forcoord='avspatial_ave',
-                fixtimeave_id_name1='contact_ave',
-                fixtimeave_id_name2='avspatial_ave',
-                is_calculated_v1=False,
-                is_calculated_v2=False,
-                filename=filename,
-            )
+            if 'contact_ave' in log_variable_dic_list[len(folder_path_list_initial_to_last)-1]['fixavetime']:
 
+                dp.save_plot_ave_ratio_value_for_select_region_yz_strain(
+                    log_variable_dic_list,
+                    201,
+                    fraction_steps,
+                    1, r'$\gamma$',
+                    1, 'contact number',
+                    'n_contact', 'Ncount',
+                    n_y_0, d_n_y,
+                    n_z_0, d_n_z,
+                    if_on_paper=if_on_paper,
+                    ifrotate_tick=True,
+                    ifshrink=False,
+                    fixtimeave_id_fortime='avspatial_ave',
+                    fixtimeave_id_forcoord='avspatial_ave',
+                    fixtimeave_id_name1='contact_ave',
+                    fixtimeave_id_name2='avspatial_ave',
+                    is_calculated_v1=False,
+                    is_calculated_v2=False,
+                    filename=filename,
+                )
+            else:
+                print('fixtimeave_id_name contact_ave not exist')
         # plot streamline
         dp.save_plot_velocity_streamplot_contour(
             log_variable_dic_list,
@@ -248,7 +249,7 @@ def main():
             log_variable_dic_list,
             201,
             np.array([velocityinputstepsarray[-1]]),
-            [0,7,14,15,16],
+            [0,7,11],
             float(log_variable['dp']), 'y',
             abs(float(log_variable['in_velocity'])), 'Vx',
             mv_v_name="mv_1",
@@ -263,7 +264,7 @@ def main():
             log_variable_dic_list,
             201,
             np.array([velocityinputstepsarray[-1]]),
-            [0,7,14,15,16],
+            [0,7,11],
             float(log_variable['dp']), 'y',
             abs(float(log_variable['in_velocity'])), 'Vy',
             mv_v_name="mv_2",
@@ -278,7 +279,7 @@ def main():
             log_variable_dic_list,
             201,
             np.array([velocityinputstepsarray[-1]]),
-            [0,7,14,15,16],
+            [0,7,11],
             float(log_variable['dp']), 'y',
             abs(float(log_variable['in_velocity'])), 'Vz',
             mv_v_name="mv_3",
@@ -342,379 +343,390 @@ def main():
         
         # plot wall stress vs coord
         add_pre_filename_string = 'f0010'
-        for (v_name, fixtimeave_id_name, fig_y_label, filename) in [
-            ('chunk_inwall_force_1', 'ave_std_inwall', 'inwall_stress ' + r'$\sigma_{21}$', add_pre_filename_string + 'inwall_stress_21_coord.png'),
-            ('chunk_inwall_force_2', 'ave_std_inwall', 'inwall_stress ' + r'$\sigma_{22}$', add_pre_filename_string + 'inwall_stress_22_coord.png'),
-            ('chunk_inwall_force_3', 'ave_std_inwall', 'inwall_stress ' + r'$\sigma_{23}$', add_pre_filename_string + 'inwall_stress_23_coord.png'),
-            ('chunk_outwall_force_1', 'ave_std_outwall', 'outwall_stress ' + r'$\sigma_{21}$', add_pre_filename_string + 'outwall_stress_21_coord.png'),
-            ('chunk_outwall_force_2', 'ave_std_outwall', 'outwall_stress ' + r'$\sigma_{22}$', add_pre_filename_string + 'outwall_stress_22_coord.png'),
-            ('chunk_outwall_force_3', 'ave_std_outwall', 'outwall_stress ' + r'$\sigma_{23}$', add_pre_filename_string + 'outwall_stress_23_coord.png'),
-            ]:
-            dp.save_plot_wall_stress_coord(
-                log_variable_dic_list,
-                201,
-                stress_steps,
-                v_name,
-                'Coord2',
-                fixtimeave_id_name,
-                'z',
-                fig_y_label,
-                float(log_variable['dp']),
-                stress_scale_height,
-                if_on_paper=if_on_paper,
-                ifrotate_tick=True,
-                ifshrink=False,
-                filename = filename,
-            )
-        for (v_name, fixtimeave_id_name, fig_y_label, filename) in [
-            ('chunk_zbottom_force_1', 'ave_std_zbottom', 'zbottom_stress ' + r'$\sigma_{31}$', add_pre_filename_string + 'zbottom_stress_31_coord.png'),
-            ('chunk_zbottom_force_2', 'ave_std_zbottom', 'zbottom_stress ' + r'$\sigma_{32}$', add_pre_filename_string + 'zbottom_stress_32_coord.png'),
-            ('chunk_zbottom_force_3', 'ave_std_zbottom', 'zbottom_stress ' + r'$\sigma_{33}$', add_pre_filename_string + 'zbottom_stress_33_coord.png'),
-            ]:
-            dp.save_plot_wall_stress_coord(
-                log_variable_dic_list,
-                201,
-                stress_steps,
-                v_name,
-                'Coord1',
-                fixtimeave_id_name,
-                'y',
-                fig_y_label,
-                float(log_variable['dp']),
-                stress_scale_height,
-                if_on_paper=if_on_paper,
-                ifrotate_tick=True,
-                ifshrink=False,
-                filename = filename,
-            )
-        # plot wall stress ratio vs coord
-        add_pre_filename_string = 'f0011'
-        for (v_name_1, v_name_2, fixtimeave_id_name, fig_y_label, filename) in [
-            ('chunk_inwall_force_1', 'chunk_inwall_force_2', 'ave_std_inwall', 'shearing wall ' + r'$\mu_{12}$', add_pre_filename_string + 'inwall_stress_ratio_12_coord.png'),
-            ('chunk_inwall_force_3', 'chunk_inwall_force_2', 'ave_std_inwall', 'shearing wall ' + r'$\mu_{32}$', add_pre_filename_string + 'inwall_stress_ratio_32_coord.png'),
-            ('chunk_outwall_force_1', 'chunk_outwall_force_2', 'ave_std_outwall', 'static wall ' + r'$\mu_{12}$', add_pre_filename_string + 'outwall_stress_ratio_12_coord.png'),
-            ('chunk_outwall_force_3', 'chunk_outwall_force_2', 'ave_std_outwall', 'static wall ' + r'$\mu_{32}$', add_pre_filename_string + 'outwall_stress_ratio_32_coord.png'),
-            ]:
-            dp.save_plot_wall_stress_ratio_coord(
-                log_variable_dic_list,
-                201,
-                stress_steps,
-                v_name_1,
-                v_name_2,
-                'Coord2',
-                fixtimeave_id_name,
-                'z',
-                fig_y_label,
-                float(log_variable['dp']),
-                1,
-                if_on_paper=if_on_paper,
-                ifrotate_tick=True,
-                ifshrink=False,
-                filename = filename,
-            )
-        for (v_name_1, v_name_2, fixtimeave_id_name, fig_y_label, filename) in [
-            ('chunk_zbottom_force_1', 'chunk_zbottom_force_3', 'ave_std_zbottom', 'zbottom' + r'$\mu_{13}$', add_pre_filename_string + 'zbottom_stress_ratio_31_coord.png'),
-            ('chunk_zbottom_force_2', 'chunk_zbottom_force_3', 'ave_std_zbottom', 'zbottom' + r'$\mu_{23}$', add_pre_filename_string + 'zbottom_stress_ratio_32_coord.png'),
-            ]:
-            dp.save_plot_wall_stress_ratio_coord(
-                log_variable_dic_list,
-                201,
-                stress_steps,
-                v_name_1,
-                v_name_2,
-                'Coord1',
-                fixtimeave_id_name,
-                'y',
-                fig_y_label,
-                float(log_variable['dp']),
-                1,
-                if_on_paper=if_on_paper,
-                ifrotate_tick=True,
-                ifshrink=False,
-                filename = filename,
-            )
-        
+        if 'ave_std_inwall' in log_variable_dic_list[len(folder_path_list_initial_to_last)-1]['fixavetime']:
+            for (v_name, fixtimeave_id_name, fig_y_label, filename) in [
+                ('chunk_inwall_force_1', 'ave_std_inwall', 'inwall_stress ' + r'$\sigma_{21}$', add_pre_filename_string + 'inwall_stress_21_coord.png'),
+                ('chunk_inwall_force_2', 'ave_std_inwall', 'inwall_stress ' + r'$\sigma_{22}$', add_pre_filename_string + 'inwall_stress_22_coord.png'),
+                ('chunk_inwall_force_3', 'ave_std_inwall', 'inwall_stress ' + r'$\sigma_{23}$', add_pre_filename_string + 'inwall_stress_23_coord.png'),
+                ('chunk_outwall_force_1', 'ave_std_outwall', 'outwall_stress ' + r'$\sigma_{21}$', add_pre_filename_string + 'outwall_stress_21_coord.png'),
+                ('chunk_outwall_force_2', 'ave_std_outwall', 'outwall_stress ' + r'$\sigma_{22}$', add_pre_filename_string + 'outwall_stress_22_coord.png'),
+                ('chunk_outwall_force_3', 'ave_std_outwall', 'outwall_stress ' + r'$\sigma_{23}$', add_pre_filename_string + 'outwall_stress_23_coord.png'),
+                ]:
+                dp.save_plot_wall_stress_coord(
+                    log_variable_dic_list,
+                    201,
+                    stress_steps,
+                    v_name,
+                    'Coord2',
+                    fixtimeave_id_name,
+                    'z',
+                    fig_y_label,
+                    float(log_variable['dp']),
+                    stress_scale_height,
+                    if_on_paper=if_on_paper,
+                    ifrotate_tick=True,
+                    ifshrink=False,
+                    filename = filename,
+                )
+            for (v_name, fixtimeave_id_name, fig_y_label, filename) in [
+                ('chunk_zbottom_force_1', 'ave_std_zbottom', 'zbottom_stress ' + r'$\sigma_{31}$', add_pre_filename_string + 'zbottom_stress_31_coord.png'),
+                ('chunk_zbottom_force_2', 'ave_std_zbottom', 'zbottom_stress ' + r'$\sigma_{32}$', add_pre_filename_string + 'zbottom_stress_32_coord.png'),
+                ('chunk_zbottom_force_3', 'ave_std_zbottom', 'zbottom_stress ' + r'$\sigma_{33}$', add_pre_filename_string + 'zbottom_stress_33_coord.png'),
+                ]:
+                dp.save_plot_wall_stress_coord(
+                    log_variable_dic_list,
+                    201,
+                    stress_steps,
+                    v_name,
+                    'Coord1',
+                    fixtimeave_id_name,
+                    'y',
+                    fig_y_label,
+                    float(log_variable['dp']),
+                    stress_scale_height,
+                    if_on_paper=if_on_paper,
+                    ifrotate_tick=True,
+                    ifshrink=False,
+                    filename = filename,
+                )
+            # plot wall stress ratio vs coord
+            add_pre_filename_string = 'f0011'
+            for (v_name_1, v_name_2, fixtimeave_id_name, fig_y_label, filename) in [
+                ('chunk_inwall_force_1', 'chunk_inwall_force_2', 'ave_std_inwall', 'shearing wall ' + r'$\mu_{12}$', add_pre_filename_string + 'inwall_stress_ratio_12_coord.png'),
+                ('chunk_inwall_force_3', 'chunk_inwall_force_2', 'ave_std_inwall', 'shearing wall ' + r'$\mu_{32}$', add_pre_filename_string + 'inwall_stress_ratio_32_coord.png'),
+                ('chunk_outwall_force_1', 'chunk_outwall_force_2', 'ave_std_outwall', 'static wall ' + r'$\mu_{12}$', add_pre_filename_string + 'outwall_stress_ratio_12_coord.png'),
+                ('chunk_outwall_force_3', 'chunk_outwall_force_2', 'ave_std_outwall', 'static wall ' + r'$\mu_{32}$', add_pre_filename_string + 'outwall_stress_ratio_32_coord.png'),
+                ]:
+                dp.save_plot_wall_stress_ratio_coord(
+                    log_variable_dic_list,
+                    201,
+                    stress_steps,
+                    v_name_1,
+                    v_name_2,
+                    'Coord2',
+                    fixtimeave_id_name,
+                    'z',
+                    fig_y_label,
+                    float(log_variable['dp']),
+                    1,
+                    if_on_paper=if_on_paper,
+                    ifrotate_tick=True,
+                    ifshrink=False,
+                    filename = filename,
+                )
+            for (v_name_1, v_name_2, fixtimeave_id_name, fig_y_label, filename) in [
+                ('chunk_zbottom_force_1', 'chunk_zbottom_force_3', 'ave_std_zbottom', 'zbottom' + r'$\mu_{13}$', add_pre_filename_string + 'zbottom_stress_ratio_31_coord.png'),
+                ('chunk_zbottom_force_2', 'chunk_zbottom_force_3', 'ave_std_zbottom', 'zbottom' + r'$\mu_{23}$', add_pre_filename_string + 'zbottom_stress_ratio_32_coord.png'),
+                ]:
+                dp.save_plot_wall_stress_ratio_coord(
+                    log_variable_dic_list,
+                    201,
+                    stress_steps,
+                    v_name_1,
+                    v_name_2,
+                    'Coord1',
+                    fixtimeave_id_name,
+                    'y',
+                    fig_y_label,
+                    float(log_variable['dp']),
+                    1,
+                    if_on_paper=if_on_paper,
+                    ifrotate_tick=True,
+                    ifshrink=False,
+                    filename = filename,
+                )
+        else:
+            print('fixtimeave_id_name ave_std_inwall not exist')
         # plot wall stress
 
         # plot mu-I
-        coord1 = ddfp.get_coord_by_variable(len(log_variable_dic_list)-1, 'Coord1', log_variable_dic_list, 'avspatialstress_ave')
-        d_coord1 = coord1[1,0] - coord1[0,0]
-        coord2 = ddfp.get_coord_by_variable(len(log_variable_dic_list)-1, 'Coord2', log_variable_dic_list, 'avspatialstress_ave')
-        d_coord2 = coord2[0,1] - coord2[0,0]
-        binvolume = (
-            d_coord1
-            *d_coord2
-            *float(log_variable_dic_list[-1]['x_period_dp_unit'])
-            *float(log_variable_dic_list[-1]['dp'])
-        )
-        stress_scale_width = float(log_variable['den'])*float(log_variable['g'])*float(log_variable['width_wall_dp_unit'])*float(log_variable['dp'])
-        
-        for (inputstepsarray, add_pre_filename_string, array_index_y) in [
-            (np.array([35000000]), 'f0012', np.array([0])),
-            (np.array([3000000]), 'f0013', np.array([0])),
-            (np.array([35000000]), 'f0014', np.array([1])),
-            (np.array([3000000]), 'f0015', np.array([1])),
-        ]:
-            for (v_name, filename, fig_y_label) in [
-                ('stress_multiply_binvolume_11', add_pre_filename_string + 'stress_multiply_binvolume_11_near_shearing', r'$\sigma_{11}$' + 'near_shearing'),
-                ('stress_multiply_binvolume_22', add_pre_filename_string + 'stress_multiply_binvolume_22_near_shearing', r'$\sigma_{22}$' + 'near_shearing'),
-                ('stress_multiply_binvolume_33', add_pre_filename_string + 'stress_multiply_binvolume_33_near_shearing', r'$\sigma_{33}$' + 'near_shearing'),
-                ('stress_multiply_binvolume_12', add_pre_filename_string + 'stress_multiply_binvolume_12_near_shearing', r'$\sigma_{12}$' + 'near_shearing'),
-                ('stress_multiply_binvolume_13', add_pre_filename_string + 'stress_multiply_binvolume_13_near_shearing', r'$\sigma_{13}$' + 'near_shearing'),
-                ('stress_multiply_binvolume_23', add_pre_filename_string + 'stress_multiply_binvolume_23_near_shearing', r'$\sigma_{23}$' + 'near_shearing'),
+        if 'avspatialstress_ave' in log_variable_dic_list[len(folder_path_list_initial_to_last)-1]['fixavetime']:
+            coord1 = ddfp.get_coord_by_variable(len(log_variable_dic_list)-1, 'Coord1', log_variable_dic_list, 'avspatialstress_ave')
+            d_coord1 = coord1[1,0] - coord1[0,0]
+            coord2 = ddfp.get_coord_by_variable(len(log_variable_dic_list)-1, 'Coord2', log_variable_dic_list, 'avspatialstress_ave')
+            d_coord2 = coord2[0,1] - coord2[0,0]
+            binvolume = (
+                d_coord1
+                *d_coord2
+                *float(log_variable_dic_list[-1]['x_period_dp_unit'])
+                *float(log_variable_dic_list[-1]['dp'])
+            )
+            stress_scale_width = float(log_variable['den'])*float(log_variable['g'])*float(log_variable['width_wall_dp_unit'])*float(log_variable['dp'])
+            
+            for (inputstepsarray, add_pre_filename_string, array_index_y) in [
+                (np.array([35000000]), 'f0012', np.array([0])),
+                (np.array([3000000]), 'f0013', np.array([0])),
+                (np.array([35000000]), 'f0014', np.array([1])),
+                (np.array([3000000]), 'f0015', np.array([1])),
             ]:
-                v_name_x_axis = 'Coord2'
-                x_scale_factor = float(log_variable['dp'])
-                fig_x_label = 'z'
-                array_index_z = np.arange(10)
+                for (v_name, filename, fig_y_label) in [
+                    ('stress_multiply_binvolume_11', add_pre_filename_string + 'stress_multiply_binvolume_11_near_shearing', r'$\sigma_{11}$' + 'near_shearing'),
+                    ('stress_multiply_binvolume_22', add_pre_filename_string + 'stress_multiply_binvolume_22_near_shearing', r'$\sigma_{22}$' + 'near_shearing'),
+                    ('stress_multiply_binvolume_33', add_pre_filename_string + 'stress_multiply_binvolume_33_near_shearing', r'$\sigma_{33}$' + 'near_shearing'),
+                    ('stress_multiply_binvolume_12', add_pre_filename_string + 'stress_multiply_binvolume_12_near_shearing', r'$\sigma_{12}$' + 'near_shearing'),
+                    ('stress_multiply_binvolume_13', add_pre_filename_string + 'stress_multiply_binvolume_13_near_shearing', r'$\sigma_{13}$' + 'near_shearing'),
+                    ('stress_multiply_binvolume_23', add_pre_filename_string + 'stress_multiply_binvolume_23_near_shearing', r'$\sigma_{23}$' + 'near_shearing'),
+                ]:
+                    v_name_x_axis = 'Coord2'
+                    x_scale_factor = float(log_variable['dp'])
+                    fig_x_label = 'z'
+                    array_index_z = np.arange(10)
 
-                dp.save_plot_variable_vs_y_or_z_or_strain(
-                    log_variable_dic_list,
-                    201,
-                    inputstepsarray,
-                    x_scale_factor, fig_x_label,
-                    stress_scale_height*binvolume, fig_y_label,
-                    v_name, v_name_x_axis,
-                    array_index_y,
-                    array_index_z,
-                    if_on_paper=False,
-                    ifrotate_tick=True,
-                    ifshrink=False,
-                    fixtimeave_id_fortime='avspatialstress_ave',
-                    fixtimeave_id_forcoord='avspatialstress_ave',
-                    fixtimeave_id_name='avspatialstress_ave',
-                    is_std=False,
-                    is_calculated_v=False,
-                    filename=filename,
-                )
-        for (inputstepsarray, add_pre_filename_string, array_index_y) in [
-            (np.array([35000000]), 'f0016', np.array([-1])),
-            (np.array([3000000]), 'f0017', np.array([-1])),
-            (np.array([35000000]), 'f0018', np.array([-2])),
-            (np.array([3000000]), 'f0019', np.array([-2])),
-        ]:
-            for (v_name, filename, fig_y_label) in [
-                ('stress_multiply_binvolume_11', add_pre_filename_string + 'stress_multiply_binvolume_11_near_static', r'$\sigma_{11}$' + 'near_static'),
-                ('stress_multiply_binvolume_22', add_pre_filename_string + 'stress_multiply_binvolume_22_near_static', r'$\sigma_{22}$' + 'near_static'),
-                ('stress_multiply_binvolume_33', add_pre_filename_string + 'stress_multiply_binvolume_33_near_static', r'$\sigma_{33}$' + 'near_static'),
-                ('stress_multiply_binvolume_12', add_pre_filename_string + 'stress_multiply_binvolume_12_near_static', r'$\sigma_{12}$' + 'near_static'),
-                ('stress_multiply_binvolume_13', add_pre_filename_string + 'stress_multiply_binvolume_13_near_static', r'$\sigma_{13}$' + 'near_static'),
-                ('stress_multiply_binvolume_23', add_pre_filename_string + 'stress_multiply_binvolume_23_near_static', r'$\sigma_{23}$' + 'near_static'),
+                    dp.save_plot_variable_vs_y_or_z_or_strain(
+                        log_variable_dic_list,
+                        201,
+                        inputstepsarray,
+                        x_scale_factor, fig_x_label,
+                        stress_scale_height*binvolume, fig_y_label,
+                        v_name, v_name_x_axis,
+                        array_index_y,
+                        array_index_z,
+                        if_on_paper=False,
+                        ifrotate_tick=True,
+                        ifshrink=False,
+                        fixtimeave_id_fortime='avspatialstress_ave',
+                        fixtimeave_id_forcoord='avspatialstress_ave',
+                        fixtimeave_id_name='avspatialstress_ave',
+                        is_std=False,
+                        is_calculated_v=False,
+                        filename=filename,
+                    )
+            for (inputstepsarray, add_pre_filename_string, array_index_y) in [
+                (np.array([35000000]), 'f0016', np.array([-1])),
+                (np.array([3000000]), 'f0017', np.array([-1])),
+                (np.array([35000000]), 'f0018', np.array([-2])),
+                (np.array([3000000]), 'f0019', np.array([-2])),
             ]:
-                v_name_x_axis = 'Coord2'
-                x_scale_factor = float(log_variable['dp'])
-                fig_x_label = 'z'
-                array_index_z = np.arange(10)
+                for (v_name, filename, fig_y_label) in [
+                    ('stress_multiply_binvolume_11', add_pre_filename_string + 'stress_multiply_binvolume_11_near_static', r'$\sigma_{11}$' + 'near_static'),
+                    ('stress_multiply_binvolume_22', add_pre_filename_string + 'stress_multiply_binvolume_22_near_static', r'$\sigma_{22}$' + 'near_static'),
+                    ('stress_multiply_binvolume_33', add_pre_filename_string + 'stress_multiply_binvolume_33_near_static', r'$\sigma_{33}$' + 'near_static'),
+                    ('stress_multiply_binvolume_12', add_pre_filename_string + 'stress_multiply_binvolume_12_near_static', r'$\sigma_{12}$' + 'near_static'),
+                    ('stress_multiply_binvolume_13', add_pre_filename_string + 'stress_multiply_binvolume_13_near_static', r'$\sigma_{13}$' + 'near_static'),
+                    ('stress_multiply_binvolume_23', add_pre_filename_string + 'stress_multiply_binvolume_23_near_static', r'$\sigma_{23}$' + 'near_static'),
+                ]:
+                    v_name_x_axis = 'Coord2'
+                    x_scale_factor = float(log_variable['dp'])
+                    fig_x_label = 'z'
+                    array_index_z = np.arange(10)
 
-                dp.save_plot_variable_vs_y_or_z_or_strain(
-                    log_variable_dic_list,
-                    201,
-                    inputstepsarray,
-                    x_scale_factor, fig_x_label,
-                    stress_scale_height*binvolume, fig_y_label,
-                    v_name, v_name_x_axis,
-                    array_index_y,
-                    array_index_z,
-                    if_on_paper=False,
-                    ifrotate_tick=True,
-                    ifshrink=False,
-                    fixtimeave_id_fortime='avspatialstress_ave',
-                    fixtimeave_id_forcoord='avspatialstress_ave',
-                    fixtimeave_id_name='avspatialstress_ave',
-                    is_std=False,
-                    is_calculated_v=False,
-                    filename=filename,
-                )
-        
-        for (inputstepsarray, add_pre_filename_string, array_index_y) in [
-            (omega_max_steps, 'f0020', np.array([0])),
-            (np.array([5050000]), 'f0021', np.array([0])),
-            (np.array([5100000]), 'f0022', np.array([0])),
-            (np.array([4000000]), 'f0023', np.array([0])),
-            (omega_max_steps, 'f0024', np.array([1])),
-            (np.array([5050000]), 'f0025', np.array([1])),
-            (np.array([5100000]), 'f0026', np.array([1])),
-            (np.array([4000000]), 'f0027', np.array([1])),
-        ]:
-            for (v_name, filename, fig_y_label) in [
-                ('omega_1', add_pre_filename_string + 'omega_1_near_shearing', r'$\omega_{1}$' + 'near_shearing'),
-                ('omega_2', add_pre_filename_string + 'omega_2_near_shearing', r'$\omega_{2}$' + 'near_shearing'),
-                ('omega_3', add_pre_filename_string + 'omega_3_near_shearing', r'$\omega_{3}$' + 'near_shearing'),
+                    dp.save_plot_variable_vs_y_or_z_or_strain(
+                        log_variable_dic_list,
+                        201,
+                        inputstepsarray,
+                        x_scale_factor, fig_x_label,
+                        stress_scale_height*binvolume, fig_y_label,
+                        v_name, v_name_x_axis,
+                        array_index_y,
+                        array_index_z,
+                        if_on_paper=False,
+                        ifrotate_tick=True,
+                        ifshrink=False,
+                        fixtimeave_id_fortime='avspatialstress_ave',
+                        fixtimeave_id_forcoord='avspatialstress_ave',
+                        fixtimeave_id_name='avspatialstress_ave',
+                        is_std=False,
+                        is_calculated_v=False,
+                        filename=filename,
+                    )
+        else:
+            print('fixtimeave_id_name avspatialstress_ave not exist')
+
+        if 'avspatial_omega_ave' in log_variable_dic_list[len(folder_path_list_initial_to_last)-1]['fixavetime']:
+            for (inputstepsarray, add_pre_filename_string, array_index_y) in [
+                (omega_max_steps, 'f0020', np.array([0])),
+                (np.array([5050000]), 'f0021', np.array([0])),
+                (np.array([5100000]), 'f0022', np.array([0])),
+                (np.array([4000000]), 'f0023', np.array([0])),
+                (omega_max_steps, 'f0024', np.array([1])),
+                (np.array([5050000]), 'f0025', np.array([1])),
+                (np.array([5100000]), 'f0026', np.array([1])),
+                (np.array([4000000]), 'f0027', np.array([1])),
             ]:
-                v_name_x_axis = 'Coord2'
-                x_scale_factor = float(log_variable['dp'])
-                fig_x_label = 'z'
-                array_index_z = np.arange(10)
+                for (v_name, filename, fig_y_label) in [
+                    ('omega_1', add_pre_filename_string + 'omega_1_near_shearing', r'$\omega_{1}$' + 'near_shearing'),
+                    ('omega_2', add_pre_filename_string + 'omega_2_near_shearing', r'$\omega_{2}$' + 'near_shearing'),
+                    ('omega_3', add_pre_filename_string + 'omega_3_near_shearing', r'$\omega_{3}$' + 'near_shearing'),
+                ]:
+                    v_name_x_axis = 'Coord2'
+                    x_scale_factor = float(log_variable['dp'])
+                    fig_x_label = 'z'
+                    array_index_z = np.arange(10)
 
-                dp.save_plot_variable_vs_y_or_z_or_strain(
-                    log_variable_dic_list,
-                    1,
-                    inputstepsarray,
-                    x_scale_factor, fig_x_label,
-                    1, fig_y_label,
-                    v_name, v_name_x_axis,
-                    array_index_y,
-                    array_index_z,
-                    if_on_paper=False,
-                    ifrotate_tick=True,
-                    ifshrink=False,
-                    fixtimeave_id_fortime='avspatial_omega_ave',
-                    fixtimeave_id_forcoord='avspatial_omega_ave',
-                    fixtimeave_id_name='avspatial_omega_ave',
-                    is_std=False,
-                    is_calculated_v=False,
-                    filename=filename,
-                )
-        for (inputstepsarray, add_pre_filename_string, array_index_y) in [
-            (omega_max_steps, 'f0028', np.array([-1])),
-            (np.array([5050000]), 'f0029', np.array([-1])),
-            (np.array([5100000]), 'f0030', np.array([-1])),
-            (np.array([4000000]), 'f0031', np.array([-1])),
-            (omega_max_steps, 'f0032', np.array([-2])),
-            (np.array([5050000]), 'f0033', np.array([-2])),
-            (np.array([5100000]), 'f0034', np.array([-2])),
-            (np.array([4000000]), 'f0035', np.array([-2])),
-        ]:
-            for (v_name, filename, fig_y_label) in [
-                ('omega_1', add_pre_filename_string + 'omega_1_near_static', r'$\omega_{1}$' + 'near_static'),
-                ('omega_2', add_pre_filename_string + 'omega_2_near_static', r'$\omega_{2}$' + 'near_static'),
-                ('omega_3', add_pre_filename_string + 'omega_3_near_static', r'$\omega_{3}$' + 'near_static'),
+                    dp.save_plot_variable_vs_y_or_z_or_strain(
+                        log_variable_dic_list,
+                        1,
+                        inputstepsarray,
+                        x_scale_factor, fig_x_label,
+                        1, fig_y_label,
+                        v_name, v_name_x_axis,
+                        array_index_y,
+                        array_index_z,
+                        if_on_paper=False,
+                        ifrotate_tick=True,
+                        ifshrink=False,
+                        fixtimeave_id_fortime='avspatial_omega_ave',
+                        fixtimeave_id_forcoord='avspatial_omega_ave',
+                        fixtimeave_id_name='avspatial_omega_ave',
+                        is_std=False,
+                        is_calculated_v=False,
+                        filename=filename,
+                    )
+            for (inputstepsarray, add_pre_filename_string, array_index_y) in [
+                (omega_max_steps, 'f0028', np.array([-1])),
+                (np.array([5050000]), 'f0029', np.array([-1])),
+                (np.array([5100000]), 'f0030', np.array([-1])),
+                (np.array([4000000]), 'f0031', np.array([-1])),
+                (omega_max_steps, 'f0032', np.array([-2])),
+                (np.array([5050000]), 'f0033', np.array([-2])),
+                (np.array([5100000]), 'f0034', np.array([-2])),
+                (np.array([4000000]), 'f0035', np.array([-2])),
             ]:
-                v_name_x_axis = 'Coord2'
-                x_scale_factor = float(log_variable['dp'])
-                fig_x_label = 'z'
-                array_index_z = np.arange(10)
+                for (v_name, filename, fig_y_label) in [
+                    ('omega_1', add_pre_filename_string + 'omega_1_near_static', r'$\omega_{1}$' + 'near_static'),
+                    ('omega_2', add_pre_filename_string + 'omega_2_near_static', r'$\omega_{2}$' + 'near_static'),
+                    ('omega_3', add_pre_filename_string + 'omega_3_near_static', r'$\omega_{3}$' + 'near_static'),
+                ]:
+                    v_name_x_axis = 'Coord2'
+                    x_scale_factor = float(log_variable['dp'])
+                    fig_x_label = 'z'
+                    array_index_z = np.arange(10)
 
-                dp.save_plot_variable_vs_y_or_z_or_strain(
-                    log_variable_dic_list,
-                    1,
-                    inputstepsarray,
-                    x_scale_factor, fig_x_label,
-                    1, fig_y_label,
-                    v_name, v_name_x_axis,
-                    array_index_y,
-                    array_index_z,
-                    if_on_paper=False,
-                    ifrotate_tick=True,
-                    ifshrink=False,
-                    fixtimeave_id_fortime='avspatial_omega_ave',
-                    fixtimeave_id_forcoord='avspatial_omega_ave',
-                    fixtimeave_id_name='avspatial_omega_ave',
-                    is_std=False,
-                    is_calculated_v=False,
-                    filename=filename,
-                )
+                    dp.save_plot_variable_vs_y_or_z_or_strain(
+                        log_variable_dic_list,
+                        1,
+                        inputstepsarray,
+                        x_scale_factor, fig_x_label,
+                        1, fig_y_label,
+                        v_name, v_name_x_axis,
+                        array_index_y,
+                        array_index_z,
+                        if_on_paper=False,
+                        ifrotate_tick=True,
+                        ifshrink=False,
+                        fixtimeave_id_fortime='avspatial_omega_ave',
+                        fixtimeave_id_forcoord='avspatial_omega_ave',
+                        fixtimeave_id_name='avspatial_omega_ave',
+                        is_std=False,
+                        is_calculated_v=False,
+                        filename=filename,
+                    )
+        else:
+            print('fixtimeave_id_name avspatial_omega_ave not exist')
         
-        # new plot mu and mu for middle region
-        # whole time
-        dp.save_plot_mu(
-            51, 8, 8, mu_I_steps, log_variable_dic_list, np.s_[:,3,3],
-            r'$\gamma$', r'$\mu$', 'f0036' + 'mu-gamma-later.png',
-            if_on_paper=if_on_paper,
-        )
-        dp.save_plot_mu(
-            51, 8, 8, mu_I_steps, log_variable_dic_list, np.s_[:,3,3],
-            r'$\gamma$', r'$\mu$', 'f0036' + 'mu-ignoredia-gamma-later.png',
-            if_on_paper=if_on_paper,
-            ignore_diagonal=True,
-        )
-        dp.save_plot_I(
-            51, 8, 8, mu_I_steps, log_variable_dic_list, np.s_[:,3,3],
-            r'$\gamma$', r'$I$', 'f0036' + 'I-gamma-later.png',
-            if_on_paper=if_on_paper,
-        )
-        dp.save_plot_I(
-            51, 8, 8, mu_I_steps, log_variable_dic_list, np.s_[:,3,3],
-            r'$\gamma$', r'$I$', 'f0036' + 'I-ignoredia-gamma-later.png',
-            if_on_paper=if_on_paper,
-            ignore_diagonal=True,
-        )
-        dp.save_plot_mu_ij(
-            3, 3, 51, 8, 8, mu_I_steps, log_variable_dic_list, np.s_[:,3,3],
-            r'$\gamma$', r'$\mu_{33}$', 'f0036' + 'mu33-gamma.png',
-            if_on_paper=if_on_paper,
-        )
-        dp.save_plot_mu_ij(
-            2, 2, 51, 8, 8, mu_I_steps, log_variable_dic_list, np.s_[:,3,3],
-            r'$\gamma$', r'$\mu_{22}$', 'f0036' + 'mu22-gamma.png',
-            if_on_paper=if_on_paper,
-        )
-        dp.save_plot_mu_ij(
-            1, 1, 51, 8, 8, mu_I_steps, log_variable_dic_list, np.s_[:,3,3],
-            r'$\gamma$', r'$\mu_{11}$', 'f0036' + 'mu11-gamma.png',
-            if_on_paper=if_on_paper,
-        )
-        # begin
-        dp.save_plot_mu(
-            1, 8, 8, np.arange(5000000,6000000,10000), log_variable_dic_list, np.s_[:,3,3],
-            r'$\gamma$', r'$\mu$', 'f0036' + 'mu-gamma-begin.png',
-            if_on_paper=if_on_paper,
-        )
-        dp.save_plot_mu(
-            1, 8, 8, np.arange(5000000,6000000,10000), log_variable_dic_list, np.s_[:,3,3],
-            r'$\gamma$', r'$\mu$', 'f0036' + 'mu-ignoredia-gamma-begin.png',
-            if_on_paper=if_on_paper,
-            ignore_diagonal=True,
-        )
-        dp.save_plot_I(
-            1, 8, 8, np.arange(5000000,6000000,10000), log_variable_dic_list, np.s_[:,3,3],
-            r'$\gamma$', r'$I$', 'f0036' + 'I-gamma-begin.png',
-            if_on_paper=if_on_paper,
-        )
-        dp.save_plot_I(
-            1, 8, 8, np.arange(5000000,6000000,10000), log_variable_dic_list, np.s_[:,3,3],
-            r'$\gamma$', r'$I$', 'f0036' + 'I-ignoredia-gamma-begin.png',
-            if_on_paper=if_on_paper,
-            ignore_diagonal=True,
-        )
-        # plot mu diagonal at begin
-        dp.save_plot_mu_ij(
-            3, 3, 1, 8, 8, np.arange(5000000,6000000,10000), log_variable_dic_list, np.s_[:,3,3],
-            r'$\gamma$', r'$\mu_{33}$', 'f0036' + 'mu33-gamma-begin.png',
-            if_on_paper=if_on_paper,
-        )
-        dp.save_plot_mu_ij(
-            2, 2, 1, 8, 8, np.arange(5000000,6000000,10000), log_variable_dic_list, np.s_[:,3,3],
-            r'$\gamma$', r'$\mu_{22}$', 'f0036' + 'mu22-gamma-begin.png',
-            if_on_paper=if_on_paper,
-        )
-        dp.save_plot_mu_ij(
-            1, 1, 1, 8, 8, np.arange(5000000,6000000,10000), log_variable_dic_list, np.s_[:,3,3],
-            r'$\gamma$', r'$\mu_{11}$', 'f0036' + 'mu11-gamma-begin.png',
-            if_on_paper=if_on_paper,
-        )
-        
-        # plot I diagonal at begin
-        dp.save_plot_I_ij(
-            3, 3, 1, 8, 8, np.arange(5000000,6000000,10000), log_variable_dic_list, np.s_[:,3,3],
-            r'$\gamma$', r'$I_{33}$', 'f0036' + 'I_33-gamma-begin.png',
-            if_on_paper=if_on_paper,
-            iflog=False,
-        )
-        dp.save_plot_I_ij(
-            2, 2, 1, 8, 8, np.arange(5000000,6000000,10000), log_variable_dic_list, np.s_[:,3,3],
-            r'$\gamma$', r'$I_{22}$', 'f0036' + 'I_22-gamma-begin.png',
-            if_on_paper=if_on_paper,
-            iflog=False,
-        )
-        dp.save_plot_I_ij(
-            1, 1, 1, 8, 8, np.arange(5000000,6000000,10000), log_variable_dic_list, np.s_[:,3,3],
-            r'$\gamma$', r'$I_{11}$', 'f0036' + 'I_11-gamma-begin.png',
-            if_on_paper=if_on_paper,
-            iflog=False,
-        )
-        dp.save_plot_trace_I(
-            1, 8, 8, np.arange(5000000,6000000,10000), log_variable_dic_list, np.s_[:,3,3],
-            r'$\gamma$', r'$I_{trace}$', 'f0036' + 'I_trace-gamma-begin.png',
-            if_on_paper=if_on_paper,
-            iflog=False,
-        )
-        dp.save_plot_trace_I(
-            201, 8, 8, mu_I_steps, log_variable_dic_list, np.s_[:,3,3],
-            r'$\gamma$', r'$I_{trace}$', 'f0036' + 'I_trace-gamma-later.png',
-            if_on_paper=if_on_paper,
-            iflog=False,
-        )
+        if 'avspatialstress_ave' in log_variable_dic_list[len(folder_path_list_initial_to_last)-1]['fixavetime']:
+            # new plot mu and mu for middle region
+            # whole time
+            dp.save_plot_mu(
+                51, 8, 8, mu_I_steps, log_variable_dic_list, np.s_[:,3,3],
+                r'$\gamma$', r'$\mu$', 'f0036' + 'mu-gamma-later.png',
+                if_on_paper=if_on_paper,
+            )
+            dp.save_plot_mu(
+                51, 8, 8, mu_I_steps, log_variable_dic_list, np.s_[:,3,3],
+                r'$\gamma$', r'$\mu$', 'f0036' + 'mu-ignoredia-gamma-later.png',
+                if_on_paper=if_on_paper,
+                ignore_diagonal=True,
+            )
+            dp.save_plot_I(
+                51, 8, 8, mu_I_steps, log_variable_dic_list, np.s_[:,3,3],
+                r'$\gamma$', r'$I$', 'f0036' + 'I-gamma-later.png',
+                if_on_paper=if_on_paper,
+            )
+            dp.save_plot_I(
+                51, 8, 8, mu_I_steps, log_variable_dic_list, np.s_[:,3,3],
+                r'$\gamma$', r'$I$', 'f0036' + 'I-ignoredia-gamma-later.png',
+                if_on_paper=if_on_paper,
+                ignore_diagonal=True,
+            )
+            dp.save_plot_mu_ij(
+                3, 3, 51, 8, 8, mu_I_steps, log_variable_dic_list, np.s_[:,3,3],
+                r'$\gamma$', r'$\mu_{33}$', 'f0036' + 'mu33-gamma.png',
+                if_on_paper=if_on_paper,
+            )
+            dp.save_plot_mu_ij(
+                2, 2, 51, 8, 8, mu_I_steps, log_variable_dic_list, np.s_[:,3,3],
+                r'$\gamma$', r'$\mu_{22}$', 'f0036' + 'mu22-gamma.png',
+                if_on_paper=if_on_paper,
+            )
+            dp.save_plot_mu_ij(
+                1, 1, 51, 8, 8, mu_I_steps, log_variable_dic_list, np.s_[:,3,3],
+                r'$\gamma$', r'$\mu_{11}$', 'f0036' + 'mu11-gamma.png',
+                if_on_paper=if_on_paper,
+            )
+            # begin
+            dp.save_plot_mu(
+                1, 8, 8, np.arange(5000000,6000000,10000), log_variable_dic_list, np.s_[:,3,3],
+                r'$\gamma$', r'$\mu$', 'f0036' + 'mu-gamma-begin.png',
+                if_on_paper=if_on_paper,
+            )
+            dp.save_plot_mu(
+                1, 8, 8, np.arange(5000000,6000000,10000), log_variable_dic_list, np.s_[:,3,3],
+                r'$\gamma$', r'$\mu$', 'f0036' + 'mu-ignoredia-gamma-begin.png',
+                if_on_paper=if_on_paper,
+                ignore_diagonal=True,
+            )
+            dp.save_plot_I(
+                1, 8, 8, np.arange(5000000,6000000,10000), log_variable_dic_list, np.s_[:,3,3],
+                r'$\gamma$', r'$I$', 'f0036' + 'I-gamma-begin.png',
+                if_on_paper=if_on_paper,
+            )
+            dp.save_plot_I(
+                1, 8, 8, np.arange(5000000,6000000,10000), log_variable_dic_list, np.s_[:,3,3],
+                r'$\gamma$', r'$I$', 'f0036' + 'I-ignoredia-gamma-begin.png',
+                if_on_paper=if_on_paper,
+                ignore_diagonal=True,
+            )
+            # plot mu diagonal at begin
+            dp.save_plot_mu_ij(
+                3, 3, 1, 8, 8, np.arange(5000000,6000000,10000), log_variable_dic_list, np.s_[:,3,3],
+                r'$\gamma$', r'$\mu_{33}$', 'f0036' + 'mu33-gamma-begin.png',
+                if_on_paper=if_on_paper,
+            )
+            dp.save_plot_mu_ij(
+                2, 2, 1, 8, 8, np.arange(5000000,6000000,10000), log_variable_dic_list, np.s_[:,3,3],
+                r'$\gamma$', r'$\mu_{22}$', 'f0036' + 'mu22-gamma-begin.png',
+                if_on_paper=if_on_paper,
+            )
+            dp.save_plot_mu_ij(
+                1, 1, 1, 8, 8, np.arange(5000000,6000000,10000), log_variable_dic_list, np.s_[:,3,3],
+                r'$\gamma$', r'$\mu_{11}$', 'f0036' + 'mu11-gamma-begin.png',
+                if_on_paper=if_on_paper,
+            )
+            
+            # plot I diagonal at begin
+            dp.save_plot_I_ij(
+                3, 3, 1, 8, 8, np.arange(5000000,6000000,10000), log_variable_dic_list, np.s_[:,3,3],
+                r'$\gamma$', r'$I_{33}$', 'f0036' + 'I_33-gamma-begin.png',
+                if_on_paper=if_on_paper,
+                iflog=False,
+            )
+            dp.save_plot_I_ij(
+                2, 2, 1, 8, 8, np.arange(5000000,6000000,10000), log_variable_dic_list, np.s_[:,3,3],
+                r'$\gamma$', r'$I_{22}$', 'f0036' + 'I_22-gamma-begin.png',
+                if_on_paper=if_on_paper,
+                iflog=False,
+            )
+            dp.save_plot_I_ij(
+                1, 1, 1, 8, 8, np.arange(5000000,6000000,10000), log_variable_dic_list, np.s_[:,3,3],
+                r'$\gamma$', r'$I_{11}$', 'f0036' + 'I_11-gamma-begin.png',
+                if_on_paper=if_on_paper,
+                iflog=False,
+            )
+            dp.save_plot_trace_I(
+                1, 8, 8, np.arange(5000000,6000000,10000), log_variable_dic_list, np.s_[:,3,3],
+                r'$\gamma$', r'$I_{trace}$', 'f0036' + 'I_trace-gamma-begin.png',
+                if_on_paper=if_on_paper,
+                iflog=False,
+            )
+            dp.save_plot_trace_I(
+                201, 8, 8, mu_I_steps, log_variable_dic_list, np.s_[:,3,3],
+                r'$\gamma$', r'$I_{trace}$', 'f0036' + 'I_trace-gamma-later.png',
+                if_on_paper=if_on_paper,
+                iflog=False,
+            )
+        else:
+            print('fixtimeave_id_name avspatialstress_ave not exist')
 
 if __name__ == "__main__":
     main()
